@@ -45,15 +45,25 @@ const AUTH = {
   Prefer: "count=none",
 };
 
-/** Warm cache: devolve na hora. Revalida topo só depois de WARM_MS. */
-const WARM_MS = 45_000;
-const STALE_MS = 180_000;
+/**
+ * Camadas de cache da lista:
+ *  WARM  (< 90s)  → devolve memória, zero rede
+ *  STALE (< 5min) → devolve memória + revalida em background (só head barato)
+ *  COLD           → 1 fetch da lista (topo = stories[0].id)
+ */
+const WARM_MS = 90_000;
+const STALE_MS = 300_000;
 const listCache = new Map<string, { at: number; stories: Story[]; headId: string }>();
 const listInflight = new Map<string, Promise<Story[]>>();
+
+/** Cache de post individual (abrir matéria). */
+const POST_TTL = 60_000;
+const postCache = new Map<string, { at: number; story: Story }>();
 
 export function invalidateSupabaseList() {
   listCache.clear();
   listInflight.clear();
+  postCache.clear();
   void invalidateNewsCache();
 }
 
@@ -106,7 +116,7 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
 
 export type ListOpts = { before?: string; limit?: number };
 
-/** Topo real da tabela — 1 linha, barato. */
+/** Topo real — 1 linha. Usado só na revalidação em background. */
 async function fetchHeadId(category: Category): Promise<string | null> {
   try {
     const params = new URLSearchParams();
@@ -116,7 +126,7 @@ async function fetchHeadId(category: Category): Promise<string | null> {
     params.set("category", `eq.${normalizeSection(category)}`);
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
       headers: AUTH,
-      signal: AbortSignal.timeout(3_500),
+      signal: AbortSignal.timeout(3_000),
     });
     if (!res.ok) return null;
     const rows = (await res.json()) as Array<{ post_id?: string }>;
@@ -136,7 +146,7 @@ async function fetchList(category: Category, opts: ListOpts = {}): Promise<Story
 
   const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
     headers: AUTH,
-    signal: AbortSignal.timeout(5_500),
+    signal: AbortSignal.timeout(5_000),
   });
   if (!res.ok) throw new Error(`supabase_${res.status}`);
   const rows = (await res.json()) as DbPost[];
@@ -151,27 +161,34 @@ function storeList(key: string, stories: Story[], headId: string) {
   return stories;
 }
 
-/** Revalida em background sem bloquear a resposta. */
+/**
+ * Revalida só o head. Se mudou → fetch lista completa.
+ * Se igual → só renova o timestamp do cache (estende WARM).
+ */
 function revalidateInBackground(slug: Category, limit: number, key: string, knownHead: string) {
-  void (async () => {
+  // single-flight por key
+  if (listInflight.has(`rv:${key}`)) return;
+  const job = (async () => {
     try {
-      const [headId, stories] = await Promise.all([
-        fetchHeadId(slug),
-        fetchList(slug, { limit }),
-      ]);
-      if (headId && knownHead && headId !== knownHead) {
-        storeList(key, stories, headId);
-        void cacheSetJson(CACHE_KEYS.list(slug, limit), stories, 45);
+      const headId = await fetchHeadId(slug);
+      if (!headId) return;
+      if (headId === knownHead) {
+        // topo igual: estende o warm sem baixar a lista de novo
+        const hit = listCache.get(key);
+        if (hit) listCache.set(key, { ...hit, at: Date.now() });
         return;
       }
+      // topo novo → lista fresca
+      const stories = await fetchList(slug, { limit });
       if (stories.length) {
-        storeList(key, stories, headId || knownHead);
-        void cacheSetJson(CACHE_KEYS.list(slug, limit), stories, 45);
+        storeList(key, stories, headId);
+        void cacheSetJson(CACHE_KEYS.list(slug, limit), stories, 120);
       }
     } catch {
       /* silent */
     }
-  })();
+  })().finally(() => listInflight.delete(`rv:${key}`));
+  listInflight.set(`rv:${key}`, job as Promise<Story[]>);
 }
 
 export async function downloadSupabase(
@@ -187,41 +204,38 @@ export async function downloadSupabase(
   const hit = listCache.get(key);
   const age = hit ? Date.now() - hit.at : Number.POSITIVE_INFINITY;
 
-  // 1) Warm: devolve na hora, sem round-trip ao Supabase
+  // 1) Warm: zero rede
   if (hit && age < WARM_MS) {
     return hit.stories;
   }
 
-  // 2) Stale-while-revalidate: devolve cache e atualiza em background
+  // 2) Stale-while-revalidate: responde na hora, head em background
   if (hit && age < STALE_MS) {
     revalidateInBackground(slug, limit, key, hit.headId);
     return hit.stories;
   }
 
-  // 3) Cold: head + list em paralelo (antes era sequencial = 2x latência)
+  // 3) Cold: 1 request da lista (sem head separado — topo = stories[0])
   const pending = listInflight.get(key);
   if (pending) return pending;
 
   const job = (async () => {
-    // tenta cloud cache em paralelo com head
-    const remoteJob = cacheGetJson<Story[]>(redisKey);
-    const headJob = fetchHeadId(slug);
-    const [remote, headId] = await Promise.all([remoteJob, headJob]);
-
-    if (remote?.length) {
-      const remoteHead = remote[0]?.id || "";
-      if (headId && remoteHead === headId) {
-        return storeList(key, remote, headId);
-      }
-      if (headId && remoteHead !== headId) {
-        void cacheDel(redisKey);
-      }
-    }
+    // memória de processo anterior no mesmo isolate (cloud KV) — sem bloquear se demorar
+    const remotePromise = cacheGetJson<Story[]>(redisKey).catch(() => null);
 
     const stories = await fetchList(slug, { limit });
-    const top = stories[0]?.id || headId || "";
-    storeList(key, stories, top);
-    if (stories.length) void cacheSetJson(redisKey, stories, 45);
+    if (stories.length) {
+      const top = stories[0]?.id || "";
+      storeList(key, stories, top);
+      void cacheSetJson(redisKey, stories, 120);
+      return stories;
+    }
+
+    // fallback: cloud KV se lista vazia (ex.: falha intermitente)
+    const remote = await remotePromise;
+    if (remote?.length) {
+      return storeList(key, remote, remote[0]?.id || "");
+    }
     return stories;
   })().finally(() => listInflight.delete(key));
 
@@ -235,19 +249,25 @@ export async function downloadPostById(
 ): Promise<Story | null> {
   const clean = id.trim();
   if (!clean) return null;
+
+  const cached = postCache.get(clean);
+  if (cached && Date.now() - cached.at < POST_TTL) return cached.story;
+
   const params = new URLSearchParams();
   params.set("select", FULL_SELECT);
   params.set("post_id", `eq.${clean}`);
   params.set("limit", "1");
   const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
     headers: AUTH,
-    signal: AbortSignal.timeout(8_000),
+    signal: AbortSignal.timeout(6_000),
   });
   if (!res.ok) return null;
   const rows = (await res.json()) as DbPost[];
   const row = Array.isArray(rows) ? rows[0] : null;
   if (!row?.post_id || !isNewsRow(row)) return null;
-  return dbPostToStory(row, fallbackCategory);
+  const story = dbPostToStory(row, fallbackCategory);
+  postCache.set(clean, { at: Date.now(), story });
+  return story;
 }
 
 export async function probeSupabase(): Promise<{

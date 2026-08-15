@@ -1,4 +1,4 @@
-/** Redis local/Upstash, depois cache no Supabase, depois memória. */
+/** Redis (se houver) → memória. Cloud KV em posts só como fallback lento. */
 
 function env(name: string): string {
   if (typeof process === "undefined" || !process.env) return "";
@@ -10,11 +10,13 @@ function configuredRest(): { url: string; token: string } | null {
     env("UPSTASH_REDIS_REST_URL") ||
     env("KV_REST_API_URL") ||
     env("REDIS_REST_URL") ||
-    "http://127.0.0.1:6380"
+    ""
   ).replace(/\/$/, "");
   const token =
-    env("UPSTASH_REDIS_REST_TOKEN") || env("KV_REST_API_TOKEN") || env("REDIS_REST_TOKEN") || "local";
-  if (!url) return null;
+    env("UPSTASH_REDIS_REST_TOKEN") || env("KV_REST_API_TOKEN") || env("REDIS_REST_TOKEN") || "";
+  // sem URL real (não usar 127.0.0.1 — só atrasa o probe)
+  if (!url || url.includes("127.0.0.1") || url.includes("localhost")) return null;
+  if (!token) return null;
   return { url, token };
 }
 
@@ -43,7 +45,8 @@ let liveAt = 0;
 
 async function rest(): Promise<{ url: string; token: string } | null> {
   if (liveRest && Date.now() - liveAt < 60_000) return liveRest;
-  if (liveRest === null && Date.now() - liveAt < 3_000) return null;
+  // negação recente: não re-probe a cada request
+  if (liveRest === null && Date.now() - liveAt < 15_000) return null;
   const cfg = configuredRest();
   if (!cfg) {
     liveRest = null;
@@ -53,7 +56,7 @@ async function rest(): Promise<{ url: string; token: string } | null> {
   try {
     const probe = await fetch(`${cfg.url}/ping`, {
       headers: { Authorization: `Bearer ${cfg.token}` },
-      signal: AbortSignal.timeout(800),
+      signal: AbortSignal.timeout(600),
     });
     if (probe.ok) {
       liveRest = cfg;
@@ -82,9 +85,9 @@ export function redisConfigured(): boolean {
   return Boolean(configuredRest());
 }
 
-export function cacheBackend(): "redis" | "cloud" | "memory" {
+export function cacheBackend(): "redis" | "memory" {
   if (liveRest) return "redis";
-  return "cloud";
+  return "memory";
 }
 
 type RedisReply = { result?: unknown; error?: string };
@@ -99,7 +102,7 @@ async function redisCmd(cmd: Array<string | number>): Promise<unknown> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(cmd),
-    signal: AbortSignal.timeout(2_500),
+    signal: AbortSignal.timeout(2_000),
   });
   if (!res.ok) return null;
   const body = (await res.json()) as RedisReply;
@@ -111,6 +114,7 @@ function kvId(key: string) {
   return `kv_${key.replace(/[^a-zA-Z0-9_:-]/g, "_").slice(0, 80)}`;
 }
 
+/** Cloud KV em posts — só usado como último recurso (não no hot path). */
 async function cloudGet(key: string): Promise<string | null> {
   try {
     const url = "https://uqcaodtgrkphuhdkchyh.supabase.co";
@@ -123,7 +127,7 @@ async function cloudGet(key: string): Promise<string | null> {
       `${url}/rest/v1/posts?post_id=eq.${encodeURIComponent(id)}&select=content,posted_at,media_label&limit=1`,
       {
         headers: { apikey: anon, Authorization: `Bearer ${anon}`, Accept: "application/json" },
-        signal: AbortSignal.timeout(3_000),
+        signal: AbortSignal.timeout(2_500),
       },
     );
     if (!res.ok) return null;
@@ -141,7 +145,6 @@ async function cloudGet(key: string): Promise<string | null> {
   }
 }
 
-/** Apaga a linha de cache na tabela posts (category=cache). */
 async function cloudDel(key: string): Promise<void> {
   try {
     const url = "https://uqcaodtgrkphuhdkchyh.supabase.co";
@@ -156,23 +159,40 @@ async function cloudDel(key: string): Promise<void> {
         apikey: service,
         Authorization: `Bearer ${service}`,
       },
-      signal: AbortSignal.timeout(4_000),
+      signal: AbortSignal.timeout(3_000),
     });
   } catch {
     /* ignore */
   }
 }
 
-export async function cacheGet(key: string): Promise<string | null> {
+/**
+ * GET prioritiza memória (0 ms).
+ * Redis só se configurado de verdade.
+ * Cloud KV só se opts.cloud — evita 50–150 ms no hot path do feed.
+ */
+export async function cacheGet(key: string, opts?: { cloud?: boolean }): Promise<string | null> {
+  const mem = memGet(key);
+  if (mem) return mem;
+
   try {
     const out = await redisCmd(["GET", key]);
-    if (typeof out === "string") return out;
+    if (typeof out === "string") {
+      memSet(key, out, 60);
+      return out;
+    }
   } catch {
     /* next */
   }
-  const cloud = await cloudGet(key);
-  if (cloud) return cloud;
-  return memGet(key);
+
+  if (opts?.cloud) {
+    const cloud = await cloudGet(key);
+    if (cloud) {
+      memSet(key, cloud, 45);
+      return cloud;
+    }
+  }
+  return null;
 }
 
 export async function cacheSet(key: string, value: string, ttlSec = 60): Promise<void> {
@@ -192,7 +212,6 @@ export async function cacheDel(...keys: string[]): Promise<void> {
   } catch {
     /* ignore */
   }
-  // IMPORTANTE: também limpa o cloud KV — sem isso o feed fica preso em lista velha
   await Promise.all(keys.map((k) => cloudDel(k)));
 }
 
@@ -210,8 +229,8 @@ export async function cacheSetNx(key: string, value: string, ttlSec: number): Pr
   return true;
 }
 
-export async function cacheGetJson<T>(key: string): Promise<T | null> {
-  const raw = await cacheGet(key);
+export async function cacheGetJson<T>(key: string, opts?: { cloud?: boolean }): Promise<T | null> {
+  const raw = await cacheGet(key, opts);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as T;
@@ -225,16 +244,18 @@ export async function cacheSetJson(key: string, value: unknown, ttlSec = 60): Pr
 }
 
 export const CACHE_KEYS = {
-  list: (category: string, limit: number) => `agora:v1:list:${category}:${limit}`,
-  lock: "agora:v1:lock:ingest",
-  newest: "agora:v1:newest",
+  list: (category: string, limit: number) => `agora:v2:list:${category}:${limit}`,
+  lock: "agora:v2:lock:ingest",
+  newest: "agora:v2:newest",
 };
 
 export async function invalidateNewsCache() {
   const keys = [
+    CACHE_KEYS.list("ai", 24),
     CACHE_KEYS.list("ai", 40),
-    CACHE_KEYS.list("ai", 80),
+    CACHE_KEYS.list("tech", 24),
     CACHE_KEYS.list("tech", 40),
+    CACHE_KEYS.list("brasil", 24),
     CACHE_KEYS.list("brasil", 40),
     CACHE_KEYS.newest,
   ];
