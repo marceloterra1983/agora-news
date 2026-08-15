@@ -5,6 +5,7 @@ import { blurbFor, profileByHandle, profilesFor } from "./profiles";
 import { FEED_SHEET_ID } from "./sheet";
 import { downloadPostById, SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 import { readStoredProfile } from "./profile-store";
+import { timed } from "./timing";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 import { embedForStory } from "./x-media";
 
@@ -44,32 +45,38 @@ export const loadNews = createServerFn({ method: "GET" })
     }),
   )
   .handler(async ({ data }) => {
-    if (data.before) {
-      const { downloadSupabase } = await import("./supabase");
-      const older = await downloadSupabase(data.category, { before: data.before, limit: 40 });
-      const stories = filterStories(older, data.category, data.q).map((s) => ({
-        ...s,
-        body: s.excerpt || s.title,
-        original: s.original || "",
-      }));
-      return {
-        stories,
-        meta: {
-          live: true,
-          syncedAt: new Date().toISOString(),
-          folder: `NEWS/${data.category.toUpperCase()}`,
-          count: stories.length,
-          source: "supabase",
-          hasMore: stories.length >= 40,
-        },
-      };
-    }
-    const payload = await loadFeed(data.refresh, data.category, data.fromX);
-    const news = toNews(payload, data.category, data.q);
-    return {
-      ...news,
-      meta: { ...news.meta, hasMore: news.stories.length >= 40 },
-    };
+    return timed(
+      `loadNews ${data.category}`,
+      async () => {
+        if (data.before) {
+          const { downloadSupabase } = await import("./supabase");
+          const older = await downloadSupabase(data.category, { before: data.before, limit: 40 });
+          const stories = filterStories(older, data.category, data.q).map((s) => ({
+            ...s,
+            body: s.excerpt || s.title,
+            original: s.original || "",
+          }));
+          return {
+            stories,
+            meta: {
+              live: true,
+              syncedAt: new Date().toISOString(),
+              folder: `NEWS/${data.category.toUpperCase()}`,
+              count: stories.length,
+              source: "supabase",
+              hasMore: stories.length >= 40,
+            },
+          };
+        }
+        const payload = await loadFeed(data.refresh, data.category, data.fromX);
+        const news = toNews(payload, data.category, data.q);
+        return {
+          ...news,
+          meta: { ...news.meta, hasMore: news.stories.length >= 40 },
+        };
+      },
+      (r) => ({ count: r.stories?.length ?? 0, live: Boolean(r.meta?.live) }),
+    );
   });
 
 export const loadStory = createServerFn({ method: "GET" })
@@ -103,8 +110,14 @@ export const loadFontes = createServerFn({ method: "GET" })
     category: normalizeSection(input?.category || DEFAULT_SECTION),
   }))
   .handler(async ({ data }) => {
-    const rows = await loadFontesFast(data.category);
-    return { rows, live: rows.some((r) => r.followers > 0 || Boolean(r.avatar)) };
+    return timed(
+      `loadFontes ${data.category}`,
+      async () => {
+        const rows = await loadFontesFast(data.category);
+        return { rows, live: rows.some((r) => r.followers > 0 || Boolean(r.avatar)) };
+      },
+      (r) => ({ rows: r.rows.length, live: r.live }),
+    );
   });
 
 export const loadFontesLive = createServerFn({ method: "GET" })
@@ -112,13 +125,19 @@ export const loadFontesLive = createServerFn({ method: "GET" })
     category: normalizeSection(input?.category || DEFAULT_SECTION),
   }))
   .handler(async ({ data }) => {
-    try {
-      const rows = await enrichFontes(data.category);
-      return { rows, live: rows.some((r) => r.followers > 0) };
-    } catch {
-      const rows = await loadFontesFast(data.category);
-      return { rows, live: rows.some((r) => r.followers > 0 || Boolean(r.avatar)) };
-    }
+    return timed(
+      `loadFontesLive ${data.category}`,
+      async () => {
+        try {
+          const rows = await enrichFontes(data.category);
+          return { rows, live: rows.some((r) => r.followers > 0) };
+        } catch {
+          const rows = await loadFontesFast(data.category);
+          return { rows, live: rows.some((r) => r.followers > 0 || Boolean(r.avatar)) };
+        }
+      },
+      (r) => ({ rows: r.rows.length, live: r.live }),
+    );
   });
 
 const summaryCache = new Map<string, { at: number; line: string }>();
