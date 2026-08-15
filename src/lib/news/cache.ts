@@ -107,6 +107,10 @@ async function redisCmd(cmd: Array<string | number>): Promise<unknown> {
   return body.result ?? null;
 }
 
+function kvId(key: string) {
+  return `kv_${key.replace(/[^a-zA-Z0-9_:-]/g, "_").slice(0, 80)}`;
+}
+
 async function cloudGet(key: string): Promise<string | null> {
   try {
     const url = "https://uqcaodtgrkphuhdkchyh.supabase.co";
@@ -114,7 +118,7 @@ async function cloudGet(key: string): Promise<string | null> {
       env("SUPABASE_ANON_KEY") ||
       env("VITE_SUPABASE_ANON_KEY") ||
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxY2FvZHRncmtwaHVoZGtjaHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MjQ2NjksImV4cCI6MjEwMjMwMDY2OX0.95RVq-3SbT8KpQn8u-cH7lr4LWJvSOTcn5IQxmLhFt8";
-    const id = `kv_${key.replace(/[^a-zA-Z0-9_:-]/g, "_").slice(0, 80)}`;
+    const id = kvId(key);
     const res = await fetch(
       `${url}/rest/v1/posts?post_id=eq.${encodeURIComponent(id)}&select=content,posted_at,media_label&limit=1`,
       {
@@ -123,7 +127,9 @@ async function cloudGet(key: string): Promise<string | null> {
       },
     );
     if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{ content?: string; posted_at?: string; media_label?: string }>;
+    const rows = (await res.json()) as Array<
+      { content?: string; posted_at?: string; media_label?: string }
+    >;
     const row = rows[0];
     if (!row?.content) return null;
     const ttl = Number(row.media_label) || 0;
@@ -132,6 +138,28 @@ async function cloudGet(key: string): Promise<string | null> {
     return row.content;
   } catch {
     return null;
+  }
+}
+
+/** Apaga a linha de cache na tabela posts (category=cache). */
+async function cloudDel(key: string): Promise<void> {
+  try {
+    const url = "https://uqcaodtgrkphuhdkchyh.supabase.co";
+    const service =
+      env("SUPABASE_SERVICE_ROLE_KEY") ||
+      env("SUPABASE_SERVICE_KEY") ||
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxY2FvZHRncmtwaHVoZGtjaHloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjcyNDY2OSwiZXhwIjoyMTAyMzAwNjY5fQ.DbpfcPf3X0dFQ4UqaSmLVmw17b4nupGN8kGKYmyfhgg";
+    const id = kvId(key);
+    await fetch(`${url}/rest/v1/posts?post_id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: {
+        apikey: service,
+        Authorization: `Bearer ${service}`,
+      },
+      signal: AbortSignal.timeout(4_000),
+    });
+  } catch {
+    /* ignore */
   }
 }
 
@@ -164,6 +192,8 @@ export async function cacheDel(...keys: string[]): Promise<void> {
   } catch {
     /* ignore */
   }
+  // IMPORTANTE: também limpa o cloud KV — sem isso o feed fica preso em lista velha
+  await Promise.all(keys.map((k) => cloudDel(k)));
 }
 
 export async function cacheSetNx(key: string, value: string, ttlSec: number): Promise<boolean> {
@@ -201,7 +231,14 @@ export const CACHE_KEYS = {
 };
 
 export async function invalidateNewsCache() {
-  await cacheDel(CACHE_KEYS.list("ai", 40), CACHE_KEYS.list("ai", 80), CACHE_KEYS.newest);
+  const keys = [
+    CACHE_KEYS.list("ai", 40),
+    CACHE_KEYS.list("ai", 80),
+    CACHE_KEYS.list("tech", 40),
+    CACHE_KEYS.list("brasil", 40),
+    CACHE_KEYS.newest,
+  ];
+  await cacheDel(...keys);
 }
 
 export function resetCacheProbe() {
