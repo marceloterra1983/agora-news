@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-display: "Literata", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Source Sans 3", "Source Sans Pro", ui-sans-serif, system-ui,
+    sans-serif;
+
+  --color-paper: #f2eee4;
+  --color-paper-2: #e7e1d3;
+  --color-card: #faf7f0;
+  --color-ink: #161411;
+  --color-ink-soft: #3c382f;
+  --color-mute: #6e695d;
+  --color-line: #d5cfbf;
+  --color-line-strong: #b9b19d;
+  --color-mark: #8c1d18;
+  --color-mark-fg: #f7f3ea;
+  --color-hero: #1b1814;
+  --color-hero-fg: #f4efe4;
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+
+  --shadow-card: 0 1px 0 color-mix(in oklab, var(--color-ink) 6%, transparent),
+    0 12px 28px -22px color-mix(in oklab, var(--color-ink) 45%, transparent);
+}
+
+.dark {
+  color-scheme: dark;
+  --color-paper: #12100e;
+  --color-paper-2: #1c1916;
+  --color-card: #1a1714;
+  --color-ink: #f0e9e0;
+  --color-ink-soft: #cfc6b8;
+  --color-mute: #9a9286;
+  --color-line: #2c2824;
+  --color-line-strong: #3d3832;
+  --color-mark: #e07a6e;
+  --color-mark-fg: #1a1210;
+  --color-hero: #0c0b09;
+  --color-hero-fg: #f0e9e0;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: pretty;
+    font-family: var(--font-display);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a[data-cta="open-x"] svg {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  html[data-font="sm"] { font-size: 14px; }
+  html[data-font="md"] { font-size: 15px; }
+  html[data-font="lg"] { font-size: 17px; }
+  html[data-font="xl"] { font-size: 19px; }
+
+  html[data-type="literata"] { --font-display: "Literata", Georgia, serif; }
+  html[data-type="source"] { --font-display: "Source Serif 4", Georgia, serif; }
+  html[data-type="newsreader"] { --font-display: "Newsreader", Georgia, serif; }
+  html[data-type="fraunces"] { --font-display: "Fraunces", Georgia, serif; }
+  html[data-type="sans"] { --font-display: var(--font-sans); }
+
+  html[data-images="off"] [data-media] {
+    display: none !important;
+  }
+
+  [data-story][data-unread="1"] {
+    padding-left: 0.75rem;
+  }
+
+  html[data-unread="off"] [data-unread-mark] {
+    display: none !important;
+  }
+
+  html[data-unread="off"] [data-story][data-unread="1"] {
+    padding-left: 0;
+  }
+
+  html[data-density="compact"] [data-story] {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+  }
+
+  html[data-density="compact"] [data-story] h3 {
+    font-size: 1.1rem;
+  }
+
+  html[data-motion="reduce"] *,
+  html[data-motion="reduce"] *::before,
+  html[data-motion="reduce"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.ticker-track {
+  animation: ticker 42s linear infinite;
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}

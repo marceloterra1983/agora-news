@@ -1,0 +1,298 @@
+#,Conta de origem,Data/Hora (UTC),Data/Hora (São Paulo),ID do Post,Conteúdo,Tradução (PT-BR),Síntese (1 linha),Link do Post,Mídia,Categoria,Imagem
+1,@swyx,2026-08-13 23:44:48,2026-08-13 20:44:48,2088049159509344265,"!!!!!
+
+it's been a huge huge pleasure to serve @arizeai these past years with AIE, and this could not happen to better people. Dynarize is now a globally trusted $14B observability powerhouse that just got one of the best AI-native US teams in this business. 
+
+if you're interested to learn more, come to @aidotengineer NYC this fall: https://t.co/9j7D5tVfOg where they are the first non-bigcloud to be an AIE presenting sponsor!!","!!!!!
+
+Foi um enorme prazer servir a @arizeai nesses últimos anos com a AIE, e isso não poderia acontecer com pessoas melhores. A Dynarize agora é uma potência global de observabilidade de US$ 14B de confiança que acabou de obter uma das melhores equipes nativas de IA dos EUA neste negócio.
+
+Se você estiver interessado em saber mais, venha ao @aidotengineer NYC neste outono: https://t.co/9j7D5tVfOg onde eles são o primeiro non-bigcloud a ser um patrocinador apresentador da AIE!!",Swyx celebra a aquisição da Arize AI pela Dynatrace e promove evento AIE NYC.,https://x.com/swyx/status/2088049159509344265,Sim (quoted image),ai,https://pbs.twimg.com/media/HPmDb6taUAAt57o.jpg
+2,@emollick,2026-08-13 23:17:41,2026-08-13 20:17:41,2088042334902755683,"To the extent that AI use boosts firm performance, some early signs here that early AI adopting firms that were already doing well may start to outpace others.
+
+Data from OpenAI shows some firms are using AI much more, and they tend to be firms with the most productive employees.","Na medida em que o uso de IA impulsiona o desempenho das empresas, alguns sinais iniciais aqui de que empresas que adotaram IA cedo e já estavam indo bem podem começar a superar as outras.
+
+Dados da OpenAI mostram que algumas empresas estão usando IA muito mais, e elas tendem a ser empresas com os funcionários mais produtivos.",Dados da OpenAI sugerem que empresas que adotam IA cedo e produtivas estão se distanciando.,https://x.com/emollick/status/2088042334902755683,Sim (3 imagens),ai,https://pbs.twimg.com/media/HPo3b8XagAEDHT0.jpg
+3,@levelsio,2026-08-13 23:07:44,2026-08-13 20:07:44,2088039833432109522,A new guy is making money on the internet!!!,Um novo cara está ganhando dinheiro na internet!!!,Levelsio celebra que um novo empreendedor conseguiu seu primeiro cliente online.,https://x.com/levelsio/status/2088039833432109522,Sim (quoted image),ai,https://pbs.twimg.com/media/HPo0sxsaMAARFXu.jpg
+4,@elonmusk,2026-08-13 22:58:33,2026-08-13 19:58:33,2088037519312994480,Tesla self-driving is amazing,A direção autônoma da Tesla é incrível,Elon Musk destaca a excelência da direção autônoma da Tesla em vídeo.,https://x.com/elonmusk/status/2088037519312994480,Vídeo,ai,
+5,@grok,2026-08-13 22:47:12,2026-08-13 19:47:12,2088034663004770667,Use Grok 4.6 for CAD,Use o Grok 4.6 para CAD,Grok recomenda Grok 4.6 para trabalhos agentic de CAD com ótimo custo-benefício.,https://x.com/grok/status/2088034663004770667,Citação com vídeo,ai,
+6,@elonmusk,2026-08-13 22:42:58,2026-08-13 19:42:58,2088033597999473050,Grok 4.6,Grok 4.6,Elon compartilha feedback positivo de teste do Grok 4.6 em kernel e modding.,https://x.com/elonmusk/status/2088033597999473050,Citação,ai,
+7,@theo,2026-08-13 22:39:53,2026-08-13 19:39:53,2088032824259641698,Hey I know that guy,"Ei, eu conheço esse cara",Theo reage ao anúncio de sua palestra na Abstract Conference da Convex.,https://x.com/theo/status/2088032824259641698,Citação com vídeo,ai,
+8,@levelsio,2026-08-13 22:15:04,2026-08-13 19:15:04,2088026576474550757,"I don't know him but if I look him in the eyes like Larry David in Curb Your Enthusiasm I think he's telling the truth so he deserves a follow
+
+He's switching from mobile apps to web apps!!
+
+@willbakerships","Eu não o conheço, mas se eu olhar nos olhos dele como Larry David em Curb Your Enthusiasm, acho que ele está falando a verdade, então merece um follow
+
+Ele está mudando de apps mobile para web apps!!
+
+@willbakerships",Levelsio recomenda seguir criador que está migrando de apps mobile para web apps.,https://x.com/levelsio/status/2088026576474550757,Citação com vídeo,ai,
+9,@elonmusk,2026-08-13 22:01:55,2026-08-13 19:01:55,2088023268871557481,Prosecute/Fauci,Processem o Fauci,Elon comenta post sobre acusações de Joe Rogan contra Fauci por mentiras sobre vacinas e abortos.,https://x.com/elonmusk/status/2088023268871557481,Citação com vídeo,ai,
+10,@dair_ai,2026-08-13 15:53:02,2026-08-13 12:53:02,2087930434323959894,"A great read if you an AI dev.
+
+Current context compactors retain 17% of the standing rules users give them.
+
+Session Constraints are instructions like ""do not delete any emails until I confirm"" that bind the agent for the rest of the session. It turns out that compaction drops them silently.
+
+Their evaluation suite, COMPINT, tests three settings, multi-turn chat, agentic trajectory, and long-horizon research. Compactors often leave the task worse off than running it without compaction at all.
+
+Retention swings with the compactor, the prompt, the context length, the phrasing, and where the constraint was injected, so the loss is structural.
+
+The fix is small. An SC-aware extractor running alongside the compactor recovers over 90% retention without touching the compactor or the model.
+
+Paper: https://t.co/SQr9Uz7ek5
+
+Track more trending AI papers in our academy:","Uma ótima leitura se você é um desenvolvedor de IA.
+
+Os compactadores de contexto atuais retêm apenas 17% das regras permanentes que os usuários lhes dão.
+
+Session Constraints são instruções como ""não exclua nenhum e-mail até eu confirmar"" que vinculam o agente pelo resto da sessão. Acontece que a compactação as descarta silenciosamente.
+
+Seu conjunto de avaliação, COMPINT, testa três configurações: chat multi-turno, trajetória agêntica e pesquisa de longo horizonte. Os compactadores frequentemente deixam a tarefa pior do que executá-la sem compactação alguma.
+
+A retenção varia com o compactador, o prompt, o comprimento do contexto, a formulação e onde a restrição foi injetada, então a perda é estrutural.
+
+A correção é pequena. Um extrator consciente de SC rodando junto com o compactador recupera mais de 90% de retenção sem tocar no compactador ou no modelo.
+
+Paper: https://t.co/SQr9Uz7ek5
+
+Acompanhe mais papers de IA em tendência em nossa academia:",Paper mostra que compactadores de contexto retêm só 17% das Session Constraints; extrator SC-aware recupera >90% de retenção.,https://x.com/dair_ai/status/2087930434323959894,Foto: https://pbs.twimg.com/media/HPnRqfjaAAAleUW.jpg,ai,https://pbs.twimg.com/media/HPnRqfjaAAAleUW.jpg
+11,@TheRundownAI,2026-08-13 15:43:36,2026-08-13 12:43:36,2087928061639487597,"Google DeepMind just shipped a model that lets people sign into a Pixel 11 instead of typing.
+
+SL2T starts with ASL-to-English in Gboard and Live Transcribe.
+
+Testers said signing was faster than typing in English.
+
+To keep the camera feed private, the phone tracks points on the hands, face, and body on-device and discards the video.
+
+Sam Sepah, a Deaf Googler, originated the project.
+
+Demis Hassabis: “Built in close collaboration with the Deaf community, it’s a great example of the good that can be done with AI.”","Google DeepMind acabou de lançar um modelo que permite que as pessoas façam sinais no Pixel 11 em vez de digitar.
+
+SL2T começa com ASL-para-Inglês no Gboard e Live Transcribe.
+
+Testadores disseram que sinalizar era mais rápido do que digitar em inglês.
+
+Para manter o feed da câmera privado, o telefone rastreia pontos nas mãos, rosto e corpo no dispositivo e descarta o vídeo.
+
+Sam Sepah, um Googler surdo, originou o projeto.
+
+Demis Hassabis: “Construído em estreita colaboração com a comunidade surda, é um ótimo exemplo do bem que pode ser feito com IA.”","Google DeepMind lança SL2T: modelo de linguagem de sinais para texto no Pixel 11 (ASL→Inglês), processado on-device para privacidade.",https://x.com/TheRundownAI/status/2087928061639487597,Citação de vídeo do @GoogleDeepMind,ai,
+12,@hwchase17,2026-08-13 15:19:40,2026-08-13 12:19:40,2087922041060315419,"New Max Agency with @unifygtm CTO & co-founder @HeggieConnor.  Some of my favorite tidbits:
+
+- how they cut 90-95% of costs two weeks before launch
+- why their subagents are just a function call.
+
+🎧 Apple: https://podcasts.apple.com/nz/podcast/how-unify-cut-its-ai-agent-costs-95-in-two-weeks/id1891551672?i=1000783151404
+🎧 Spotify: https://open.spotify.com/episode/6kWQouc2QmiHGk0vdiZEtd?si=ba6e241ca4a24faf
+⏯️ YouTube:","Novo Max Agency com o CTO e co-fundador da @unifygtm @HeggieConnor. Alguns dos meus trechos favoritos:
+
+- como cortaram 90-95% dos custos duas semanas antes do lançamento
+- por que seus subagentes são apenas uma chamada de função.
+
+🎧 Apple: https://podcasts.apple.com/nz/podcast/how-unify-cut-its-ai-agent-costs-95-in-two-weeks/id1891551672?i=1000783151404
+🎧 Spotify: https://open.spotify.com/episode/6kWQouc2QmiHGk0vdiZEtd?si=ba6e241ca4a24faf
+⏯️ YouTube:",Harrison Chase destaca podcast com Unify: cortaram 90-95% dos custos de agentes de IA e tratam subagentes como simples function calls.,https://x.com/hwchase17/status/2087922041060315419,Vídeo,ai,
+13,@levelsio,2026-08-13 15:17:58,2026-08-13 12:17:58,2087921612351746184,"I agree with this
+
+More testing and body scans etc will shows lots of issues that are not actually issues but might become issues the moment you start cutting in people's body
+
+But the benefits of preventative healthcare if we do it right will still outweigh the negatives of that
+
+Also with cheap and regular testing (like the Midjourney Medical scanner) you can see your body change and quickly spot irregularities
+
+Being against longevity and preventative healthcare because it has its issues is kinda like being against cars in 1900 because they kill people, they do but the benefits outweighed that over staying with horses","Concordo com isso
+
+Mais testes e body scans etc. mostrarão muitos problemas que na verdade não são problemas, mas podem se tornar problemas no momento em que você começa a cortar o corpo das pessoas
+
+Mas os benefícios da saúde preventiva, se fizermos direito, ainda superarão os negativos disso
+
+Além disso, com testes baratos e regulares (como o scanner médico Midjourney) você pode ver seu corpo mudar e detectar irregularidades rapidamente
+
+Ser contra longevidade e saúde preventiva porque tem seus problemas é um pouco como ser contra carros em 1900 porque matam pessoas — matam, mas os benefícios superaram ficar com cavalos","Levelsio defende saúde preventiva e body scans apesar de falsos positivos, comparando à adoção de carros no passado.",https://x.com/levelsio/status/2087921612351746184,Citação,ai,
+14,@levelsio,2026-08-13 14:06:40,2026-08-13 11:06:40,2087903666158162214,Very cool tip by @dhh to hook your Claude Code up to your Ubiquiti router and improve your WiFi!,Dica muito legal do @dhh para conectar seu Claude Code ao seu roteador Ubiquiti e melhorar o WiFi!,Levelsio compartilha dica de @dhh para usar Claude Code otimizando WiFi Ubiquiti (com imagem diferente).,https://x.com/levelsio/status/2087903666158162214,Foto,ai,
+15,@levelsio,2026-08-13 13:59:41,2026-08-13 10:59:41,2087901912532221956,Very cool tip by @dhh to hook your Claude Code up to your Ubiquiti router and improve your WiFi!,Dica muito legal do @dhh para conectar seu Claude Code ao seu roteador Ubiquiti e melhorar o WiFi!,Levelsio compartilha dica de @dhh para usar Claude Code otimizando WiFi Ubiquiti.,https://x.com/levelsio/status/2087901912532221956,Foto,ai,https://pbs.twimg.com/media/HPm2vs5XgAAKIvn.jpg
+16,@demishassabis,2026-08-13 12:53:42,2026-08-13 9:53:42,2087885303855944001,"SL2T is our amazing sign-language-to-text model allows users to sign directly to their phones for the first time. Built in close collaboration with the Deaf community, it’s a great example of the good that can be done with AI. Congrats to the team for the launch!","SL2T é nosso incrível modelo de linguagem de sinais para texto que permite aos usuários assinar diretamente em seus telefones pela primeira vez. Construído em estreita colaboração com a comunidade surda, é um ótimo exemplo do bem que pode ser feito com IA. Parabéns à equipe pelo lançamento!","Demis Hassabis anuncia o modelo SL2T de linguagem de sinais para texto, permitindo assinatura direta no celular.",https://x.com/demishassabis/status/2087885303855944001,Não,ai,
+17,@levelsio,2026-08-13 12:51:42,2026-08-13 9:51:42,2087884802728796565,"You can just make your own coffee with a Hario V60 Dripper and it will be 5x to 10x cheaper than coffee pods
+
+And it will taste better because you can get freshly roasted and ground coffee beans
+
+Instead of whatever coffeeslop Nestle produces and sells you at 10x markup
+
+Did you know coffee inside pods is 6-18 months old? While ground coffee from a local specialty roaster is 1 to 7 days old. A big difference in taste (better) and price (cheaper)
+
+Coffee pods are a Nestle psyop","Você pode simplesmente fazer seu próprio café com um Hario V60 Dripper e será 5x a 10x mais barato que cápsulas de café
+
+E terá um sabor melhor porque você pode obter grãos de café frescos torrados e moídos
+
+Em vez do que seja o cafélixo que a Nestlé produz e vende a você com markup de 10x
+
+Você sabia que o café dentro das cápsulas tem 6-18 meses? Enquanto o café moído de um torrador local especializado tem 1 a 7 dias. Uma grande diferença no sabor (melhor) e no preço (mais barato)
+
+Cápsulas de café são uma psyop da Nestlé","Levelsio recomenda fazer café com Hario V60 em vez de cápsulas, por ser mais barato, fresco e saboroso.",https://x.com/levelsio/status/2087884802728796565,https://pbs.twimg.com/media/HPmoKSuWkAAbFTK.jpg,ai,https://pbs.twimg.com/media/HPmoKSuWkAAbFTK.jpg
+18,@theo,2026-08-13 11:32:24,2026-08-13 8:32:24,2087864844800364857,Forgot that posting employment-related things at midnight results in the most unemployed people in the world replying the stupidest shit possible,Esqueci que postar coisas relacionadas a emprego à meia-noite resulta nas pessoas mais desempregadas do mundo respondendo as merdas mais estúpidas possíveis,Theo reclama que postar sobre emprego à meia-noite atrai respostas bobas de desempregados.,https://x.com/theo/status/2087864844800364857,Nenhuma,ai,
+19,@TheRundownAI,2026-08-13 10:30:18,2026-08-13 7:30:18,2087849215842021513,"Top stories in AI today:
+
+- SpaceXAI’s Grok 4.6 storms the frontier
+- Nate's Notebook: Why your AI still feels dumb
+- Generate 100 ad hooks from customer feedback
+- Dog that got an AI cancer vaccine now has a company","Principais histórias em IA hoje:
+
+- Grok 4.6 da SpaceXAI invade a fronteira
+- Nate's Notebook: Por que sua IA ainda parece burra
+- Gere 100 ganchos de anúncios a partir do feedback de clientes
+- Cão que recebeu uma vacina de câncer com IA agora tem uma empresa","Resumo das principais notícias de IA do dia, com destaque para o Grok 4.6, limitações das IAs, geração de anúncios e vacina de câncer com IA.",https://x.com/TheRundownAI/status/2087849215842021513,Sim (imagem: https://pbs.twimg.com/media/HPmHy6lWkAA2fIO.jpg),ai,https://pbs.twimg.com/media/HPmHy6lWkAA2fIO.jpg
+20,@elonmusk,2026-08-13 08:44:13,2026-08-13 5:44:13,2087822520128823438,https://t.co/ToZHdbSK3E,https://t.co/ToZHdbSK3E,Elon Musk compartilha um vídeo.,https://x.com/elonmusk/status/2087822520128823438,Vídeo,ai,
+21,@fchollet,2026-08-13 08:41:44,2026-08-13 5:41:44,2087821894581973426,"Test-time training was popularized during the ARC Prize 2024 competition, after being explored in particular by @MindsAI_Jack and team. To date, I believe ARC 1-2 are the only datasets where TTT strongly outperforms. It would be interesting if TTT started becoming more mainstream. I believe it has great potential.","O treinamento em tempo de teste (Test-Time Training) foi popularizado durante a competição ARC Prize 2024, após ser explorado em particular por @MindsAI_Jack e equipe. Até o momento, acredito que ARC 1-2 são os únicos conjuntos de dados onde o TTT supera fortemente. Seria interessante se o TTT começasse a se tornar mais mainstream. Acredito que tem grande potencial.","François Chollet destaca o potencial do Test-Time Training (TTT), popularizado no ARC Prize 2024, e sua eficácia em datasets ARC.",https://x.com/fchollet/status/2087821894581973426,Nenhuma,ai,
+22,@swyx,2026-08-13 07:36:17,2026-08-13 4:36:17,2087805426750632290,"The @latentspacepod team and I will be speaking at Mongodb's .local buildfest today 10a-4pmish, come by!
+
+https://www.mongodb.com/events/mongodb-local/build-fest 
+
+We'll be covering:
+- tba Agent infra with @BazeleyMikiko!
+- the state of embeddings/reranking with @frankzliu @VoyageAI head of Applied ML
+- wearable AI with @a_israelov, CTO of Mentra!
+- their state of managed MCP with Gaurab Aryal 
+- Jim Scharf, CTO MongoDB
+- AIE top speaker Apoorva Joshi
+
+click on only if you are gonna come... take one of my tix MDBLCL26INSIDER!","A equipe do @latentspacepod e eu falaremos no .local buildfest da MongoDB hoje das 10h às 16h aproximadamente, venham!
+
+https://www.mongodb.com/events/mongodb-local/build-fest 
+
+Cobriremos:
+- infra de agentes tba com @BazeleyMikiko!
+- o estado de embeddings/reranking com @frankzliu head of Applied ML da @VoyageAI
+- wearable AI com @a_israelov, CTO da Mentra!
+- o estado do managed MCP com Gaurab Aryal
+- Jim Scharf, CTO MongoDB
+- AIE top speaker Apoorva Joshi
+
+clique somente se for vir... pegue um dos meus tickets MDBLCL26INSIDER!",Swyx e equipe Latent Space falam no MongoDB .local Buildfest hoje.,https://x.com/swyx/status/2087805426750632290,Nenhuma,ai,
+23,@swyx,2026-08-13 07:12:26,2026-08-13 4:12:26,2087799423774646316,"completely bowled over by the incredible responses to the $10,000 Kill My SaaS hackathon this past weekend. sorry it took so long to get back to some of you, organizing this thing solo on top of my regular meetings and work this week was completely stupid and rushed — but this is why we need you!
+
+blasting out submission forms now! - check discord - but check out some INSANE submissions from @agrimsingh and @realgenekim and over a dozen others just in the weekend alone","Completamente impressionado com as respostas incríveis ao hackathon Kill My SaaS de US$ 10.000 no fim de semana passado. Desculpe ter demorado tanto para responder a alguns de vocês; organizar isso sozinho além das reuniões e do trabalho regular desta semana foi completamente estúpido e apressado — mas é por isso que precisamos de vocês!
+
+Enviando os formulários de submissão agora! - confira o Discord - mas vejam algumas submissões INSANAS de @agrimsingh e @realgenekim e de mais de uma dúzia de outros só no fim de semana",Swyx impressionado com respostas ao hackathon Kill My SaaS de $10k; envia formulários de submissão.,https://x.com/swyx/status/2087799423774646316,Foto,ai,
+24,@theo,2026-08-13 06:26:38,2026-08-13 3:26:38,2087787897223344193,I will never in my life understand how people go this far and don’t notice what they’re doing,Eu nunca na minha vida vou entender como as pessoas vão tão longe e não notam o que estão fazendo,Incompreensão sobre pessoas que não percebem o extremo de suas próprias ações.,https://x.com/theo/status/2087787897223344193,Imagem: https://pbs.twimg.com/media/HPlQB26aoAAg1sq.jpg,ai,https://pbs.twimg.com/media/HPlQB26aoAAg1sq.jpg
+25,@elonmusk,2026-08-13 04:37:33,2026-08-13 1:37:33,2087760446212522196,https://t.co/irXUkk1duy,https://t.co/irXUkk1duy,Elon compartilha um vídeo.,https://x.com/elonmusk/status/2087760446212522196,Vídeo,ai,
+26,@elonmusk,2026-08-13 04:36:03,2026-08-13 1:36:03,2087760069693997530,Grok 4.6 has a great sense of humor 😂,Grok 4.6 tem um ótimo senso de humor 😂,Elon elogia o senso de humor do Grok 4.6 ao citar post sobre reação a ID baixo no GitHub.,https://x.com/elonmusk/status/2087760069693997530,Nenhuma,ai,
+27,@emollick,2026-08-13 04:26:45,2026-08-13 1:26:45,2087757725572939957,"I think this will turn out to be wrong, and not just because I suspect there are greater returns to more intelligent models than people expect
+
+Economic value comes from agents, not chatbots. And accuracy drives how long a task an agent can do: small gains compound exponentially!","Eu acho que isso vai se mostrar errado, e não só porque suspeito que há retornos maiores a modelos mais inteligentes do que as pessoas esperam
+
+O valor econômico vem de agentes, não de chatbots. E a precisão determina quanto tempo uma tarefa um agente pode fazer: pequenos ganhos se acumulam exponencialmente!",Mollick discorda de previsão sobre modelos caros; valor econômico está em agentes e precisão que se compõe.,https://x.com/emollick/status/2087757725572939957,Imagem,ai,
+28,@JensenHuang,2026-08-13 04:18:36,2026-08-13 1:18:36,2087755674650603534,"The mighty A100 fleet are mission-capable from 2020 through 2029. NVIDIA computing is more than chips. CUDA gives developers and NVIDIA engineers a common platform to continually upgrade Ampere, Hopper and Blackwell throughout their useful lives.
+CUDA makes NVIDIA computing versatile. Versatility makes it fungible. Fungibility drives utilization and extends durability, making NVIDIA compute a productive asset: rentable, durable and financeable.","A poderosa frota A100 é capaz de missão de 2020 a 2029. A computação NVIDIA é mais do que chips. O CUDA dá a desenvolvedores e engenheiros da NVIDIA uma plataforma comum para atualizar continuamente Ampere, Hopper e Blackwell ao longo de suas vidas úteis.
+O CUDA torna a computação NVIDIA versátil. A versatilidade a torna fungível. A fungibilidade impulsiona a utilização e estende a durabilidade, tornando o compute NVIDIA um ativo produtivo: alugável, durável e financiável.",Jensen destaca a longevidade dos A100 e o papel do CUDA na versatilidade e financiabilidade do compute NVIDIA.,https://x.com/JensenHuang/status/2087755674650603534,Nenhuma,ai,
+29,@dair_ai,2026-08-12 21:00:15,2026-08-12 18:00:15,2087645363255828742,"// Actions Speak Louder Than Words //
+
+Multilingual agent evaluation compares final answers and throws the trajectory away. The trajectory fixes cost, latency, failure mode, and auditability.
+
+New research from Microsoft Research makes the action policy the measured object. 8 models, 6 parallel benchmarks, 41 languages, 2.38M rollouts.
+
+Five confounds sit between raw trace similarity and any defensible claim. Short traces score higher, empty traces score perfectly, unrelated traces agree by chance over half the time, reproducibility caps the gap, and one model asked twice in one language answers differently. Removing all five made the effect larger.
+
+Normalised by their own reproducibility, four frontier models each keep 71 to 73% of their action policy across languages.
+
+Paper: https://t.co/PwNNgWchWu
+
+Track more trending AI papers in our academy:","// Ações Falam Mais Alto que Palavras //
+
+A avaliação de agentes multilíngues compara apenas as respostas finais e descarta a trajetória. A trajetória determina custo, latência, modo de falha e auditabilidade.
+
+Nova pesquisa da Microsoft Research torna a política de ação o objeto medido. 8 modelos, 6 benchmarks paralelos, 41 idiomas, 2,38M de rollouts.
+
+Cinco fatores de confusão se interpõem entre a similaridade bruta de traços e qualquer afirmação defensável. Traços curtos pontuam mais alto, traços vazios pontuam perfeitamente, traços não relacionados concordam por acaso em mais da metade das vezes, a reprodutibilidade limita a diferença, e um modelo perguntado duas vezes no mesmo idioma responde de forma diferente. Removendo todos os cinco, o efeito ficou maior.
+
+Normalizados pela própria reprodutibilidade, quatro modelos de fronteira mantêm cada um 71 a 73% de sua política de ação entre idiomas.
+
+Paper: https://t.co/PwNNgWchWu
+
+Acompanhe mais papers de IA em tendência na nossa academy:",Pesquisa da Microsoft mostra que políticas de ação de modelos de fronteira mantêm 71-73% de consistência entre 41 idiomas após corrigir confounds.,https://x.com/dair_ai/status/2087645363255828742,Foto,ai,
+30,@leerob,2026-08-12 20:39:32,2026-08-12 17:39:32,2087640149442404584,"We've released the model card for Grok 4.6!
+
+It goes in-depth on the capabilities of the model across many different evals for coding, engineering, knowledge work, and more. We also discuss pre-deployment safety testing and our safeguard stack.
+
+https://media.x.ai/v1/website/card-4p6-4cd2dc57.pdf","Lançamos o model card do Grok 4.6!
+
+Ele aprofunda as capacidades do modelo em várias avaliações diferentes para coding, engenharia, trabalho de conhecimento e mais. Também discutimos os testes de segurança pré-implantação e nossa stack de salvaguardas.
+
+https://media.x.ai/v1/website/card-4p6-4cd2dc57.pdf","Lee Robinson anuncia o model card oficial do Grok 4.6 com detalhes de evals, coding e segurança.",https://x.com/leerob/status/2087640149442404584,Foto,ai,
+31,@claudeai,2026-08-12 20:20:07,2026-08-12 17:20:07,2087635262390026525,"Your Claude in Chrome sessions now carry over to desktop, web, and mobile. Conversations are saved, and your skills and connectors work in the browser.
+
+Available on Max and Team today, rolling out to Pro in the coming weeks.","Suas sessões do Claude no Chrome agora são transferidas para desktop, web e mobile. As conversas são salvas, e suas skills e conectores funcionam no navegador.
+
+Disponível no Max e Team hoje, chegando ao Pro nas próximas semanas.","Claude anuncia sincronização de sessões do Chrome para desktop/web/mobile, com skills e conectores no browser (Max/Team agora, Pro em breve).",https://x.com/claudeai/status/2087635262390026525,Vídeo,ai,
+32,@theo,2026-08-12 19:42:41,2026-08-12 16:42:41,2087625841069248968,"Okay fine, AI definitely wasted a bunch of water here","Ok, tudo bem, a IA definitivamente desperdiçou um monte de água aqui",Comentário irônico sobre fazendeiro que perdeu plantação seguindo app de IA.,https://x.com/theo/status/2087625841069248968,Nenhuma,ai,
+33,@levelsio,2026-08-12 19:32:32,2026-08-12 16:32:32,2087623287681470823,Looks like this,Parece com isso,Demonstra resultado visual do switch de ideasai.com para o Grok 4.6 da xAI.,https://x.com/levelsio/status/2087623287681470823,Vídeo,ai,
+34,@TheRundownAI,2026-08-12 19:18:21,2026-08-12 16:18:21,2087619716537885164,"Kellanova, the company that makes Pringles in Europe, spent four years and roughly $5M working with Siemens to build a real time digital twin of its potato chip dough at a factory in Poland. 
+
+The problem it solves is variability. More than 200 parameters affect the final chip, from flour particle size to the humidity of the dough to where and when the potatoes were harvested, and workers previously corrected for all of it by hand and by feel. 
+
+Now sensors capture 200 data points every millisecond and feed a machine learning model that recommends recipe adjustments before problems appear. 
+
+A human operator still approves each change. The line has seen 13 percent less waste, 7 percent lower energy use and a 10 percent capacity gain. 
+
+Digital twins have been a concept in manufacturing for years, but this is what it looks like when one finally starts paying for itself.","A Kellanova, empresa que fabric a Pringles na Europa, gastou quatro anos e cerca de US$ 5 milhões trabalhando com a Siemens para construir um digital twin em tempo real da massa de batata chips em uma fábrica na Polônia.
+
+O problema que resolve é a variabilidade. Mais de 200 parâmetros afetam o chip final, desde o tamanho das partículas de farinha até a umidade da massa e o local e momento da colheita das batatas, e os trabalhadores antes corrigiam tudo manualmente e por feeling.
+
+Agora sensores capturam 200 pontos de dados a cada milissegundo e alimentam um modelo de machine learning que recomenda ajustes de receita antes dos problemas aparecerem.
+
+Um operador humano ainda aprova cada mudança. A linha viu 13% menos desperdício, 7% menos uso de energia e 10% de ganho de capacidade.
+
+Digital twins são conceito em manufatura há anos, mas é assim que fica quando um finalmente começa a se pagar.","Kellanova usa digital twin + ML para otimizar produção de Pringles: -13% desperdício, -7% energia, +10% capacidade.",https://x.com/TheRundownAI/status/2087619716537885164,Vídeo,ai,
+35,@hwchase17,2026-08-12 18:30:15,2026-08-12 15:30:15,2087607611097264579,"📹Build a social media agent
+
+This Managed Deep Agent scans Hacker News and optional X, drafts three posts, saves them to durable memory, and sends them to Slack.
+
+Learn how to use:
+> Slack channel integration
+> Custom tools
+> Memory
+
+Video: https://www.youtube.com/watch?v=OpFXXSsEIBo&feature=youtu.be","📹Construa um agente de mídia social
+
+Este Managed Deep Agent varre o Hacker News e opcionalmente o X, elabora três posts, salva-os na memória durável e envia para o Slack.
+
+Aprenda a usar:
+> Integração com canal Slack
+> Ferramentas personalizadas
+> Memória
+
+Vídeo: https://www.youtube.com/watch?v=OpFXXSsEIBo&feature=youtu.be","Tutorial de como construir um agente de mídia social com Managed Deep Agent que varre HN/X, rascunha posts e envia para o Slack.",https://x.com/hwchase17/status/2087607611097264579,https://pbs.twimg.com/media/HPisCrMawAEKHKa.png,ai,https://pbs.twimg.com/media/HPisCrMawAEKHKa.png
+36,@elonmusk,2026-08-12 18:09:49,2026-08-12 15:09:49,2087602469778166195,Try out Grok @Bot,Experimente o Grok @Bot,"Elon Musk incentiva a experimentação do Grok Bot, citando feedback positivo de usuário sobre suas capacidades práticas.",https://x.com/elonmusk/status/2087602469778166195,Não,ai,
+37,@elonmusk,2026-08-12 18:07:06,2026-08-12 15:07:06,2087601785833951705,"Try out Grok 4.6!
+
+Double your tokens for next 7 days.","Experimente o Grok 4.6!
+
+Dobre seus tokens pelos próximos 7 dias.",Anúncio do lançamento do Grok 4.6 com o dobro de tokens de uso por uma semana em Cursor e Grok Build.,https://x.com/elonmusk/status/2087601785833951705,Não,ai,
+38,@dair_ai,2026-08-12 18:02:02,2026-08-12 15:02:02,2087600513441546589,"Four small architecture decisions can cost up to 47% of a model's long-context performance.
+
+New research from Ai2, Carnegie Mellon, and the University of Washington isolates them. Normalization, GQA, pretraining context length, and sliding window attention.
+
+Each one is made by at least one of the Olmo, Llama, and Qwen dense families, and each looks harmless on its own.
+
+Combine three or more and downstream long-context performance drops significantly. None of it shows up in short-context loss or validation sets, which is how the choices survive into shipped models.
+
+Applying context extension early in pretraining exposes the problem. They release OlmPool, 26 comparable 7B models with checkpoints before and after extension, from over 170,000 GPU hours of training.
+
+Paper: https://t.co/2XOoY5A2nz
+
+Track more trending AI papers in our academy:","Quatro pequenas decisões de arquitetura podem custar até 47% do desempenho de contexto longo de um modelo.
+
+Nova pesquisa do Ai2, Carnegie Mellon e Universidade de Washington as isola. Normalização, GQA, comprimento de contexto no pré-treinamento e atenção de janela deslizante.
+
+Cada uma é feita por pelo menos uma das famílias densas Olmo, Llama e Qwen, e cada uma parece inofensiva por si só.
+
+Combine três ou mais e o desempenho de contexto longo a jusante cai significativamente. Nada disso aparece na perda de contexto curto ou conjuntos de validação, que é como as escolhas sobrevivem em modelos lançados.
+
+Aplicar extensão de contexto cedo no pré-treinamento expõe o problema. Eles liberam OlmPool, 26 modelos 7B comparáveis com checkpoints antes e depois da extensão, de mais de 170.000 horas de GPU de treinamento.
+
+Paper: https://t.co/2XOoY5A2nz
+
+Acompanhe mais papers de IA em tendência em nossa academia:","Pesquisa revela que 4 decisões arquiteturais (normalização, GQA, etc.) podem reduzir em até 47% o desempenho de long-context; liberam o dataset OlmPool com 26 modelos 7B.",https://x.com/dair_ai/status/2087600513441546589,https://pbs.twimg.com/media/HPilmiJbgAAfTrI.jpg,ai,https://pbs.twimg.com/media/HPilmiJbgAAfTrI.jpg
+39,@levelsio,2026-08-12 17:53:15,2026-08-12 14:53:15,2087598300748743119,Ok fully nutritionally complete now if you add eggs :D,"Ok, agora nutricionalmente completo se adicionar ovos :D",levelsio afirma que sua refeição fica nutricionalmente completa ao adicionar ovos.,https://x.com/levelsio/status/2087598300748743119,Sim (imagem: https://pbs.twimg.com/media/HPijjppXcAEYeRM.jpg),ai,https://pbs.twimg.com/media/HPijjppXcAEYeRM.jpg
+40,@AmandaAskell,2026-08-12 17:48:36,2026-08-12 14:48:36,2087597131800674495,"When I started playing Skyrim, I quickly realized you can make a lot of progress without doing any killing. You can also adopt orphans and build them nice houses, so I focused on that. I honestly don't really remember the plot beyond ""that challenging fantasy philanthropy game"".","Quando comecei a jogar Skyrim, rapidamente percebi que se pode fazer muito progresso sem matar ninguém. Também se pode adotar órfãos e construir casas legais para eles, então foquei nisso. Honestamente, não me lembro muito do enredo além de ""aquele jogo desafiador de filantropia fantasy"".","Amanda Askell relata sua experiência pacífica e filantrópica jogando Skyrim, evitando violência e adotando órfãos.",https://x.com/AmandaAskell/status/2087597131800674495,Nenhuma,ai,
+41,@elonmusk,2026-08-12 17:38:49,2026-08-12 14:38:49,2087594669459001801,Try Grok 4.6 on tough real-world tasks!,Experimente o Grok 4.6 em tarefas difíceis do mundo real!,Elon promove o Grok 4.6 para tarefas reais desafiadoras.,https://x.com/elonmusk/status/2087594669459001801,Não,ai,

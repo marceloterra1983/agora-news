@@ -1,8 +1,8 @@
 {
+  "name": "Agora",
+  "short_name": "Agora",
+  "description": "Feed de IA, Tech e Brasil. Leitura rápida, no celular.",
   "id": "/",
-  "name": "Agora — Notícias de IA",
-  "short_name": "Agora IA",
-  "description": "Feed de notícias de inteligência artificial a partir de fontes selecionadas no X.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/?source=pwa",
@@ -10,56 +10,27 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
-  "background_color": "#0a0a0a",
-  "theme_color": "#E34234",
+  "background_color": "#f2eee4",
+  "theme_color": "#f2eee4",
   "categories": ["news", "magazines"],
-  "iarc_rating_id": "",
-  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-512.png",
+      "src": "/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "IA",
-      "short_name": "IA",
-      "description": "Abrir feed de inteligência artificial",
-      "url": "/?secao=ai",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Fontes",
-      "short_name": "Fontes",
-      "description": "Perfis do X monitorados",
-      "url": "/fontes",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
-  ],
-  "related_applications": []
+  ]
 }

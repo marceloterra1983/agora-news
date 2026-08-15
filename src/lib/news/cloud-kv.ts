@@ -1,0 +1,81 @@
+import { upsertPosts, deletePost, SUPABASE_URL } from "./admin";
+
+function env(name: string): string {
+  if (typeof process === "undefined" || !process.env) return "";
+  return process.env[name] ?? "";
+}
+
+const ANON =
+  env("SUPABASE_ANON_KEY") ||
+  env("VITE_SUPABASE_ANON_KEY") ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxY2FvZHRncmtwaHVoZGtjaHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MjQ2NjksImV4cCI6MjEwMjMwMDY2OX0.95RVq-3SbT8KpQn8u-cH7lr4LWJvSOTcn5IQxmLhFt8";
+
+function kvId(key: string) {
+  return `kv_${key.replace(/[^a-zA-Z0-9_:-]/g, "_").slice(0, 80)}`;
+}
+
+const AUTH = {
+  apikey: ANON,
+  Authorization: `Bearer ${ANON}`,
+  Accept: "application/json",
+};
+
+export async function cloudKvGet(key: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/posts?post_id=eq.${encodeURIComponent(kvId(key))}&select=content,posted_at,media_label&limit=1`,
+      { headers: AUTH, signal: AbortSignal.timeout(4_000) },
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{ content?: string; posted_at?: string; media_label?: string }>;
+    const row = rows[0];
+    if (!row?.content) return null;
+    const ttl = Number(row.media_label) || 0;
+    const at = Date.parse(row.posted_at || "");
+    if (ttl && Number.isFinite(at) && Date.now() - at > ttl * 1000) return null;
+    return row.content;
+  } catch {
+    return null;
+  }
+}
+
+export async function cloudKvSet(key: string, value: string, ttlSec = 60): Promise<void> {
+  const now = new Date().toISOString();
+  await upsertPosts([
+    {
+      post_id: kvId(key),
+      account: "cache",
+      posted_at: now,
+      posted_at_sp: now,
+      content: value,
+      translation_pt: "",
+      summary_pt: key.slice(0, 80),
+      post_url: "https://x.com",
+      media_label: String(ttlSec),
+      image_url: "",
+      category: "cache",
+      batch_name: "cache",
+      source: "cache",
+    },
+  ]);
+}
+
+export async function cloudKvDel(key: string): Promise<void> {
+  await deletePost(kvId(key));
+}
+
+export async function cloudKvList(category: string): Promise<Array<{ id: string; content: string }>> {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/posts?category=eq.${encodeURIComponent(category)}&select=post_id,content&limit=200`,
+      { headers: AUTH, signal: AbortSignal.timeout(5_000) },
+    );
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<{ post_id?: string; content?: string }>;
+    return rows
+      .filter((r) => r.post_id && r.content)
+      .map((r) => ({ id: String(r.post_id), content: String(r.content) }));
+  } catch {
+    return [];
+  }
+}
