@@ -22,8 +22,9 @@ export type FeedPayload = {
 };
 
 /** Fresh: serve only. Stale: serve + refresh in background. Expired: wait. */
-const SOFT_MS = 120_000;
-const HARD_MS = 600_000;
+const SOFT_MS = 90_000;
+const HARD_MS = 300_000;
+const FIRST_LIMIT = 24;
 
 const cache = new Map<string, { at: number; payload: FeedPayload }>();
 const lastGood = new Map<string, FeedPayload>();
@@ -145,7 +146,7 @@ async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayl
     available: false,
   };
   try {
-    const remoteJob = downloadSupabase(section.slug, { limit: 40 });
+    const remoteJob = downloadSupabase(section.slug, { limit: FIRST_LIMIT });
     const xJob = fromX
       ? loadXStories(section.slug, true)
       : Promise.resolve<Awaited<ReturnType<typeof loadXStories>>>({
