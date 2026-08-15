@@ -1,6 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Bookmark, Newspaper, Search, Wifi } from "lucide-react";
-import { readerDate } from "@/lib/news/format";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Bookmark, ChevronDown, Newspaper, Search, Wifi } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
 import { cn } from "@/lib/utils";
@@ -26,32 +26,87 @@ export function AppChrome({
   );
 }
 
-function CompactHeader({ category }: { category: Category }) {
+function SectionSelect({ category }: { category: Category }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const current = SECTIONS.find((s) => s.slug === category) ?? SECTIONS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function pick(slug: Category) {
+    setOpen(false);
+    if (slug === category) return;
+    try {
+      localStorage.setItem("agora-last-secao", slug);
+    } catch {
+      /* ignore */
+    }
+    void navigate({ to: "/", search: { secao: slug } });
+  }
+
   return (
-    <header data-chrome="compact" className="sticky top-0 z-30 border-b border-line bg-paper">
-      <div className="row mx-auto flex max-w-2xl items-center gap-2 px-4 py-3">
-        <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+    <div ref={rootRef} className="relative shrink-0">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Seção ${current.label}`}
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex h-9 min-w-[5.5rem] items-center justify-between gap-1.5 rounded-full bg-ink px-3.5 text-sm font-semibold tracking-wide text-paper"
+      >
+        <span>{current.label}</span>
+        <ChevronDown className={cn("size-4 opacity-80 transition-transform", open && "rotate-180")} />
+      </button>
+      {open ? (
+        <ul
+          role="listbox"
+          aria-label="Escolher seção"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[8.5rem] overflow-hidden rounded-xl border border-line bg-paper shadow-card"
+        >
           {SECTIONS.map((s) => {
             const on = s.slug === category;
             return (
-              <Link
-                key={s.slug}
-                to="/"
-                search={{ secao: s.slug }}
-                aria-current={on ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-sm font-semibold tracking-wide no-underline",
-                  on ? "bg-ink text-paper" : "bg-paper-2 text-mute",
-                )}
-              >
-                {s.label}
-              </Link>
+              <li key={s.slug} role="option" aria-selected={on}>
+                <button
+                  type="button"
+                  onClick={() => pick(s.slug)}
+                  className={cn(
+                    "flex w-full items-center px-3.5 py-2.5 text-left text-sm font-semibold",
+                    on ? "bg-paper-2 text-ink" : "text-ink-soft hover:bg-paper-2 hover:text-ink",
+                  )}
+                >
+                  {s.label}
+                </button>
+              </li>
             );
           })}
-        </nav>
-        <p className="hidden shrink-0 font-sans text-sm text-ink-soft sm:block" suppressHydrationWarning>
-          {readerDate()}
-        </p>
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function CompactHeader({ category }: { category: Category }) {
+  return (
+    <header data-chrome="compact" className="sticky top-0 z-30 border-b border-line bg-paper">
+      <div className="mx-auto flex max-w-2xl items-center gap-2 px-4 py-3">
+        <SectionSelect category={category} />
+        <div className="min-w-0 flex-1" />
         <AppMenu />
       </div>
     </header>
