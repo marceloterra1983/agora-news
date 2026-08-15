@@ -116,6 +116,7 @@ function FontesPage() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [openGroups, setOpenGroups] = useState<Set<ProfileGroup>>(() => new Set());
   const [extras, setExtras] = useState<ReturnType<typeof loadExtraFontes>>([]);
+  const [liveEnabled, setLiveEnabled] = useState(false);
 
   useEffect(() => {
     setSort(readStoredSort());
@@ -125,6 +126,13 @@ function FontesPage() {
     window.addEventListener("agora-extra-fontes", refresh);
     return () => window.removeEventListener("agora-extra-fontes", refresh);
   }, []);
+
+  // Enrichment fxtwitter só depois do paint — não compete com a 1ª renderização
+  useEffect(() => {
+    setLiveEnabled(false);
+    const t = window.setTimeout(() => setLiveEnabled(true), 280);
+    return () => window.clearTimeout(t);
+  }, [secao]);
 
   function changeSort(next: SortKey) {
     setSort(next);
@@ -141,12 +149,14 @@ function FontesPage() {
     queryKey: ["fontes", secao],
     queryFn: () => loadFontes({ data: { category: secao } }),
     initialData: initial,
-    staleTime: 30_000,
+    staleTime: 45_000,
   });
   const { data: live } = useQuery({
     queryKey: ["fontes-live", secao],
     queryFn: () => loadFontesLive({ data: { category: secao } }),
-    staleTime: 10 * 60_000,
+    enabled: liveEnabled,
+    staleTime: 15 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const base = live?.rows?.length ? live.rows : data?.rows?.length ? data.rows : seed;
