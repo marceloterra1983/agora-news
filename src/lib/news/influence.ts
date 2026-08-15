@@ -1,8 +1,8 @@
 import { profilesFor, type XProfile } from "./profiles";
-import { loadFeed } from "./feed";
 import { listStoredProfiles } from "./profile-store";
 import { listWatchAccounts } from "./watch";
-import type { Category, Story } from "./types";
+import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
+import type { Category } from "./types";
 
 export type InfluenceRow = {
   handle: string;
@@ -34,8 +34,24 @@ type LiveStats = {
   bio: string | null;
 };
 
+type LastHit = { id: string; title: string; publishedAt: string; count: number };
+
 const USER_TTL = 60 * 60_000;
 const userCache = new Map<string, { at: number; stats: LiveStats }>();
+const lastCache = new Map<string, { at: number; map: Map<string, LastHit> }>();
+const LAST_TTL = 45_000;
+
+const AUTH = {
+  apikey: SUPABASE_ANON_KEY,
+  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+  Accept: "application/json",
+};
+
+function norm(h: string): string {
+  return String(h || "")
+    .replace(/^@+/, "")
+    .trim();
+}
 
 function emptyStats(): LiveStats {
   return { followers: 0, following: 0, tweets: 0, verified: false, avatar: null, bio: null };
@@ -43,10 +59,10 @@ function emptyStats(): LiveStats {
 
 function seedFromStore(
   handle: string,
-  row: { followers?: number; avatar?: string | null; bio?: string; summary_pt?: string; name?: string },
+  row: { followers?: number; avatar?: string | null; bio?: string; summary_pt?: string },
 ) {
-  const key = handle.toLowerCase();
-  if (userCache.has(key)) return;
+  const key = norm(handle).toLowerCase();
+  if (!key || userCache.has(key)) return;
   userCache.set(key, {
     at: Date.now(),
     stats: {
@@ -61,15 +77,15 @@ function seedFromStore(
 }
 
 async function fetchOne(handle: string): Promise<LiveStats> {
-  const key = handle.toLowerCase();
+  const key = norm(handle).toLowerCase();
   const hit = userCache.get(key);
   if (hit && Date.now() - hit.at < USER_TTL && (hit.stats.followers || hit.stats.avatar)) {
     return hit.stats;
   }
   try {
-    const res = await fetch(`https://api.fxtwitter.com/${encodeURIComponent(handle)}`, {
+    const res = await fetch(`https://api.fxtwitter.com/${encodeURIComponent(norm(handle))}`, {
       headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(4_000),
+      signal: AbortSignal.timeout(3_500),
     });
     if (!res.ok) return hit?.stats ?? emptyStats();
     const body = (await res.json()) as {
@@ -132,89 +148,53 @@ function recencySort(a: InfluenceRow, b: InfluenceRow): number {
 }
 
 function cachedStats(handle: string): LiveStats {
-  return userCache.get(handle.toLowerCase())?.stats ?? emptyStats();
+  return userCache.get(norm(handle).toLowerCase())?.stats ?? emptyStats();
 }
 
-export function rowsFromStories(section: Category, stories: Story[]): InfluenceRow[] {
-  const since = Date.now() - 48 * 60 * 60_000;
-  const allByHandle = new Map<string, Story[]>();
-  for (const story of stories) {
-    const key = story.source.toLowerCase();
-    const list = allByHandle.get(key) ?? [];
-    list.push(story);
-    allByHandle.set(key, list);
-  }
-  for (const list of allByHandle.values()) {
-    list.sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
-  }
+/** 1 query leve: últimos posts por conta na categoria (sem montar Story completo). */
+async function lastPostsByAccount(section: Category): Promise<Map<string, LastHit>> {
+  const key = section;
+  const hit = lastCache.get(key);
+  if (hit && Date.now() - hit.at < LAST_TTL) return hit.map;
 
-  return profilesFor(section)
-    .map((p) => {
-      const key = p.handle.toLowerCase();
-      const stats = cachedStats(key);
-      const posts = allByHandle.get(key) ?? [];
-      const last = posts[0];
-      const recentCount = posts.filter((s) => Date.parse(s.publishedAt) >= since).length;
-      const longform = posts.filter((s) =>
-        /\/i\/article\//i.test(`${s.url} ${s.original} ${s.body}`),
-      ).length;
-      return {
-        handle: p.handle,
-        name: p.name,
-        group: p.group,
-        ...stats,
-        lastPost: last
-          ? { id: last.id, title: last.title, publishedAt: last.publishedAt }
-          : null,
-        inFeed: recentCount,
-        articles: posts.length,
-        longform,
-        likes: 0,
-        engagement: 0,
-        views: 0,
-        er: 0,
-        score: scoreOf(stats, recentCount),
-      };
-    })
-    .sort(recencySort);
-}
-
-function extraRows(
-  watch: Array<{ handle: string; name: string; avatar: string | null; summary: string; followers: number }>,
-  stories: Story[],
-  already: Set<string>,
-): InfluenceRow[] {
-  const since = Date.now() - 48 * 60 * 60_000;
-  const out: InfluenceRow[] = [];
-  for (const w of watch) {
-    const key = w.handle.toLowerCase();
-    if (already.has(key)) continue;
-    const posts = stories.filter((s) => s.source.toLowerCase() === key);
-    posts.sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
-    const last = posts[0];
-    const stats = cachedStats(key);
-    out.push({
-      handle: w.handle,
-      name: w.name || w.handle,
-      group: "novos",
-      followers: stats.followers || w.followers,
-      following: 0,
-      tweets: 0,
-      verified: false,
-      avatar: stats.avatar || w.avatar,
-      bio: stats.bio || w.summary || null,
-      lastPost: last ? { id: last.id, title: last.title, publishedAt: last.publishedAt } : null,
-      inFeed: posts.filter((s) => Date.parse(s.publishedAt) >= since).length,
-      articles: posts.length,
-      longform: 0,
-      likes: 0,
-      engagement: 0,
-      views: 0,
-      er: 0,
-      score: scoreOf(stats, posts.length),
+  const map = new Map<string, LastHit>();
+  try {
+    const params = new URLSearchParams();
+    params.set("select", "post_id,account,posted_at,summary_pt");
+    params.set("category", `eq.${section}`);
+    params.set("order", "posted_at.desc");
+    params.set("limit", "120");
+    const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
+      headers: AUTH,
+      signal: AbortSignal.timeout(5_000),
     });
+    if (!res.ok) return map;
+    const rows = (await res.json()) as Array<{
+      post_id?: string;
+      account?: string;
+      posted_at?: string;
+      summary_pt?: string;
+    }>;
+    for (const row of rows) {
+      const handle = norm(row.account || "").toLowerCase();
+      if (!handle || !row.post_id) continue;
+      const prev = map.get(handle);
+      if (prev) {
+        prev.count += 1;
+        continue;
+      }
+      map.set(handle, {
+        id: String(row.post_id),
+        title: String(row.summary_pt || "Sem título").slice(0, 180),
+        publishedAt: String(row.posted_at || ""),
+        count: 1,
+      });
+    }
+  } catch {
+    /* empty map */
   }
-  return out;
+  lastCache.set(key, { at: Date.now(), map });
+  return map;
 }
 
 async function hydrateStore() {
@@ -224,27 +204,94 @@ async function hydrateStore() {
   return watch;
 }
 
-/** Lista imediata: feed + cache do banco. Sem rede extra no X. */
-export async function loadFontesFast(section: Category): Promise<InfluenceRow[]> {
-  const [feed, watch] = await Promise.all([loadFeed(false, section, false), hydrateStore()]);
-  const base = rowsFromStories(section, feed.stories);
-  const seen = new Set(base.map((r) => r.handle.toLowerCase()));
-  return [...extraRows(watch, feed.stories, seen), ...base].sort(recencySort);
+function buildRows(
+  section: Category,
+  lastMap: Map<string, LastHit>,
+  watch: Array<{ handle: string; name: string; avatar: string | null; summary: string; followers: number }>,
+): InfluenceRow[] {
+  const since = Date.now() - 48 * 60 * 60_000;
+  const base = profilesFor(section).map((p) => {
+    const key = norm(p.handle).toLowerCase();
+    const stats = cachedStats(key);
+    const last = lastMap.get(key) ?? null;
+    const recentCount =
+      last && Date.parse(last.publishedAt) >= since ? last.count : last ? Math.min(last.count, 1) : 0;
+    return {
+      handle: p.handle,
+      name: p.name,
+      group: p.group,
+      ...stats,
+      lastPost: last
+        ? { id: last.id, title: last.title, publishedAt: last.publishedAt }
+        : null,
+      inFeed: recentCount,
+      articles: last?.count ?? 0,
+      longform: 0,
+      likes: 0,
+      engagement: 0,
+      views: 0,
+      er: 0,
+      score: scoreOf(stats, recentCount),
+    } satisfies InfluenceRow;
+  });
+
+  const seen = new Set(base.map((r) => norm(r.handle).toLowerCase()));
+  const extras: InfluenceRow[] = [];
+  for (const w of watch) {
+    const key = norm(w.handle).toLowerCase();
+    if (!key || seen.has(key)) continue;
+    const stats = cachedStats(key);
+    const last = lastMap.get(key) ?? null;
+    extras.push({
+      handle: w.handle,
+      name: w.name || w.handle,
+      group: "novos",
+      followers: stats.followers || w.followers,
+      following: 0,
+      tweets: 0,
+      verified: false,
+      avatar: stats.avatar || w.avatar,
+      bio: stats.bio || w.summary || null,
+      lastPost: last
+        ? { id: last.id, title: last.title, publishedAt: last.publishedAt }
+        : null,
+      inFeed: last?.count ?? 0,
+      articles: last?.count ?? 0,
+      longform: 0,
+      likes: 0,
+      engagement: 0,
+      views: 0,
+      er: 0,
+      score: scoreOf(stats, last?.count ?? 0),
+    });
+  }
+  return [...extras, ...base].sort(recencySort);
 }
 
-/** Completa só o que ainda não tem avatar/seguidores. */
+/** Lista imediata: 1 query posts leve + cache de perfis. Zero fxtwitter. */
+export async function loadFontesFast(section: Category): Promise<InfluenceRow[]> {
+  const [lastMap, watch] = await Promise.all([lastPostsByAccount(section), hydrateStore()]);
+  return buildRows(section, lastMap, watch);
+}
+
+/** Completa só o que ainda não tem avatar/seguidores (máx 8, pool 6). */
 export async function enrichFontes(section: Category): Promise<InfluenceRow[]> {
   const profiles = profilesFor(section);
   const missing = profiles.filter((p) => {
-    const hit = userCache.get(p.handle.toLowerCase());
+    const hit = userCache.get(norm(p.handle).toLowerCase());
     return !hit || Date.now() - hit.at >= USER_TTL || (!hit.stats.followers && !hit.stats.avatar);
   });
   if (missing.length) {
-    await mapPool(missing.slice(0, 16), 8, (p) => fetchOne(p.handle));
+    await mapPool(missing.slice(0, 8), 6, (p) => fetchOne(p.handle));
   }
   return loadFontesFast(section);
 }
 
 export async function loadInfluence(section: Category): Promise<InfluenceRow[]> {
   return loadFontesFast(section);
+}
+
+/** Invalida cache de last-posts (chamar após ingest). */
+export function invalidateFontesLastCache() {
+  lastCache.clear();
 }
