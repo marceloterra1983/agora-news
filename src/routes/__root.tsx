@@ -32,7 +32,7 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "IA — NEWS" },
       { name: "description", content: "Notícias das pastas de NEWS no Google Drive." },
       { name: "application-name", content: APP_NAME },
@@ -56,18 +56,17 @@ export const Route = createRootRoute({
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icons/icon-180.png" },
+      // Crítico: Supabase no primeiro paint do feed
       { rel: "preconnect", href: "https://uqcaodtgrkphuhdkchyh.supabase.co" },
-      { rel: "preconnect", href: "https://api.fxtwitter.com" },
-      { rel: "preconnect", href: "https://pbs.twimg.com" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      // Secundários: não competem com o first paint
+      { rel: "dns-prefetch", href: "https://api.fxtwitter.com" },
+      { rel: "dns-prefetch", href: "https://pbs.twimg.com" },
+      { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },
+      { rel: "dns-prefetch", href: "https://fonts.gstatic.com" },
       {
         rel: "preconnect",
         href: "https://fonts.gstatic.com",
         crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap",
       },
     ],
     styles: [{ children: CRITICAL_CSS }],
@@ -83,9 +82,23 @@ function Root() {
         <script dangerouslySetInnerHTML={{ __html: SETTINGS_BOOT_SCRIPT }} />
         <HeadContent />
         <style dangerouslySetInnerHTML={{ __html: appCssInline }} />
+        {/* Fontes sem bloquear render: media=print → onload troca para all */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+          media="print"
+          // @ts-expect-error — onLoad em link para desbloquear paint
+          onLoad="this.media='all'"
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+          />
+        </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v9";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v10";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>
