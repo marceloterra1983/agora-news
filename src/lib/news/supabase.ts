@@ -15,7 +15,7 @@ export const SUPABASE_ANON_KEY =
 export const SUPABASE_POSTS_URL = `${SUPABASE_URL}/rest/v1/posts`;
 
 import { normalizeSection, type Category, type Story } from "./types";
-import { CACHE_KEYS, cacheGetJson, cacheSetJson, invalidateNewsCache } from "./cache";
+import { CACHE_KEYS, cacheDel, cacheGetJson, cacheSetJson, invalidateNewsCache } from "./cache";
 
 type DbPost = {
   post_id: string;
@@ -44,8 +44,9 @@ const AUTH = {
   Prefer: "count=none",
 };
 
-const LIST_TTL = 60_000;
-const listCache = new Map<string, { at: number; stories: Story[] }>();
+/** Cache local curto — o topo é sempre validado no banco. */
+const LIST_TTL = 20_000;
+const listCache = new Map<string, { at: number; stories: Story[]; headId: string }>();
 const listInflight = new Map<string, Promise<Story[]>>();
 
 export function invalidateSupabaseList() {
@@ -63,8 +64,10 @@ function isNewsRow(p: DbPost): boolean {
   if (!p.post_id) return false;
   if (p.category === "profile" || p.category === "watch" || p.category === "lock") return false;
   if (p.category === "cache" || p.category === "push" || p.category === "prefs") return false;
-  if (p.batch_name === "x-profile" || p.batch_name === "x-watch") return false;
+  if (p.batch_name === "x-profile" || p.batch_name === "x-watch" || p.batch_name === "cache")
+    return false;
   if (/^(prfl_|watch_|lock_|kv_|push_)/i.test(p.post_id)) return false;
+  if (p.account === "cache") return false;
   return true;
 }
 
@@ -101,32 +104,43 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
 
 export type ListOpts = { before?: string; limit?: number };
 
+/** Topo real da tabela — 1 linha, barato. */
+async function fetchHeadId(category: Category): Promise<string | null> {
+  try {
+    const params = new URLSearchParams();
+    params.set("select", "post_id");
+    params.set("order", "posted_at.desc");
+    params.set("limit", "1");
+    params.set("category", `eq.${normalizeSection(category)}`);
+    const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
+      headers: AUTH,
+      signal: AbortSignal.timeout(4_000),
+    });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{ post_id?: string }>;
+    return rows[0]?.post_id ? String(rows[0].post_id) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchList(category: Category, opts: ListOpts = {}): Promise<Story[]> {
   const params = new URLSearchParams();
   params.set("select", LIST_SELECT);
   params.set("order", "posted_at.desc");
   params.set("limit", String(opts.limit ?? 40));
   if (opts.before) params.set("posted_at", `lt.${opts.before}`);
+  // Só a categoria pedida — evita misturar null/cache e perder o topo real
+  params.set("category", `eq.${normalizeSection(category)}`);
 
-  const run = async (qs: URLSearchParams) => {
-    const res = await fetch(`${SUPABASE_POSTS_URL}?${qs}`, {
-      headers: AUTH,
-      signal: AbortSignal.timeout(6_000),
-    });
-    if (!res.ok) throw new Error(`supabase_${res.status}`);
-    const rows = (await res.json()) as DbPost[];
-    if (!Array.isArray(rows)) return [];
-    return rows.filter(isNewsRow).map((p) => dbPostToStory(p, category));
-  };
-
-  try {
-    const filtered = new URLSearchParams(params);
-    const slug = normalizeSection(category);
-    if (slug) filtered.set("or", `(category.eq.${slug},category.is.null)`);
-    return await run(filtered);
-  } catch {
-    return run(params);
-  }
+  const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
+    headers: AUTH,
+    signal: AbortSignal.timeout(6_000),
+  });
+  if (!res.ok) throw new Error(`supabase_${res.status}`);
+  const rows = (await res.json()) as DbPost[];
+  if (!Array.isArray(rows)) return [];
+  return rows.filter(isNewsRow).map((p) => dbPostToStory(p, category));
 }
 
 export async function downloadSupabase(
@@ -134,21 +148,43 @@ export async function downloadSupabase(
   opts: ListOpts = {},
 ): Promise<Story[]> {
   if (opts.before) return fetchList(fallbackCategory, opts);
-  const key = `${normalizeSection(fallbackCategory)}:${opts.limit ?? 40}`;
-  const redisKey = CACHE_KEYS.list(normalizeSection(fallbackCategory), opts.limit ?? 40);
+
+  const slug = normalizeSection(fallbackCategory);
+  const limit = opts.limit ?? 40;
+  const key = `${slug}:${limit}`;
+  const redisKey = CACHE_KEYS.list(slug, limit);
+
+  // 1) topo real no banco (sempre)
+  const headId = await fetchHeadId(slug);
+
+  // 2) memória local — só se o topo bater
+  const hit = listCache.get(key);
+  if (hit && Date.now() - hit.at < LIST_TTL && (!headId || hit.headId === headId)) {
+    return hit.stories;
+  }
+
+  // 3) Redis/cloud — só se o topo bater; senão descarta (era isso que travava em 8h)
   const remote = await cacheGetJson<Story[]>(redisKey);
   if (remote?.length) {
-    listCache.set(key, { at: Date.now(), stories: remote });
-    return remote;
+    const remoteHead = remote[0]?.id || "";
+    if (headId && remoteHead === headId) {
+      listCache.set(key, { at: Date.now(), stories: remote, headId });
+      return remote;
+    }
+    // cache envenenado / defasado → apaga
+    void cacheDel(redisKey);
   }
-  const hit = listCache.get(key);
-  if (hit && Date.now() - hit.at < LIST_TTL) return hit.stories;
+
   const pending = listInflight.get(key);
   if (pending) return pending;
+
   const job = fetchList(fallbackCategory, opts)
     .then((stories) => {
-      listCache.set(key, { at: Date.now(), stories });
-      if (stories.length) void cacheSetJson(redisKey, stories, 60);
+      // garante ordem por data
+      stories.sort((a, b) => (b.publishedAt || "").localeCompare(a.publishedAt || ""));
+      const top = stories[0]?.id || headId || "";
+      listCache.set(key, { at: Date.now(), stories, headId: top });
+      if (stories.length) void cacheSetJson(redisKey, stories, 30);
       return stories;
     })
     .finally(() => listInflight.delete(key));
@@ -156,7 +192,10 @@ export async function downloadSupabase(
   return job;
 }
 
-export async function downloadPostById(id: string, fallbackCategory: Category = "ai"): Promise<Story | null> {
+export async function downloadPostById(
+  id: string,
+  fallbackCategory: Category = "ai",
+): Promise<Story | null> {
   const clean = id.trim();
   if (!clean) return null;
   const params = new URLSearchParams();
@@ -170,7 +209,7 @@ export async function downloadPostById(id: string, fallbackCategory: Category = 
   if (!res.ok) return null;
   const rows = (await res.json()) as DbPost[];
   const row = Array.isArray(rows) ? rows[0] : null;
-  if (!row?.post_id || row.category === "profile") return null;
+  if (!row?.post_id || !isNewsRow(row)) return null;
   return dbPostToStory(row, fallbackCategory);
 }
 
