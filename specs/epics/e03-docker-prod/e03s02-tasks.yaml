@@ -1,6 +1,6 @@
 story_id: e03s02
 title: Cutover PM2 para Compose na 3080
-status: failing
+status: passing
 bcps: 5
 risk: P0
 security: medium
@@ -9,7 +9,7 @@ tasks:
     description: "Build da imagem no host (PM2 ainda no ar)"
     verify: "docker compose -f /home/marce/news/compose.yml build"
     risk: P0
-    status: failing
+    status: passing
     allure:
       severity: critical
       categories: ["infra", "Security Review"]
@@ -17,7 +17,7 @@ tasks:
     description: "Preflight da imagem em 127.0.0.1:3081"
     verify: "curl -sS -o /dev/null -w '%{http_code}' --max-time 15 http://127.0.0.1:3081/fontes?secao=ai | grep -qx 200"
     risk: P0
-    status: failing
+    status: passing
     allure:
       severity: critical
       categories: ["smoke"]
@@ -25,7 +25,7 @@ tasks:
     description: "Cutover 3080 + smoke local e vivo"
     verify: "curl -sS -o /dev/null -w '%{http_code}' --max-time 15 http://127.0.0.1:3080/fontes?secao=ai | grep -qx 200 && curl -sS -o /dev/null -w '%{http_code}' --max-time 20 https://news.automatizems.com/fontes?secao=ai | grep -qx 200"
     risk: P0
-    status: failing
+    status: passing
     allure:
       severity: critical
       categories: ["smoke", "Security Review"]
@@ -33,7 +33,7 @@ tasks:
     description: "PM2 news não está online"
     verify: "pm2 show news 2>/dev/null | grep -qi 'status.*stopped' || pm2 show news 2>&1 | grep -qi 'doesn.t exist\\|not found\\|erased'"
     risk: P1
-    status: failing
+    status: passing
     allure:
       severity: high
       categories: ["ops"]
