@@ -241,7 +241,6 @@ if (typeof window === "undefined" && dbSource === "pglite") {
   globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
     globalBoot.__pgBootstrapPromise__ = undefined;
     console.error("[db] PGLite bootstrap failed:", err);
-    // Never rethrow — an unhandled rejection kills the Vercel serverless
-    // function and the published app comes back as a blank/unstyled page.
+    // Never rethrow — an unhandled rejection kills the Node process.
   });
 }

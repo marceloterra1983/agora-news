@@ -7,15 +7,15 @@
 
 ## Stack
 
-- Runtime: TanStack Start 1.16 + Vite 8 + Nitro 3 (preset Vercel) + React 19
+- Runtime: TanStack Start 1.16 + Vite 8 + Nitro 3 (preset node-server) + React 19; prod = PM2 `vite dev` :3080
 - Linguagem: TypeScript 5.7 (`strict`)
 - UI: Tailwind 4, Radix (quase todo morto), lucide-react
 - Data client: TanStack Query 5, Zustand 5
 - Auth: Better Auth 1.6 (Google/X via broker Grok) + Kysely
 - SQL de auth: Neon (`DATABASE_URL`) ou PGLite in-memory
 - Feed canônico: Supabase REST `public.posts` (projeto `uqcaodtgrkphuhdkchyh`)
-- Cache: Redis REST (Upstash/Vercel KV) → memória de isolate → `posts` como KV
-- Ingest: fxtwitter + Google Translate gtx + cron Vercel `*/15` → `/api/ingest`
+- Cache: Redis REST (Upstash) → memória → `posts` como KV
+- Ingest: fxtwitter + Google Translate gtx + cron local `scripts/ingest-cron.sh` `*/15` → `/api/ingest`
 - Push: web-push + VAPID
 - Testes: `node --test scripts/**/*.test.mjs` (gates de template Grok, não de domínio)
 
@@ -50,7 +50,7 @@ Auth existe (cookies `__Host-`, `authMiddleware`, Sec-Fetch-Site) mas **nenhuma 
 ## Signals / Active Considerations
 
 - **Segredos:** service role JWT e VAPID private continuam como fallback no source (decisão 2026-08-16: não rotacionar neste ciclo).
-- **Escritas (e01):** mutações app exigem `Sec-Fetch-Site: same-origin`. Ingest: `CRON_SECRET` opcional; sem secret, cron Vercel / sem header ainda passam; cross-site bloqueado. Prefs usam `authMiddleware` + `context.userId`.
+- **Escritas (e01):** mutações app exigem `Sec-Fetch-Site: same-origin`. Ingest: `CRON_SECRET` obrigatório (Bearer). Ops: same-origin. Prefs usam `authMiddleware` + `context.userId`.
 - **Schema drift:** migrations documentam Neon/PGLite; feed vive no Supabase. Health agora só sonda `posts`.
 - **Hotspots:** `server.ts` 604, `buscar.tsx` 568, `fontes.tsx` 490, `ingest.ts` 394, `p2p.ts` 570 (morto).
 - **Morto (e02):** removidos rss/catalog/multiplayer, chrome jornal (Masthead/Hero/Ticker), Radix/shadcn sem uso. Um manifesto: `/manifest.webmanifest`. Plugin Grok não injeta o segundo se o app já declara um.

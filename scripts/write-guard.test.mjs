@@ -32,9 +32,10 @@ test("ingest requires bearer secret; fail-closed without it", () => {
   assert.equal(writeDenialStatus("ingest", env), 401);
 });
 
-test("ops write: same-origin or vercel cron", () => {
+test("ops write: same-origin only", () => {
   assert.equal(writeAllowed("ops", { site: "same-origin" }), true);
-  assert.equal(writeAllowed("ops", { userAgent: "vercel-cron/1.0" }), true);
+  assert.equal(writeAllowed("ops", { userAgent: "vercel-cron/1.0" }), false);
+  assert.equal(writeAllowed("ops", { vercelCron: "1" }), false);
   assert.equal(writeAllowed("ops", { site: null }), false);
   assert.equal(writeAllowed("ops", { site: "cross-site" }), false);
 });

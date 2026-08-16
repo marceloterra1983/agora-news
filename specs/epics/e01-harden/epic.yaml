@@ -4,7 +4,7 @@ title: Endurecer escritas e higiene do repo
 status: in_progress
 decisions:
   - "Não rotacionar service role / VAPID — fallbacks no source permanecem"
-  - "CRON_SECRET opcional: se ausente, ingest aceita cron Vercel e clientes sem Sec-Fetch-Site"
+  - "CRON_SECRET obrigatório: ingest só Bearer; sem Vercel"
   - "Mutações do app exigem Sec-Fetch-Site: same-origin"
 stories:
   - e01s01
