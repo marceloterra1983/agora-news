@@ -60,7 +60,7 @@ export function Feed({
   category,
   query,
   initial,
-  group,
+  group: groupProp,
   onGroupChange,
 }: {
   category: Category;
@@ -89,7 +89,7 @@ export function Feed({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [groupLocal, setGroupLocal] = useState<ProfileGroup | "all">("all");
-  const group = group ?? groupLocal;
+  const group = groupProp ?? groupLocal;
 
   useEffect(() => {
     const g = readGroup();
