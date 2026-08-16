@@ -165,7 +165,7 @@ function GrokHeader({
               onClick={() => pickGroup("all")}
               className={cn(
                 "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-                group === "all" ? "bg-paper-2 text-ink ring-1 ring-ink/25" : "bg-paper-2 text-mute",
+                group === "all" ? "bg-ink text-paper ring-1 ring-ink/40" : "bg-paper-2 text-mute",
               )}
             >
               Todos
@@ -180,11 +180,10 @@ function GrokHeader({
                   aria-pressed={on}
                   onClick={() => pickGroup(id)}
                   className={cn(
-                    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold",
+                    "inline-flex h-8 shrink-0 items-center rounded-full px-2.5 text-[11px] font-semibold",
                     on ? st.chipOn : st.chip,
                   )}
                 >
-                  <span className={cn("size-1.5 rounded-full", st.dot)} aria-hidden />
                   {GROUP_LABELS[id]}
                 </button>
               );

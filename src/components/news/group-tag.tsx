@@ -1,6 +1,6 @@
 import { groupOverrideOf } from "@/lib/news/fontes-prefs";
 import { groupStyle } from "@/lib/news/group-style";
-import { groupLabel, groupPip, groupStyle as customGroupStyle } from "@/lib/news/groups";
+import { groupLabel, groupStyle as customGroupStyle } from "@/lib/news/groups";
 import { GROUP_LABELS, profileByHandle, type ProfileGroup } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
 
@@ -32,17 +32,12 @@ export function GroupTag({
     <span
       data-group={id}
       className={cn(
-        "inline-flex h-4 shrink-0 items-center gap-1 rounded-full px-1.5 text-[9px] font-semibold leading-none",
+        "inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-[9px] font-semibold leading-none",
         st ? st.tag : null,
         className,
       )}
       style={st ? undefined : customGroupStyle(id)}
     >
-      <span
-        className={cn("size-1.5 shrink-0 rounded-full", st ? st.dot : null)}
-        style={st ? undefined : { background: groupPip(id) }}
-        aria-hidden
-      />
       {label}
     </span>
   );

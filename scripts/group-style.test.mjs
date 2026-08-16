@@ -12,21 +12,22 @@ test("GROUP_LABELS maps novos → Outros", () => {
   assert.doesNotMatch(src, /novos:\s*"Novos"/);
 });
 
-test("group-style defines all six groups with chip + dot", () => {
+test("group-style defines all six groups with chip + chipOn, no leading dots", () => {
   const src = readFileSync(join(root, "src/lib/news/group-style.ts"), "utf8");
   for (const g of ["labs", "lideres", "pesquisa", "imprensa", "builders", "novos"]) {
     assert.match(src, new RegExp(`${g}:\\s*\\{`));
   }
   assert.match(src, /chip:/);
-  assert.match(src, /dot:/);
   assert.match(src, /chipOn:/);
+  assert.doesNotMatch(src, /\bdot:/);
 });
 
-test("app-chrome uses groupStyle for chips", () => {
+test("app-chrome uses groupStyle for chips without leading dots", () => {
   const src = readFileSync(join(root, "src/components/news/app-chrome.tsx"), "utf8");
   assert.match(src, /groupStyle/);
-  assert.match(src, /st\.dot/);
   assert.match(src, /st\.chip/);
+  assert.doesNotMatch(src, /st\.dot/);
+  assert.doesNotMatch(src, /size-1\.5 rounded-full/);
 });
 
 test("group chips only render when the page can filter (onGroup)", () => {
@@ -35,9 +36,11 @@ test("group chips only render when the page can filter (onGroup)", () => {
   assert.match(src, /GROUP_ORDER\.map/);
 });
 
-test("group-tag uses colored tag + dot", () => {
+test("group-tag uses colored tag without a leading dot", () => {
   const src = readFileSync(join(root, "src/components/news/group-tag.tsx"), "utf8");
   assert.match(src, /groupStyle/);
   assert.match(src, /st\.tag/);
-  assert.match(src, /st\.dot/);
+  assert.doesNotMatch(src, /st\.dot/);
+  assert.doesNotMatch(src, /groupPip/);
+  assert.doesNotMatch(src, /size-1\.5/);
 });
