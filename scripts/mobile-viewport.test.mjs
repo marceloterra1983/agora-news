@@ -11,11 +11,27 @@ const WIDE_TW = /min-w-\[(?:[6-9]\d{2,}|[1-9]\d{3,})px\]/;
 
 test("root head declares a single device-width viewport", () => {
   const src = readFileSync(join(root, "src/routes/__root.tsx"), "utf8");
+  const shell = readFileSync(join(root, "src/lib/news/phone-shell.ts"), "utf8");
   const metas = src.match(/name:\s*"viewport"/g) ?? [];
   assert.equal(metas.length, 1);
-  assert.match(src, /width=device-width,\s*initial-scale=1/);
+  assert.match(src, /VIEWPORT_CONTENT/);
+  assert.match(src, /PHONE_VIEWPORT_GUARD/);
+  assert.match(src, /Cache-Control/);
+  assert.match(shell, /width=device-width, initial-scale=1, viewport-fit=cover/);
   assert.doesNotMatch(src, /user-scalable\s*=\s*no/);
   assert.doesNotMatch(src, /width=1024/);
+});
+
+test("phone layout is driven by max-width 640px media query", () => {
+  const css = readFileSync(join(root, "src/lib/news/phone-layout.css"), "utf8");
+  const styles = readFileSync(join(root, "src/styles.css"), "utf8");
+  const critical = readFileSync(join(root, "src/lib/news/critical.css.ts"), "utf8");
+  assert.match(css, /@media \(max-width: 640px\)/);
+  assert.match(css, /html\[data-shell="phone"\]/);
+  assert.match(css, /100dvw/);
+  assert.match(css, /font-size: 17px/);
+  assert.match(styles, /phone-layout\.css/);
+  assert.match(critical, /phone-layout\.css\?raw/);
 });
 
 test("chrome does not set a desktop min-width and keeps chips inside the bar", () => {
@@ -25,6 +41,8 @@ test("chrome does not set a desktop min-width and keeps chips inside the bar", (
   assert.match(chrome, /data-h-scroll/);
   assert.match(chrome, /overflow-x-clip/);
   assert.match(chrome, /min-w-0/);
+  assert.match(chrome, /data-chrome-root/);
+  assert.match(chrome, /max-sm:max-w-none/);
 });
 
 test("base css clips horizontal overflow instead of a 1024px floor", () => {

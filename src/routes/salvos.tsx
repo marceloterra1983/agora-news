@@ -26,7 +26,7 @@ function SavedPage() {
 
   return (
     <AppChrome category={secao}>
-      <main className="mx-auto max-w-6xl px-4 py-8 pb-24 sm:px-6">
+      <main className="mx-auto max-w-6xl px-4 py-8 pb-24 sm:px-6 max-sm:max-w-none">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mark">
           Sua lista
         </p>

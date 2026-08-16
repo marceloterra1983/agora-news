@@ -17,7 +17,7 @@ const LINKS = {
 function InstallPage() {
   return (
     <AppChrome category="ai">
-      <main className="mx-auto max-w-3xl px-4 py-6 pb-24 sm:px-6">
+      <main className="mx-auto max-w-3xl px-4 py-6 pb-24 sm:px-6 max-sm:max-w-none">
         <p className="text-xs font-semibold uppercase tracking-widest text-mark">App PWA</p>
         <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">
           Instalar no Android

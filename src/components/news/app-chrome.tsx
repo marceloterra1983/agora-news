@@ -55,7 +55,7 @@ export function AppChrome({
   }
 
   return (
-    <div className="min-h-dvh w-full min-w-0 overflow-x-clip bg-paper text-ink">
+    <div data-chrome-root="" className="min-h-dvh w-full min-w-0 overflow-x-clip bg-paper text-ink">
       <PrefsSync />
       <GrokHeader
         category={shown}
@@ -120,7 +120,7 @@ function GrokHeader({
 
   return (
     <header data-chrome="compact" className="sticky top-0 z-30 w-full min-w-0 overflow-x-clip border-b border-line bg-paper">
-      <div className="mx-auto flex h-[var(--agora-header)] w-full min-w-0 max-w-2xl items-center gap-1.5 pr-3 pl-2">
+      <div className="mx-auto flex h-[var(--agora-header)] w-full min-w-0 max-w-2xl items-center gap-1.5 pr-3 pl-2 max-sm:max-w-none">
         <div ref={rootRef} className="relative shrink-0">
           <button
             type="button"
@@ -213,7 +213,7 @@ function TabBar({ category }: { category: Category }) {
       data-chrome="tabs"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="mx-auto grid max-w-2xl grid-cols-4">
+      <div className="mx-auto grid w-full max-w-2xl grid-cols-4 max-sm:max-w-none">
         {items.map((item) => {
           const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
           const Icon = item.icon;

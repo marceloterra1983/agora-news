@@ -222,7 +222,7 @@ export function Feed({
   }
 
   return (
-    <div className="mx-auto max-w-2xl pt-3">
+    <div data-feed="" className="mx-auto max-w-2xl pt-3 max-sm:max-w-none">
       {updatedLabel ? (
         <p className="mb-4 text-[12px] text-mute">Atualizado {updatedLabel}</p>
       ) : null}

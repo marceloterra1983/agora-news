@@ -1,0 +1,83 @@
+/* Layout telefone: @media (max-width: 640px) é a fonte de verdade.
+   html[data-shell=phone] cobre PWA / WebView que ainda reportam ~980px. */
+@media (max-width: 640px) {
+  html {
+    font-size: 17px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+  }
+  [data-chrome="compact"],
+  [data-chrome="tabs"] {
+    width: 100vw;
+    width: 100dvw;
+    max-width: 100%;
+    left: 0;
+    right: 0;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  [data-chrome="compact"] .row,
+  [data-chrome="tabs"] > div,
+  [data-chrome-root] main,
+  [data-feed],
+  [data-post],
+  [data-story] {
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  [data-story] h3,
+  [data-story] h3 a {
+    font-size: 1.3rem;
+    line-height: 1.35;
+  }
+  [data-story] p {
+    font-size: 1rem;
+  }
+  [data-post] h1 {
+    font-size: 1.35rem;
+  }
+  [data-post] p {
+    font-size: 1.05rem;
+  }
+}
+
+html[data-shell="phone"] {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html[data-shell="phone"] [data-chrome="compact"],
+html[data-shell="phone"] [data-chrome="tabs"] {
+  width: 100vw;
+  width: 100dvw;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+html[data-shell="phone"] [data-chrome="compact"] .row,
+html[data-shell="phone"] [data-chrome="tabs"] > div,
+html[data-shell="phone"] [data-chrome-root] main,
+html[data-shell="phone"] [data-feed],
+html[data-shell="phone"] [data-post],
+html[data-shell="phone"] [data-story] {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+html[data-shell="phone"] [data-story] h3,
+html[data-shell="phone"] [data-story] h3 a {
+  font-size: 1.3rem;
+}
+html[data-shell="phone"] [data-story] p {
+  font-size: 1rem;
+}

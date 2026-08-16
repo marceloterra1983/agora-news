@@ -98,7 +98,7 @@ function BuscarPage() {
 
   return (
     <AppChrome category={secao}>
-      <main className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:px-6">
+      <main className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:px-6 max-sm:max-w-none">
         <h1 className="sr-only">Buscar</h1>
 
         <label className="relative block">
