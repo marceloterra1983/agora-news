@@ -26,6 +26,7 @@ test("extracted page modules stay under 200 lines", () => {
     "src/lib/news/groups.ts",
     "src/lib/news/fonte-metrics.ts",
     "src/lib/news/last-post.ts",
+    "src/lib/news/last-post-store.ts",
     "src/components/news/buscar-hit-list.tsx",
     "src/components/news/buscar-interests.tsx",
     "src/lib/news/fontes-sort.ts",

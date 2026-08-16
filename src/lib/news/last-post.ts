@@ -1,6 +1,8 @@
-/** Last tweet per handle — any age, persisted on x_profiles.last_post. */
+/** Last tweet per handle — any age. Stored in posts category x-last (x_profiles may be absent). */
 
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
+
+export const LAST_POST_CATEGORY = "x-last";
 
 export type StoredLastPost = {
   id: string;
@@ -14,6 +16,10 @@ const AUTH = {
   Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
   Accept: "application/json",
 };
+
+function tweetIdOf(id: string, url: string): string {
+  return url.match(/status\/(\d+)/)?.[1] || id;
+}
 
 export function parseLastPost(raw: unknown): StoredLastPost | null {
   if (!raw || typeof raw !== "object") return null;
@@ -38,7 +44,8 @@ export function keepLastPost(
   if (!prev) return next;
   const pt = Date.parse(prev.publishedAt);
   const nt = Date.parse(next.publishedAt);
-  if (Number.isFinite(nt) && Number.isFinite(pt) && nt < pt) return prev;
+  if (!Number.isFinite(nt)) return prev;
+  if (Number.isFinite(pt) && nt < pt) return prev;
   return next;
 }
 
@@ -82,7 +89,8 @@ export async function fetchLastPost(handle: string): Promise<StoredLastPost | nu
       ? new Date(row.created_timestamp * 1000).toISOString()
       : row.created_at
         ? new Date(row.created_at).toISOString()
-        : new Date().toISOString();
+        : "";
+    if (!publishedAt) return null;
     return {
       id: String(row.id),
       text: String(row.text).replace(/\s+/g, " ").trim(),
@@ -100,7 +108,7 @@ export async function latestFromPosts(handle: string): Promise<StoredLastPost | 
   try {
     const params = new URLSearchParams();
     params.set("select", "post_id,account,posted_at,summary_pt,content,post_url");
-    params.set("account", `ilike.${key}`);
+    params.set("account", `eq.${key}`);
     params.set("order", "posted_at.desc");
     params.set("limit", "8");
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
@@ -116,16 +124,13 @@ export async function latestFromPosts(handle: string): Promise<StoredLastPost | 
       post_url?: string;
     }>;
     for (const row of rows) {
-      const id = String(row.post_id || "");
-      if (!id || id.startsWith("prfl_") || id.startsWith("watch_")) continue;
+      const rawId = String(row.post_id || "");
+      if (!rawId || rawId.startsWith("prfl_") || rawId.startsWith("watch_")) continue;
       const text = String(row.summary_pt || row.content || "").trim();
-      if (!text) continue;
-      return {
-        id,
-        text: text.slice(0, 280),
-        url: String(row.post_url || `https://x.com/${key}/status/${id}`),
-        publishedAt: String(row.posted_at || ""),
-      };
+      const publishedAt = String(row.posted_at || "");
+      if (!text || !publishedAt) continue;
+      const url = String(row.post_url || `https://x.com/${key}/status/${rawId}`);
+      return { id: tweetIdOf(rawId, url), text: text.slice(0, 280), url, publishedAt };
     }
     return null;
   } catch {
@@ -133,35 +138,3 @@ export async function latestFromPosts(handle: string): Promise<StoredLastPost | 
   }
 }
 
-export async function persistLastPost(handle: string, post: StoredLastPost): Promise<boolean> {
-  const { readStoredProfile } = await import("./profile-store");
-  const { upsertProfile } = await import("./admin");
-  const prev = await readStoredProfile(handle);
-  return upsertProfile({
-    handle,
-    name: prev?.name || handle,
-    bio: prev?.bio || "",
-    summary_pt: prev?.summary_pt || prev?.bio || handle,
-    avatar: prev?.avatar ?? null,
-    followers: prev?.followers || 0,
-    last_post: keepLastPost(prev?.last_post, post),
-  });
-}
-
-export async function fillMissingLastPosts(handles: string[]): Promise<number> {
-  const unique = [
-    ...new Set(handles.map((h) => h.replace(/^@+/, "").trim()).filter(Boolean)),
-  ].slice(0, 32);
-  let n = 0;
-  for (let i = 0; i < unique.length; i += 6) {
-    const chunk = unique.slice(i, i + 6);
-    await Promise.all(
-      chunk.map(async (handle) => {
-        const post = (await latestFromPosts(handle)) ?? (await fetchLastPost(handle));
-        if (!post) return;
-        if (await persistLastPost(handle, post)) n += 1;
-      }),
-    );
-  }
-  return n;
-}
