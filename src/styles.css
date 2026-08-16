@@ -56,7 +56,9 @@
     color: var(--color-ink);
     color-scheme: light;
     overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
+    overflow-wrap: break-word;
     overscroll-behavior-x: none;
   }
 
@@ -69,6 +71,8 @@
     min-height: 100dvh;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
+    overflow-wrap: break-word;
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
     touch-action: pan-y;
@@ -81,6 +85,17 @@
   #root {
     max-width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  a,
+  li {
+    overflow-wrap: anywhere;
   }
 
   a {

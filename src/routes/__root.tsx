@@ -38,7 +38,7 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no" },
       { title: "IA — NEWS" },
       { name: "description", content: "Notícias das pastas de NEWS no Google Drive." },
       { name: "application-name", content: APP_NAME },
@@ -90,7 +90,7 @@ function Root() {
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v11";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v12";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>

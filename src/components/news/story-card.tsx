@@ -65,7 +65,7 @@ export function StoryCard({
             {relativeTime(story.publishedAt)}
           </time>
         </p>
-        <h3 className="font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
+        <h3 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
           <Link to="/materia/$id" params={{ id: story.id }}>
             {displayTitle(story.title)}
           </Link>

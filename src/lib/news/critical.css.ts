@@ -1,6 +1,6 @@
 /** CSS no <head> — o publicado não pode depender só de /assets/*.css. */
 export const CRITICAL_CSS = `
-html,body{margin:0;background:#f2eee4;color:#161411;font-family:"Source Sans 3",system-ui,sans-serif}
+html,body{margin:0;max-width:100%;overflow-x:clip;overflow-wrap:break-word;background:#f2eee4;color:#161411;font-family:"Source Sans 3",system-ui,sans-serif}
 html.dark,html.dark body{background:#12100e;color:#f0e9e0}
 a{color:inherit;text-decoration:none}
 [data-chrome=compact]{position:sticky;top:0;z-index:30;border-bottom:1px solid #d5cfbf;background:#f2eee4}
@@ -15,12 +15,12 @@ html.dark [data-chrome=tabs]{border-top-color:#2c2824;background:#12100e}
 [data-chrome=tabs] a{display:flex;min-height:56px;flex-direction:column;align-items:center;justify-content:center;font-size:12px;gap:2px}
 a[data-cta=open-x]{display:grid;place-items:center;width:32px;height:32px;padding:0;border-radius:999px;border:1px solid #d5cfbf;background:transparent;color:#161411}
 html.dark a[data-cta=open-x]{border-color:#3d3832;color:#f0e9e0}
-[data-story]{border-bottom:1px solid #d5cfbf;padding:24px 16px;max-width:42rem;margin:0 auto}
+[data-story]{border-bottom:1px solid #d5cfbf;padding:24px 16px;max-width:min(42rem,100%);margin:0 auto;overflow-wrap:anywhere}
 html.dark [data-story]{border-bottom-color:#2c2824}
-[data-story] h3{font-family:var(--font-display),Georgia,serif;font-size:1.25rem;line-height:1.35;font-weight:500;margin:0;text-align:left}
+[data-story] h3,[data-story] h3 a{font-family:var(--font-display),Georgia,serif;font-size:1.25rem;line-height:1.35;font-weight:500;margin:0;text-align:left;overflow-wrap:anywhere}
 [data-story] p{color:#6e695d;font-size:13px;margin:0 0 8px}
 html.dark [data-story] p{color:#9a9286}
-[data-post]{max-width:48rem;margin:0 auto}
+[data-post]{max-width:min(48rem,100%);margin:0 auto;overflow-wrap:anywhere}
 [data-post] h1{font-family:var(--font-display),Georgia,serif;font-size:1.4rem;line-height:1.35;font-weight:500;letter-spacing:-0.01em;margin:12px 0 0;text-align:left;text-wrap:pretty}
 [data-post] p{font-size:1.05rem;line-height:1.6;margin:16px 0 0}
 `;

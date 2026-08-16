@@ -25,6 +25,23 @@ test("injects before </head>", () => {
   assert.ok(out.indexOf("manifest") < out.indexOf("</head>"));
 });
 
+test("injects device-width viewport when the document has none", () => {
+  const out = injectGrokPwaHead("<html><head><title>x</title></head></html>");
+  assert.match(
+    out,
+    /name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no"/,
+  );
+  assert.doesNotMatch(out, /width=1024|user-scalable=no|maximum-scale=1/);
+});
+
+test("does not duplicate an existing viewport", () => {
+  const html =
+    '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head></html>';
+  const out = injectGrokPwaHead(html);
+  assert.equal(out.split('name="viewport"').length - 1, 1);
+  assert.match(out, /content="width=device-width, initial-scale=1"/);
+});
+
 test("injects the extensions script without a project id", () => {
   const out = injectGrokPwaHead("<html><head></head></html>", "Demo", "");
   assert.match(out, /src="https:\/\/grok\.com\/grok-app-builder\/extensions\.js" defer/);
