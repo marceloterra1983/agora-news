@@ -37,3 +37,15 @@ test("FonteControls can edit group and create a custom one", () => {
   assert.match(src, /Criar grupo/);
   assert.match(src, /addCustomGroup/);
 });
+
+test("Fontes sort chips live in the AppChrome header toolbar, not a second sticky bar", () => {
+  const chrome = read("src/components/news/app-chrome.tsx");
+  const fontes = read("src/routes/fontes.tsx");
+  assert.match(chrome, /toolbar\?:/);
+  assert.match(chrome, /toolbar \?\?/);
+  assert.match(fontes, /toolbar=\{/);
+  assert.match(fontes, /aria-label="Ordenar fontes"/);
+  assert.doesNotMatch(fontes, /sticky top-\[57px\]/);
+  const css = read("src/styles.css");
+  assert.match(css, /--agora-header:\s*3\.75rem/);
+});

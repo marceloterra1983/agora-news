@@ -27,6 +27,9 @@
 
   --shadow-card: 0 1px 0 color-mix(in oklab, var(--color-ink) 6%, transparent),
     0 12px 28px -22px color-mix(in oklab, var(--color-ink) 45%, transparent);
+
+  --agora-header: 3.75rem;
+  --agora-subbar: 2.5rem;
 }
 
 .dark {

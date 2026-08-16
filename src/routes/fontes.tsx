@@ -145,32 +145,37 @@ function FontesPage() {
   }
 
   return (
-    <AppChrome category={secao}>
+    <AppChrome
+      category={secao}
+      toolbar={
+        <div
+          className="flex min-w-0 flex-1 items-center gap-1"
+          role="toolbar"
+          aria-label="Ordenar fontes"
+        >
+          {FONTES_SORTS.map((s) => {
+            const Icon = s.icon;
+            return (
+              <FontesChip key={s.id} active={sort === s.id} label={s.label} onClick={() => changeSort(s.id)}>
+                <Icon className="size-3.5" />
+              </FontesChip>
+            );
+          })}
+          <FontesChip
+            active={picking}
+            label="Mover em lote"
+            onClick={() => {
+              setPicking((v) => !v);
+              setPicked(new Set());
+            }}
+          >
+            {picking ? <CheckSquare className="size-3.5" /> : <Square className="size-3.5" />}
+          </FontesChip>
+        </div>
+      }
+    >
       <main className="mx-auto max-w-2xl px-4 pb-24">
         <h1 className="sr-only">Fontes</h1>
-        <div className="sticky top-[57px] z-20 -mx-4 border-b border-line bg-paper px-4 py-1.5">
-          <div className="flex gap-1">
-            {FONTES_SORTS.map((s) => {
-              const Icon = s.icon;
-              return (
-                <FontesChip key={s.id} active={sort === s.id} label={s.label} onClick={() => changeSort(s.id)}>
-                  <Icon className="size-3.5" />
-                </FontesChip>
-              );
-            })}
-            <FontesChip
-              active={picking}
-              label="Mover em lote"
-              onClick={() => {
-                setPicking((v) => !v);
-                setPicked(new Set());
-              }}
-            >
-              {picking ? <CheckSquare className="size-3.5" /> : <Square className="size-3.5" />}
-            </FontesChip>
-          </div>
-        </div>
-
         {picking ? <FontesBatchBar count={picked.size} groupIds={groupIds} onMove={movePicked} /> : null}
 
         {sort === "groups" ? (
