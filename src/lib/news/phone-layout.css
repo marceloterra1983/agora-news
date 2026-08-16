@@ -14,7 +14,7 @@
     --agora-meta: 16px;
     --agora-chip-label: 17px;
     --agora-tap: 48px;
-    --agora-nav-tap: 56px;
+    --agora-nav-tap: 48px;
     --agora-header: 64px;
     font-size: 22px !important;
     -webkit-text-size-adjust: 100%;
@@ -27,6 +27,8 @@
   }
   [data-chrome="compact"],
   [data-chrome="tabs"] {
+    position: fixed !important;
+    z-index: 40;
     width: 100vw;
     width: 100dvw;
     max-width: 100%;
@@ -75,20 +77,33 @@
     font-size: 17px !important;
   }
 
+  [data-chrome="compact"] {
+    top: 0;
+    bottom: auto;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   [data-chrome="tabs"] {
-    min-height: 56px !important;
+    top: auto;
+    bottom: 0;
+    min-height: 48px !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   [data-chrome="tabs"] > div {
-    min-height: 56px !important;
+    min-height: 48px !important;
+    height: 48px !important;
   }
   [data-chrome="tabs"] a {
-    min-width: 56px !important;
-    min-height: 56px !important;
-    height: 56px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    height: 48px !important;
   }
   [data-chrome="tabs"] svg {
-    width: 26px !important;
-    height: 26px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+  [data-chrome-main] {
+    padding-top: calc(var(--agora-header) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(var(--agora-nav-tap) + env(safe-area-inset-bottom, 0px));
   }
 
   [data-story] h3,
@@ -146,7 +161,7 @@ html[data-shell="phone"][data-font="xl"] {
   --agora-meta: 16px;
   --agora-chip-label: 17px;
   --agora-tap: 48px;
-  --agora-nav-tap: 56px;
+  --agora-nav-tap: 48px;
   --agora-header: 64px;
   font-size: 22px !important;
   -webkit-text-size-adjust: 100%;
@@ -154,6 +169,8 @@ html[data-shell="phone"][data-font="xl"] {
 }
 html[data-shell="phone"] [data-chrome="compact"],
 html[data-shell="phone"] [data-chrome="tabs"] {
+  position: fixed !important;
+  z-index: 40;
   width: 100vw;
   width: 100dvw;
   max-width: 100%;
@@ -196,20 +213,38 @@ html[data-shell="phone"] [data-testid="fontes-toolbar"] svg {
   width: 24px !important;
   height: 24px !important;
 }
+html[data-shell="phone"] [data-chrome="compact"],
 html[data-shell="phone"] [data-chrome="tabs"] {
-  min-height: 56px !important;
+  position: fixed !important;
+  z-index: 40;
+}
+html[data-shell="phone"] [data-chrome="compact"] {
+  top: 0;
+  bottom: auto;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+html[data-shell="phone"] [data-chrome="tabs"] {
+  top: auto;
+  bottom: 0;
+  min-height: 48px !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 html[data-shell="phone"] [data-chrome="tabs"] > div {
-  min-height: 56px !important;
+  min-height: 48px !important;
+  height: 48px !important;
 }
 html[data-shell="phone"] [data-chrome="tabs"] a {
-  min-width: 56px !important;
-  min-height: 56px !important;
-  height: 56px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  height: 48px !important;
 }
 html[data-shell="phone"] [data-chrome="tabs"] svg {
-  width: 26px !important;
-  height: 26px !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+html[data-shell="phone"] [data-chrome-main] {
+  padding-top: calc(var(--agora-header) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--agora-nav-tap) + env(safe-area-inset-bottom, 0px));
 }
 html[data-shell="phone"] [data-story] h3,
 html[data-shell="phone"] [data-story] h3 a,

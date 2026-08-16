@@ -104,7 +104,7 @@ async function measure(page) {
   });
 }
 
-test("Playwright 390px: chip ≥48, nav ≥56, headline ≥28, meta ≥16", async (t) => {
+test("Playwright 390px: chip ≥48, nav ≥48, headline ≥28, meta ≥16", async (t) => {
   const browser = await launchChromium(t);
   if (!browser) return;
   try {
@@ -115,8 +115,9 @@ test("Playwright 390px: chip ≥48, nav ≥56, headline ≥28, meta ≥16", asyn
     assert.ok(s.chipFs >= 17, `chip label ${s.chipFs}`);
     assert.ok(s.iaH >= 48 && s.iaW >= 48, `IA ${s.iaW}x${s.iaH}`);
     assert.ok(s.menuH >= 48 && s.menuW >= 48, `menu ${s.menuW}x${s.menuH}`);
-    assert.ok(s.navH >= 56 && s.navW >= 56, `nav ${s.navW}x${s.navH}`);
-    assert.ok(s.iconH >= 26, `nav icon ${s.iconH}`);
+    assert.ok(s.navH >= 48 && s.navW >= 48, `nav ${s.navW}x${s.navH}`);
+    assert.ok(s.iconH >= 24, `nav icon ${s.iconH}`);
+    assert.ok(Math.abs(s.navH - s.chipH) <= 1, `nav/chip heights ${s.navH}/${s.chipH}`);
     assert.ok(s.headline >= 28, `headline ${s.headline}`);
     assert.ok(s.meta >= 16, `meta ${s.meta}`);
     assert.ok(s.updated >= 16, `updated ${s.updated}`);
@@ -154,7 +155,7 @@ test("Playwright 1280px + data-shell=phone still uses the phone scale", async (t
     assert.ok(s.chipH >= 48, `shell chip ${s.chipH}`);
     assert.ok(s.headline >= 28, `shell headline ${s.headline}`);
     assert.ok(s.meta >= 16, `shell meta ${s.meta}`);
-    assert.ok(s.navH >= 56, `shell nav ${s.navH}`);
+    assert.ok(s.navH >= 48, `shell nav ${s.navH}`);
   } finally {
     await browser.close();
   }

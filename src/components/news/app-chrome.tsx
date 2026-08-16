@@ -64,7 +64,12 @@ export function AppChrome({
         onPickSec={pickSec}
         toolbar={toolbar}
       />
-      <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]">{children}</div>
+      <div
+        data-chrome-main=""
+        className="pb-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px))] max-sm:pt-[calc(var(--agora-header)+env(safe-area-inset-top,0px))]"
+      >
+        {children}
+      </div>
       <TabBar category={shown} />
     </div>
   );
@@ -119,7 +124,7 @@ function GrokHeader({
   }
 
   return (
-    <header data-chrome="compact" className="sticky top-0 z-30 w-full min-w-0 overflow-x-clip border-b border-line bg-paper">
+    <header data-chrome="compact" className="sticky top-0 z-40 w-full min-w-0 overflow-x-clip border-b border-line bg-paper pt-[env(safe-area-inset-top,0px)]">
       <div className="mx-auto flex h-[var(--agora-header)] w-full min-w-0 max-w-2xl items-center gap-1.5 pr-3 pl-2 max-sm:max-w-none">
         <div ref={rootRef} className="relative shrink-0">
           <button
@@ -211,9 +216,9 @@ function TabBar({ category }: { category: Category }) {
   return (
     <nav
       data-chrome="tabs"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom,0px)]"
     >
-      <div className="mx-auto grid w-full max-w-2xl grid-cols-4 max-sm:max-w-none">
+      <div className="mx-auto grid h-[var(--agora-nav-tap)] w-full max-w-2xl grid-cols-4 max-sm:max-w-none">
         {items.map((item) => {
           const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
           const Icon = item.icon;
@@ -223,7 +228,7 @@ function TabBar({ category }: { category: Category }) {
                 to={item.to}
                 search={item.search}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center no-underline",
+                  "flex h-[var(--agora-tap)] min-h-[var(--agora-tap)] w-full flex-col items-center justify-center no-underline",
                   active ? "text-ink" : "text-mute",
                 )}
                 aria-label={item.label}
