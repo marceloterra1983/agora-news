@@ -36,7 +36,8 @@
   --agora-type: 16px;
   --agora-headline: 1.25rem;
   --agora-meta: 0.875rem;
-  --agora-chip-label: 13px;
+  --agora-chip-h: 32px;
+  --agora-chip-label: 12px;
   --agora-tap: 44px;
   --agora-nav-tap: 44px;
 }
@@ -185,14 +186,6 @@
     transition-duration: 0.01ms !important;
   }
 
-  /* Faixas de chips/filtros: rolagem horizontal local, sem empurrar a página */
-  [data-h-scroll] {
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x pinch-zoom;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -222,4 +215,18 @@
   .ticker-track {
     animation: none;
   }
+}
+
+/* Unlayered: swipe local, scrollbar invisível (Firefox + WebKit). */
+[data-h-scroll] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-h-scroll]::-webkit-scrollbar {
+  display: none;
 }

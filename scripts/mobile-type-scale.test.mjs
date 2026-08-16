@@ -77,6 +77,7 @@ async function launchChromium(t) {
 async function measure(page) {
   return page.evaluate(() => {
     const chip = document.querySelector("[data-h-scroll] button");
+    const scroller = document.querySelector("[data-h-scroll]");
     const ia = document.querySelector("[aria-haspopup=listbox]");
     const menu = document.querySelector("[aria-haspopup=menu]");
     const nav = document.querySelector("[data-chrome=tabs] a");
@@ -99,6 +100,10 @@ async function measure(page) {
       chipFs: px(chip, "fontSize"),
       chipPadL: chip ? parseFloat(getComputedStyle(chip).paddingLeft) : 0,
       chipPadR: chip ? parseFloat(getComputedStyle(chip).paddingRight) : 0,
+      scrollBar: scroller ? getComputedStyle(scroller).scrollbarWidth : "",
+      overflowX: scroller ? getComputedStyle(scroller).overflowX : "",
+      overflowY: scroller ? getComputedStyle(scroller).overflowY : "",
+      touchAction: scroller ? getComputedStyle(scroller).touchAction : "",
       longW: box(document.querySelector("[data-h-scroll] button:last-child")).w,
       iaFs: px(ia, "fontSize"),
       iaH: box(ia).h,
@@ -128,16 +133,20 @@ test("Playwright 390px default: reader scale, not 22/28 floors", async (t) => {
     assert.ok(s.updated >= 12.5 && s.updated <= 14.5, `updated ${s.updated}`);
     assert.ok(s.html < 20, `default html must not be the old 22px floor (${s.html})`);
     assert.ok(s.headline < 26, `default headline must not be the old 28px floor (${s.headline})`);
-    assert.ok(s.chipH >= 44 && s.chipH <= 45, `chip height ${s.chipH}`);
-    assert.ok(Math.abs(s.chipH - s.iaH) <= 1, `chip/IA height ${s.chipH}/${s.iaH}`);
+    assert.ok(s.chipH >= 31 && s.chipH <= 33, `chip height ${s.chipH}`);
+    assert.ok(s.iaH - s.chipH >= 10, `chip must be lighter than IA ${s.chipH}/${s.iaH}`);
     assert.ok(s.chipFs >= 12 && s.chipFs <= 13.5, `chip label ${s.chipFs}`);
-    assert.ok(Math.abs(s.chipFs - s.iaFs) <= 1, `chip/IA type ${s.chipFs}/${s.iaFs}`);
-    assert.ok(s.chipPadL <= 10 && s.chipPadR <= 10, `chip pad ${s.chipPadL}/${s.chipPadR}`);
+    assert.ok(s.chipPadL >= 10 && s.chipPadL <= 14, `chip padL ${s.chipPadL}`);
+    assert.ok(s.chipPadR >= 10 && s.chipPadR <= 14, `chip padR ${s.chipPadR}`);
     assert.ok(s.longW < 160, `Instituições width ${s.longW} should stay compact`);
     assert.ok(s.iaH >= 44 && s.iaW >= 44, `IA ${s.iaW}x${s.iaH}`);
     assert.ok(s.menuH >= 44 && s.menuW >= 44, `menu ${s.menuW}x${s.menuH}`);
     assert.ok(s.navH >= 44 && s.navW >= 44, `nav ${s.navW}x${s.navH}`);
-    assert.ok(Math.abs(s.navH - s.chipH) <= 1, `nav/chip heights ${s.navH}/${s.chipH}`);
+    assert.equal(s.scrollBar, "none", `scrollbar-width ${s.scrollBar}`);
+    assert.equal(s.overflowX, "auto", `overflow-x ${s.overflowX}`);
+    assert.equal(s.overflowY, "hidden", `overflow-y ${s.overflowY}`);
+    assert.match(s.touchAction, /pan-x/);
+    assert.match(s.touchAction, /pinch-zoom/);
   } finally {
     await browser.close();
   }
@@ -198,7 +207,7 @@ test("Playwright 1280px + data-shell=phone uses reader scale, not 22/28", async 
       waitUntil: "domcontentloaded",
     });
     const s = await measure(page);
-    assert.ok(s.chipH >= 44, `shell chip ${s.chipH}`);
+    assert.ok(s.chipH >= 31 && s.chipH <= 33, `shell chip ${s.chipH}`);
     assert.ok(s.navH >= 44, `shell nav ${s.navH}`);
     assert.ok(s.html >= 15.5 && s.html <= 17, `shell html ${s.html}`);
     assert.ok(s.headline >= 19.5 && s.headline <= 22.5, `shell headline ${s.headline}`);
