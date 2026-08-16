@@ -36,6 +36,7 @@ test("extracted page modules stay under 200 lines", () => {
     "src/lib/news/server-profile.ts",
     "src/lib/news/server-debug.ts",
     "src/lib/news/summary-core.mjs",
+    "src/lib/news/summary-line.ts",
   ]) {
     assert.ok(lines(rel) <= 200, `${rel} is ${lines(rel)}`);
   }

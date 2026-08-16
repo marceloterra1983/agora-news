@@ -138,6 +138,7 @@ function FontesPage() {
           className="flex min-w-0 flex-1 items-center gap-1"
           role="toolbar"
           aria-label="Ordenar fontes"
+          data-testid="fontes-toolbar"
         >
           {FONTES_SORTS.map((s) => {
             const Icon = s.icon;
@@ -178,14 +179,23 @@ function FontesPage() {
                   >
                     <span className="flex shrink-0 -space-x-2">
                       {g.faces.length ? (
-                        g.faces.map((f) => (
-                          <img
-                            key={f.handle}
-                            src={f.avatar ?? ""}
-                            alt=""
-                            className="size-7 rounded-full border border-paper bg-paper-2 object-cover"
-                          />
-                        ))
+                        g.faces.map((f) =>
+                          f.avatar ? (
+                            <img
+                              key={f.handle}
+                              src={f.avatar}
+                              alt=""
+                              className="size-7 rounded-full border border-paper bg-paper-2 object-cover"
+                            />
+                          ) : (
+                            <span
+                              key={f.handle}
+                              className="grid size-7 place-items-center rounded-full border border-paper bg-paper-2 text-[10px] font-medium text-mute"
+                            >
+                              {(f.handle || "?").charAt(0).toUpperCase()}
+                            </span>
+                          ),
+                        )
                       ) : (
                         <span className="grid size-7 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-mute">
                           {g.items.length}
@@ -220,7 +230,7 @@ function FontesPage() {
                   {open ? (
                     <>
                       <p className="-mt-1 mb-2 text-[11px] leading-snug text-mute">{g.hint}</p>
-                      <ol>
+                      <ol data-testid="fontes-list">
                         {g.items.map((row, i) => (
                           <ProfileRow
                             key={row.handle}
@@ -247,7 +257,7 @@ function FontesPage() {
             {sort === "starred" ? "Nenhum favorito ainda. Toque na estrela de um perfil." : "Nenhum perfil."}
           </p>
         ) : (
-          <ol>
+          <ol data-testid="fontes-list">
             {rows.map((row, i) => (
               <ProfileRow
                 key={row.handle}

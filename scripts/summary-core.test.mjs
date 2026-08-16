@@ -10,7 +10,7 @@ import {
 
 test("clipOneLine strips urls/hashtags and cuts at a sentence or 160 chars", () => {
   assert.equal(clipOneLine("  Olá.  Mundo.  "), "Olá.");
-  assert.equal(clipOneLine('https://x.com/a #tag "Oi"'), "Oi");
+  assert.equal(clipOneLine("https://x.com/a #tag Oi"), "Oi");
   const long = `${"palavra ".repeat(30)}fim`;
   const clipped = clipOneLine(long);
   assert.ok(clipped.length <= 160);
