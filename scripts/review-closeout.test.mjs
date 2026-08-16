@@ -25,9 +25,11 @@ test("CloudPrefs snapshot and type include groups and customGroups", () => {
   const sync = read("src/lib/news/prefs-sync.ts");
   assert.match(server, /groups\?:/);
   assert.match(server, /customGroups\?:/);
+  assert.match(server, /bySection\?:/);
   assert.match(sync, /getGroupOverrides/);
   assert.match(sync, /loadCustomGroups/);
   assert.match(sync, /setGroupOverrides|replaceCustomGroups/);
+  assert.match(sync, /bySection/);
 });
 
 test("loadFontesLive reads the store; enrichFontes runs on ingest", () => {

@@ -1,10 +1,18 @@
 import { getGroupOverrides, setGroupOverrides } from "./fontes-prefs";
 import { GROUP_HINTS, GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "./profiles";
+import { findCustomGroup, readCustomGroups, writeCustomGroups } from "./section-prefs.mjs";
+import { readLastSection } from "./section-pref";
+import type { Category } from "./types";
 
 export type CustomGroup = { id: string; label: string };
 
 const CUSTOM_KEY = "agora-custom-groups-v1";
 const EVENT = "agora-custom-groups";
+void CUSTOM_KEY;
+
+function sectionOf(section?: Category): Category {
+  return section || (typeof window === "undefined" ? "ai" : readLastSection());
+}
 
 const SOFT = [
   { bg: "color-mix(in oklab, #8a7a2e 34%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 88%, #5a4e18)", pip: "#8a7a2e" },
@@ -34,80 +42,52 @@ function slugify(label: string): string {
     .slice(0, 24) || `g-${Date.now().toString(36)}`;
 }
 
-export function loadCustomGroups(): CustomGroup[] {
+export function loadCustomGroups(section?: Category): CustomGroup[] {
   if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(CUSTOM_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    const seen = new Set<string>(GROUP_ORDER);
-    const out: CustomGroup[] = [];
-    for (const item of parsed) {
-      if (!item || typeof item !== "object") continue;
-      const label = String((item as CustomGroup).label || "").trim().slice(0, 28);
-      const id = String((item as CustomGroup).id || slugify(label));
-      if (!label || !id || seen.has(id)) continue;
-      seen.add(id);
-      out.push({ id, label });
-    }
-    return out;
-  } catch {
-    return [];
-  }
+  return readCustomGroups(sectionOf(section));
 }
 
-export function replaceCustomGroups(list: CustomGroup[]): CustomGroup[] {
+export function replaceCustomGroups(list: CustomGroup[], section?: Category): CustomGroup[] {
   if (typeof window === "undefined") return [];
-  const seen = new Set<string>(GROUP_ORDER);
-  const out: CustomGroup[] = [];
-  for (const item of list || []) {
-    const label = String(item?.label || "").trim().slice(0, 28);
-    const id = String(item?.id || slugify(label));
-    if (!label || !id || seen.has(id)) continue;
-    seen.add(id);
-    out.push({ id, label });
-  }
-  localStorage.setItem(CUSTOM_KEY, JSON.stringify(out));
-  window.dispatchEvent(new CustomEvent(EVENT));
-  return out;
+  return writeCustomGroups(sectionOf(section), list || []);
 }
 
-export function removeCustomGroup(id: string): CustomGroup[] {
+export function removeCustomGroup(id: string, section?: Category): CustomGroup[] {
   const key = String(id || "").trim();
-  if (!key || GROUP_ORDER.includes(key as ProfileGroup)) return loadCustomGroups();
-  const next = replaceCustomGroups(loadCustomGroups().filter((g) => g.id !== key));
-  const overrides = getGroupOverrides();
+  const secao = sectionOf(section);
+  if (!key || GROUP_ORDER.includes(key as ProfileGroup)) return loadCustomGroups(secao);
+  const next = replaceCustomGroups(
+    loadCustomGroups(secao).filter((g) => g.id !== key),
+    secao,
+  );
   const cleaned: Record<string, string> = {};
-  for (const [handle, group] of Object.entries(overrides)) {
+  for (const [handle, group] of Object.entries(getGroupOverrides(secao))) {
     if (group !== key) cleaned[handle] = group;
   }
-  setGroupOverrides(cleaned);
+  setGroupOverrides(cleaned, secao);
   return next;
 }
 
-export function addCustomGroup(label: string): CustomGroup | null {
+export function addCustomGroup(label: string, section?: Category): CustomGroup | null {
   const name = label.trim().slice(0, 28);
   if (!name) return null;
+  const secao = sectionOf(section);
   let id = slugify(name);
-  const existing = loadCustomGroups();
+  const existing = loadCustomGroups(secao);
   const taken = new Set([...GROUP_ORDER, ...existing.map((g) => g.id)]);
   if (taken.has(id)) id = `${id}-${existing.length + 1}`;
-  const next = [...existing, { id, label: name }];
-  localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent(EVENT));
+  replaceCustomGroups([...existing, { id, label: name }], secao);
   return { id, label: name };
 }
 
-export function allGroupIds(): string[] {
-  return [...GROUP_ORDER, ...loadCustomGroups().map((g) => g.id)];
+export function allGroupIds(section?: Category): string[] {
+  return [...GROUP_ORDER, ...loadCustomGroups(section).map((g) => g.id)];
 }
 
 export function groupLabel(id?: string | null): string {
   if (!id) return GROUP_LABELS.novos;
   if (id in GROUP_LABELS) return GROUP_LABELS[id as ProfileGroup];
-  const custom = loadCustomGroups().find((g) => g.id === id);
-  return custom?.label || GROUP_LABELS.novos;
+  return findCustomGroup(id)?.label || GROUP_LABELS.novos;
 }
 
 export function groupHint(id?: string | null): string {

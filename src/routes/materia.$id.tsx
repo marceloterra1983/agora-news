@@ -8,6 +8,8 @@ import { Tip } from "@/components/news/icon-btn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadStory } from "@/lib/news/server";
 import { useNewsStore } from "@/lib/news/store";
+import { readLastSection } from "@/lib/news/section-pref";
+import { labelFor } from "@/lib/news/types";
 import { markRead } from "@/lib/news/unread";
 
 export const Route = createFileRoute("/materia/$id")({
@@ -55,11 +57,11 @@ function ArticlePage() {
             <p className="mt-2 text-sm text-ink-soft">
               Ela pode ter saído do ar ou expirado no feed.
             </p>
-            <Tip label="Voltar para IA">
+            <Tip label={`Voltar para ${labelFor(readLastSection())}`}>
               <Link
                 to="/"
-                search={{ secao: "ai" }}
-                aria-label="Voltar para IA"
+                search={{ secao: readLastSection() }}
+                aria-label={`Voltar para ${labelFor(readLastSection())}`}
                 className="mx-auto mt-6 grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
               >
                 <ArrowLeft className="size-4" />

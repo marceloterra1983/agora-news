@@ -1,12 +1,15 @@
 import { Tip } from "@/components/news/icon-btn";
 import { ProfileCard } from "@/components/news/x-profile-card";
 import type { FoundProfile } from "@/lib/news/server";
-import { addExtraFonteFromProfile, isExtraFonte, removeExtraFonte } from "@/lib/news/extra-fontes";
+import { addExtraFonteFromProfile, loadExtraFontes, removeExtraFonte } from "@/lib/news/extra-fontes";
 import { removeInterest, saveInterest } from "@/lib/news/profile-interests";
-import { profileByHandle } from "@/lib/news/profiles";
+import { profilesFor } from "@/lib/news/profiles";
+import { catalogFor, handleInCatalog } from "@/lib/news/section-catalog.mjs";
+import type { Category } from "@/lib/news/types";
 import { ChevronDown, X } from "lucide-react";
 
 export function BuscarInterests({
+  secao,
   interests,
   result,
   summary,
@@ -18,6 +21,7 @@ export function BuscarInterests({
   onCloseCard,
   onInterests,
 }: {
+  secao: Category;
   interests: string[];
   result: FoundProfile | null;
   summary: string;
@@ -72,16 +76,16 @@ export function BuscarInterests({
                     result={result}
                     summary={summary}
                     summarizing={summarizing}
-                    known={Boolean(profileByHandle(result.handle))}
+                    known={handleInCatalog(result.handle, catalogFor(secao, { profiles: profilesFor(secao), extras: loadExtraFontes() }))}
                     saved
-                    inFontes={Boolean(profileByHandle(result.handle)) || isExtraFonte(result.handle)}
+                    inFontes={handleInCatalog(result.handle, catalogFor(secao, { profiles: profilesFor(secao), extras: loadExtraFontes() }))}
                     nested
                     onSave={() => onInterests(saveInterest(result.handle))}
                     onRemove={() => {
                       onInterests(removeInterest(result.handle));
                       onCloseCard();
                     }}
-                    onAddFonte={() => addExtraFonteFromProfile(result, summary)}
+                    onAddFonte={() => addExtraFonteFromProfile(result, summary, secao)}
                     onRemoveFonte={() => removeExtraFonte(result.handle)}
                   />
                 ) : open && loading ? (

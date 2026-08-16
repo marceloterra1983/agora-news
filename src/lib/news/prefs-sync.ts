@@ -1,8 +1,10 @@
 import { loadExtraFontes, replaceExtraFontes } from "./extra-fontes";
 import { getDisabled, getGroupOverrides, getNotifyHandles, getStarred, setGroupOverrides } from "./fontes-prefs";
 import { loadCustomGroups, replaceCustomGroups } from "./groups";
+import { applyBySection, snapshotBySection } from "./section-prefs.mjs";
 import { applySettings, readSettings, SETTINGS_KEY } from "./settings";
 import { applyTheme, type ThemeMode } from "./theme";
+import { DEFAULT_SECTION } from "./types";
 import { loadPrefs, savePrefs, type CloudPrefs } from "./prefs-server";
 
 export function snapshotPrefs(): CloudPrefs {
@@ -21,8 +23,9 @@ export function snapshotPrefs(): CloudPrefs {
     extras: loadExtraFontes(),
     settings,
     theme,
-    groups: getGroupOverrides(),
-    customGroups: loadCustomGroups(),
+    groups: getGroupOverrides(DEFAULT_SECTION),
+    customGroups: loadCustomGroups(DEFAULT_SECTION),
+    bySection: snapshotBySection(),
   };
 }
 
@@ -38,8 +41,11 @@ function writeLocal(prefs: CloudPrefs) {
     if (prefs.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(prefs.settings));
     if (prefs.theme) localStorage.setItem("agora-theme", themeMode(prefs.theme));
     if (Array.isArray(prefs.extras)) replaceExtraFontes(prefs.extras);
-    if (prefs.groups) setGroupOverrides(prefs.groups);
-    if (Array.isArray(prefs.customGroups)) replaceCustomGroups(prefs.customGroups);
+    if (prefs.bySection) applyBySection(prefs.bySection);
+    else {
+      if (prefs.groups) setGroupOverrides(prefs.groups, DEFAULT_SECTION);
+      if (Array.isArray(prefs.customGroups)) replaceCustomGroups(prefs.customGroups, DEFAULT_SECTION);
+    }
     applySettings(readSettings());
     applyTheme(themeMode(prefs.theme));
     window.dispatchEvent(new Event("agora-fontes-prefs"));

@@ -2,6 +2,7 @@ import { Bell, BellOff, Layers, Power, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { addCustomGroup, allGroupIds, groupLabel, groupPip, onCustomGroups, removeCustomGroup } from "@/lib/news/groups";
 import { GROUP_ORDER } from "@/lib/news/profiles";
+import { readLastSection } from "@/lib/news/section-pref";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
 
@@ -34,10 +35,10 @@ export function FonteControls({
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
-  const [ids, setIds] = useState<string[]>(() => allGroupIds());
+  const [ids, setIds] = useState<string[]>(() => allGroupIds(readLastSection()));
   const box = useRef<HTMLDivElement>(null);
 
-  useEffect(() => onCustomGroups(() => setIds(allGroupIds())), []);
+  useEffect(() => onCustomGroups(() => setIds(allGroupIds(readLastSection()))), []);
 
   useEffect(() => {
     if (!open) return;
@@ -63,13 +64,13 @@ export function FonteControls({
 
   function create(e: React.FormEvent) {
     e.preventDefault();
-    const g = addCustomGroup(name);
+    const g = addCustomGroup(name, readLastSection());
     if (!g) return;
     onSetGroup(handle, g.id);
     setName("");
     setCreating(false);
     setOpen(false);
-    setIds(allGroupIds());
+    setIds(allGroupIds(readLastSection()));
   }
 
   return (
@@ -178,10 +179,10 @@ export function FonteControls({
                 <button
                   type="button"
                   onClick={() => {
-                    removeCustomGroup(group);
+                    removeCustomGroup(group, readLastSection());
                     onResetGroup?.(handle);
                     setOpen(false);
-                    setIds(allGroupIds());
+                    setIds(allGroupIds(readLastSection()));
                   }}
                   className="flex w-full items-center px-3 py-2 text-left text-[13px] font-medium text-ink-soft hover:bg-paper-2 hover:text-ink"
                 >

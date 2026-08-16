@@ -186,10 +186,15 @@ function distance(a: string, b: string): number {
   return row[b.length];
 }
 
-export function matchProfiles(raw: string, limit = 8): Array<XProfile & { score: number }> {
+export function matchProfiles(
+  raw: string,
+  limit = 8,
+  section?: Category | null,
+): Array<XProfile & { score: number }> {
   const q = fold(raw);
   if (q.length < 1) return [];
-  const scored = ALL.map((p) => {
+  const pool = section ? ALL.filter((p) => p.section === section) : ALL;
+  const scored = pool.map((p) => {
     const h = fold(p.handle);
     const n = fold(p.name);
     const words = n.split(/[\s._-]+/).filter(Boolean);

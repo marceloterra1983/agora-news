@@ -1,12 +1,15 @@
 import { HitRow } from "@/components/news/x-hit-row";
 import { ProfileCard } from "@/components/news/x-profile-card";
 import type { FoundProfile } from "@/lib/news/server";
-import { addExtraFonteFromProfile, isExtraFonte, removeExtraFonte } from "@/lib/news/extra-fontes";
+import { addExtraFonteFromProfile, loadExtraFontes, removeExtraFonte } from "@/lib/news/extra-fontes";
 import { hasInterest, removeInterest, saveInterest } from "@/lib/news/profile-interests";
-import { profileByHandle } from "@/lib/news/profiles";
+import { profilesFor } from "@/lib/news/profiles";
+import { catalogFor, handleInCatalog } from "@/lib/news/section-catalog.mjs";
+import type { Category } from "@/lib/news/types";
 import type { XUserHit } from "@/lib/news/server";
 
 export function BuscarHitList({
+  secao,
   hits,
   searching,
   result,
@@ -18,6 +21,7 @@ export function BuscarHitList({
   onToggle,
   onInterests,
 }: {
+  secao: Category;
   hits: XUserHit[];
   searching: boolean;
   result: FoundProfile | null;
@@ -32,8 +36,9 @@ export function BuscarHitList({
   const novos = hits.filter((h) => !h.inFeed);
   const jaNoFeed = hits.filter((h) => h.inFeed);
   const saved = result ? hasInterest(result.handle) : false;
-  const known = result ? Boolean(profileByHandle(result.handle)) : false;
-  const inFontes = result ? known || isExtraFonte(result.handle) : false;
+  const catalog = catalogFor(secao, { profiles: profilesFor(secao), extras: loadExtraFontes() });
+  const known = result ? handleInCatalog(result.handle, catalog) : false;
+  const inFontes = known;
 
   function card(handle: string) {
     const key = handle.toLowerCase();
@@ -51,7 +56,7 @@ export function BuscarHitList({
           showFace={false}
           onSave={() => onInterests(saveInterest(result.handle))}
           onRemove={() => onInterests(removeInterest(result.handle))}
-          onAddFonte={() => addExtraFonteFromProfile(result, summary)}
+          onAddFonte={() => addExtraFonteFromProfile(result, summary, secao)}
           onRemoveFonte={() => removeExtraFonte(result.handle)}
         />
       );

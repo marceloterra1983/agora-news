@@ -15,8 +15,9 @@ import {
   toggleStar as persistToggleStar,
 } from "./fontes-prefs";
 import { isNotifyEnabled, subscribeWebPush } from "./notify-favorites";
+import type { Category } from "./types";
 
-export function useFontesPrefs() {
+export function useFontesPrefs(section?: Category) {
   const [starred, setStarredState] = useState<string[]>([]);
   const [disabled, setDisabledState] = useState<string[]>([]);
   const [notify, setNotifyState] = useState<string[]>([]);
@@ -26,8 +27,8 @@ export function useFontesPrefs() {
     setStarredState(getStarred());
     setDisabledState(getDisabled());
     setNotifyState(getNotifyHandles());
-    setGroupsState(getGroupOverrides());
-  }, []);
+    setGroupsState(getGroupOverrides(section));
+  }, [section]);
 
   useEffect(() => {
     refresh();
@@ -53,11 +54,11 @@ export function useFontesPrefs() {
     isNotify: (h: string) => notify.includes(normHandle(h)),
     groupOf: (h: string) => groups[normHandle(h)] ?? null,
     setGroup: (h: string, group: string) => {
-      persistGroup(h, group);
+      persistGroup(h, group, section);
       refresh();
     },
     clearGroup: (h: string) => {
-      persistClearGroup(h);
+      persistClearGroup(h, section);
       refresh();
     },
     toggleStar: (h: string) => {

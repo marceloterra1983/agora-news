@@ -4,9 +4,9 @@ import { groupLabel, groupStyle as customGroupStyle } from "@/lib/news/groups";
 import { GROUP_LABELS, profileByHandle, type ProfileGroup } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
 
-export function groupOf(handle?: string | null): string {
+export function groupOf(handle?: string | null, section?: string): string {
   if (!handle) return "novos";
-  return groupOverrideOf(handle) ?? profileByHandle(handle)?.group ?? "novos";
+  return groupOverrideOf(handle, section) ?? profileByHandle(handle)?.group ?? "novos";
 }
 
 export function groupLabelFor(handle?: string | null): string | null {

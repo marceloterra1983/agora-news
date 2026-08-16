@@ -4,6 +4,7 @@ import type { InfluenceRow } from "./influence";
 import { lastPostHref } from "./last-post";
 import { readLastSection } from "./section-pref";
 import type { Category } from "./types";
+import { extrasForSection } from "./watch-section.mjs";
 
 const KEY = "agora-extra-fontes-v1";
 
@@ -138,7 +139,7 @@ export function addExtraFonte(row: ExtraFonte): ExtraFonte[] {
   ];
   pushWatch(next[0]);
   const group = suggestGroup({ handle, name: next[0].name, bio: next[0].summary });
-  if (group !== "novos") setGroupOverride(handle, group);
+  if (group !== "novos") setGroupOverride(handle, group, next[0].section);
   return write(next);
 }
 
@@ -153,9 +154,12 @@ export function syncExtraFontes() {
   for (const row of loadExtraFontes()) pushWatch(row);
 }
 
-export function isExtraFonte(handle: string): boolean {
+export function isExtraFonte(handle: string, section?: Category): boolean {
   const key = norm(handle).toLowerCase();
-  return loadExtraFontes().some((x) => x.handle.toLowerCase() === key);
+  const list = section
+    ? extrasForSection(loadExtraFontes(), section)
+    : loadExtraFontes();
+  return list.some((x) => x.handle.toLowerCase() === key);
 }
 
 export function extraFonteToRow(e: ExtraFonte): InfluenceRow {

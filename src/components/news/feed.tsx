@@ -10,7 +10,6 @@ import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { useUnread } from "@/lib/news/use-unread";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "@/lib/news/supabase";
-import { type ProfileGroup } from "@/lib/news/profiles";
 import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
 import { groupOf } from "./group-tag";
@@ -43,13 +42,12 @@ function writeLastGood(category: Category, query: string | undefined, data: News
   }
 }
 
-function readGroup(): ProfileGroup | "all" {
+function readGroup(category: Category): string {
   if (typeof window === "undefined") return "all";
   try {
-    const v = sessionStorage.getItem(GROUP_KEY);
-    if (v === "all") return "all";
-    if (v && ["labs", "lideres", "pesquisa", "imprensa", "builders", "novos"].includes(v))
-      return v as ProfileGroup;
+    const v = sessionStorage.getItem(`${GROUP_KEY}:${category}`) ?? sessionStorage.getItem(GROUP_KEY);
+    if (!v || v === "all") return "all";
+    return v;
   } catch {
     /* ignore */
   }
@@ -66,11 +64,11 @@ export function Feed({
   category: Category;
   query?: string;
   initial?: NewsPayload;
-  group?: ProfileGroup | "all";
-  onGroupChange?: (g: ProfileGroup | "all") => void;
+  group?: string;
+  onGroupChange?: (g: string) => void;
 }) {
   const ingest = useNewsStore((s) => s.ingest);
-  const prefs = useFontesPrefs();
+  const prefs = useFontesPrefs(category);
   const unread = useUnread();
   const seedBaseline = unread.seedBaseline;
   const queryClient = useQueryClient();
@@ -88,11 +86,11 @@ export function Feed({
   const [older, setOlder] = useState<NewsPayload["stories"]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [groupLocal, setGroupLocal] = useState<ProfileGroup | "all">("all");
+  const [groupLocal, setGroupLocal] = useState<string>("all");
   const group = groupProp ?? groupLocal;
 
   useEffect(() => {
-    const g = readGroup();
+    const g = readGroup(category);
     setGroupLocal(g);
     onGroupChange?.(g);
     setOlder([]);
@@ -172,10 +170,10 @@ export function Feed({
     return rawStories.filter((s) => {
       const h = normHandle(s.source || s.sourceLabel || "");
       if (h && disabled.has(h)) return false;
-      if (group !== "all" && groupOf(s.source) !== group) return false;
+      if (group !== "all" && groupOf(s.source, category) !== group) return false;
       return true;
     });
-  }, [rawStories, prefs.disabled, group]);
+  }, [rawStories, prefs.disabled, group, category]);
 
   useEffect(() => {
     if (!rawStories.length) return;
