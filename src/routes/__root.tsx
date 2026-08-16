@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { HideHostChrome } from "@/components/news/hide-host-chrome";
 import { PwaRoot } from "@/components/news/pwa-install";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CRITICAL_CSS } from "@/lib/news/critical.css";
@@ -17,6 +18,11 @@ import appCssInline from "../styles.css?inline";
 const APP_NAME = "Agora";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
 const ogImage = host ? `https://${host}/og.jpg` : undefined;
+
+const FONT_HREF =
+  "https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap";
+
+const FONT_LOAD_SCRIPT = `(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=${JSON.stringify(FONT_HREF)};l.media="print";l.onload=function(){this.media="all"};document.head.appendChild(l);})();`;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,13 +62,10 @@ export const Route = createRootRoute({
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icons/icon-180.png" },
-      // Crítico: Supabase no primeiro paint do feed
       { rel: "preconnect", href: "https://uqcaodtgrkphuhdkchyh.supabase.co" },
-      // Secundários: não competem com o first paint
       { rel: "dns-prefetch", href: "https://api.fxtwitter.com" },
       { rel: "dns-prefetch", href: "https://pbs.twimg.com" },
       { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },
-      { rel: "dns-prefetch", href: "https://fonts.gstatic.com" },
       {
         rel: "preconnect",
         href: "https://fonts.gstatic.com",
@@ -82,27 +85,18 @@ function Root() {
         <script dangerouslySetInnerHTML={{ __html: SETTINGS_BOOT_SCRIPT }} />
         <HeadContent />
         <style dangerouslySetInnerHTML={{ __html: appCssInline }} />
-        {/* Fontes sem bloquear render: media=print → onload troca para all */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap"
-          media="print"
-          // @ts-expect-error — onLoad em link para desbloquear paint
-          onLoad="this.media='all'"
-        />
+        <script dangerouslySetInnerHTML={{ __html: FONT_LOAD_SCRIPT }} />
         <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap"
-          />
+          <link rel="stylesheet" href={FONT_HREF} />
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v10";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v11";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>
       <body>
+        <HideHostChrome />
         <PreviewHostBridge />
         <PwaRoot />
         <QueryClientProvider client={queryClient}>
