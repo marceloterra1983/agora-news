@@ -489,6 +489,8 @@ export const summarizeProfile = createServerFn({ method: "POST" })
     return { summary, usedLlm: Boolean(summary && aiKey()) };
   });
 
+export type FoundProfile = Extract<Awaited<ReturnType<typeof lookupXProfile>>, { found: true }>;
+
 export type XUserHit = {
   handle: string;
   name: string;

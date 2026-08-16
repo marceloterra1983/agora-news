@@ -17,10 +17,10 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase]
 git:
-  branch: feat/chips-feed-only
-  hash: e456712
+  branch: feat/split-fontes-buscar
+  hash: ad05cdf
 handoff:
-  last_step_completed: "e03s01 group chips only on the feed"
+  last_step_completed: "split buscar/fontes routes into page modules"
   open_decisions:
     - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
     - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
