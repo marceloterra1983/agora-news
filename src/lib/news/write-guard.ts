@@ -11,10 +11,7 @@ export function requestWriteAllowed(kind: WriteKind, request: Request): boolean 
   if (site === "cross-site" || site === "same-site") return false;
   if (kind === "app") return site === "same-origin";
 
-  const ua = request.headers.get("user-agent") || "";
-  const isVercelCron =
-    request.headers.get("x-vercel-cron") === "1" || ua.toLowerCase().startsWith("vercel-cron");
-  if (kind === "ops") return site === "same-origin" || isVercelCron;
+  if (kind === "ops") return site === "same-origin";
 
   const secret = cronSecret();
   const auth = request.headers.get("authorization") || "";

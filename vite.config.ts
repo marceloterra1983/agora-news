@@ -124,8 +124,8 @@ function authPopupPlugin(): Plugin {
 }
 
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.
-// Keep `nitro` gated to `build` (the Vercel deploy target): enabled in dev it
-// opens a second dev-server port, which breaks the single-port preview.
+// Keep `nitro` gated to `build`: enabled in dev it opens a second
+// dev-server port, which breaks the single-port preview. Prod is PM2 + vite.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
 export default defineConfig(({ command }) => ({
@@ -146,7 +146,7 @@ export default defineConfig(({ command }) => ({
     ...(command === "build"
       ? [
           nitro({
-            preset: "vercel",
+            preset: "node-server",
             serverDir: "./server",
             routeRules: {
               "/sw.js": {

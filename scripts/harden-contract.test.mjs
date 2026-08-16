@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -23,6 +23,15 @@ test("health does not depend on sources table", () => {
 test("ingest invalidates fontes last-cache", () => {
   const src = readFileSync(join(root, "src/lib/news/ingest.ts"), "utf8");
   assert.match(src, /invalidateFontesLastCache/);
+});
+
+test("repo is not a Vercel project", () => {
+  assert.equal(existsSync(join(root, "vercel.json")), false);
+  const vite = readFileSync(join(root, "vite.config.ts"), "utf8");
+  assert.doesNotMatch(vite, /preset:\s*"vercel"/);
+  assert.doesNotMatch(vite, /Vercel deploy/);
+  const guard = readFileSync(join(root, "scripts/write-guard.mjs"), "utf8");
+  assert.doesNotMatch(guard, /cron Vercel|isVercelCron|vercelCron/);
 });
 
 test("gitignore covers secrets, vendor, nested clone", () => {
