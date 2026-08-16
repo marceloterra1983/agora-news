@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
 import { useNewsStore } from "@/lib/news/store";
+import { PAGE_SIZE } from "@/lib/news/page-size.mjs";
 import { type Category } from "@/lib/news/types";
 import { normHandle } from "@/lib/news/fontes-prefs";
 import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
@@ -18,7 +19,7 @@ import { Tip } from "./icon-btn";
 
 const LAST_FEED = "agora-last-live-v3";
 const GROUP_KEY = "agora-feed-group";
-const PAGE = 40;
+const PAGE = PAGE_SIZE;
 
 type NewsPayload = ReturnType<typeof newsFromFallback> & {
   meta: ReturnType<typeof newsFromFallback>["meta"] & { hasMore?: boolean };
@@ -259,7 +260,7 @@ export function Feed({
               onClick={() => void loadMore()}
               className="grid size-10 place-items-center rounded-full bg-paper-2 text-ink disabled:opacity-40"
             >
-              <ChevronDown className={cn("size-5", loadingMore && "animate-bounce")} />
+              <ChevronDown className={cn("size-5", loadingMore && "opacity-50")} />
             </button>
           </Tip>
         </div>

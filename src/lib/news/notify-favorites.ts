@@ -1,4 +1,5 @@
 import { getNotifyHandles, normHandle } from "./fontes-prefs";
+import { applyPushSubscribeResult } from "./notify-core.mjs";
 import { VAPID_PUBLIC_KEY } from "./vapid-public";
 import type { Story } from "./types";
 
@@ -57,10 +58,11 @@ export async function enableFavoriteNotify(): Promise<NotificationPermission | "
       ? "granted"
       : await Notification.requestPermission();
   if (perm === "granted") {
+    const pushed = await subscribeWebPush();
+    if (!pushed) return perm;
     window.localStorage.setItem(ENABLED_KEY, "1");
     window.localStorage.removeItem(READY_KEY);
     emit();
-    void subscribeWebPush();
   }
   return perm;
 }
@@ -68,6 +70,7 @@ export async function enableFavoriteNotify(): Promise<NotificationPermission | "
 export function disableFavoriteNotify() {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(ENABLED_KEY, "0");
+  void unsubscribeWebPush();
   emit();
 }
 
@@ -151,7 +154,7 @@ function urlBase64ToUint8Array(base64: string) {
 
 export async function subscribeWebPush() {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-    return false;
+    return true;
   }
   try {
     const reg = await navigator.serviceWorker.ready;
@@ -163,7 +166,7 @@ export async function subscribeWebPush() {
       }));
     const json = sub.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) return false;
-    await fetch("/api/push", {
+    const res = await fetch("/api/push", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -172,8 +175,29 @@ export async function subscribeWebPush() {
         handles: getNotifyHandles(),
       }),
     });
-    return true;
+    return applyPushSubscribeResult(res.ok);
   } catch {
     return false;
+  }
+}
+
+export async function unsubscribeWebPush() {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    const endpoint = sub?.endpoint;
+    if (sub) await sub.unsubscribe();
+    if (endpoint) {
+      await fetch("/api/push", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint }),
+      });
+    }
+  } catch {
+    /* local flag already off */
   }
 }

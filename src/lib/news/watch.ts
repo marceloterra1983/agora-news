@@ -1,4 +1,5 @@
 import { upsertPosts, deletePost } from "./admin";
+import { parseWatchSection } from "./watch-section.mjs";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase";
 
 export type WatchAccount = {
@@ -7,6 +8,7 @@ export type WatchAccount = {
   avatar: string | null;
   summary: string;
   followers: number;
+  section: string;
 };
 
 const AUTH = {
@@ -28,7 +30,7 @@ function watchId(handle: string) {
 export async function listWatchAccounts(): Promise<WatchAccount[]> {
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/posts?category=eq.watch&select=account,content,summary_pt,image_url,media_label&limit=80`,
+      `${SUPABASE_URL}/rest/v1/posts?category=eq.watch&select=account,content,summary_pt,image_url,media_label,batch_name,source&limit=80`,
       { headers: AUTH, signal: AbortSignal.timeout(6_000) },
     );
     if (!res.ok) return [];
@@ -38,6 +40,8 @@ export async function listWatchAccounts(): Promise<WatchAccount[]> {
       summary_pt?: string;
       image_url?: string;
       media_label?: string;
+      batch_name?: string;
+      source?: string;
     }>;
     const out: WatchAccount[] = [];
     const seen = new Set<string>();
@@ -51,6 +55,7 @@ export async function listWatchAccounts(): Promise<WatchAccount[]> {
         avatar: row.image_url || null,
         summary: row.summary_pt || "",
         followers: Number(row.media_label) || 0,
+        section: parseWatchSection(row),
       });
     }
     return out;
@@ -76,8 +81,8 @@ export async function registerWatch(input: WatchAccount): Promise<boolean> {
       media_label: String(input.followers || 0),
       image_url: input.avatar || "",
       category: "watch",
-      batch_name: "x-watch",
-      source: "x-watch",
+      batch_name: input.section ? `x-watch:${input.section}` : "x-watch",
+      source: input.section || "x-watch",
     },
   ]);
   return written.ok;

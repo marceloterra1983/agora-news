@@ -19,6 +19,11 @@ export function storedToLastHit(post: StoredLastPost | null | undefined): {
   count: number;
 } | null;
 export function preferNewerLast<T extends { publishedAt: string }>(a: T | null, b: T | null): T | null;
+export const LAST_POST_STALE_MS: number;
+export function lastPostIsStale(
+  post: { publishedAt?: string } | null | undefined,
+  now?: number,
+): boolean;
 export function isSyntheticPostId(id: unknown): boolean;
 export function usableTweetId(id: unknown, url: unknown): string;
 export function lastPostFromXLastRow(

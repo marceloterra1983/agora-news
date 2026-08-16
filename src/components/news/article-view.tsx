@@ -73,7 +73,12 @@ export function ArticleView({ story }: { story: Story }) {
       </Tip>
       <p className="mt-6 flex items-center gap-2.5 text-[13px] text-mute">
         {face ? (
-          <img src={face} alt="" className="size-8 shrink-0 rounded-full bg-paper-2 object-cover" />
+          <img
+            src={face}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="size-8 shrink-0 rounded-full bg-paper-2 object-cover"
+          />
         ) : (
           <span
             aria-hidden

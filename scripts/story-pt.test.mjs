@@ -6,6 +6,7 @@ import test from "node:test";
 import {
   chunkText,
   isDistinctTitle,
+  isTruncatedPt,
   needsFullTranslation,
   parseGtx,
 } from "../src/lib/news/story-pt.mjs";
@@ -17,6 +18,15 @@ const LECUN_EN =
   "For about 10 years now, I have argued that the *only* way forward is for AI technology to be widely available, shared, and open. Like the printing press and the Internet, AI amplifies human intelligence.";
 const LECUN_CUT =
   "Há cerca de 10 anos que defendo que o *único* caminho a seguir é que a tecnologia de IA esteja amplamente disponível";
+
+test("English with no/do still needs a full translation when PT is cut at 280", () => {
+  const orig = `${"There is no way to do this without the models. ".repeat(180)}End.`;
+  const cut = "Não há maneira de fazer isso sem os modelos. ".repeat(4).slice(0, 280);
+  assert.ok(orig.length > 8000);
+  assert.ok(cut.length <= 280);
+  assert.equal(isTruncatedPt(orig, cut), true);
+  assert.equal(needsFullTranslation(orig, cut), true);
+});
 
 test("truncated PT against a longer English original needs a full translation", () => {
   assert.equal(needsFullTranslation(LECUN_EN, LECUN_CUT), true);

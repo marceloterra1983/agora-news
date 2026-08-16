@@ -2,6 +2,7 @@ import {
   LAST_POST_CATEGORY,
   fetchLastPost,
   lastPostFromXLastRow,
+  lastPostIsStale,
   latestFromPosts,
   xLastListParams,
   type StoredLastPost,
@@ -78,7 +79,9 @@ export async function fillCatalogGaps(handles: string[]): Promise<number> {
   const have = await listXLastPosts();
   const missing = handles.filter((h) => {
     const key = h.replace(/^@+/, "").trim().toLowerCase();
-    return Boolean(key) && !have.has(key);
+    if (!key) return false;
+    const post = have.get(key);
+    return !post || lastPostIsStale(post);
   });
   return fillMissingLastPosts(missing);
 }

@@ -18,12 +18,34 @@ export function clipOneLine(text) {
   return `${(sp > 80 ? cut.slice(0, sp) : cut).trimEnd()}…`;
 }
 
-/** @param {string} text */
+/** Corta no espaço, não no meio da palavra. */
+export function clipAtWord(text, max) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  if (s.length <= max) return s;
+  const cut = s.slice(0, Math.max(0, max - 1));
+  const sp = cut.lastIndexOf(" ");
+  const floor = Math.floor(max * 0.4);
+  return `${(sp > floor ? cut.slice(0, sp) : cut).trimEnd()}…`;
+}
+
+/**
+ * no/do/de sozinhos são inglês. Acento ou ≥2 partículas PT (sem no/do).
+ * @param {string} text
+ */
 export function looksPortuguese(text) {
-  return (
-    /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(text) ||
-    /\b(é|da|do|de|um|uma|para|com|no|na|dos|das|pelo|pela)\b/i.test(text)
-  );
+  const s = String(text || "");
+  if (!s.trim()) return false;
+  if (/[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(s)) return true;
+  const en = (s.match(/\b(the|and|that|this|with|from|have|been|will|would|there|their|about|which|only|are|was|not|for)\b/gi) || [])
+    .length;
+  const ptStrong = (
+    s.match(/\b(não|você|está|são|também|pelo|pela|então|porque|muito|isso|aqui|ainda)\b/gi) || []
+  ).length;
+  const ptWeak = (s.match(/\b(é|uma|para|com|na|dos|das)\b/gi) || []).length;
+  if (en >= 2 && ptStrong === 0) return false;
+  if (en > ptStrong + ptWeak) return false;
+  return ptStrong >= 1 || ptWeak >= 2;
 }
 
 /** @param {string} name */

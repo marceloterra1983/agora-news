@@ -11,7 +11,15 @@ import { persistBuzzCache } from "./fonte-buzz-store";
 import { enrichFontesCatalog, invalidateFontesLastCache } from "./influence";
 import { mapPool } from "./map-pool";
 import { embedForStory } from "./x-media";
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL, invalidateSupabaseList } from "./supabase";
+import { PAGE_SIZE } from "./page-size.mjs";
+import { translateToPt } from "./translate-pt.mjs";
+import { clipAtWord } from "./summary-core.mjs";
+import {
+  SUPABASE_ANON_KEY,
+  SUPABASE_POSTS_URL,
+  invalidateSupabaseList,
+  storiesFromDbPosts,
+} from "./supabase";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson, cacheSetNx, cacheBackend } from "./cache";
 import { cloudKvSet } from "./cloud-kv";
 import { sendPushForStories } from "./push-server";
@@ -246,7 +254,6 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
     const posted = postedIso(status) || new Date().toISOString();
     const content = String(status.text).replace(/\s+/g, " ").trim();
     let photo = status.media?.photos?.[0]?.url || status.media?.videos?.[0]?.thumbnail_url || "";
-    let quoteBit = "";
     let media = photo ? (status.media?.videos?.length ? "Vídeo" : "Foto") : "Nenhuma";
     let usedEmbed = false;
 
@@ -260,11 +267,6 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
         embed.card?.image ||
         embed.article?.cover ||
         photo;
-      quoteBit = embed.quoted
-        ? ` ${embed.quoted.kind === "repost" ? "RT" : "QT"} @${embed.quoted.handle}: ${embed.quoted.text}`
-        : embed.card
-          ? ` ${embed.card.title}`
-          : "";
       const kind = embed.quoted?.kind;
       media = embed.assets.some((a) => a.type === "video")
         ? "Vídeo"
@@ -280,20 +282,18 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
                   ? "Foto"
                   : "Nenhuma";
     } else if (status.quote || status.retweet) {
-      const inner = status.quote || status.retweet;
-      quoteBit = ` ${status.retweet ? "RT" : "QT"} @${inner?.author?.screen_name || ""}: ${inner?.text || ""}`;
       media = status.retweet ? "Repost" : "Citação";
     }
 
-    const translation = await translateLine(`${content}${quoteBit}`.slice(0, 280));
+    const translation = await translateToPt(content);
     const row: UpsertPost = {
       post_id: String(status.id),
       account: handle,
       posted_at: posted,
       posted_at_sp: saoPauloIso(posted),
-      content: `${content}${quoteBit}`.trim(),
+      content,
       translation_pt: translation,
-      summary_pt: translation.slice(0, 180),
+      summary_pt: clipAtWord(translation, 180),
       post_url: status.url || `https://x.com/${handle}/status/${status.id}`,
       media_label: media,
       image_url: photo,
@@ -312,7 +312,16 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
     invalidateFeedCache();
     invalidateFontesLastCache();
     try {
-      await cloudKvSet(CACHE_KEYS.list("ai", 40), JSON.stringify(rows.slice(0, 40)), 60);
+      const stories = storiesFromDbPosts(rows, "ai");
+      const byCat = new Map<string, typeof stories>();
+      for (const story of stories) {
+        const list = byCat.get(story.category) ?? [];
+        list.push(story);
+        byCat.set(story.category, list);
+      }
+      for (const [cat, list] of byCat) {
+        await cloudKvSet(CACHE_KEYS.list(cat, PAGE_SIZE), JSON.stringify(list.slice(0, PAGE_SIZE)), 60);
+      }
     } catch {
       /* cache is optional */
     }

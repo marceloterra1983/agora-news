@@ -14,6 +14,7 @@ export const SUPABASE_ANON_KEY =
 
 export const SUPABASE_POSTS_URL = `${SUPABASE_URL}/rest/v1/posts`;
 
+import { PAGE_SIZE } from "./page-size.mjs";
 import { normalizeSection, type Category, type Story } from "./types";
 import { CACHE_KEYS, cacheDel, cacheGetJson, cacheSetJson, invalidateNewsCache } from "./cache";
 
@@ -85,6 +86,31 @@ function isNewsRow(p: DbPost): boolean {
   return true;
 }
 
+export function storiesFromDbPosts(
+  rows: Array<Partial<DbPost> & { post_id: string; posted_at: string }>,
+  fallbackCategory: Category,
+): Story[] {
+  return rows.map((p) =>
+    dbPostToStory(
+      {
+        post_id: p.post_id,
+        account: p.account ?? null,
+        posted_at: p.posted_at,
+        posted_at_sp: p.posted_at_sp ?? null,
+        content: p.content ?? null,
+        translation_pt: p.translation_pt ?? null,
+        summary_pt: p.summary_pt ?? null,
+        post_url: p.post_url ?? null,
+        media_label: p.media_label ?? null,
+        image_url: p.image_url ?? null,
+        category: p.category ?? fallbackCategory,
+        batch_name: p.batch_name ?? null,
+      },
+      p.category || fallbackCategory,
+    ),
+  );
+}
+
 export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
   const { source, sourceLabel } = handle(p.account || "");
   const title = (p.summary_pt || p.translation_pt || p.content || "Sem título").trim();
@@ -142,7 +168,7 @@ async function fetchList(category: Category, opts: ListOpts = {}): Promise<Story
   const params = new URLSearchParams();
   params.set("select", LIST_SELECT);
   params.set("order", "posted_at.desc");
-  params.set("limit", String(opts.limit ?? 24));
+  params.set("limit", String(opts.limit ?? PAGE_SIZE));
   if (opts.before) params.set("posted_at", `lt.${opts.before}`);
   params.set("category", `eq.${normalizeSection(category)}`);
 
@@ -202,7 +228,7 @@ export async function downloadSupabase(
   if (opts.before) return fetchList(fallbackCategory, opts);
 
   const slug = normalizeSection(fallbackCategory);
-  const limit = opts.limit ?? 24;
+  const limit = opts.limit ?? PAGE_SIZE;
   const key = `${slug}:${limit}`;
   const redisKey = CACHE_KEYS.list(slug, limit);
   const hit = listCache.get(key);

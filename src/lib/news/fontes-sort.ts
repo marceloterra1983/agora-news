@@ -1,5 +1,6 @@
 import { Clock, Layers, Star, Users } from "lucide-react";
 import { extraFonteToRow, type ExtraFonte } from "./extra-fontes";
+import { extrasForSection } from "./watch-section.mjs";
 import type { InfluenceRow } from "./influence";
 import { normHandle } from "./fontes-prefs";
 import { allGroupIds, groupHint, groupLabel } from "./groups";
@@ -61,9 +62,14 @@ export function seedFontes(secao: Category): InfluenceRow[] {
   return profilesFor(secao).map(emptyFonteRow);
 }
 
-export function mergeExtraFontes(base: InfluenceRow[], extras: ExtraFonte[]): InfluenceRow[] {
+export function mergeExtraFontes(
+  base: InfluenceRow[],
+  extras: ExtraFonte[],
+  section?: string,
+): InfluenceRow[] {
+  const scoped = section ? extrasForSection(extras, section) : extras;
   const seen = new Set(base.map((r) => r.handle.toLowerCase()));
-  const added = extras.filter((e) => !seen.has(e.handle.toLowerCase())).map(extraFonteToRow);
+  const added = scoped.filter((e) => !seen.has(e.handle.toLowerCase())).map(extraFonteToRow);
   return [...added, ...base];
 }
 

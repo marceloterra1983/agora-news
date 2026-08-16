@@ -1,12 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { VAPID_PUBLIC_KEY } from "@/lib/news/vapid-public";
-import { savePushSub } from "@/lib/news/push-server";
+import { deletePushSub, savePushSub } from "@/lib/news/push-server";
 import { denyWrite, requestWriteAllowed } from "@/lib/news/write-guard";
 
 export const Route = createFileRoute("/api/push")({
   server: {
     handlers: {
       GET: async () => Response.json({ key: VAPID_PUBLIC_KEY }),
+      DELETE: async ({ request }) => {
+        if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
+        const body = (await request.json().catch(() => ({}))) as { endpoint?: string };
+        const endpoint = String(body.endpoint || "");
+        if (!endpoint) return Response.json({ ok: false }, { status: 400 });
+        const ok = await deletePushSub(endpoint);
+        return Response.json({ ok });
+      },
       POST: async ({ request }) => {
         if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
         const { userIdFromHeaders } = await import("@/lib/auth/verify.server");
