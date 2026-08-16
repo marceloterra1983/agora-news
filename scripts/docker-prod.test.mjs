@@ -23,6 +23,11 @@ test("Dockerfile exists and is a production Nitro image", () => {
   assert.match(df, /EXPOSE\s+3080/);
   assert.match(df, /NITRO_PORT=3080|NITRO_PORT 3080/);
   assert.match(df, /USER\s+node/);
+  assert.match(
+    df,
+    /npm install -g npm@11[\s\S]*npm ci/,
+    "lockfile is npm@11 (same as CI); Node 22 image ships npm 10",
+  );
   const runLines = df
     .split("\n")
     .filter((line) => /^(RUN|CMD|ENTRYPOINT)\b/.test(line.trim()));

@@ -3,7 +3,8 @@ FROM node:22-bookworm-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# Mesmo npm@11 do job check — o lockfile não fecha no npm 10 da imagem Node 22.
+RUN npm install -g npm@11 && npm ci
 
 COPY tsconfig.json vite.config.ts ./
 COPY public ./public
@@ -25,6 +26,7 @@ ENV NODE_ENV=production \
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
+  && npm install -g npm@11 \
   && chown node:node /app
 
 USER node
