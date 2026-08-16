@@ -22,6 +22,7 @@ export const Route = createFileRoute("/api/watch")({
           summary?: string;
           followers?: number;
           lastPost?: unknown;
+          section?: string;
         };
         const handle = String(body.handle || "").replace(/^@+/, "").trim();
         if (!handle) return Response.json({ ok: false }, { status: 400 });
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/api/watch")({
           avatar: body.avatar || null,
           summary: String(body.summary || ""),
           followers: Number(body.followers) || 0,
+          section: String(body.section || ""),
         });
         if (ok && body.summary) {
           const prev = await readStoredProfile(handle);

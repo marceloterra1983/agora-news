@@ -54,8 +54,13 @@ function pickBuzz(hit: { at: number } & PostBuzz): PostBuzz {
   };
 }
 
-export function buzzFor(handle: string): PostBuzz | null {
-  const hit = buzzCache.get(handle.toLowerCase());
+export function buzzFor(handle: string, tweetId?: string): PostBuzz | null {
+  const key = handle.toLowerCase();
+  if (tweetId) {
+    const hit = buzzCache.get(`${key}:${tweetId}`);
+    if (hit) return pickBuzz(hit);
+  }
+  const hit = buzzCache.get(key);
   return hit ? pickBuzz(hit) : null;
 }
 
@@ -80,9 +85,10 @@ export function importBuzzCache(map: Record<string, PostBuzz> | null | undefined
   }
 }
 
-export async function fetchLastBuzz(handle: string): Promise<PostBuzz | null> {
+export async function fetchLastBuzz(handle: string, tweetId?: string): Promise<PostBuzz | null> {
   const key = handle.toLowerCase();
-  const hit = buzzCache.get(key);
+  const tweetKey = tweetId ? `${key}:${tweetId}` : key;
+  const hit = buzzCache.get(tweetKey) || buzzCache.get(key);
   if (hit && Date.now() - hit.at < BUZZ_TTL && typeof hit.profileEr === "number") {
     return pickBuzz(hit);
   }
@@ -92,22 +98,28 @@ export async function fetchLastBuzz(handle: string): Promise<PostBuzz | null> {
       { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6_000) },
     );
     if (!res.ok) return hit ? pickBuzz(hit) : null;
-    const body = (await res.json()) as { results?: Array<Parameters<typeof fromTweet>[0]> };
+    const body = (await res.json()) as {
+      results?: Array<Parameters<typeof fromTweet>[0] & { id?: string }>;
+    };
     const rows = body.results ?? [];
     if (!rows.length) return hit ? pickBuzz(hit) : null;
-    const first = fromTweet(rows[0]);
+    const picked =
+      tweetId ? rows.find((r) => String(r.id) === String(tweetId)) ?? rows[0] : rows[0];
+    const first = fromTweet(picked);
     const rates = rows.map((r) => engagementRate(fromTweet(r))).filter((n) => n > 0);
     const profileEr = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
     const buzz: PostBuzz = { ...first, er: engagementRate(first), profileEr };
     buzzCache.set(key, { at: Date.now(), ...buzz });
+    if (tweetId) buzzCache.set(tweetKey, { at: Date.now(), ...buzz });
     return buzz;
   } catch {
     return hit ? pickBuzz(hit) : null;
   }
 }
 
-export function buzzIsFresh(handle: string): boolean {
-  const hit = buzzCache.get(handle.toLowerCase());
+export function buzzIsFresh(handle: string, tweetId?: string): boolean {
+  const key = handle.toLowerCase();
+  const hit = tweetId ? buzzCache.get(`${key}:${tweetId}`) || buzzCache.get(key) : buzzCache.get(key);
   return Boolean(hit && Date.now() - hit.at < BUZZ_TTL);
 }
 

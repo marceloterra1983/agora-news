@@ -92,6 +92,16 @@ export function preferNewerLast(a, b) {
   return Date.parse(b.publishedAt) > Date.parse(a.publishedAt) ? b : a;
 }
 
+/** x-last com mais de 14 dias entra de novo no fill (DanielaAmodei 2023). */
+export const LAST_POST_STALE_MS = 14 * 24 * 60 * 60_000;
+
+/** @param {{ publishedAt?: string } | null | undefined} post @param {number} [now] */
+export function lastPostIsStale(post, now = Date.now()) {
+  if (!post?.publishedAt) return true;
+  const at = Date.parse(post.publishedAt);
+  return !Number.isFinite(at) || now - at > LAST_POST_STALE_MS;
+}
+
 /** @param {unknown} id */
 export function isSyntheticPostId(id) {
   return /^(prfl_|watch_|last_|kv_)/i.test(String(id || ""));

@@ -1,5 +1,7 @@
 import type { InfluenceRow } from "./influence";
 import { lastPostHref } from "./last-post";
+import { readLastSection } from "./section-pref";
+import type { Category } from "./types";
 
 const KEY = "agora-extra-fontes-v1";
 
@@ -10,6 +12,7 @@ export type ExtraFonte = {
   verified: boolean;
   followers: number;
   summary: string;
+  section: Category;
   lastPost: { id: string; title: string; publishedAt: string } | null;
 };
 
@@ -43,6 +46,7 @@ export function loadExtraFontes(): ExtraFonte[] {
         verified: Boolean(row.verified),
         followers: Number(row.followers) || 0,
         summary: String(row.summary || ""),
+        section: String(row.section || ""),
         lastPost: row.lastPost?.id
           ? {
               id: String(row.lastPost.id),
@@ -70,6 +74,7 @@ function pushWatch(row: ExtraFonte) {
       summary: row.summary,
       followers: row.followers,
       lastPost: row.lastPost,
+      section: row.section,
     }),
   }).catch(() => {});
 }
@@ -97,6 +102,7 @@ export function addExtraFonteFromProfile(
     lastPost: { id: string; text: string; publishedAt: string } | null;
   },
   summary: string,
+  section?: Category,
 ): ExtraFonte[] {
   return addExtraFonte({
     handle: result.handle,
@@ -104,6 +110,7 @@ export function addExtraFonteFromProfile(
     avatar: result.avatar,
     verified: result.verified,
     followers: result.followers,
+    section: section || readLastSection(),
     summary,
     lastPost: result.lastPost
       ? {

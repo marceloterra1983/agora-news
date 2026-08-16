@@ -13,6 +13,7 @@ import {
   toggleNotifyHandle as persistToggleNotify,
   toggleStar as persistToggleStar,
 } from "./fontes-prefs";
+import { isNotifyEnabled, subscribeWebPush } from "./notify-favorites";
 
 export function useFontesPrefs() {
   const [starred, setStarredState] = useState<string[]>([]);
@@ -67,6 +68,7 @@ export function useFontesPrefs() {
     toggleNotify: (h: string) => {
       const next = persistToggleNotify(h);
       refresh();
+      if (isNotifyEnabled()) void subscribeWebPush();
       return next;
     },
     setStarred: (h: string, on: boolean) => {
@@ -80,6 +82,7 @@ export function useFontesPrefs() {
     setNotify: (h: string, on: boolean) => {
       persistNotify(h, on);
       refresh();
+      if (isNotifyEnabled()) void subscribeWebPush();
     },
     refresh,
   };

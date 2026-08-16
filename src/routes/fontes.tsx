@@ -79,7 +79,7 @@ function FontesPage() {
   });
 
   const base = data?.rows?.length ? data.rows : seed;
-  const withExtras = useMemo(() => mergeExtraFontes(base, extras), [base, extras]);
+  const withExtras = useMemo(() => mergeExtraFontes(base, extras, secao), [base, extras, secao]);
   const rows = useMemo(
     () =>
       sortFontesRows(withExtras, sort, prefs.starred).map((r) => ({

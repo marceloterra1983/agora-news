@@ -1,3 +1,5 @@
+import { clipAtWord } from "./summary-core.mjs";
+
 const WEEKDAYS = [
   "domingo",
   "segunda-feira",
@@ -80,5 +82,5 @@ export function displayTitle(title: string): string {
     .replace(/\s*\((?:com\s+)?imagem\s+diferente\)\.?\s*$/i, "")
     .replace(/\s*com imagem diferente\.?\s*$/i, "")
     .trim();
-  return clean || title;
+  return clipAtWord(clean || title, 180);
 }

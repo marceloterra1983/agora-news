@@ -3,6 +3,7 @@ import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
 import { downloadPostById } from "./supabase";
 import { hydrateStory } from "./story-hydrate";
 import { timed } from "./timing";
+import { PAGE_SIZE } from "./page-size.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 
 function toNews(payload: ReturnType<typeof fallbackPayload>, category: Category, q?: string) {
@@ -46,7 +47,7 @@ export const loadNews = createServerFn({ method: "GET" })
       async () => {
         if (data.before) {
           const { downloadSupabase } = await import("./supabase");
-          const older = await downloadSupabase(data.category, { before: data.before, limit: 40 });
+          const older = await downloadSupabase(data.category, { before: data.before, limit: PAGE_SIZE });
           const stories = filterStories(older, data.category, data.q).map((s) => ({
             ...s,
             body: s.excerpt || s.title,
@@ -60,7 +61,7 @@ export const loadNews = createServerFn({ method: "GET" })
               folder: `NEWS/${data.category.toUpperCase()}`,
               count: stories.length,
               source: "supabase",
-              hasMore: stories.length >= 40,
+              hasMore: stories.length >= PAGE_SIZE,
             },
           };
         }
@@ -68,7 +69,7 @@ export const loadNews = createServerFn({ method: "GET" })
         const news = toNews(payload, data.category, data.q);
         return {
           ...news,
-          meta: { ...news.meta, hasMore: news.stories.length >= 40 },
+          meta: { ...news.meta, hasMore: news.stories.length >= PAGE_SIZE },
         };
       },
       (r) => ({ count: r.stories?.length ?? 0, live: Boolean(r.meta?.live) }),

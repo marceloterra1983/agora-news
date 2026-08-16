@@ -4,6 +4,7 @@ import { getSection, mergeSectionList } from "./sections";
 import { downloadSupabase } from "./supabase";
 import { loadXStories } from "./x-search";
 import { invalidateNewsCache } from "./cache";
+import { PAGE_SIZE } from "./page-size.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category, type Story } from "./types";
 
 export type FeedPayload = {
@@ -22,7 +23,7 @@ export type FeedPayload = {
 /** Fresh: serve only. Stale: serve + refresh in background. Expired: wait. */
 const SOFT_MS = 90_000;
 const HARD_MS = 300_000;
-const FIRST_LIMIT = 24;
+const FIRST_LIMIT = PAGE_SIZE;
 
 const cache = new Map<string, { at: number; payload: FeedPayload }>();
 const lastGood = new Map<string, FeedPayload>();

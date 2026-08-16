@@ -1,13 +1,23 @@
 import { looksPortuguese } from "./summary-core.mjs";
 
-/** PT gravado no ingest (280) é corte. Reabrir a matéria exige o texto inteiro. */
+/** Ingest histórico cortava em 280. Inglês longo + PT curto = retraduzir. */
+export function isTruncatedPt(original, body) {
+  const orig = String(original || "").trim();
+  const pt = String(body || "").trim();
+  if (!orig || !pt) return false;
+  if (orig.length > 400 && pt.length <= 280) return true;
+  if (!looksPortuguese(orig) && pt.length < orig.length * 0.75) return true;
+  return false;
+}
+
+/** Retraduz inglês quando o PT está cortado ou não é português de verdade. */
 export function needsFullTranslation(original, body) {
   const orig = String(original || "").trim();
   const pt = String(body || "").trim();
   if (!orig) return false;
   if (!pt) return !looksPortuguese(orig);
+  if (isTruncatedPt(orig, pt)) return true;
   if (!looksPortuguese(pt) && !looksPortuguese(orig)) return true;
-  if (!looksPortuguese(orig) && pt.length < orig.length * 0.75) return true;
   return false;
 }
 

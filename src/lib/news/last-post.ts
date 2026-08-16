@@ -12,6 +12,8 @@ export {
   keepLastPost,
   lastPostFromXLastRow,
   lastPostHref,
+  lastPostIsStale,
+  LAST_POST_STALE_MS,
   parseLastPost,
   pickLatestFromPostRows,
   preferNewerLast,

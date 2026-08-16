@@ -138,6 +138,23 @@ async function listPushSubs(): Promise<Array<{ id: string; sub: PushSub }>> {
   return pickPushList(table.kind, table.rows, extras);
 }
 
+export async function deletePushSub(endpoint: string): Promise<boolean> {
+  const id = subId(endpoint);
+  let tableOk = false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: adminHeaders(),
+      signal: AbortSignal.timeout(5_000),
+    });
+    tableOk = res.ok;
+  } catch {
+    tableOk = false;
+  }
+  const legacy = await deletePost(id);
+  return tableOk || legacy;
+}
+
 export async function savePushSub(sub: PushSub): Promise<boolean> {
   const id = subId(sub.endpoint);
   const tableOk = await upsertPushTable(id, sub);

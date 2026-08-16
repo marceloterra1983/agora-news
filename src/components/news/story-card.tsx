@@ -35,6 +35,21 @@ export function StoryCard({
           />
         ) : null}
         <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-mute">
+          {story.avatar ? (
+            <img
+              src={story.avatar}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="size-6 shrink-0 rounded-full bg-paper-2 object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="grid size-6 shrink-0 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-ink"
+            >
+              {story.source.replace(/^@/, "").charAt(0).toUpperCase()}
+            </span>
+          )}
           {unread ? (
             <span
               data-unread-mark=""

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { fetchLastPost } from "./last-post";
-import { blurbFor, profileByHandle, profilesFor } from "./profiles";
+import { allProfiles, blurbFor, profileByHandle } from "./profiles";
 import { readStoredProfile } from "./profile-store";
 import { clipOneLine } from "./summary-core.mjs";
 import { aiKey, oneLineAbout } from "./summary-line";
@@ -134,7 +134,7 @@ export const searchXUsers = createServerFn({ method: "GET" })
           is_blue_verified?: boolean;
         }>;
       };
-      const known = new Set(profilesFor().map((p) => p.handle.toLowerCase()));
+      const known = new Set(allProfiles().map((p) => p.handle.toLowerCase()));
       const users: XUserHit[] = [];
       const seen = new Set<string>();
       for (const u of body.users ?? []) {

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  clipAtWord,
   clipOneLine,
   extractLlmText,
   extractMatchesPerson,
@@ -20,6 +21,17 @@ test("clipOneLine strips urls/hashtags and cuts at a sentence or 160 chars", () 
 test("looksPortuguese detects accents and common particles", () => {
   assert.equal(looksPortuguese("pesquisa de inteligência"), true);
   assert.equal(looksPortuguese("hello world this is english"), false);
+  assert.equal(looksPortuguese("There is no way to do this without help"), false);
+  assert.equal(looksPortuguese("For about 10 years now, I have argued that the only way"), false);
+  assert.equal(looksPortuguese("uma pesquisa para os dados"), true);
+});
+
+test("clipAtWord cuts on a space and adds an ellipsis", () => {
+  assert.equal(clipAtWord("palavra curta", 80), "palavra curta");
+  const clipped = clipAtWord("alpha bravo charlie delta echo foxtrot", 18);
+  assert.ok(clipped.endsWith("…"));
+  assert.ok(!clipped.includes("charli"));
+  assert.ok(clipped.length <= 18);
 });
 
 test("extractMatchesPerson requires handle or enough name tokens", () => {

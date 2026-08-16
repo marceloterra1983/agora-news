@@ -6,6 +6,7 @@ import { mapPool } from "./map-pool";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listKnownSections } from "./sections";
+import { extrasForSection } from "./watch-section.mjs";
 import { listWatchAccounts } from "./watch";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 import type { Category } from "./types";
@@ -56,7 +57,7 @@ type LastHit = { id: string; title: string; publishedAt: string; count: number }
 
 const USER_TTL = 60 * 60_000;
 const userCache = new Map<string, { at: number; stats: LiveStats }>();
-const lastCache = new Map<string, { at: number; map: Map<string, LastHit> }>();
+const lastCache = new Map<string, { at: number; feed: Map<string, LastHit>; last: Map<string, LastHit> }>();
 const LAST_TTL = 45_000;
 
 const AUTH = {
@@ -145,7 +146,7 @@ function lastWithBuzz(last: LastHit | null, handle: string, inApp: boolean): Inf
     href: lastPostHref(handle, last.id, inApp),
     title: last.title,
     publishedAt: last.publishedAt,
-    ...(buzzFor(handle) ?? {}),
+    ...(buzzFor(handle, last.id) ?? buzzFor(handle) ?? {}),
   };
 }
 
@@ -159,13 +160,15 @@ function cachedStats(handle: string): LiveStats {
   return userCache.get(norm(handle).toLowerCase())?.stats ?? emptyStats();
 }
 
-/** 1 query leve: últimos posts por conta na categoria (sem montar Story completo). */
-async function lastPostsByAccount(section: Category): Promise<Map<string, LastHit>> {
+/** Feed da seção separado do x-last — inApp só vale se o id está no feed. */
+async function lastPostsByAccount(
+  section: Category,
+): Promise<{ feed: Map<string, LastHit>; last: Map<string, LastHit> }> {
   const key = section;
   const hit = lastCache.get(key);
-  if (hit && Date.now() - hit.at < LAST_TTL) return hit.map;
+  if (hit && Date.now() - hit.at < LAST_TTL) return { feed: hit.feed, last: hit.last };
 
-  const map = new Map<string, LastHit>();
+  const feed = new Map<string, LastHit>();
   try {
     const params = new URLSearchParams();
     params.set("select", "post_id,account,posted_at,summary_pt");
@@ -186,12 +189,12 @@ async function lastPostsByAccount(section: Category): Promise<Map<string, LastHi
       for (const row of rows) {
         const handle = norm(row.account || "").toLowerCase();
         if (!handle || !row.post_id) continue;
-        const prev = map.get(handle);
+        const prev = feed.get(handle);
         if (prev) {
           prev.count += 1;
           continue;
         }
-        map.set(handle, {
+        feed.set(handle, {
           id: String(row.post_id),
           title: String(row.summary_pt || "Sem título").slice(0, 180),
           publishedAt: String(row.posted_at || ""),
@@ -202,16 +205,16 @@ async function lastPostsByAccount(section: Category): Promise<Map<string, LastHi
   } catch {
     /* empty map */
   }
+  const last = new Map(feed);
   const storedLast = await listXLastPosts();
   for (const [handle, post] of storedLast) {
-    const hit = storedToLastHit(post);
-    if (!hit) continue;
-    const cur = map.get(handle) ?? null;
-    const next = preferNewerLast(cur, hit);
-    if (next) map.set(handle, next);
+    const stored = storedToLastHit(post);
+    if (!stored) continue;
+    const next = preferNewerLast(last.get(handle) ?? null, stored);
+    if (next) last.set(handle, next);
   }
-  lastCache.set(key, { at: Date.now(), map });
-  return map;
+  lastCache.set(key, { at: Date.now(), feed, last });
+  return { feed, last };
 }
 
 async function hydrateStore() {
@@ -233,17 +236,25 @@ function storedLastMap(stored: StoredProfile[]): Map<string, LastHit> {
 
 function buildRows(
   section: Category,
+  feedMap: Map<string, LastHit>,
   lastMap: Map<string, LastHit>,
   stored: StoredProfile[],
-  watch: Array<{ handle: string; name: string; avatar: string | null; summary: string; followers: number }>,
+  watch: Array<{
+    handle: string;
+    name: string;
+    avatar: string | null;
+    summary: string;
+    followers: number;
+    section?: string;
+  }>,
 ): InfluenceRow[] {
   const since = Date.now() - 48 * 60 * 60_000;
   const fromStore = storedLastMap(stored);
   const base = profilesFor(section).map((p) => {
     const key = norm(p.handle).toLowerCase();
     const stats = cachedStats(key);
-    const fromFeed = lastMap.get(key) ?? null;
-    const last = preferNewerLast(fromFeed, fromStore.get(key) ?? null);
+    const fromFeed = feedMap.get(key) ?? null;
+    const last = preferNewerLast(lastMap.get(key) ?? fromFeed, fromStore.get(key) ?? null);
     const inApp = Boolean(fromFeed && last && fromFeed.id === last.id);
     const recentCount =
       last && Date.parse(last.publishedAt) >= since ? last.count : last ? Math.min(last.count, 1) : 0;
@@ -266,12 +277,12 @@ function buildRows(
 
   const seen = new Set(base.map((r) => norm(r.handle).toLowerCase()));
   const extras: InfluenceRow[] = [];
-  for (const w of watch) {
+  for (const w of extrasForSection(watch, section)) {
     const key = norm(w.handle).toLowerCase();
     if (!key || seen.has(key)) continue;
     const stats = cachedStats(key);
-    const fromFeed = lastMap.get(key) ?? null;
-    const last = preferNewerLast(fromFeed, fromStore.get(key) ?? null);
+    const fromFeed = feedMap.get(key) ?? null;
+    const last = preferNewerLast(lastMap.get(key) ?? fromFeed, fromStore.get(key) ?? null);
     const inApp = Boolean(fromFeed && last && fromFeed.id === last.id);
     extras.push({
       handle: w.handle,
@@ -299,8 +310,11 @@ function buildRows(
 
 /** Lista imediata: 1 query posts leve + cache de perfis. Zero fxtwitter. */
 export async function loadFontesFast(section: Category): Promise<InfluenceRow[]> {
-  const [lastMap, { stored, watch }] = await Promise.all([lastPostsByAccount(section), hydrateStore()]);
-  return buildRows(section, lastMap, stored, watch);
+  const [{ feed, last }, { stored, watch }] = await Promise.all([
+    lastPostsByAccount(section),
+    hydrateStore(),
+  ]);
+  return buildRows(section, feed, last, stored, watch);
 }
 
 /** Um passe de fxtwitter no cron: avatares + buzz de todo o catálogo. */
@@ -331,9 +345,9 @@ export async function enrichFontesCatalog(): Promise<InfluenceRow[]> {
       rows.push(row);
     }
   }
-  const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle)).slice(0, 20);
+  const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle, r.lastPost.id)).slice(0, 20);
   if (needBuzz.length) {
-    await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle));
+    await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle, r.lastPost?.id));
   }
   return rows;
 }
@@ -349,9 +363,9 @@ export async function enrichFontes(section: Category): Promise<InfluenceRow[]> {
     await mapPool(missing.slice(0, 8), 6, (p) => fetchOne(p.handle));
   }
   let rows = await loadFontesFast(section);
-  const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle)).slice(0, 20);
+  const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle, r.lastPost.id)).slice(0, 20);
   if (needBuzz.length) {
-    await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle));
+    await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle, r.lastPost?.id));
     rows = await loadFontesFast(section);
   }
   return rows;

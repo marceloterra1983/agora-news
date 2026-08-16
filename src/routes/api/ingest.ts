@@ -15,7 +15,9 @@ async function handle({ request }: { request: Request }) {
   if (!(await requestWriteAllowed("ingest", request))) return denyWrite("ingest");
   try {
     const result = await runIngest({ withProfiles: true });
+    const status = result.ok ? 200 : 502;
     return Response.json(result, {
+      status,
       headers: { "Cache-Control": "no-store" },
     });
   } catch (err) {
