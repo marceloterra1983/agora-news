@@ -57,6 +57,27 @@ export function buzzFor(handle: string): PostBuzz | null {
   return hit ? pickBuzz(hit) : null;
 }
 
+export function seedBuzz(handle: string, buzz: PostBuzz): void {
+  const key = handle.replace(/^@+/, "").trim().toLowerCase();
+  if (!key) return;
+  buzzCache.set(key, { at: Date.now(), ...buzz });
+}
+
+export function exportBuzzCache(): Record<string, PostBuzz> {
+  const out: Record<string, PostBuzz> = {};
+  for (const [key, hit] of buzzCache) out[key] = pickBuzz(hit);
+  return out;
+}
+
+export function importBuzzCache(map: Record<string, PostBuzz> | null | undefined): void {
+  if (!map || typeof map !== "object") return;
+  for (const [key, buzz] of Object.entries(map)) {
+    if (!key || !buzz || typeof buzz !== "object") continue;
+    if (buzzCache.has(key.toLowerCase())) continue;
+    buzzCache.set(key.toLowerCase(), { at: Date.now(), ...buzz });
+  }
+}
+
 export async function fetchLastBuzz(handle: string): Promise<PostBuzz | null> {
   const key = handle.toLowerCase();
   const hit = buzzCache.get(key);
@@ -88,9 +109,8 @@ export function buzzIsFresh(handle: string): boolean {
   return Boolean(hit && Date.now() - hit.at < BUZZ_TTL);
 }
 
-export async function getProfileMetrics(handle: string): Promise<{ profileEr: number }> {
-  const buzz = await fetchLastBuzz(handle.replace(/^@+/, "").trim());
-  return { profileEr: buzz?.profileEr ?? 0 };
+export function getProfileMetrics(handle: string): { profileEr: number } {
+  return { profileEr: buzzFor(handle.replace(/^@+/, "").trim())?.profileEr ?? 0 };
 }
 
 export function formatPostEr(post: { er?: number } | null | undefined): string {

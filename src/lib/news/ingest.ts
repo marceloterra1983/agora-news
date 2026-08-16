@@ -7,7 +7,8 @@ import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
 import { listWatchAccounts } from "./watch";
 import { invalidateFeedCache } from "./feed";
-import { enrichFontes, invalidateFontesLastCache } from "./influence";
+import { persistBuzzCache } from "./fonte-buzz-store";
+import { enrichFontesCatalog, invalidateFontesLastCache } from "./influence";
 import { mapPool } from "./map-pool";
 import { embedForStory } from "./x-media";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL, invalidateSupabaseList } from "./supabase";
@@ -389,25 +390,24 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
   const storedForEnrich = await listStoredProfiles();
   const storedAtEnrich = new Map(storedForEnrich.map((p) => [p.handle.toLowerCase(), p]));
   let enriched = 0;
-  for (const section of listKnownSections()) {
-    const liveRows = await enrichFontes(section);
-    const needStore = liveRows
-      .filter((r) => (r.avatar || r.followers) && !storedAtEnrich.get(r.handle.toLowerCase())?.avatar)
-      .slice(0, 8);
-    await mapPool(needStore, 4, async (r) => {
-      const prev = storedAtEnrich.get(r.handle.toLowerCase());
-      const ok = await upsertProfile({
-        handle: r.handle,
-        name: r.name,
-        bio: r.bio || prev?.bio || "",
-        summary_pt: prev?.summary_pt || r.bio || r.handle,
-        avatar: r.avatar,
-        followers: r.followers || prev?.followers || 0,
-        last_post: prev?.last_post ?? null,
-      });
-      if (ok) enriched += 1;
+  const liveRows = await enrichFontesCatalog();
+  const needStore = liveRows
+    .filter((r) => (r.avatar || r.followers) && !storedAtEnrich.get(r.handle.toLowerCase())?.avatar)
+    .slice(0, 8);
+  await mapPool(needStore, 4, async (r) => {
+    const prev = storedAtEnrich.get(r.handle.toLowerCase());
+    const ok = await upsertProfile({
+      handle: r.handle,
+      name: r.name,
+      bio: r.bio || prev?.bio || "",
+      summary_pt: prev?.summary_pt || r.bio || r.handle,
+      avatar: r.avatar,
+      followers: r.followers || prev?.followers || 0,
+      last_post: prev?.last_post ?? null,
     });
-  }
+    if (ok) enriched += 1;
+  });
+  await persistBuzzCache();
 
   return {
     batch,
