@@ -12,3 +12,7 @@ export type StoredProfileRow = {
 };
 
 export function storedProfileFromRow(raw: unknown, fallbackHandle?: string): StoredProfileRow | null;
+export function mergeClientProfile(
+  prev: Partial<StoredProfileRow> | null | undefined,
+  body: Record<string, unknown> | null | undefined,
+): Omit<StoredProfileRow, "updated_at"> | null;

@@ -2,6 +2,7 @@ import webpush from "web-push";
 import { VAPID_PUBLIC_KEY } from "./vapid-public";
 import { adminHeaders, deletePost, SUPABASE_URL } from "./admin";
 import { cloudKvListPrefix, cloudKvSet } from "./cloud-kv";
+import { classifyPushTableHttp, pickPushList, pushPersisted } from "./push-core.mjs";
 
 const VAPID_PRIVATE_KEY = "2Dyn3rcPYyBgCXhA5hl5XHqfn-KFHROrQZJ__Wq7S78";
 const PUSH_TTL = 60 * 60 * 24 * 365;
@@ -55,14 +56,16 @@ async function upsertPushTable(id: string, sub: PushSub): Promise<boolean> {
   }
 }
 
-async function listPushTable(): Promise<Array<{ id: string; sub: PushSub }> | null> {
+type PushTableKind = "ok" | "absent" | "error";
+
+async function listPushTable(): Promise<{ kind: PushTableKind; rows: Array<{ id: string; sub: PushSub }> }> {
   try {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/push_subscriptions?select=id,endpoint,p256dh,auth,handles,user_id&limit=200`,
       { headers: adminHeaders(), signal: AbortSignal.timeout(5_000) },
     );
-    if (res.status === 404 || res.status === 400) return null;
-    if (!res.ok) return null;
+    const kind = classifyPushTableHttp(res.status);
+    if (kind !== "ok") return { kind, rows: [] };
     const rows = (await res.json()) as Array<{
       id?: string;
       endpoint?: string;
@@ -71,19 +74,22 @@ async function listPushTable(): Promise<Array<{ id: string; sub: PushSub }> | nu
       handles?: string[];
       user_id?: string | null;
     }>;
-    return rows
-      .filter((r) => r.id && r.endpoint && r.p256dh && r.auth)
-      .map((r) => ({
-        id: String(r.id),
-        sub: {
-          endpoint: String(r.endpoint),
-          keys: { p256dh: String(r.p256dh), auth: String(r.auth) },
-          handles: Array.isArray(r.handles) ? r.handles.map(String) : [],
-          userId: r.user_id || undefined,
-        },
-      }));
+    return {
+      kind: "ok",
+      rows: rows
+        .filter((r) => r.id && r.endpoint && r.p256dh && r.auth)
+        .map((r) => ({
+          id: String(r.id),
+          sub: {
+            endpoint: String(r.endpoint),
+            keys: { p256dh: String(r.p256dh), auth: String(r.auth) },
+            handles: Array.isArray(r.handles) ? r.handles.map(String) : [],
+            userId: r.user_id || undefined,
+          },
+        })),
+    };
   } catch {
-    return null;
+    return { kind: "error", rows: [] };
   }
 }
 
@@ -120,23 +126,24 @@ async function listKvPush(): Promise<Array<{ id: string; sub: PushSub }>> {
 async function listPushSubs(): Promise<Array<{ id: string; sub: PushSub }>> {
   const table = await listPushTable();
   const extras = [...(await listKvPush()), ...(await listLegacyPushPosts())];
-  if (table) {
+  if (table.kind === "ok") {
     for (const row of extras) {
       const tableId = row.id.startsWith("kv_push:") ? row.id.slice("kv_push:".length) : row.id;
       const ok = await upsertPushTable(tableId, row.sub);
       if (ok) await deletePost(row.id);
     }
     const again = await listPushTable();
-    return again ?? [...table, ...extras];
+    return again.kind === "ok" ? again.rows : [...table.rows, ...extras];
   }
-  return extras;
+  return pickPushList(table.kind, table.rows, extras);
 }
 
-export async function savePushSub(sub: PushSub) {
+export async function savePushSub(sub: PushSub): Promise<boolean> {
   const id = subId(sub.endpoint);
   const tableOk = await upsertPushTable(id, sub);
-  if (tableOk) return;
-  await cloudKvSet(`push:${id}`, JSON.stringify(sub), PUSH_TTL);
+  if (tableOk) return true;
+  const kvOk = await cloudKvSet(`push:${id}`, JSON.stringify(sub), PUSH_TTL);
+  return pushPersisted(tableOk, kvOk);
 }
 
 export async function sendPushForStories(

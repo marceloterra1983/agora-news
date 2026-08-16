@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { listWatchAccounts, registerWatch, unregisterWatch } from "@/lib/news/watch";
 import { upsertProfile } from "@/lib/news/admin";
-import { keepLastPost, parseLastPost } from "@/lib/news/last-post";
+import { mergeClientProfile } from "@/lib/news/profile-store-core.mjs";
 import { readStoredProfile } from "@/lib/news/profile-store";
 import { denyWrite, requestWriteAllowed } from "@/lib/news/write-guard";
 
@@ -34,15 +34,8 @@ export const Route = createFileRoute("/api/watch")({
         });
         if (ok && body.summary) {
           const prev = await readStoredProfile(handle);
-          await upsertProfile({
-            handle,
-            name: String(body.name || handle),
-            bio: String(body.summary || ""),
-            summary_pt: String(body.summary || "").slice(0, 220),
-            avatar: body.avatar || null,
-            followers: Number(body.followers) || 0,
-            last_post: keepLastPost(prev?.last_post, parseLastPost(body.lastPost)),
-          });
+          const merged = mergeClientProfile(prev, { ...body, handle, summary_pt: body.summary });
+          if (merged) await upsertProfile(merged);
         }
         return Response.json({ ok });
       },

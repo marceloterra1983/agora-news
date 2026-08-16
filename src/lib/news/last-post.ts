@@ -4,16 +4,21 @@ import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 
 export const LAST_POST_CATEGORY = "x-last";
 
-import type { StoredLastPost } from "./last-post-core.mjs";
+import { pickLatestFromPostRows, type StoredLastPost } from "./last-post-core.mjs";
 
 export type { StoredLastPost };
 export {
+  isSyntheticPostId,
   keepLastPost,
+  lastPostFromXLastRow,
   lastPostHref,
   parseLastPost,
+  pickLatestFromPostRows,
   preferNewerLast,
   safeHttpHref,
   storedToLastHit,
+  usableTweetId,
+  xLastListParams,
 } from "./last-post-core.mjs";
 
 const AUTH = {
@@ -21,10 +26,6 @@ const AUTH = {
   Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
   Accept: "application/json",
 };
-
-function tweetIdOf(id: string, url: string): string {
-  return url.match(/status\/(\d+)/)?.[1] || id;
-}
 
 export async function fetchLastPost(handle: string): Promise<StoredLastPost | null> {
   const key = handle.replace(/^@+/, "").trim();
@@ -84,16 +85,7 @@ export async function latestFromPosts(handle: string): Promise<StoredLastPost | 
       content?: string;
       post_url?: string;
     }>;
-    for (const row of rows) {
-      const rawId = String(row.post_id || "");
-      if (!rawId || rawId.startsWith("prfl_") || rawId.startsWith("watch_")) continue;
-      const text = String(row.summary_pt || row.content || "").trim();
-      const publishedAt = String(row.posted_at || "");
-      if (!text || !publishedAt) continue;
-      const url = String(row.post_url || `https://x.com/${key}/status/${rawId}`);
-      return { id: tweetIdOf(rawId, url), text: text.slice(0, 280), url, publishedAt };
-    }
-    return null;
+    return pickLatestFromPostRows(rows, key);
   } catch {
     return null;
   }

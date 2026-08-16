@@ -1,4 +1,11 @@
-import { LAST_POST_CATEGORY, fetchLastPost, latestFromPosts, type StoredLastPost } from "./last-post";
+import {
+  LAST_POST_CATEGORY,
+  fetchLastPost,
+  lastPostFromXLastRow,
+  latestFromPosts,
+  xLastListParams,
+  type StoredLastPost,
+} from "./last-post";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 
 const AUTH = {
@@ -11,17 +18,10 @@ function lastRowId(handle: string): string {
   return `last_${handle.replace(/^@+/, "").trim().toLowerCase()}`;
 }
 
-function tweetIdOf(id: string, url: string): string {
-  return url.match(/status\/(\d+)/)?.[1] || id;
-}
-
 export async function listXLastPosts(): Promise<Map<string, StoredLastPost>> {
   const out = new Map<string, StoredLastPost>();
   try {
-    const params = new URLSearchParams();
-    params.set("select", "account,post_id,posted_at,summary_pt,content,post_url");
-    params.set("category", `eq.${LAST_POST_CATEGORY}`);
-    params.set("limit", "400");
+    const params = xLastListParams(LAST_POST_CATEGORY);
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
       headers: AUTH,
       signal: AbortSignal.timeout(6_000),
@@ -36,20 +36,13 @@ export async function listXLastPosts(): Promise<Map<string, StoredLastPost>> {
       post_url?: string;
     }>;
     for (const row of rows) {
+      const post = lastPostFromXLastRow(row, String(row.account || ""));
+      if (!post) continue;
       const handle = String(row.account || "")
         .replace(/^@+/, "")
         .trim()
         .toLowerCase();
-      const publishedAt = String(row.posted_at || "");
-      const text = String(row.summary_pt || row.content || "").trim();
-      if (!handle || !publishedAt || !text) continue;
-      const url = String(row.post_url || "");
-      out.set(handle, {
-        id: tweetIdOf(String(row.post_id || ""), url),
-        text: text.slice(0, 280),
-        url: url || `https://x.com/${handle}`,
-        publishedAt,
-      });
+      if (handle) out.set(handle, post);
     }
   } catch {
     /* empty */
