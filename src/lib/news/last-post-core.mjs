@@ -91,3 +91,66 @@ export function preferNewerLast(a, b) {
   if (!b) return a;
   return Date.parse(b.publishedAt) > Date.parse(a.publishedAt) ? b : a;
 }
+
+/** @param {unknown} id */
+export function isSyntheticPostId(id) {
+  return /^(prfl_|watch_|last_|kv_)/i.test(String(id || ""));
+}
+
+/** @param {unknown} id @param {unknown} url */
+export function usableTweetId(id, url) {
+  const fromUrl = String(url || "").match(/\/status\/(\d+)/)?.[1];
+  if (fromUrl) return fromUrl;
+  const raw = String(id || "").trim();
+  return /^\d+$/.test(raw) ? raw : "";
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} row
+ * @param {string} [handle]
+ * @returns {{ id: string, text: string, url: string, publishedAt: string } | null}
+ */
+export function lastPostFromXLastRow(row, handle = "") {
+  if (!row || typeof row !== "object") return null;
+  const key = String(handle || row.account || "")
+    .replace(/^@+/, "")
+    .trim()
+    .toLowerCase();
+  const publishedAt = String(row.posted_at || "").trim();
+  const text = String(row.summary_pt || row.content || "").trim();
+  if (!key || !publishedAt || !text) return null;
+  const url = String(row.post_url || "").trim();
+  const id = usableTweetId(row.post_id, url);
+  if (!id) return null;
+  return {
+    id,
+    text: text.slice(0, 280),
+    url: url || `https://x.com/${key}/status/${id}`,
+    publishedAt,
+  };
+}
+
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {string} handle
+ */
+export function pickLatestFromPostRows(rows, handle) {
+  if (!Array.isArray(rows)) return null;
+  for (const row of rows) {
+    const rawId = String(row?.post_id || "");
+    if (!rawId || isSyntheticPostId(rawId)) continue;
+    const post = lastPostFromXLastRow(row, handle);
+    if (post) return post;
+  }
+  return null;
+}
+
+/** @param {string} [category] */
+export function xLastListParams(category = "x-last") {
+  const params = new URLSearchParams();
+  params.set("select", "account,post_id,posted_at,summary_pt,content,post_url");
+  params.set("category", `eq.${category}`);
+  params.set("order", "posted_at.desc");
+  params.set("limit", "1000");
+  return params;
+}

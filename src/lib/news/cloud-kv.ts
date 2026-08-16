@@ -23,9 +23,9 @@ export async function cloudKvGet(key: string): Promise<string | null> {
   }
 }
 
-export async function cloudKvSet(key: string, value: string, ttlSec = 60): Promise<void> {
+export async function cloudKvSet(key: string, value: string, ttlSec = 60): Promise<boolean> {
   const now = new Date().toISOString();
-  await upsertPosts([
+  const written = await upsertPosts([
     {
       post_id: kvId(key),
       account: "cache",
@@ -42,6 +42,7 @@ export async function cloudKvSet(key: string, value: string, ttlSec = 60): Promi
       source: "cache",
     },
   ]);
+  return written.ok;
 }
 
 export async function cloudKvDel(key: string): Promise<void> {

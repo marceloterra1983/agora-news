@@ -53,7 +53,7 @@ test("TS port and API routes call the guard", () => {
   const ts = readFileSync(join(root, "src/lib/news/write-guard.ts"), "utf8");
   assert.match(ts, /requestWriteAllowed/);
   assert.match(ts, /CRON_SECRET/);
-  assert.match(ts, /same-origin/);
+  assert.match(ts, /write-guard\.mjs/);
 
   const ingest = readFileSync(join(root, "src/routes/api/ingest.ts"), "utf8");
   assert.match(ingest, /requestWriteAllowed\(\s*"ingest"/);

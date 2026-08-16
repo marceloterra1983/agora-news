@@ -19,12 +19,13 @@ export const Route = createFileRoute("/api/push")({
         if (!body.endpoint || !body.keys?.p256dh || !body.keys.auth) {
           return Response.json({ ok: false }, { status: 400 });
         }
-        await savePushSub({
+        const saved = await savePushSub({
           endpoint: body.endpoint,
           keys: { p256dh: body.keys.p256dh, auth: body.keys.auth },
           handles: Array.isArray(body.handles) ? body.handles.map(String) : [],
           userId,
         });
+        if (!saved) return Response.json({ ok: false }, { status: 502 });
         return Response.json({ ok: true });
       },
     },

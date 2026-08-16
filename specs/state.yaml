@@ -1,6 +1,6 @@
 active_flow: build_epic
-active_epic_id: e03
-active_story_id: e03s01
+active_epic_id: e01
+active_story_id: e01s01
 active_bug_id: null
 release:
   target_version: null
@@ -17,19 +17,20 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase, plan-work]
 git:
-  branch: main
-  hash: 20e18ba
+  branch: feat/review-next
+  hash: pending
 handoff:
-  last_step_completed: "Cutover Docker na 3080; PM2 news stopped; site vivo 200"
+  last_step_completed: "Review-next: last-post sintético, push 502, merge de perfil"
   open_decisions: []
   required_reading:
-    - specs/epics/e03-docker-prod/PLAN.md
-    - specs/verifications/2026-08-16-docker-prod-cutover.md
+    - specs/epics/e01-harden/epic.yaml
   next_skill: null
 learned_preferences:
   - "PT-BR, conciso, dono do repo a partir de 2026-08-16"
   - "Não rotacionar chaves neste ciclo — fallbacks no source permanecem"
 workspace_facts:
   - "Feed canônico é Supabase public.posts, não Neon/PGLite"
-  - "Mutações /api/watch|profile|push exigem Sec-Fetch-Site same-origin"
-  - "CRON_SECRET opcional em /api/ingest"
+  - "Mutações /api/watch|profile|push exigem same-origin e userId"
+  - "CRON_SECRET obrigatório em /api/ingest (só Bearer)"
+  - "Prod é Docker Nitro em 127.0.0.1:3080, não vite dev nem Vercel"
+  - "MCP SQL: supabase-stdio via ~/.cursor/bin/supabase-mcp.sh + .env"
