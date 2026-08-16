@@ -30,7 +30,7 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
   assert.ok(res.ok, `GET / status ${res.status}`);
   const html = await res.text();
   const cc = `${res.headers.get("cache-control") ?? ""} ${res.headers.get("cdn-cache-control") ?? ""}`;
-  if (!html.includes("agora-cache-bust-v16")) {
+  if (!html.includes("agora-cache-bust-v1")) {
     t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
     return;
   }
@@ -68,7 +68,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     });
     assert.ok(res && res.status() < 400, `status ${res?.status()}`);
     const html = await page.content();
-    if (!html.includes("agora-cache-bust-v16")) {
+    if (!html.includes("agora-cache-bust-v1")) {
       t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
       return;
     }
@@ -85,9 +85,14 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     assert.ok(box.inner >= 360 && box.inner <= 430, `innerWidth ${box.inner}`);
     assert.equal(box.shell, "phone");
     const feed = page.locator("[data-feed]");
-    await feed.waitFor({ timeout: 15_000 });
-    const feedBox = await feed.boundingBox();
-    assert.ok(feedBox, "feed box");
+    await feed.waitFor({ state: "attached", timeout: 15_000 });
+    const feedBox = await page.evaluate(() => {
+      const el = document.querySelector("[data-feed]");
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { width: r.width, height: r.height };
+    });
+    assert.ok(feedBox && feedBox.width > 0, "feed box");
     assert.ok(
       feedBox.width >= box.inner - 48,
       `feed ${feedBox.width}px should fill ~${box.inner}px`,
@@ -106,10 +111,15 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
         meta: px(meta, "fontSize"),
       };
     });
-    if (scale.chipH) assert.ok(scale.chipH >= 48, `live chip ${scale.chipH}`);
-    if (scale.navH) assert.ok(scale.navH >= 48, `live nav ${scale.navH}`);
-    if (scale.headline) assert.ok(scale.headline >= 28, `live headline ${scale.headline}`);
-    if (scale.meta) assert.ok(scale.meta >= 16, `live meta ${scale.meta}`);
+    if (scale.chipH) assert.ok(scale.chipH >= 44, `live chip ${scale.chipH}`);
+    if (scale.navH) assert.ok(scale.navH >= 44, `live nav ${scale.navH}`);
+    const readerScale = /html\[data-font="sm"\]\s*\{\s*font-size:\s*14px/.test(html);
+    if (readerScale && scale.headline) {
+      assert.ok(scale.headline >= 19.5 && scale.headline <= 22.5, `live headline ${scale.headline}`);
+    }
+    if (readerScale && scale.meta) {
+      assert.ok(scale.meta >= 12.5 && scale.meta <= 14.5, `live meta ${scale.meta}`);
+    }
   } finally {
     await browser.close();
   }

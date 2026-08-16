@@ -31,18 +31,23 @@ test("chrome pins top+bottom and reserves feed space with bar tokens", () => {
   assert.match(css, /\[data-chrome="tabs"\][\s\S]{0,280}position:\s*fixed/i);
   assert.match(css, /html\[data-shell="phone"\] \[data-chrome="compact"\][\s\S]{0,220}position:\s*fixed/i);
   assert.match(css, /\[data-chrome-main\][\s\S]{0,240}padding-top:/);
-  assert.match(css, /--agora-nav-tap:\s*48px/);
-  assert.match(css, /--agora-tap:\s*48px/);
+  assert.match(css, /--agora-nav-tap:\s*44px/);
+  assert.match(css, /--agora-tap:\s*44px/);
 });
 
-test("phone chrome tap targets share 48px height", () => {
+test("phone chrome tap targets share 44px height", () => {
   const css = read("src/lib/news/phone-layout.css");
   const chrome = read("src/components/news/app-chrome.tsx");
 
-  assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,160}height:\s*48px/);
-  assert.match(css, /\[data-chrome="compact"\] \[aria-haspopup="listbox"\][\s\S]{0,200}height:\s*48px/);
-  assert.match(css, /\[data-chrome="compact"\] \[aria-haspopup="menu"\][\s\S]{0,160}height:\s*48px/);
-  assert.match(css, /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*48px/);
+  assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,160}height:\s*44px/);
+  assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,200}padding-left:\s*8px/);
+  assert.doesNotMatch(
+    css,
+    /\[data-h-scroll\] button[\s\S]{0,80}\[aria-haspopup="listbox"\][\s\S]{0,160}padding-left:\s*16px/,
+  );
+  assert.match(css, /\[data-chrome="compact"\] \[aria-haspopup="listbox"\][\s\S]{0,200}height:\s*44px/);
+  assert.match(css, /\[data-chrome="compact"\] \[aria-haspopup="menu"\][\s\S]{0,160}height:\s*44px/);
+  assert.match(css, /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*44px/);
   assert.doesNotMatch(css, /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*56px/);
   assert.match(chrome, /h-\[var\(--agora-tap\)\]|h-\[44px\]/);
 });
@@ -137,7 +142,7 @@ async function chromeBox(page) {
   });
 }
 
-test("Playwright 390px: chrome is fixed and tap heights match 48px", async (t) => {
+test("Playwright 390px: chrome is fixed and tap heights match 44px", async (t) => {
   const browser = await launchChromium(t);
   if (!browser) return;
   try {
@@ -148,10 +153,10 @@ test("Playwright 390px: chrome is fixed and tap heights match 48px", async (t) =
     assert.equal(before.tabsPos, "fixed", `tabs position ${before.tabsPos}`);
     assert.ok(before.header.t <= 1, `header top ${before.header.t}`);
     assert.ok(Math.abs(before.tabs.b - before.vh) <= 1, `tabs bottom ${before.tabs.b} vh ${before.vh}`);
-    assert.ok(before.chipH >= 48, `chip ${before.chipH}`);
-    assert.ok(before.iaH >= 48, `IA ${before.iaH}`);
-    assert.ok(before.menuH >= 48, `menu ${before.menuH}`);
-    assert.ok(before.navH >= 48, `nav ${before.navH}`);
+    assert.ok(before.chipH >= 44, `chip ${before.chipH}`);
+    assert.ok(before.iaH >= 44, `IA ${before.iaH}`);
+    assert.ok(before.menuH >= 44, `menu ${before.menuH}`);
+    assert.ok(before.navH >= 44, `nav ${before.navH}`);
     assert.ok(Math.abs(before.chipH - before.iaH) <= 1, `chip/IA ${before.chipH}/${before.iaH}`);
     assert.ok(Math.abs(before.iaH - before.menuH) <= 1, `IA/menu ${before.iaH}/${before.menuH}`);
     assert.ok(Math.abs(before.navH - before.chipH) <= 1, `nav/chip ${before.navH}/${before.chipH}`);

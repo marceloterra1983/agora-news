@@ -171,7 +171,7 @@ function GrokHeader({
                 aria-pressed={group === "all"}
                 onClick={() => pickGroup("all")}
                 className={cn(
-                  "h-[44px] min-w-[44px] shrink-0 rounded-full px-3 text-[11px] font-semibold",
+                  "inline-flex h-[44px] min-h-[44px] min-w-[44px] shrink-0 items-center rounded-full px-2 text-[13px] font-semibold",
                   group === "all" ? "bg-ink text-paper ring-1 ring-ink/40" : "bg-paper-2 text-mute",
                 )}
               >
@@ -187,7 +187,7 @@ function GrokHeader({
                     aria-pressed={on}
                     onClick={() => pickGroup(g.id)}
                     className={cn(
-                      "inline-flex h-[44px] min-w-[44px] shrink-0 items-center rounded-full px-3 text-[11px] font-semibold",
+                      "inline-flex h-[44px] min-h-[44px] min-w-[44px] shrink-0 items-center rounded-full px-2 text-[13px] font-semibold",
                       on ? st.chipOn : st.chip,
                     )}
                   >
