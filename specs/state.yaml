@@ -17,10 +17,10 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase]
 git:
-  branch: feat/split-fontes-buscar
-  hash: ad05cdf
+  branch: feat/fix-section-nav
+  hash: c46df86
 handoff:
-  last_step_completed: "split buscar/fontes routes into page modules"
+  last_step_completed: "fix section nav stay-on-page + last-secao"
   open_decisions:
     - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
     - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"

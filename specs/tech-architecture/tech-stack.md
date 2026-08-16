@@ -55,4 +55,5 @@ Auth existe (cookies `__Host-`, `authMiddleware`, Sec-Fetch-Site) mas **nenhuma 
 - **Hotspots:** `server.ts` 604, `buscar.tsx` 568, `fontes.tsx` 490, `ingest.ts` 394, `p2p.ts` 570 (morto).
 - **Morto (e02):** removidos rss/catalog/multiplayer, chrome jornal (Masthead/Hero/Ticker), Radix/shadcn sem uso. Um manifesto: `/manifest.webmanifest`. Plugin Grok não injeta o segundo se o app já declara um.
 - **UX:** chips de grupo só filtram em `/`; `/buscar` é busca de perfis X; marca “Agora” vs “IA — NEWS”.
-- Stash local (não neste epic): `migrations/0002_posts_indexes.sql`, `package-lock.json`, `src/routeTree.gen.ts`.
+- SQL de índice/Realtime do feed: `scripts/supabase-posts-indexes.sql` (manual no Supabase). `migrations/` só auth.
+- Stash local (não neste epic): `package-lock.json`, `src/routeTree.gen.ts`.

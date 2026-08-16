@@ -1,0 +1,8 @@
+bugs:
+  - bug_id: BUG-2026-08-16T023400
+    date: 2026-08-16
+    severity: medium
+    priority: p1
+    scope: ui-chrome
+    summary: Seção IA/Tech/Brasil resetava para o feed e para ai fora da home
+    file: specs/bugs/BUG-2026-08-16-section-nav.md
