@@ -36,5 +36,11 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build --chown=node:node /app/.output ./.output
 
+# Nitro empacota o JS do PGLite mas não os sidecars wasm/data (ENOENT em runtime).
+RUN cp node_modules/@electric-sql/pglite/dist/pglite.data \
+       node_modules/@electric-sql/pglite/dist/pglite.wasm \
+       node_modules/@electric-sql/pglite/dist/initdb.wasm \
+       .output/server/_libs/
+
 EXPOSE 3080
 CMD ["node", ".output/server/index.mjs"]
