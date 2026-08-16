@@ -21,6 +21,9 @@ import {
   resolveDark,
   type ThemeMode,
 } from "@/lib/news/theme";
+import { FONT_STEPS } from "@/lib/news/font-scale";
+import { useSettings } from "@/lib/news/use-settings";
+import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
 
 const THEME_LABEL: Record<ThemeMode, string> = {
@@ -34,6 +37,7 @@ export function AppMenu() {
   const [mode, setMode] = useState<ThemeMode>("system");
   const box = useRef<HTMLDivElement>(null);
   const { isPending, user } = useCurrentUserState();
+  const { settings, set } = useSettings();
 
   useEffect(() => {
     applyTheme();
@@ -137,6 +141,30 @@ export function AppMenu() {
             <ThemeIcon className="size-4 shrink-0" />
             {THEME_LABEL[mode]}
           </button>
+          <div className="px-3 py-2.5">
+            <p className="mb-1.5 text-[11px] text-mute">Tamanho do texto</p>
+            <div className="grid grid-cols-3 gap-1">
+              {FONT_STEPS.map((step) => {
+                const on = settings.fontSize === step.id || (step.id === "lg" && settings.fontSize === "xl");
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    role="menuitem"
+                    aria-pressed={on}
+                    aria-label={step.label}
+                    onClick={() => set({ fontSize: step.id })}
+                    className={cn(
+                      "rounded-md border px-1 py-1.5 text-[11px]",
+                      on ? "border-ink bg-paper-2 text-ink" : "border-line text-mute",
+                    )}
+                  >
+                    {step.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <Link
             to="/instalar"
             role="menuitem"

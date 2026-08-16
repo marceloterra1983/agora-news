@@ -4,7 +4,8 @@ import { AppChrome } from "@/components/news/app-chrome";
 import { SettingsChoice, SettingsRow, SettingsSection, SettingsToggle } from "@/components/news/settings-ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useNewsStore } from "@/lib/news/store";
-import { FONT_STEPS, TYPEFACES, type Density, type FontSize, type Typeface } from "@/lib/news/settings";
+import { FONT_STEPS } from "@/lib/news/font-scale";
+import { TYPEFACES, type Density, type FontSize, type Typeface } from "@/lib/news/settings";
 import { TypefaceLoader, typefaceFamily } from "@/lib/news/typeface-loader";
 import { useSettings } from "@/lib/news/use-settings";
 import { resetUnread } from "@/lib/news/unread";
@@ -55,18 +56,21 @@ function SettingsPage() {
         </p>
 
         <SettingsSection title="Leitura">
-          <p className="mb-3 text-xs text-mute">Tamanho da letra</p>
+          <p className="mb-3 text-xs text-mute">Tamanho do texto</p>
           <div className="flex items-end gap-1.5">
             {FONT_STEPS.map((step, i) => (
               <SettingsChoice
                 key={step.id}
-                active={settings.fontSize === step.id}
+                active={settings.fontSize === step.id || (step.id === "lg" && settings.fontSize === "xl")}
                 onClick={() => set({ fontSize: step.id as FontSize })}
-                label={["Menor", "Normal", "Grande", "Maior"][i] ?? step.id}
+                label={step.label}
                 className="flex-1"
               >
-                <span style={{ fontSize: 13 + i * 4 }} className="font-display leading-none">
-                  A
+                <span className="flex flex-col items-center gap-1">
+                  <span style={{ fontSize: 14 + i * 4 }} className="font-display leading-none">
+                    A
+                  </span>
+                  <span className="text-[11px]">{step.label}</span>
                 </span>
               </SettingsChoice>
             ))}

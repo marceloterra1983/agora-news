@@ -52,8 +52,8 @@ test("phone layout is driven by max-width 640px media query", () => {
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
   assert.match(css, /100dvw/);
-  assert.match(css, /--agora-type: 22px/);
-  assert.match(css, /font-size: 22px !important/);
+  assert.doesNotMatch(css, /--agora-type: 22px/);
+  assert.doesNotMatch(css, /font-size: 22px !important/);
   assert.match(styles, /phone-layout\.css/);
   assert.match(critical, /phone-layout\.css\?raw/);
 });
@@ -79,19 +79,19 @@ test("base css clips horizontal overflow instead of a 1024px floor", () => {
   assert.match(css, /overflow-wrap:\s*anywhere/);
 });
 
-test("phone type scale forces readable px that beat utilities", () => {
+test("phone type scale follows data-font instead of a 22/28 floor", () => {
   const css = readFileSync(join(root, "src/lib/news/phone-layout.css"), "utf8");
   const styles = readFileSync(join(root, "src/styles.css"), "utf8");
   assert.match(styles, /--agora-type:/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
-  assert.match(css, /font-size: 28px !important/);
-  assert.match(css, /font-size: 16px !important/);
-  assert.match(css, /font-size: 17px !important/);
-  assert.match(css, /min-height: 48px !important/);
-  assert.match(css, /height: 48px !important/);
-  assert.match(css, /width: 24px !important/);
+  assert.doesNotMatch(css, /font-size: 28px !important/);
+  assert.doesNotMatch(css, /font-size: 22px !important/);
+  assert.match(css, /min-height: 44px !important/);
+  assert.match(css, /height: 44px !important/);
+  assert.match(css, /html\[data-font="sm"\]/);
   assert.match(css, /html\[data-font="md"\]/);
+  assert.match(css, /html\[data-font="lg"\]/);
 });
 
 test("phone chrome, Fontes and article use 44px tap targets", () => {
@@ -109,5 +109,5 @@ test("phone chrome, Fontes and article use 44px tap targets", () => {
   assert.match(article, /size-\[44px\]/);
   assert.match(article, /break-all/);
   assert.match(controls, /size-\[44px\]/);
-  assert.match(critical, /width:48px;height:48px/);
+  assert.match(critical, /width:44px;height:44px/);
 });
