@@ -22,7 +22,30 @@ test("listStoredProfiles reads last_post from x_profiles", () => {
 test("Fontes lastPost falls back to stored last_post, not only the recent feed window", () => {
   const src = read("src/lib/news/influence.ts");
   assert.match(src, /storedLast|lastFromStore|keepLastPost|preferNewerLast/);
-  assert.match(src, /fillMissingLastPosts/);
+  assert.doesNotMatch(src, /fillMissingLastPosts/);
+});
+
+test("last-post fill runs on ingest cron, not on Fontes GET", () => {
+  const ingest = read("src/lib/news/ingest.ts");
+  const live = read("src/lib/news/influence.ts");
+  assert.match(ingest, /fillMissingLastPosts|fillCatalogGaps/);
+  assert.doesNotMatch(live, /fillMissingLastPosts|fillCatalogGaps/);
+});
+
+test("Fontes last-post link uses in-app materia only when the tweet is in the feed", () => {
+  const href = read("src/lib/news/last-post.ts");
+  const row = read("src/components/news/fontes-profile-row.tsx");
+  assert.match(href, /export function lastPostHref/);
+  assert.match(href, /\/materia\//);
+  assert.match(href, /https:\/\/x\.com\//);
+  assert.match(row, /lastPost\.href|lastPostHref/);
+});
+
+test("ingest cron script sends Bearer to local PM2", () => {
+  const src = read("scripts/ingest-cron.sh");
+  assert.match(src, /CRON_SECRET/);
+  assert.match(src, /Bearer/);
+  assert.match(src, /3080\/api\/ingest/);
 });
 
 test("ingest keeps the previous last_post when the current batch has no tweet", () => {

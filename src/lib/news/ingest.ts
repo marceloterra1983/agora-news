@@ -1,6 +1,7 @@
 import { keepLastPost } from "./last-post";
 import { persistLastPost } from "./last-post-store";
-import { blurbFor, profileByHandle, profilesFor } from "./profiles";
+import { fillCatalogGaps } from "./last-post-store";
+import { allProfiles, blurbFor, profileByHandle, profilesFor } from "./profiles";
 import { listKnownSections } from "./sections";
 import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
@@ -386,6 +387,12 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
     });
   }
 
+  const lastFilled = await fillCatalogGaps([
+    ...allProfiles().map((p) => p.handle),
+    ...(await listWatchAccounts()).map((w) => w.handle),
+  ]);
+  if (lastFilled) invalidateFontesLastCache();
+
   return {
     batch,
     scanned: due.length,
@@ -397,6 +404,7 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
     ok: written.ok,
     error: written.error,
     profiles,
+    lastFilled,
     pushed,
     cache: cacheBackend(),
   };

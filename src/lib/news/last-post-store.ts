@@ -81,6 +81,15 @@ export async function persistLastPost(handle: string, post: StoredLastPost): Pro
   return written.ok;
 }
 
+export async function fillCatalogGaps(handles: string[]): Promise<number> {
+  const have = await listXLastPosts();
+  const missing = handles.filter((h) => {
+    const key = h.replace(/^@+/, "").trim().toLowerCase();
+    return Boolean(key) && !have.has(key);
+  });
+  return fillMissingLastPosts(missing);
+}
+
 export async function fillMissingLastPosts(handles: string[]): Promise<number> {
   const unique = [...new Set(handles.map((h) => h.replace(/^@+/, "").trim()).filter(Boolean))].slice(0, 80);
   let n = 0;

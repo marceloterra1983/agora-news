@@ -36,6 +36,13 @@ export function parseLastPost(raw: unknown): StoredLastPost | null {
   };
 }
 
+export function lastPostHref(handle: string, id: string, inApp: boolean): string {
+  const key = handle.replace(/^@+/, "").trim();
+  if (inApp && id) return `/materia/${id}`;
+  if (id) return `https://x.com/${key}/status/${id}`;
+  return `https://x.com/${key}`;
+}
+
 export function keepLastPost(
   prev: StoredLastPost | null | undefined,
   next: StoredLastPost | null | undefined,
