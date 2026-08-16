@@ -1,4 +1,4 @@
-/** Viewport canônico — um único <meta> no HTML SSR. */
+/** Viewport canônico — um único <meta> no HTML SSR. Pinch-zoom livre (sem trava de escala). */
 export const VIEWPORT_CONTENT =
   "width=device-width, initial-scale=1, viewport-fit=cover";
 

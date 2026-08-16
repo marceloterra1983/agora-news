@@ -97,7 +97,7 @@ function Root() {
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v15";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v16";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>
