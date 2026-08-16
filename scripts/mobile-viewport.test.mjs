@@ -19,7 +19,30 @@ test("root head declares a single device-width viewport", () => {
   assert.match(src, /Cache-Control/);
   assert.match(shell, /width=device-width, initial-scale=1, viewport-fit=cover/);
   assert.doesNotMatch(src, /user-scalable\s*=\s*no/);
+  assert.doesNotMatch(src, /maximum-scale\s*=\s*1(?!\d)/);
   assert.doesNotMatch(src, /width=1024/);
+});
+
+test("no viewport or touch-action locks pinch-zoom", () => {
+  const files = [
+    "src/routes/__root.tsx",
+    "src/lib/news/phone-shell.ts",
+    "src/lib/news/critical.css.ts",
+    "src/lib/auth/popup.server.ts",
+    "scripts/grok-pwa-shared.mjs",
+    "scripts/install-page.html",
+    "public/limpar.html",
+    "src/styles.css",
+  ].map((rel) => readFileSync(join(root, rel), "utf8"));
+  for (const src of files) {
+    assert.doesNotMatch(src, /user-scalable\s*=\s*no/i);
+    assert.doesNotMatch(src, /maximum-scale\s*=\s*1(?:\.0+)?(?!\d)/i);
+    assert.doesNotMatch(src, /touch-action:\s*pan-y\s*;/);
+    assert.doesNotMatch(src, /touch-action:\s*pan-x\s*;/);
+  }
+  const css = readFileSync(join(root, "src/styles.css"), "utf8");
+  assert.match(css, /touch-action:\s*pan-y pinch-zoom/);
+  assert.match(css, /touch-action:\s*pan-x pinch-zoom/);
 });
 
 test("phone layout is driven by max-width 640px media query", () => {
@@ -29,8 +52,8 @@ test("phone layout is driven by max-width 640px media query", () => {
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
   assert.match(css, /100dvw/);
-  assert.match(css, /--agora-type: 20px/);
-  assert.match(css, /font-size: 20px !important/);
+  assert.match(css, /--agora-type: 22px/);
+  assert.match(css, /font-size: 22px !important/);
   assert.match(styles, /phone-layout\.css/);
   assert.match(critical, /phone-layout\.css\?raw/);
 });
@@ -62,7 +85,7 @@ test("phone type scale forces readable px that beat utilities", () => {
   assert.match(styles, /--agora-type:/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
-  assert.match(css, /font-size: 26px !important/);
+  assert.match(css, /font-size: 28px !important/);
   assert.match(css, /font-size: 16px !important/);
   assert.match(css, /font-size: 17px !important/);
   assert.match(css, /min-height: 48px !important/);

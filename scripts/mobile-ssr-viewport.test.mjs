@@ -30,7 +30,7 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
   assert.ok(res.ok, `GET / status ${res.status}`);
   const html = await res.text();
   const cc = `${res.headers.get("cache-control") ?? ""} ${res.headers.get("cdn-cache-control") ?? ""}`;
-  if (!html.includes("agora-cache-bust-v15")) {
+  if (!html.includes("agora-cache-bust-v16")) {
     t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
     return;
   }
@@ -38,6 +38,9 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
   assert.equal(metas.length, 1, `viewport tags: ${metas.join(" | ")}`);
   assert.match(metas[0] ?? "", /width=device-width/);
   assert.match(metas[0] ?? "", /initial-scale=1/);
+  assert.doesNotMatch(metas[0] ?? "", /user-scalable\s*=\s*no/i);
+  assert.doesNotMatch(metas[0] ?? "", /maximum-scale\s*=\s*1(?:\.0+)?(?!\d)/i);
+  assert.match(html, /touch-action:\s*pan-y pinch-zoom/);
   assert.match(html.slice(0, 400), /name="viewport"/);
   assert.match(cc, /no-store/i);
 });
@@ -65,12 +68,14 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     });
     assert.ok(res && res.status() < 400, `status ${res?.status()}`);
     const html = await page.content();
-    if (!html.includes("agora-cache-bust-v15")) {
+    if (!html.includes("agora-cache-bust-v16")) {
       t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
       return;
     }
     const content = await page.locator('meta[name="viewport"]').getAttribute("content");
     assert.equal(content, VIEWPORT_CONTENT);
+    assert.doesNotMatch(content ?? "", /user-scalable\s*=\s*no/i);
+    assert.doesNotMatch(content ?? "", /maximum-scale\s*=\s*1(?:\.0+)?(?!\d)/i);
     const box = await page.evaluate(() => ({
       inner: window.innerWidth,
       client: document.documentElement.clientWidth,
@@ -103,7 +108,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     });
     if (scale.chipH) assert.ok(scale.chipH >= 48, `live chip ${scale.chipH}`);
     if (scale.navH) assert.ok(scale.navH >= 56, `live nav ${scale.navH}`);
-    if (scale.headline) assert.ok(scale.headline >= 26, `live headline ${scale.headline}`);
+    if (scale.headline) assert.ok(scale.headline >= 28, `live headline ${scale.headline}`);
     if (scale.meta) assert.ok(scale.meta >= 16, `live meta ${scale.meta}`);
   } finally {
     await browser.close();

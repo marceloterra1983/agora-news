@@ -84,7 +84,8 @@
     overflow-wrap: break-word;
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
-    touch-action: pan-y;
+    /* pan-y sozinho bloqueia pinch-zoom no feed (Safari/Chrome). */
+    touch-action: pan-y pinch-zoom;
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
@@ -189,7 +190,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
-    touch-action: pan-x;
+    touch-action: pan-x pinch-zoom;
     -webkit-overflow-scrolling: touch;
   }
 }

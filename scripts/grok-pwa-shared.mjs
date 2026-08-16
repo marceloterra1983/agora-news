@@ -117,6 +117,7 @@ export function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
   return [
     [
       "viewport",
+      // Pinch-zoom livre — sem trava de escala.
       '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
     ],
     // Standalone display comes from the manifest ("display": "standalone");
