@@ -97,7 +97,7 @@ export function ProfileRow({
                     {relativeTime(row.lastPost.publishedAt)}
                   </time>
                   {[
-                    { key: "er", label: "Engajamento", value: formatPostEr(row.lastPost), Icon: Percent },
+                    { key: "er", label: "Engajamento", value: formatPostEr(row.lastPost, row.er), Icon: Percent },
                     { key: "alc", label: "Alcance", value: formatPostReach(row.lastPost, row.followers), Icon: Eye },
                     { key: "ql", label: "Qualidade", value: formatPostQuality(row.lastPost), Icon: MessageCircle },
                   ]
