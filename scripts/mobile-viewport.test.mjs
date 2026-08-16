@@ -29,8 +29,8 @@ test("phone layout is driven by max-width 640px media query", () => {
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
   assert.match(css, /100dvw/);
-  assert.match(css, /--agora-type: 18px/);
-  assert.match(css, /font-size: 18px !important/);
+  assert.match(css, /--agora-type: 20px/);
+  assert.match(css, /font-size: 20px !important/);
   assert.match(styles, /phone-layout\.css/);
   assert.match(critical, /phone-layout\.css\?raw/);
 });
@@ -62,12 +62,12 @@ test("phone type scale forces readable px that beat utilities", () => {
   assert.match(styles, /--agora-type:/);
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
-  assert.match(css, /font-size: 22px !important/);
-  assert.match(css, /font-size: 14px !important/);
-  assert.match(css, /font-size: 15px !important/);
-  assert.match(css, /min-height: 44px !important/);
+  assert.match(css, /font-size: 26px !important/);
+  assert.match(css, /font-size: 16px !important/);
+  assert.match(css, /font-size: 17px !important/);
   assert.match(css, /min-height: 48px !important/);
-  assert.match(css, /width: 24px !important/);
+  assert.match(css, /min-height: 56px !important/);
+  assert.match(css, /width: 26px !important/);
   assert.match(css, /html\[data-font="md"\]/);
 });
 
@@ -86,5 +86,5 @@ test("phone chrome, Fontes and article use 44px tap targets", () => {
   assert.match(article, /size-\[44px\]/);
   assert.match(article, /break-all/);
   assert.match(controls, /size-\[44px\]/);
-  assert.match(critical, /width:44px;height:44px/);
+  assert.match(critical, /width:48px;height:48px/);
 });

@@ -30,7 +30,7 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
   assert.ok(res.ok, `GET / status ${res.status}`);
   const html = await res.text();
   const cc = `${res.headers.get("cache-control") ?? ""} ${res.headers.get("cdn-cache-control") ?? ""}`;
-  if (!html.includes("agora-cache-bust-v14")) {
+  if (!html.includes("agora-cache-bust-v15")) {
     t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
     return;
   }
@@ -65,7 +65,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     });
     assert.ok(res && res.status() < 400, `status ${res?.status()}`);
     const html = await page.content();
-    if (!html.includes("agora-cache-bust-v14")) {
+    if (!html.includes("agora-cache-bust-v15")) {
       t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
       return;
     }
@@ -101,10 +101,10 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
         meta: px(meta, "fontSize"),
       };
     });
-    if (scale.chipH) assert.ok(scale.chipH >= 44, `live chip ${scale.chipH}`);
-    if (scale.navH) assert.ok(scale.navH >= 48, `live nav ${scale.navH}`);
-    if (scale.headline) assert.ok(scale.headline >= 22, `live headline ${scale.headline}`);
-    if (scale.meta) assert.ok(scale.meta >= 14, `live meta ${scale.meta}`);
+    if (scale.chipH) assert.ok(scale.chipH >= 48, `live chip ${scale.chipH}`);
+    if (scale.navH) assert.ok(scale.navH >= 56, `live nav ${scale.navH}`);
+    if (scale.headline) assert.ok(scale.headline >= 26, `live headline ${scale.headline}`);
+    if (scale.meta) assert.ok(scale.meta >= 16, `live meta ${scale.meta}`);
   } finally {
     await browser.close();
   }
