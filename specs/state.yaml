@@ -1,7 +1,7 @@
 active_flow: build_epic
 active_epic_id: e03
 active_story_id: e03s01
-active_bug_id: BUG-2026-08-16T094800
+active_bug_id: null
 release:
   target_version: null
   last_tag: null
@@ -17,10 +17,10 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase]
 git:
-  branch: fix/vite-glob-missing-migration
+  branch: fix/fontes-controls-in-card
   hash: pending
 handoff:
-  last_step_completed: "lazy PGLite migration glob so deleted SQL cannot 500 SSR"
+  last_step_completed: "move Fontes star/bell/power into open profile card footer"
   open_decisions:
     - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
     - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
