@@ -1,6 +1,6 @@
 active_flow: build_epic
-active_epic_id: e02
-active_story_id: e02s01
+active_epic_id: e03
+active_story_id: e03s01
 active_bug_id: null
 release:
   target_version: null
@@ -17,10 +17,10 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase]
 git:
-  branch: feat/dead-code-pwa
-  hash: b744a4d
+  branch: feat/chips-feed-only
+  hash: e456712
 handoff:
-  last_step_completed: "e02s01 dead code + single Agora PWA manifest"
+  last_step_completed: "e03s01 group chips only on the feed"
   open_decisions:
     - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
     - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
