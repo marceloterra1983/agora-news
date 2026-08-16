@@ -85,6 +85,34 @@ function write(list: ExtraFonte[]): ExtraFonte[] {
   return list;
 }
 
+export function addExtraFonteFromProfile(
+  result: {
+    handle: string;
+    name: string;
+    avatar: string | null;
+    verified: boolean;
+    followers: number;
+    lastPost: { id: string; text: string; publishedAt: string } | null;
+  },
+  summary: string,
+): ExtraFonte[] {
+  return addExtraFonte({
+    handle: result.handle,
+    name: result.name,
+    avatar: result.avatar,
+    verified: result.verified,
+    followers: result.followers,
+    summary,
+    lastPost: result.lastPost
+      ? {
+          id: result.lastPost.id,
+          title: result.lastPost.text,
+          publishedAt: result.lastPost.publishedAt,
+        }
+      : null,
+  });
+}
+
 export function addExtraFonte(row: ExtraFonte): ExtraFonte[] {
   const handle = norm(row.handle);
   if (!handle) return loadExtraFontes();
