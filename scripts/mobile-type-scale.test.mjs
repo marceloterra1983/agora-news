@@ -54,6 +54,23 @@ const FIXTURE = `<!doctype html>
 </body>
 </html>`;
 
+async function launchChromium(t) {
+  const { chromium } = await import("playwright");
+  try {
+    return await chromium.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/Executable doesn't exist/i.test(msg)) {
+      t.skip("Playwright Chromium ausente — npx playwright install chromium");
+      return null;
+    }
+    throw err;
+  }
+}
+
 async function measure(page) {
   return page.evaluate(() => {
     const chip = document.querySelector("[data-h-scroll] button");
@@ -87,12 +104,9 @@ async function measure(page) {
   });
 }
 
-test("Playwright 390px: chip ≥44, nav ≥48, headline ≥22, meta ≥14", async () => {
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  });
+test("Playwright 390px: chip ≥44, nav ≥48, headline ≥22, meta ≥14", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await page.setContent(FIXTURE, { waitUntil: "domcontentloaded" });
@@ -111,12 +125,9 @@ test("Playwright 390px: chip ≥44, nav ≥48, headline ≥22, meta ≥14", asyn
   }
 });
 
-test("Playwright 1280px: desktop densities stay put", async () => {
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  });
+test("Playwright 1280px: desktop densities stay put", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     await page.setContent(FIXTURE, { waitUntil: "domcontentloaded" });
@@ -131,12 +142,9 @@ test("Playwright 1280px: desktop densities stay put", async () => {
   }
 });
 
-test("Playwright 1280px + data-shell=phone still uses the phone scale", async () => {
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  });
+test("Playwright 1280px + data-shell=phone still uses the phone scale", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     await page.setContent(FIXTURE.replace("<html lang", '<html data-shell="phone" lang'), {
