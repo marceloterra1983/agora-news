@@ -44,7 +44,7 @@ export function ProfileRow({
           type="button"
           aria-expanded={open}
           onClick={onToggle}
-          className="flex min-w-0 flex-1 items-center gap-2.5 py-2 text-left"
+          className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2.5 py-2 text-left"
         >
           <span className="w-4 shrink-0 text-right font-mono text-[10px] tabular-nums text-mute">
             {index + 1}
@@ -96,7 +96,7 @@ export function ProfileRow({
             href={lastHref}
             target={lastHref.startsWith("http") ? "_blank" : undefined}
             rel={lastHref.startsWith("http") ? "noreferrer" : undefined}
-            className="-mt-0.5 mb-2 ml-7 mr-0.5 block text-mute hover:text-ink"
+            className="-mt-0.5 mb-2 ml-7 mr-0.5 block min-h-[44px] text-mute hover:text-ink"
           >
             <span className="block truncate text-[11px] leading-snug">
               {displayTitle(row.lastPost.title)}
@@ -104,7 +104,7 @@ export function ProfileRow({
             <ClosedPostMeta row={row} />
           </a>
         ) : (
-          <div data-testid="fonte-last-post" className="-mt-0.5 mb-2 ml-7 mr-0.5 text-mute">
+          <div data-testid="fonte-last-post" className="-mt-0.5 mb-2 ml-7 mr-0.5 min-h-[44px] text-mute">
             <span className="block truncate text-[11px] leading-snug">
               {displayTitle(row.lastPost.title)}
             </span>
@@ -150,14 +150,14 @@ export function ProfileRow({
               <p className="mt-1 text-sm text-mute">Nenhum post encontrado.</p>
             )}
           </div>
-          <div className="mt-3 flex items-center gap-1">
+          <div className="mt-3 flex flex-wrap items-center gap-1">
             <Tip label={`Abrir @${row.handle} no X`}>
               <a
                 href={`https://x.com/${row.handle}`}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={`Abrir @${row.handle} no X`}
-                className="grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper"
+                className="grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper"
               >
                 <XLogo className="size-3.5" />
               </a>

@@ -35,4 +35,6 @@ test("closed last post is a link outside the leftover expand button", () => {
   assert.match(after, /<a\b/);
   assert.match(after, /lastHref/);
   assert.match(after, /data-testid=["']fonte-last-post["']/);
+  assert.match(button, /min-h-\[44px\]/);
+  assert.match(after, /min-h-\[44px\]/);
 });

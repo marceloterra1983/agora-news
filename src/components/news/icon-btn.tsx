@@ -3,8 +3,11 @@ import { cloneElement, isValidElement, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+export const tapIcon =
+  "grid size-[44px] shrink-0 place-items-center rounded-full";
+
 const BASE =
-  "grid size-8 shrink-0 place-items-center rounded-full border border-line text-ink transition-colors hover:bg-paper-2 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50";
+  `${tapIcon} border border-line text-ink transition-colors hover:bg-paper-2 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50`;
 
 export function Tip({
   label,

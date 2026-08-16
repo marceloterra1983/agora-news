@@ -66,29 +66,29 @@ export function ArticleView({ story }: { story: Story }) {
           to="/"
           search={{ secao: story.category }}
           aria-label={`Voltar para ${labelFor(story.category)}`}
-          className="grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
+          className="grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
         >
           <ArrowLeft className="size-4" />
         </Link>
       </Tip>
-      <p className="mt-6 flex items-center gap-2.5 text-[13px] text-mute">
+      <p className="mt-6 flex items-start gap-2.5 text-[13px] text-mute">
         {face ? (
           <img
             src={face}
             alt=""
             referrerPolicy="no-referrer"
-            className="size-8 shrink-0 rounded-full bg-paper-2 object-cover"
+            className="size-[44px] shrink-0 rounded-full bg-paper-2 object-cover"
           />
         ) : (
           <span
             aria-hidden
-            className="grid size-8 shrink-0 place-items-center rounded-full bg-paper-2 text-[11px] font-medium text-ink"
+            className="grid size-[44px] shrink-0 place-items-center rounded-full bg-paper-2 text-[11px] font-medium text-ink"
           >
             {story.source.replace(/^@/, "").charAt(0).toUpperCase()}
           </span>
         )}
-        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="lowercase">@{story.source.replace(/^@/, "")}</span>
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5 pt-1.5">
+          <span className="break-all lowercase">@{story.source.replace(/^@/, "")}</span>
           <GroupTag handle={story.source} />
           <span aria-hidden> · </span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>

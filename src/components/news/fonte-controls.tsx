@@ -81,7 +81,7 @@ export function FonteControls({
           aria-label={starLabel}
           aria-pressed={starred}
           className={cn(
-            "grid size-8 place-items-center rounded-full border border-line transition-colors",
+            "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
             starred ? "text-mark hover:bg-paper" : "text-mute hover:bg-paper hover:text-mark",
           )}
           onClick={() => onToggleStar(handle)}
@@ -95,7 +95,7 @@ export function FonteControls({
           aria-label={notifyLabel}
           aria-pressed={notify}
           className={cn(
-            "grid size-8 place-items-center rounded-full border border-line transition-colors",
+            "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
             notify ? "text-mark hover:bg-paper" : "text-mute hover:bg-paper hover:text-ink",
           )}
           onClick={() => onToggleNotify(handle)}
@@ -109,7 +109,7 @@ export function FonteControls({
           aria-label={powerLabel}
           aria-pressed={!disabled}
           className={cn(
-            "grid size-8 place-items-center rounded-full border border-line transition-colors",
+            "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
             disabled ? "text-mute hover:bg-paper hover:text-ink" : "text-ink hover:bg-paper",
           )}
           onClick={() => onToggleDisabled(handle)}
@@ -125,7 +125,7 @@ export function FonteControls({
             aria-expanded={open}
             aria-haspopup="listbox"
             className={cn(
-              "grid size-8 place-items-center rounded-full border border-line transition-colors",
+              "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
               open ? "bg-paper text-ink" : "text-ink hover:bg-paper",
             )}
             onClick={() => setOpen((v) => !v)}

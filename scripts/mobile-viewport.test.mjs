@@ -36,3 +36,21 @@ test("base css clips horizontal overflow instead of a 1024px floor", () => {
   assert.match(critical, /overflow-x:clip/);
   assert.match(css, /overflow-wrap:\s*anywhere/);
 });
+
+test("phone chrome, Fontes and article use 44px tap targets", () => {
+  const chrome = readFileSync(join(root, "src/components/news/app-chrome.tsx"), "utf8");
+  const icon = readFileSync(join(root, "src/components/news/icon-btn.tsx"), "utf8");
+  const chip = readFileSync(join(root, "src/components/news/fontes-chip.tsx"), "utf8");
+  const row = readFileSync(join(root, "src/components/news/fontes-profile-row.tsx"), "utf8");
+  const article = readFileSync(join(root, "src/components/news/article-view.tsx"), "utf8");
+  const controls = readFileSync(join(root, "src/components/news/fonte-controls.tsx"), "utf8");
+  const critical = readFileSync(join(root, "src/lib/news/critical.css.ts"), "utf8");
+  assert.match(chrome, /h-\[44px\]/);
+  assert.match(icon, /size-\[44px\]/);
+  assert.match(chip, /tapIcon/);
+  assert.match(row, /min-h-\[44px\]/);
+  assert.match(article, /size-\[44px\]/);
+  assert.match(article, /break-all/);
+  assert.match(controls, /size-\[44px\]/);
+  assert.match(critical, /width:44px;height:44px/);
+});

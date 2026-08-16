@@ -62,7 +62,7 @@ function ArticlePage() {
                 to="/"
                 search={{ secao: readLastSection() }}
                 aria-label={`Voltar para ${labelFor(readLastSection())}`}
-                className="mx-auto mt-6 grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
+                className="mx-auto mt-6 grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
               >
                 <ArrowLeft className="size-4" />
               </Link>
