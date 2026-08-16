@@ -28,6 +28,11 @@ test("Dockerfile exists and is a production Nitro image", () => {
     /npm install -g npm@11[\s\S]*npm ci/,
     "lockfile is npm@11 (same as CI); Node 22 image ships npm 10",
   );
+  assert.match(
+    df,
+    /pglite\.data/,
+    "Nitro omits PGLite wasm/data sidecars; image must copy them next to the bundle",
+  );
   const runLines = df
     .split("\n")
     .filter((line) => /^(RUN|CMD|ENTRYPOINT)\b/.test(line.trim()));
