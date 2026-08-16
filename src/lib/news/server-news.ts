@@ -1,15 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
+import { serverCatalogFor } from "./server-catalog";
 import { downloadPostById } from "./supabase";
 import { hydrateStory } from "./story-hydrate";
 import { persistHydratedBody } from "./story-persist";
 import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
+import type { SectionCatalog } from "./section-catalog.mjs";
 
-function toNews(payload: ReturnType<typeof fallbackPayload>, category: Category, q?: string) {
+function toNews(
+  payload: ReturnType<typeof fallbackPayload>,
+  category: Category,
+  q?: string,
+  catalog?: SectionCatalog,
+) {
   return {
-    stories: filterStories(payload.stories, category, q).map((s) => ({
+    stories: filterStories(payload.stories, category, q, catalog).map((s) => ({
       ...s,
       body: s.body || s.excerpt || s.title,
       original: s.original || "",
@@ -46,10 +53,15 @@ export const loadNews = createServerFn({ method: "GET" })
     return timed(
       `loadNews ${data.category}`,
       async () => {
+        const catalog = await serverCatalogFor(data.category);
         if (data.before) {
           const { downloadSupabase } = await import("./supabase");
-          const older = await downloadSupabase(data.category, { before: data.before, limit: PAGE_SIZE });
-          const stories = filterStories(older, data.category, data.q).map((s) => ({
+          const older = await downloadSupabase(data.category, {
+            before: data.before,
+            limit: PAGE_SIZE,
+            accounts: catalog.handles,
+          });
+          const stories = filterStories(older, data.category, data.q, catalog).map((s) => ({
             ...s,
             body: s.excerpt || s.title,
             original: s.original || "",
@@ -67,7 +79,7 @@ export const loadNews = createServerFn({ method: "GET" })
           };
         }
         const payload = await loadFeed(data.refresh, data.category, data.fromX);
-        const news = toNews(payload, data.category, data.q);
+        const news = toNews(payload, data.category, data.q, catalog);
         return {
           ...news,
           meta: { ...news.meta, hasMore: news.stories.length >= PAGE_SIZE },

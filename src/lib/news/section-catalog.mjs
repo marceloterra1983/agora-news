@@ -70,6 +70,26 @@ export function handleInCatalog(handle, catalog) {
   return catalog.handles.includes(norm(handle));
 }
 
+/** Seção do handle no catálogo (seed + extras). Vazio = fora de qualquer tema. */
+export function sectionOfHandle(handle, input = {}) {
+  const key = norm(handle);
+  if (!key) return "";
+  for (const row of [...(input.profiles ?? []), ...(input.extras ?? [])]) {
+    if (norm(row.handle) !== key) continue;
+    const sec = String(row.section || "").trim();
+    if (sec && sec.toLowerCase() !== "capa") return slugifySection(sec);
+  }
+  return "";
+}
+
+/** Feed da seção: só contas do catálogo, case-insensitive e sem @. */
+export function filterStoriesForCatalog(stories, catalog) {
+  if (!catalog || !Array.isArray(stories)) return [];
+  return stories.filter((story) =>
+    handleInCatalog(story?.source || story?.account || story?.sourceLabel, catalog),
+  );
+}
+
 export function chipGroupIds(catalog) {
   return catalog.groupIds;
 }

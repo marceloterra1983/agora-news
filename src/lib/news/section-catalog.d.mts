@@ -22,4 +22,15 @@ export function catalogFor(
 ): SectionCatalog;
 
 export function handleInCatalog(handle: string, catalog: SectionCatalog): boolean;
+export function sectionOfHandle(
+  handle: string,
+  input?: {
+    extras?: CatalogExtra[];
+    profiles?: CatalogProfile[];
+  },
+): string;
+export function filterStoriesForCatalog<T extends { source?: string; account?: string; sourceLabel?: string }>(
+  stories: T[],
+  catalog: SectionCatalog,
+): T[];
 export function chipGroupIds(catalog: SectionCatalog): string[];

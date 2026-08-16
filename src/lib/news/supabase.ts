@@ -15,6 +15,8 @@ export const SUPABASE_ANON_KEY =
 export const SUPABASE_POSTS_URL = `${SUPABASE_URL}/rest/v1/posts`;
 
 import { PAGE_SIZE } from "./page-size.mjs";
+import { profilesFor } from "./profiles";
+import { catalogFor } from "./section-catalog.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { normalizeSection, type Category, type Story } from "./types";
 import { CACHE_KEYS, cacheDel, cacheGetJson, cacheSetJson, invalidateNewsCache } from "./cache";
@@ -161,29 +163,26 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
   };
 }
 
-export type ListOpts = { before?: string; limit?: number };
+export type ListOpts = { before?: string; limit?: number; accounts?: string[] };
 
-/** Topo real — 1 linha. Usado só na revalidação em background. */
-async function fetchHeadId(category: Category): Promise<string | null> {
+function normAccount(raw: string): string {
+  return String(raw || "")
+    .replace(/^@+/, "")
+    .trim()
+    .toLowerCase();
+}
+
+async function accountsFor(category: Category): Promise<string[]> {
   try {
-    const params = new URLSearchParams();
-    params.set("select", "post_id");
-    params.set("order", "posted_at.desc");
-    params.set("limit", "1");
-    params.set("category", `eq.${normalizeSection(category)}`);
-    const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
-      headers: AUTH,
-      signal: AbortSignal.timeout(3_000),
-    });
-    if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{ post_id?: string }>;
-    return rows[0]?.post_id ? String(rows[0].post_id) : null;
+    const { listWatchAccounts } = await import("./watch");
+    const extras = await listWatchAccounts();
+    return catalogFor(category, { profiles: profilesFor(category), extras }).handles;
   } catch {
-    return null;
+    return catalogFor(category, { profiles: profilesFor(category) }).handles;
   }
 }
 
-async function fetchList(category: Category, opts: ListOpts = {}): Promise<Story[]> {
+async function fetchListRows(category: Category, opts: ListOpts = {}): Promise<DbPost[]> {
   const params = new URLSearchParams();
   params.set("select", LIST_SELECT);
   params.set("order", "posted_at.desc");
@@ -197,8 +196,38 @@ async function fetchList(category: Category, opts: ListOpts = {}): Promise<Story
   });
   if (!res.ok) throw new Error(`supabase_${res.status}`);
   const rows = (await res.json()) as DbPost[];
-  if (!Array.isArray(rows)) return [];
-  return rows.filter(isNewsRow).map((p) => dbPostToStory(p, category));
+  return Array.isArray(rows) ? rows : [];
+}
+
+/** Topo real do catálogo — pula vazamento category=ai de conta fora da seção. */
+async function fetchHeadId(category: Category, allowed: Set<string>): Promise<string | null> {
+  try {
+    const rows = await fetchListRows(category, { limit: 24 });
+    const hit = rows.find((p) => isNewsRow(p) && allowed.has(normAccount(p.account || "")));
+    return hit?.post_id ? String(hit.post_id) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchList(category: Category, opts: ListOpts = {}): Promise<Story[]> {
+  const want = opts.limit ?? PAGE_SIZE;
+  const allowed = new Set((opts.accounts ?? (await accountsFor(category))).map(normAccount));
+  const out: Story[] = [];
+  let before = opts.before;
+  for (let i = 0; i < 5 && out.length < want; i++) {
+    const batchSize = Math.min(80, Math.max(want * 2, 40));
+    const rows = await fetchListRows(category, { before, limit: batchSize });
+    if (!rows.length) break;
+    for (const p of rows) {
+      if (!isNewsRow(p) || !allowed.has(normAccount(p.account || ""))) continue;
+      out.push(dbPostToStory(p, category));
+      if (out.length >= want) break;
+    }
+    before = rows[rows.length - 1]?.posted_at || before;
+    if (rows.length < batchSize) break;
+  }
+  return out;
 }
 
 function storeList(key: string, stories: Story[], headId: string) {
@@ -212,13 +241,20 @@ function storeList(key: string, stories: Story[], headId: string) {
  * Revalida só o head. Se mudou → fetch lista completa.
  * Se igual → só renova o timestamp do cache (estende WARM).
  */
-function revalidateInBackground(slug: Category, limit: number, key: string, knownHead: string) {
+function revalidateInBackground(
+  slug: Category,
+  limit: number,
+  key: string,
+  knownHead: string,
+  accounts?: string[],
+) {
   // single-flight por key
   if (revalidateInflight.has(key)) return;
   revalidateInflight.add(key);
   void (async () => {
     try {
-      const headId = await fetchHeadId(slug);
+      const allowed = new Set((accounts ?? (await accountsFor(slug))).map(normAccount));
+      const headId = await fetchHeadId(slug, allowed);
       if (!headId) return;
       if (headId === knownHead) {
         // topo igual: estende o warm sem baixar a lista de novo
@@ -227,7 +263,7 @@ function revalidateInBackground(slug: Category, limit: number, key: string, know
         return;
       }
       // topo novo → lista fresca
-      const stories = await fetchList(slug, { limit });
+      const stories = await fetchList(slug, { limit, accounts: accounts ?? [...allowed] });
       if (stories.length) {
         storeList(key, stories, headId);
         void cacheSetJson(CACHE_KEYS.list(slug, limit), stories, 120);
@@ -260,7 +296,7 @@ export async function downloadSupabase(
 
   // 2) Stale-while-revalidate: responde na hora, head em background
   if (hit && age < STALE_MS) {
-    revalidateInBackground(slug, limit, key, hit.headId);
+    revalidateInBackground(slug, limit, key, hit.headId, opts.accounts);
     return hit.stories;
   }
 
