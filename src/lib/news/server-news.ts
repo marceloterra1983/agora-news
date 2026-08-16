@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
 import { downloadPostById } from "./supabase";
+import { hydrateStory } from "./story-hydrate";
 import { timed } from "./timing";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 
@@ -77,10 +78,8 @@ export const loadNews = createServerFn({ method: "GET" })
 export const loadStory = createServerFn({ method: "GET" })
   .validator((id: string) => String(id || ""))
   .handler(async ({ data: id }) => {
-    const cached = peekStory(id);
-    if (cached) return cached;
-    const payload = await loadFeed(false);
-    const hit = payload.stories.find((s) => s.id === id);
-    if (hit) return hit;
-    return downloadPostById(id);
+    const full = await downloadPostById(id);
+    const base = full ?? peekStory(id);
+    if (!base) return null;
+    return hydrateStory(base);
   });

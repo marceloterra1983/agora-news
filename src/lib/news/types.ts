@@ -58,6 +58,7 @@ export type Story = {
   publishedAt: string;
   source: string;
   sourceLabel: string;
+  avatar?: string | null;
   category: Category;
   media: string;
   batch: string;
