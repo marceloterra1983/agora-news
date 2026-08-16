@@ -1,7 +1,7 @@
 import { Bell, BellOff, Layers, Power, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { isReservedGroup } from "@/lib/news/catalog-taxonomy.mjs";
 import { addCustomGroup, allGroupIds, groupLabel, groupPip, onCustomGroups, removeCustomGroup } from "@/lib/news/groups";
-import { GROUP_ORDER } from "@/lib/news/profiles";
 import { readLastSection } from "@/lib/news/section-pref";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
@@ -174,7 +174,7 @@ export function FonteControls({
                 </button>
               </li>
             ) : null}
-            {group && !(GROUP_ORDER as readonly string[]).includes(group) ? (
+            {group && !isReservedGroup(group) ? (
               <li>
                 <button
                   type="button"

@@ -1,14 +1,5 @@
 import { extrasForSection } from "./watch-section.mjs";
-
-const GROUP_ORDER = ["labs", "lideres", "pesquisa", "imprensa", "builders", "novos"];
-const GROUP_LABELS = {
-  labs: "Empresas",
-  lideres: "CEOs",
-  pesquisa: "Cientistas",
-  imprensa: "Imprensa",
-  builders: "Devs",
-  novos: "Outros",
-};
+import { groupOrderFor, labelOfGroup, reservedGroupIds } from "./catalog-taxonomy.mjs";
 
 function slugifySection(name) {
   return (
@@ -35,11 +26,6 @@ function norm(h) {
     .toLowerCase();
 }
 
-function labelOf(id, custom) {
-  if (id in GROUP_LABELS) return GROUP_LABELS[id];
-  return custom.find((g) => g.id === id)?.label || id;
-}
-
 /** Catálogo de um tema: fontes, extras e grupos com membro. */
 export function catalogFor(section, input = {}) {
   const slug = normalizeSection(section);
@@ -64,9 +50,9 @@ export function catalogFor(section, input = {}) {
   }
 
   const present = new Set(members.map((m) => m.group));
-  const reserved = new Set(GROUP_ORDER);
+  const reserved = reservedGroupIds();
   const groupIds = [
-    ...GROUP_ORDER.filter((id) => present.has(id)),
+    ...groupOrderFor(slug).filter((id) => present.has(id)),
     ...customGroups.map((g) => g.id).filter((id) => id && present.has(id) && !reserved.has(id)),
   ];
 
@@ -76,7 +62,7 @@ export function catalogFor(section, input = {}) {
     extras,
     handles: members.map((m) => m.handle),
     groupIds,
-    groups: groupIds.map((id) => ({ id, label: labelOf(id, customGroups) })),
+    groups: groupIds.map((id) => ({ id, label: labelOfGroup(id, slug) })),
   };
 }
 
