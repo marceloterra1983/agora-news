@@ -1,3 +1,4 @@
+import { keepLastPost, parseLastPost } from "./last-post";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase";
 
 export type StoredProfile = {
@@ -27,7 +28,9 @@ export async function readStoredProfile(handle: string): Promise<StoredProfile |
     );
     if (table.ok) {
       const rows = (await table.json()) as StoredProfile[];
-      if (Array.isArray(rows) && rows[0]?.summary_pt) return rows[0];
+      if (Array.isArray(rows) && rows[0]?.summary_pt) {
+        return { ...rows[0], last_post: parseLastPost(rows[0].last_post) };
+      }
     }
   } catch {
     /* table may not exist yet */
@@ -65,7 +68,37 @@ export async function readStoredProfile(handle: string): Promise<StoredProfile |
   }
 }
 
-export async function listStoredProfiles(): Promise<StoredProfile[]> {
+async function listFromXProfiles(): Promise<StoredProfile[]> {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/x_profiles?select=handle,name,bio,summary_pt,avatar,followers,last_post,updated_at&limit=400`,
+      { headers: AUTH, signal: AbortSignal.timeout(6_000) },
+    );
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<StoredProfile & { last_post?: unknown }>;
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .map((row) => {
+        const handle = String(row.handle || "").replace(/^@+/, "").trim();
+        if (!handle) return null;
+        return {
+          handle,
+          name: row.name || handle,
+          bio: row.bio || "",
+          summary_pt: row.summary_pt || "",
+          avatar: row.avatar || null,
+          followers: Number(row.followers) || 0,
+          last_post: parseLastPost(row.last_post),
+          updated_at: row.updated_at || "",
+        } satisfies StoredProfile;
+      })
+      .filter((row): row is StoredProfile => Boolean(row));
+  } catch {
+    return [];
+  }
+}
+
+async function listFromProfilePosts(): Promise<StoredProfile[]> {
   try {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/posts?category=eq.profile&select=account,content,translation_pt,summary_pt,image_url,media_label,updated_at,posted_at&limit=200`,
@@ -103,4 +136,19 @@ export async function listStoredProfiles(): Promise<StoredProfile[]> {
   } catch {
     return [];
   }
+}
+
+export async function listStoredProfiles(): Promise<StoredProfile[]> {
+  const [table, posts] = await Promise.all([listFromXProfiles(), listFromProfilePosts()]);
+  const by = new Map<string, StoredProfile>();
+  for (const row of posts) by.set(row.handle.toLowerCase(), row);
+  for (const row of table) {
+    const prev = by.get(row.handle.toLowerCase());
+    by.set(row.handle.toLowerCase(), {
+      ...prev,
+      ...row,
+      last_post: keepLastPost(prev?.last_post, row.last_post),
+    });
+  }
+  return [...by.values()];
 }

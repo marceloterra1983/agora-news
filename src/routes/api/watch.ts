@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { listWatchAccounts, registerWatch, unregisterWatch } from "@/lib/news/watch";
 import { upsertProfile } from "@/lib/news/admin";
+import { keepLastPost, parseLastPost } from "@/lib/news/last-post";
+import { readStoredProfile } from "@/lib/news/profile-store";
 import { denyWrite, requestWriteAllowed } from "@/lib/news/write-guard";
 
 export const Route = createFileRoute("/api/watch")({
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/api/watch")({
           avatar?: string | null;
           summary?: string;
           followers?: number;
+          lastPost?: unknown;
         };
         const handle = String(body.handle || "").replace(/^@+/, "").trim();
         if (!handle) return Response.json({ ok: false }, { status: 400 });
@@ -30,6 +33,7 @@ export const Route = createFileRoute("/api/watch")({
           followers: Number(body.followers) || 0,
         });
         if (ok && body.summary) {
+          const prev = await readStoredProfile(handle);
           await upsertProfile({
             handle,
             name: String(body.name || handle),
@@ -37,7 +41,7 @@ export const Route = createFileRoute("/api/watch")({
             summary_pt: String(body.summary || "").slice(0, 220),
             avatar: body.avatar || null,
             followers: Number(body.followers) || 0,
-            last_post: null,
+            last_post: keepLastPost(prev?.last_post, parseLastPost(body.lastPost)),
           });
         }
         return Response.json({ ok });

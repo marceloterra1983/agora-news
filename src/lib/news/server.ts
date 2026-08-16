@@ -4,6 +4,7 @@ import { enrichFontes, loadFontesFast } from "./influence";
 import { blurbFor, profileByHandle, profilesFor } from "./profiles";
 import { FEED_SHEET_ID } from "./sheet";
 import { downloadPostById, SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
+import { fetchLastPost } from "./last-post";
 import { readStoredProfile } from "./profile-store";
 import { timed } from "./timing";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
@@ -184,42 +185,6 @@ function extractMatchesPerson(name: string, handle: string, title: string, extra
 
 function aiKey(): string {
   return process.env.XAI_API_KEY || process.env.GROK_API_KEY || "";
-}
-
-type LastPost = { id: string; text: string; url: string; publishedAt: string };
-
-async function fetchLastPost(handle: string): Promise<LastPost | null> {
-  try {
-    const res = await fetch(
-      `https://api.fxtwitter.com/2/profile/${encodeURIComponent(handle)}/statuses?count=5`,
-      { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8_000) },
-    );
-    if (!res.ok) return null;
-    const body = (await res.json()) as {
-      results?: Array<{
-        id?: string;
-        text?: string;
-        url?: string;
-        created_timestamp?: number;
-        created_at?: string;
-      }>;
-    };
-    const row = (body.results ?? []).find((t) => t.id && t.text);
-    if (!row?.id) return null;
-    const publishedAt = row.created_timestamp
-      ? new Date(row.created_timestamp * 1000).toISOString()
-      : row.created_at
-        ? new Date(row.created_at).toISOString()
-        : new Date().toISOString();
-    return {
-      id: String(row.id),
-      text: String(row.text).replace(/\s+/g, " ").trim(),
-      url: row.url || `https://x.com/${handle}/status/${row.id}`,
-      publishedAt,
-    };
-  } catch {
-    return null;
-  }
 }
 
 function extractLlmText(body: Record<string, unknown>): string {

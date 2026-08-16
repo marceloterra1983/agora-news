@@ -150,7 +150,7 @@ export function ProfileRow({
                 {row.lastPost.title}
               </Link>
             ) : (
-              <p className="mt-1 text-sm text-mute">Nenhum post nas últimas 48 horas.</p>
+              <p className="mt-1 text-sm text-mute">Nenhum post encontrado.</p>
             )}
           </div>
           <div className="mt-3 flex items-center gap-1">

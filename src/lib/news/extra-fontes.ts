@@ -68,6 +68,7 @@ function pushWatch(row: ExtraFonte) {
       avatar: row.avatar,
       summary: row.summary,
       followers: row.followers,
+      lastPost: row.lastPost,
     }),
   }).catch(() => {});
 }

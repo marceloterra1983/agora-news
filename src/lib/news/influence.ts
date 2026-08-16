@@ -1,6 +1,7 @@
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
+import { fillMissingLastPosts, preferNewerLast, storedToLastHit } from "./last-post";
 import { profilesFor, type XProfile } from "./profiles";
-import { listStoredProfiles } from "./profile-store";
+import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listWatchAccounts } from "./watch";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 import type { Category } from "./types";
@@ -218,19 +219,30 @@ async function hydrateStore() {
   const [stored, watch] = await Promise.all([listStoredProfiles(), listWatchAccounts()]);
   for (const row of stored) seedFromStore(row.handle, row);
   for (const row of watch) seedFromStore(row.handle, row);
-  return watch;
+  return { stored, watch };
+}
+
+function storedLastMap(stored: StoredProfile[]): Map<string, LastHit> {
+  const map = new Map<string, LastHit>();
+  for (const row of stored) {
+    const hit = storedToLastHit(row.last_post);
+    if (hit) map.set(norm(row.handle).toLowerCase(), hit);
+  }
+  return map;
 }
 
 function buildRows(
   section: Category,
   lastMap: Map<string, LastHit>,
+  stored: StoredProfile[],
   watch: Array<{ handle: string; name: string; avatar: string | null; summary: string; followers: number }>,
 ): InfluenceRow[] {
   const since = Date.now() - 48 * 60 * 60_000;
+  const fromStore = storedLastMap(stored);
   const base = profilesFor(section).map((p) => {
     const key = norm(p.handle).toLowerCase();
     const stats = cachedStats(key);
-    const last = lastMap.get(key) ?? null;
+    const last = preferNewerLast(lastMap.get(key) ?? null, fromStore.get(key) ?? null);
     const recentCount =
       last && Date.parse(last.publishedAt) >= since ? last.count : last ? Math.min(last.count, 1) : 0;
     return {
@@ -256,7 +268,7 @@ function buildRows(
     const key = norm(w.handle).toLowerCase();
     if (!key || seen.has(key)) continue;
     const stats = cachedStats(key);
-    const last = lastMap.get(key) ?? null;
+    const last = preferNewerLast(lastMap.get(key) ?? null, fromStore.get(key) ?? null);
     extras.push({
       handle: w.handle,
       name: w.name || w.handle,
@@ -283,8 +295,8 @@ function buildRows(
 
 /** Lista imediata: 1 query posts leve + cache de perfis. Zero fxtwitter. */
 export async function loadFontesFast(section: Category): Promise<InfluenceRow[]> {
-  const [lastMap, watch] = await Promise.all([lastPostsByAccount(section), hydrateStore()]);
-  return buildRows(section, lastMap, watch);
+  const [lastMap, { stored, watch }] = await Promise.all([lastPostsByAccount(section), hydrateStore()]);
+  return buildRows(section, lastMap, stored, watch);
 }
 
 /** Completa só o que ainda não tem avatar/seguidores (máx 8, pool 6). */
@@ -297,13 +309,19 @@ export async function enrichFontes(section: Category): Promise<InfluenceRow[]> {
   if (missing.length) {
     await mapPool(missing.slice(0, 8), 6, (p) => fetchOne(p.handle));
   }
-  const needBuzz = (await loadFontesFast(section))
-    .filter((r) => r.lastPost && !buzzIsFresh(r.handle))
-    .slice(0, 20);
+  let rows = await loadFontesFast(section);
+  const missingLast = rows.filter((r) => !r.lastPost).map((r) => r.handle);
+  if (missingLast.length) {
+    await fillMissingLastPosts(missingLast);
+    lastCache.delete(section);
+    rows = await loadFontesFast(section);
+  }
+  const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle)).slice(0, 20);
   if (needBuzz.length) {
     await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle));
+    rows = await loadFontesFast(section);
   }
-  return loadFontesFast(section);
+  return rows;
 }
 
 export async function loadInfluence(section: Category): Promise<InfluenceRow[]> {
