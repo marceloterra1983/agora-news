@@ -38,7 +38,7 @@ export function ProfileRow({
   const followers = row.followers ? formatCount(row.followers) : "";
   const lastHref = row.lastPost ? safeHttpHref(row.lastPost.href) : "";
   return (
-    <li className={cn("border-b border-line", pausedRow && "opacity-55")}>
+    <li data-testid="fonte-row" className={cn("border-b border-line", pausedRow && "opacity-55")}>
       <div className="flex items-start gap-1">
         <button
           type="button"

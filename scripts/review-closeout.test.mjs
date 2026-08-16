@@ -31,17 +31,14 @@ test("CloudPrefs snapshot and type include groups and customGroups", () => {
 });
 
 test("loadFontesLive reads the store; enrichFontes runs on ingest", () => {
-  const server = read("src/lib/news/server.ts");
-  const start = server.indexOf("export const loadFontesLive");
-  const end = server.indexOf("const summaryCache");
-  const live = server.slice(start, end);
-  assert.match(live, /loadFontesFast/);
-  assert.doesNotMatch(live, /enrichFontes/);
+  const server = read("src/lib/news/server-fontes.ts");
+  assert.match(server, /loadFontesFast/);
+  assert.doesNotMatch(server, /enrichFontes/);
   assert.match(read("src/lib/news/ingest.ts"), /enrichFontes/);
 });
 
 test("summarizeProfile spends the LLM key only when spendKeyAllowed", () => {
-  const src = read("src/lib/news/server.ts");
+  const src = read("src/lib/news/server-profile.ts");
   assert.match(src, /spendKeyAllowed/);
   assert.match(src, /userIdFromHeaders/);
 });

@@ -31,9 +31,24 @@ test("extracted page modules stay under 200 lines", () => {
     "src/components/news/buscar-interests.tsx",
     "src/lib/news/fontes-sort.ts",
     "src/lib/news/use-open-x-profile.ts",
+    "src/lib/news/server-news.ts",
+    "src/lib/news/server-fontes.ts",
+    "src/lib/news/server-profile.ts",
+    "src/lib/news/server-debug.ts",
+    "src/lib/news/summary-core.mjs",
+    "src/lib/news/summary-line.ts",
   ]) {
     assert.ok(lines(rel) <= 200, `${rel} is ${lines(rel)}`);
   }
+});
+
+test("server.ts is a barrel under 80 lines", () => {
+  assert.ok(lines("src/lib/news/server.ts") <= 80, `server.ts is ${lines("src/lib/news/server.ts")}`);
+  const src = readFileSync(join(root, "src/lib/news/server.ts"), "utf8");
+  assert.match(src, /from ["']\.\/server-news["']/);
+  assert.match(src, /from ["']\.\/server-fontes["']/);
+  assert.match(src, /from ["']\.\/server-profile["']/);
+  assert.doesNotMatch(src, /createServerFn/);
 });
 
 test("route files no longer define HitRow/ProfileCard/ProfileRow", () => {
