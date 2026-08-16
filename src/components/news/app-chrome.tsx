@@ -55,7 +55,7 @@ export function AppChrome({
   }
 
   return (
-    <div className="min-h-dvh bg-paper text-ink">
+    <div className="min-h-dvh w-full min-w-0 overflow-x-clip bg-paper text-ink">
       <PrefsSync />
       <GrokHeader
         category={shown}
@@ -119,8 +119,8 @@ function GrokHeader({
   }
 
   return (
-    <header data-chrome="compact" className="sticky top-0 z-30 border-b border-line bg-paper">
-      <div className="mx-auto flex h-[var(--agora-header)] max-w-2xl items-center gap-1.5 pr-3 pl-2">
+    <header data-chrome="compact" className="sticky top-0 z-30 w-full min-w-0 overflow-x-clip border-b border-line bg-paper">
+      <div className="mx-auto flex h-[var(--agora-header)] w-full min-w-0 max-w-2xl items-center gap-1.5 pr-3 pl-2">
         <div ref={rootRef} className="relative shrink-0">
           <button
             type="button"
@@ -158,41 +158,41 @@ function GrokHeader({
           ) : null}
         </div>
 
-        {toolbar ?? (onGroup ? (
-          <div data-h-scroll className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
-            <button
-              type="button"
-              aria-pressed={group === "all"}
-              onClick={() => pickGroup("all")}
-              className={cn(
-                "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-                group === "all" ? "bg-ink text-paper ring-1 ring-ink/40" : "bg-paper-2 text-mute",
-              )}
-            >
-              Todos
-            </button>
-            {catalog.groups.map((g) => {
-              const st = groupStyle(g.id);
-              const on = group === g.id;
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => pickGroup(g.id)}
-                  className={cn(
-                    "inline-flex h-8 shrink-0 items-center rounded-full px-2.5 text-[11px] font-semibold",
-                    on ? st.chipOn : st.chip,
-                  )}
-                >
-                  {g.label}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="min-w-0 flex-1" />
-        ))}
+        <div data-h-scroll className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+          {toolbar ?? (onGroup ? (
+            <>
+              <button
+                type="button"
+                aria-pressed={group === "all"}
+                onClick={() => pickGroup("all")}
+                className={cn(
+                  "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
+                  group === "all" ? "bg-ink text-paper ring-1 ring-ink/40" : "bg-paper-2 text-mute",
+                )}
+              >
+                Todos
+              </button>
+              {catalog.groups.map((g) => {
+                const st = groupStyle(g.id);
+                const on = group === g.id;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => pickGroup(g.id)}
+                    className={cn(
+                      "inline-flex h-8 shrink-0 items-center rounded-full px-2.5 text-[11px] font-semibold",
+                      on ? st.chipOn : st.chip,
+                    )}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+            </>
+          ) : null)}
+        </div>
 
         <AppMenu />
       </div>

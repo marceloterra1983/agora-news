@@ -114,7 +114,7 @@ export function ArticleView({ story }: { story: Story }) {
           <StoryMedia src={story.image} alt={title} className="aspect-[16/9] w-full" />
         </div>
       ) : null}
-      <p className="mt-6 whitespace-pre-wrap text-[1.05rem] leading-relaxed text-ink-soft">
+      <p className="mt-6 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed text-ink-soft">
         {story.body || story.excerpt}
       </p>
       {quoted ? <QuoteCard quote={quoted} /> : null}
