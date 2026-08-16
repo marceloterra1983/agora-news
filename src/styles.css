@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./lib/news/phone-layout.css";
 
 @theme {
   --font-display: "Literata", "Iowan Old Style", Georgia, serif;

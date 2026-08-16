@@ -11,6 +11,7 @@ import { HideHostChrome } from "@/components/news/hide-host-chrome";
 import { PwaRoot } from "@/components/news/pwa-install";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CRITICAL_CSS } from "@/lib/news/critical.css";
+import { PHONE_VIEWPORT_GUARD, VIEWPORT_CONTENT } from "@/lib/news/phone-shell";
 import { THEME_BOOT_SCRIPT } from "@/lib/news/theme";
 import { SETTINGS_BOOT_SCRIPT } from "@/lib/news/settings";
 import appCssInline from "../styles.css?inline";
@@ -35,10 +36,15 @@ const queryClient = new QueryClient({
 });
 
 export const Route = createRootRoute({
+  headers: () => ({
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+    "CDN-Cache-Control": "no-store",
+    Pragma: "no-cache",
+  }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no" },
+      { name: "viewport", content: VIEWPORT_CONTENT },
       { title: "IA — NEWS" },
       { name: "description", content: "Notícias das pastas de NEWS no Google Drive." },
       { name: "application-name", content: APP_NAME },
@@ -80,6 +86,7 @@ function Root() {
   return (
     <html lang="pt-BR" className="antialiased" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: PHONE_VIEWPORT_GUARD }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SETTINGS_BOOT_SCRIPT }} />
         <HeadContent />
@@ -90,7 +97,7 @@ function Root() {
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v12";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v13";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>

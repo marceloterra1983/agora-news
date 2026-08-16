@@ -169,7 +169,7 @@ function FontesPage() {
         </div>
       }
     >
-      <main className="mx-auto max-w-2xl px-4 pb-24">
+      <main className="mx-auto max-w-2xl px-4 pb-24 max-sm:max-w-none">
         <h1 className="sr-only">Fontes</h1>
         <label className="mt-3 block">
           <span className="sr-only">Filtrar no catálogo</span>

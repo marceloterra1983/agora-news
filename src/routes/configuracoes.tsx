@@ -47,7 +47,7 @@ function SettingsPage() {
 
   return (
     <AppChrome category={DEFAULT_SECTION}>
-      <main className="mx-auto max-w-2xl px-4 pb-28 pt-6">
+      <main className="mx-auto max-w-2xl px-4 pb-28 pt-6 max-sm:max-w-none">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mark">App</p>
         <h1 className="mt-1 font-display text-3xl tracking-tight">Configurações</h1>
         <p className="mt-2 text-sm text-ink-soft">

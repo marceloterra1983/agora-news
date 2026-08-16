@@ -60,7 +60,7 @@ export function ArticleView({ story }: { story: Story }) {
   const showTitle = isDistinctTitle(title, story.body || story.excerpt);
 
   return (
-    <article data-post="" className="mx-auto max-w-3xl">
+    <article data-post="" className="mx-auto max-w-3xl max-sm:max-w-none">
       <Tip label={`Voltar para ${labelFor(story.category)}`}>
         <Link
           to="/"

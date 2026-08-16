@@ -41,7 +41,7 @@ function ArticlePage() {
 
   return (
     <AppChrome category={data?.category ?? "ai"}>
-      <main className="mx-auto max-w-6xl px-4 py-8 pb-24 sm:px-6">
+      <main className="mx-auto max-w-6xl px-4 py-8 pb-24 sm:px-6 max-sm:max-w-none">
         {data ? (
           <ArticleView story={data} />
         ) : isLoading ? (

@@ -1,3 +1,5 @@
+import phoneLayoutCss from "./phone-layout.css?raw";
+
 /** CSS no <head> — o publicado não pode depender só de /assets/*.css. */
 export const CRITICAL_CSS = `
 html,body{margin:0;max-width:100%;overflow-x:clip;overflow-wrap:break-word;background:#f2eee4;color:#161411;font-family:"Source Sans 3",system-ui,sans-serif}
@@ -23,4 +25,4 @@ html.dark [data-story] p{color:#9a9286}
 [data-post]{max-width:min(48rem,100%);margin:0 auto;overflow-wrap:anywhere}
 [data-post] h1{font-family:var(--font-display),Georgia,serif;font-size:1.4rem;line-height:1.35;font-weight:500;letter-spacing:-0.01em;margin:12px 0 0;text-align:left;text-wrap:pretty}
 [data-post] p{font-size:1.05rem;line-height:1.6;margin:16px 0 0}
-`;
+` + phoneLayoutCss;

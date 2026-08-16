@@ -117,7 +117,7 @@ export function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
   return [
     [
       "viewport",
-      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
     ],
     // Standalone display comes from the manifest ("display": "standalone");
     // the legacy *-web-app-capable metas it replaces are deliberately absent.
