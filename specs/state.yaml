@@ -7,9 +7,9 @@ release:
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: develop-tdd
-  next_skill: develop-tdd
-  completed_steps: [plan-work, assess-impact]
+  current_step: verify-work
+  next_skill: null
+  completed_steps: [plan-work, assess-impact, kickoff-branch, develop-tdd, verify-work]
 bug_cycle:
   current_step: null
   completed_steps: []
@@ -17,16 +17,15 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase, plan-work]
 git:
-  branch: feat/docker-prod-news
-  hash: pending
+  branch: main
+  hash: 20e18ba
 handoff:
-  last_step_completed: "Plano e03-docker-prod escrito; baseline vivo capturado"
+  last_step_completed: "Cutover Docker na 3080; PM2 news stopped; site vivo 200"
   open_decisions: []
   required_reading:
     - specs/epics/e03-docker-prod/PLAN.md
-    - specs/verifications/2026-08-16-docker-prod-baseline.md
-    - specs/IMPACT_LATEST.md
-  next_skill: develop-tdd
+    - specs/verifications/2026-08-16-docker-prod-cutover.md
+  next_skill: null
 learned_preferences:
   - "PT-BR, conciso, dono do repo a partir de 2026-08-16"
   - "Não rotacionar chaves neste ciclo — fallbacks no source permanecem"
