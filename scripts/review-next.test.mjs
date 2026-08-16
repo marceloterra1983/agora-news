@@ -1,0 +1,192 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
+import {
+  isSyntheticPostId,
+  lastPostFromXLastRow,
+  pickLatestFromPostRows,
+  usableTweetId,
+  xLastListParams,
+} from "../src/lib/news/last-post-core.mjs";
+import { mergeClientProfile } from "../src/lib/news/profile-store-core.mjs";
+import { classifyPushTableHttp, pickPushList, pushPersisted } from "../src/lib/news/push-core.mjs";
+import { writeAllowed } from "./write-guard.mjs";
+import { writeAllowed as writeAllowedTs } from "../src/lib/news/write-guard.ts";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+test("pickLatestFromPostRows skips last_/prfl_/watch_ even if they are newest", () => {
+  const handle = "openai";
+  const picked = pickLatestFromPostRows(
+    [
+      {
+        post_id: "last_openai",
+        posted_at: "2026-08-16T10:00:00.000Z",
+        summary_pt: "placeholder last row",
+        post_url: "",
+      },
+      {
+        post_id: "prfl_openai",
+        posted_at: "2026-08-16T09:00:00.000Z",
+        summary_pt: "profile row",
+        post_url: "https://x.com/openai",
+      },
+      {
+        post_id: "1948000000000000000",
+        posted_at: "2026-01-01T00:00:00.000Z",
+        summary_pt: "real tweet",
+        post_url: "https://x.com/openai/status/1948000000000000000",
+      },
+    ],
+    handle,
+  );
+  assert.equal(picked?.id, "1948000000000000000");
+  assert.equal(picked?.text, "real tweet");
+});
+
+test("pickLatestFromPostRows returns null when only synthetic rows exist", () => {
+  assert.equal(
+    pickLatestFromPostRows(
+      [
+        {
+          post_id: "last_apple",
+          posted_at: "2026-08-01T00:00:00.000Z",
+          summary_pt: "stale x-last",
+          post_url: "https://x.com/apple/status/1",
+        },
+      ],
+      "apple",
+    ),
+    null,
+  );
+});
+
+test("lastPostFromXLastRow extracts status id and never uses last_ as tweet id", () => {
+  const fromUrl = lastPostFromXLastRow(
+    {
+      account: "OpenAI",
+      post_id: "last_openai",
+      posted_at: "2026-04-01T00:00:00.000Z",
+      summary_pt: "hello",
+      post_url: "https://x.com/OpenAI/status/42",
+    },
+    "OpenAI",
+  );
+  assert.equal(fromUrl?.id, "42");
+  assert.equal(fromUrl?.url, "https://x.com/OpenAI/status/42");
+
+  const noUrl = lastPostFromXLastRow(
+    {
+      account: "openai",
+      post_id: "last_openai",
+      posted_at: "2026-04-01T00:00:00.000Z",
+      content: "hello",
+      post_url: "",
+    },
+    "openai",
+  );
+  assert.equal(noUrl, null);
+  assert.equal(usableTweetId("last_openai", ""), "");
+  assert.equal(usableTweetId("99", ""), "99");
+  assert.equal(isSyntheticPostId("last_openai"), true);
+  assert.equal(isSyntheticPostId("1948"), false);
+});
+
+test("xLastListParams orders by posted_at and asks for more than 400 rows", () => {
+  const params = xLastListParams();
+  assert.equal(params.get("category"), "eq.x-last");
+  assert.equal(params.get("order"), "posted_at.desc");
+  assert.ok(Number(params.get("limit")) >= 1000);
+});
+
+test("mergeClientProfile does not let a session overwrite a stored catalog profile", () => {
+  const prev = {
+    handle: "OpenAI",
+    name: "OpenAI",
+    bio: "official",
+    summary_pt: "lab",
+    avatar: "https://img.example/o.jpg",
+    followers: 100,
+    last_post: {
+      id: "1",
+      text: "old",
+      url: "https://x.com/OpenAI/status/1",
+      publishedAt: "2024-01-01T00:00:00.000Z",
+    },
+  };
+  const merged = mergeClientProfile(prev, {
+    handle: "OpenAI",
+    name: "HACKED",
+    bio: "vandal",
+    summary_pt: "nope",
+    avatar: "https://evil.example/x.jpg",
+    followers: 1,
+    lastPost: {
+      id: "2",
+      text: "newer",
+      url: "https://x.com/OpenAI/status/2",
+      publishedAt: "2025-01-01T00:00:00.000Z",
+    },
+  });
+  assert.equal(merged?.name, "OpenAI");
+  assert.equal(merged?.bio, "official");
+  assert.equal(merged?.summary_pt, "lab");
+  assert.equal(merged?.avatar, "https://img.example/o.jpg");
+  assert.equal(merged?.followers, 100);
+  assert.equal(merged?.last_post?.id, "2");
+});
+
+test("mergeClientProfile fills a new extra handle from the client body", () => {
+  const merged = mergeClientProfile(null, {
+    handle: "@Ada",
+    name: "Ada",
+    bio: "notes",
+    summary_pt: "math",
+    followers: 3,
+  });
+  assert.equal(merged?.handle, "Ada");
+  assert.equal(merged?.name, "Ada");
+  assert.equal(merged?.summary_pt, "math");
+  assert.equal(merged?.followers, 3);
+});
+
+test("push persist and list rules do not fail open", () => {
+  assert.equal(pushPersisted(true, false), true);
+  assert.equal(pushPersisted(false, true), true);
+  assert.equal(pushPersisted(false, false), false);
+  assert.equal(classifyPushTableHttp(201), "ok");
+  assert.equal(classifyPushTableHttp(404), "absent");
+  assert.equal(classifyPushTableHttp(500), "error");
+  const table = [{ id: "push_a" }];
+  const extras = [{ id: "kv_push:a" }];
+  assert.deepEqual(pickPushList("ok", table, extras), table);
+  assert.deepEqual(pickPushList("error", table, extras), extras);
+  assert.deepEqual(pickPushList("absent", table, extras), extras);
+});
+
+test("write-guard.ts reexports the mjs rules so the two cannot drift", () => {
+  const ts = readFileSync(join(root, "src/lib/news/write-guard.ts"), "utf8");
+  assert.match(ts, /from ["'].*write-guard\.mjs["']/);
+  assert.doesNotMatch(ts, /export function writeAllowed/);
+  assert.equal(writeAllowed("app", { site: "same-origin", userId: "u1" }), true);
+  assert.equal(writeAllowedTs("app", { site: "same-origin", userId: "u1" }), true);
+  assert.equal(writeAllowedTs("ingest", { authorization: "Bearer s" }, { cronSecret: "s" }), true);
+});
+
+test("store and API wire the new last-post, push and profile helpers", () => {
+  const store = readFileSync(join(root, "src/lib/news/last-post-store.ts"), "utf8");
+  const last = readFileSync(join(root, "src/lib/news/last-post.ts"), "utf8");
+  const push = readFileSync(join(root, "src/lib/news/push-server.ts"), "utf8");
+  const pushRoute = readFileSync(join(root, "src/routes/api/push.ts"), "utf8");
+  const profile = readFileSync(join(root, "src/routes/api/profile.ts"), "utf8");
+  const watch = readFileSync(join(root, "src/routes/api/watch.ts"), "utf8");
+  assert.match(last, /pickLatestFromPostRows/);
+  assert.match(store, /xLastListParams/);
+  assert.match(store, /lastPostFromXLastRow/);
+  assert.match(push, /pushPersisted|classifyPushTableHttp|pickPushList/);
+  assert.match(pushRoute, /status:\s*502/);
+  assert.match(profile, /mergeClientProfile/);
+  assert.match(watch, /mergeClientProfile/);
+});
