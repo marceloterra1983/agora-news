@@ -1,3 +1,4 @@
+import { keepLastPost } from "./last-post";
 import { blurbFor, profileByHandle, profilesFor } from "./profiles";
 import { listKnownSections } from "./sections";
 import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
@@ -366,14 +367,17 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
         summary_pt: summary.slice(0, 220),
         avatar: author?.avatar_url?.replace("_normal.", "_400x400.") || prev?.avatar || null,
         followers: Number(author?.followers) || prev?.followers || 0,
-        last_post: last?.id
-          ? {
-              id: String(last.id),
-              text: String(last.text),
-              url: last.url || `https://x.com/${handle}/status/${last.id}`,
-              publishedAt: postedIso(last) || new Date().toISOString(),
-            }
-          : null,
+        last_post: keepLastPost(
+          prev?.last_post,
+          last?.id
+            ? {
+                id: String(last.id),
+                text: String(last.text),
+                url: last.url || `https://x.com/${handle}/status/${last.id}`,
+                publishedAt: postedIso(last) || new Date().toISOString(),
+              }
+            : null,
+        ),
       });
       if (ok) profiles += 1;
     });
