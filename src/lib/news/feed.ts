@@ -6,8 +6,6 @@ import { loadXStories } from "./x-search";
 import { invalidateNewsCache } from "./cache";
 import { DEFAULT_SECTION, normalizeSection, type Category, type Story } from "./types";
 
-export { FEED_SHEET_ID, FEED_CSV_URL } from "./sheet";
-
 export type FeedPayload = {
   stories: Story[];
   syncedAt: string;

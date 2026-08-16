@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { fallbackPayload, filterStories, listFallbackCategories, loadFeed, peekStory } from "./feed";
+import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
 import { enrichFontes, loadFontesFast } from "./influence";
 import { blurbFor, profileByHandle, profilesFor } from "./profiles";
 import { FEED_SHEET_ID } from "./sheet";
@@ -88,21 +88,6 @@ export const loadStory = createServerFn({ method: "GET" })
     const hit = payload.stories.find((s) => s.id === id);
     if (hit) return hit;
     return downloadPostById(id);
-  });
-
-export const loadCatalogMeta = createServerFn({ method: "GET" })
-  .validator((input: { refresh?: boolean; category?: Category } | undefined) => ({
-    refresh: Boolean(input?.refresh),
-    category: normalizeSection(input?.category || DEFAULT_SECTION),
-  }))
-  .handler(async ({ data }) => {
-    const payload = await loadFeed(data.refresh, data.category);
-    return {
-      categories: payload.categories.length ? payload.categories : listFallbackCategories(),
-      live: payload.live,
-      syncedAt: payload.syncedAt,
-      folder: payload.folder,
-    };
   });
 
 export const loadFontes = createServerFn({ method: "GET" })

@@ -60,7 +60,6 @@ export const Route = createRootRoute({
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icons/icon-180.png" },
       { rel: "preconnect", href: "https://uqcaodtgrkphuhdkchyh.supabase.co" },
       { rel: "dns-prefetch", href: "https://api.fxtwitter.com" },

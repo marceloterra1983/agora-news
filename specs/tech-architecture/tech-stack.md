@@ -53,6 +53,6 @@ Auth existe (cookies `__Host-`, `authMiddleware`, Sec-Fetch-Site) mas **nenhuma 
 - **Escritas (e01):** mutações app exigem `Sec-Fetch-Site: same-origin`. Ingest: `CRON_SECRET` opcional; sem secret, cron Vercel / sem header ainda passam; cross-site bloqueado. Prefs usam `authMiddleware` + `context.userId`.
 - **Schema drift:** migrations documentam Neon/PGLite; feed vive no Supabase. Health agora só sonda `posts`.
 - **Hotspots:** `server.ts` 604, `buscar.tsx` 568, `fontes.tsx` 490, `ingest.ts` 394, `p2p.ts` 570 (morto).
-- **Morto:** `rss.ts`, `catalog.json`, `multiplayer/*`, Masthead/Hero/Ticker, dezenas de Radix/shadcn.
+- **Morto (e02):** removidos rss/catalog/multiplayer, chrome jornal (Masthead/Hero/Ticker), Radix/shadcn sem uso. Um manifesto: `/manifest.webmanifest`. Plugin Grok não injeta o segundo se o app já declara um.
 - **UX:** chips de grupo só filtram em `/`; `/buscar` é busca de perfis X; marca “Agora” vs “IA — NEWS”.
 - Stash local (não neste epic): `migrations/0002_posts_indexes.sql`, `package-lock.json`, `src/routeTree.gen.ts`.
