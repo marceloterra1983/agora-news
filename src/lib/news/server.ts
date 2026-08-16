@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
-import { enrichFontes, loadFontesFast } from "./influence";
+import { loadFontesFast } from "./influence";
 import { blurbFor, profileByHandle, profilesFor } from "./profiles";
 import { FEED_SHEET_ID } from "./sheet";
 import { downloadPostById, SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
@@ -126,13 +126,8 @@ export const loadFontesLive = createServerFn({ method: "GET" })
     return timed(
       `loadFontesLive ${data.category}`,
       async () => {
-        try {
-          const rows = await enrichFontes(data.category);
-          return { rows, live: rows.some((r) => r.followers > 0) };
-        } catch {
-          const rows = await loadFontesFast(data.category);
-          return { rows, live: rows.some((r) => r.followers > 0 || Boolean(r.avatar)) };
-        }
+        const rows = await loadFontesFast(data.category);
+        return { rows, live: rows.some((r) => r.followers > 0 || Boolean(r.avatar)) };
       },
       (r) => ({ rows: r.rows.length, live: r.live }),
     );
@@ -462,6 +457,17 @@ export const summarizeProfile = createServerFn({ method: "POST" })
       stored.updated_at &&
       Date.now() - Date.parse(stored.updated_at) < 7 * 24 * 60 * 60_000;
     if (fresh) return { summary: stored.summary_pt, usedLlm: false };
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { userIdFromHeaders } = await import("@/lib/auth/verify.server");
+    const { cronSecret, spendKeyAllowed } = await import("./write-guard");
+    const request = getRequest();
+    const headers = request?.headers;
+    const userId = headers ? await userIdFromHeaders(headers) : "";
+    const site = headers?.get("sec-fetch-site") || "";
+    const authorization = headers?.get("authorization") || "";
+    if (!spendKeyAllowed({ site, userId, authorization }, { cronSecret: cronSecret() })) {
+      return { summary: stored?.summary_pt || "", usedLlm: false };
+    }
     const summary = await oneLineAbout(data.handle, data.name || data.handle, data.bio);
     return { summary, usedLlm: Boolean(summary && aiKey()) };
   });

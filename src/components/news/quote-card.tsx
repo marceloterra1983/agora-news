@@ -1,4 +1,5 @@
 import type { StoryQuote, StoryQuoteCard, StoryXArticle } from "@/lib/news/types";
+import { safeHttpHref } from "@/lib/news/last-post";
 import { GroupTag } from "./group-tag";
 import { IconLink, Tip } from "./icon-btn";
 import { XLogo } from "./x-logo";
@@ -10,14 +11,10 @@ const KIND_LABEL: Record<StoryQuote["kind"], string> = {
 };
 
 export function LinkCard({ card }: { card: StoryQuoteCard }) {
-  if (!card.url && !card.title) return null;
-  return (
-    <a
-      href={card.url}
-      target="_blank"
-      rel="noreferrer"
-      className="mt-6 block overflow-hidden rounded-xl border border-line bg-card"
-    >
+  const href = safeHttpHref(card.url, { allowPath: false });
+  if (!href && !card.title) return null;
+  const inner = (
+    <>
       {card.image ? (
         <img
           src={card.image}
@@ -33,6 +30,13 @@ export function LinkCard({ card }: { card: StoryQuoteCard }) {
           <span className="mt-0.5 block line-clamp-2 text-[12px] text-mute">{card.description}</span>
         ) : null}
       </span>
+    </>
+  );
+  const cls = "mt-6 block overflow-hidden rounded-xl border border-line bg-card";
+  if (!href) return <div className={cls}>{inner}</div>;
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className={cls}>
+      {inner}
     </a>
   );
 }
@@ -62,9 +66,9 @@ export function XArticleBlock({ article }: { article: StoryXArticle }) {
         ) : article.preview ? (
           <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{article.preview}</p>
         ) : null}
-        {article.url ? (
+        {safeHttpHref(article.url, { allowPath: false }) ? (
           <IconLink
-            href={article.url}
+            href={safeHttpHref(article.url, { allowPath: false })}
             target="_blank"
             rel="noreferrer"
             label="Ler artigo completo no X"
@@ -118,10 +122,10 @@ export function QuoteCard({ quote }: { quote: StoryQuote }) {
             referrerPolicy="no-referrer"
           />
         ) : null}
-        {quote.url ? (
+        {safeHttpHref(quote.url, { allowPath: false }) ? (
           <Tip label="Abrir post original">
             <a
-              href={quote.url}
+              href={safeHttpHref(quote.url, { allowPath: false })}
               target="_blank"
               rel="noreferrer"
               aria-label="Abrir post original"

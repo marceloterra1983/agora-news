@@ -7,6 +7,28 @@
  * @typedef {{ id: string, text: string, url: string, publishedAt: string }} StoredLastPost
  */
 
+/**
+ * @param {unknown} raw
+ * @param {{ allowPath?: boolean }} [opts]
+ * @returns {string}
+ */
+export function safeHttpHref(raw, opts = {}) {
+  const allowPath = opts.allowPath !== false;
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) {
+    try {
+      const u = new URL(s);
+      if (u.protocol === "http:" || u.protocol === "https:") return s;
+    } catch {
+      return "";
+    }
+    return "";
+  }
+  if (allowPath && s.startsWith("/") && !s.startsWith("//") && !s.includes("\\")) return s;
+  return "";
+}
+
 /** @param {unknown} raw @returns {StoredLastPost | null} */
 export function parseLastPost(raw) {
   if (!raw || typeof raw !== "object") return null;
@@ -17,10 +39,11 @@ export function parseLastPost(raw) {
     .trim();
   const publishedAt = String(o.publishedAt || "").trim();
   if (!id || !publishedAt) return null;
+  const fallback = `https://x.com/i/status/${id}`;
   return {
     id,
     text,
-    url: String(o.url || `https://x.com/i/status/${id}`),
+    url: safeHttpHref(String(o.url || fallback)) || fallback,
     publishedAt,
   };
 }

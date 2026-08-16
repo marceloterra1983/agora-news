@@ -12,6 +12,9 @@ test("Supabase index SQL lives next to scripts, not in migrations/", () => {
   assert.match(src, /posts_feed_ai_posted/);
   assert.match(src, /x_profiles/);
   assert.match(src, /NÃO vai em migrations/);
+  const push = readFileSync(join(root, "scripts/supabase-push-subscriptions.sql"), "utf8");
+  assert.match(push, /push_subscriptions/);
+  assert.match(push, /NÃO vai em migrations/);
 });
 
 test("Neon/PGLite migrations do not touch Supabase public.posts", () => {

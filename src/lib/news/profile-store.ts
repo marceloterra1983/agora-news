@@ -1,4 +1,5 @@
-import { keepLastPost, parseLastPost } from "./last-post";
+import { storedProfileFromRow } from "./profile-store-core.mjs";
+import { keepLastPost } from "./last-post";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase";
 
 export type StoredProfile = {
@@ -27,10 +28,9 @@ export async function readStoredProfile(handle: string): Promise<StoredProfile |
       { headers: AUTH, signal: AbortSignal.timeout(5_000) },
     );
     if (table.ok) {
-      const rows = (await table.json()) as StoredProfile[];
-      if (Array.isArray(rows) && rows[0]?.summary_pt) {
-        return { ...rows[0], last_post: parseLastPost(rows[0].last_post) };
-      }
+      const rows = (await table.json()) as unknown[];
+      const mapped = storedProfileFromRow(rows[0], key);
+      if (mapped) return mapped as StoredProfile;
     }
   } catch {
     /* table may not exist yet */
@@ -41,28 +41,8 @@ export async function readStoredProfile(handle: string): Promise<StoredProfile |
       { headers: AUTH, signal: AbortSignal.timeout(5_000) },
     );
     if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{
-      account?: string;
-      content?: string;
-      translation_pt?: string;
-      summary_pt?: string;
-      image_url?: string;
-      media_label?: string;
-      updated_at?: string;
-      posted_at?: string;
-    }>;
-    const row = rows[0];
-    if (!row?.summary_pt) return null;
-    return {
-      handle: row.account || key,
-      name: row.translation_pt || key,
-      bio: row.content || "",
-      summary_pt: row.summary_pt,
-      avatar: row.image_url || null,
-      followers: Number(row.media_label) || 0,
-      last_post: null,
-      updated_at: row.updated_at || row.posted_at || "",
-    };
+    const rows = (await res.json()) as unknown[];
+    return (storedProfileFromRow(rows[0], key) as StoredProfile | null) ?? null;
   } catch {
     return null;
   }
@@ -75,23 +55,10 @@ async function listFromXProfiles(): Promise<StoredProfile[]> {
       { headers: AUTH, signal: AbortSignal.timeout(6_000) },
     );
     if (!res.ok) return [];
-    const rows = (await res.json()) as Array<StoredProfile & { last_post?: unknown }>;
+    const rows = (await res.json()) as unknown[];
     if (!Array.isArray(rows)) return [];
     return rows
-      .map((row) => {
-        const handle = String(row.handle || "").replace(/^@+/, "").trim();
-        if (!handle) return null;
-        return {
-          handle,
-          name: row.name || handle,
-          bio: row.bio || "",
-          summary_pt: row.summary_pt || "",
-          avatar: row.avatar || null,
-          followers: Number(row.followers) || 0,
-          last_post: parseLastPost(row.last_post),
-          updated_at: row.updated_at || "",
-        } satisfies StoredProfile;
-      })
+      .map((row) => storedProfileFromRow(row) as StoredProfile | null)
       .filter((row): row is StoredProfile => Boolean(row));
   } catch {
     return [];
@@ -105,32 +72,14 @@ async function listFromProfilePosts(): Promise<StoredProfile[]> {
       { headers: AUTH, signal: AbortSignal.timeout(6_000) },
     );
     if (!res.ok) return [];
-    const rows = (await res.json()) as Array<{
-      account?: string;
-      content?: string;
-      translation_pt?: string;
-      summary_pt?: string;
-      image_url?: string;
-      media_label?: string;
-      updated_at?: string;
-      posted_at?: string;
-    }>;
+    const rows = (await res.json()) as unknown[];
     const out: StoredProfile[] = [];
     const seen = new Set<string>();
-    for (const row of rows) {
-      const handle = (row.account || "").replace(/^@+/, "").trim();
-      if (!handle || seen.has(handle.toLowerCase())) continue;
-      seen.add(handle.toLowerCase());
-      out.push({
-        handle,
-        name: row.translation_pt || handle,
-        bio: row.content || "",
-        summary_pt: row.summary_pt || "",
-        avatar: row.image_url || null,
-        followers: Number(row.media_label) || 0,
-        last_post: null,
-        updated_at: row.updated_at || row.posted_at || "",
-      });
+    for (const raw of rows) {
+      const row = storedProfileFromRow(raw) as StoredProfile | null;
+      if (!row || seen.has(row.handle.toLowerCase())) continue;
+      seen.add(row.handle.toLowerCase());
+      out.push(row);
     }
     return out;
   } catch {

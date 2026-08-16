@@ -56,6 +56,22 @@ export function loadCustomGroups(): CustomGroup[] {
   }
 }
 
+export function replaceCustomGroups(list: CustomGroup[]): CustomGroup[] {
+  if (typeof window === "undefined") return [];
+  const seen = new Set<string>(GROUP_ORDER);
+  const out: CustomGroup[] = [];
+  for (const item of list || []) {
+    const label = String(item?.label || "").trim().slice(0, 28);
+    const id = String(item?.id || slugify(label));
+    if (!label || !id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, label });
+  }
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(out));
+  window.dispatchEvent(new CustomEvent(EVENT));
+  return out;
+}
+
 export function addCustomGroup(label: string): CustomGroup | null {
   const name = label.trim().slice(0, 28);
   if (!name) return null;

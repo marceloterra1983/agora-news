@@ -8,6 +8,7 @@ import { formatPostEr, formatPostQuality, formatPostReach } from "@/lib/news/fon
 import { displayTitle, formatCount, relativeTime } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { groupLabel } from "@/lib/news/groups";
+import { safeHttpHref } from "@/lib/news/last-post";
 import { blurbFor } from "@/lib/news/profiles";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function ProfileRow({
 }) {
   const pausedRow = prefs.isDisabled(row.handle);
   const followers = row.followers ? formatCount(row.followers) : "";
+  const lastHref = row.lastPost ? safeHttpHref(row.lastPost.href) : "";
   return (
     <li className={cn("border-b border-line", pausedRow && "opacity-55")}>
       <div className="flex items-start gap-1">
@@ -140,11 +142,11 @@ export function ProfileRow({
                 </>
               ) : null}
             </p>
-            {row.lastPost ? (
+            {row.lastPost && lastHref ? (
               <a
-                href={row.lastPost.href}
-                target={row.lastPost.href.startsWith("http") ? "_blank" : undefined}
-                rel={row.lastPost.href.startsWith("http") ? "noreferrer" : undefined}
+                href={lastHref}
+                target={lastHref.startsWith("http") ? "_blank" : undefined}
+                rel={lastHref.startsWith("http") ? "noreferrer" : undefined}
                 className="mt-1 block text-sm font-medium leading-snug text-ink"
               >
                 {row.lastPost.title}

@@ -1,0 +1,72 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const read = (rel) => readFileSync(join(root, rel), "utf8");
+
+test("push writes go through cloud-kv or push_subscriptions, not category push", () => {
+  const src = read("src/lib/news/push-server.ts");
+  assert.doesNotMatch(src, /category:\s*["']push["']/);
+  assert.match(src, /cloudKvSet/);
+  assert.match(src, /adminHeaders/);
+  assert.match(src, /push_subscriptions|cloudKvListPrefix/);
+  assert.ok(existsSync(join(root, "scripts/supabase-push-subscriptions.sql")));
+  const sql = read("scripts/supabase-push-subscriptions.sql");
+  assert.match(sql, /create table if not exists public\.push_subscriptions/);
+  assert.match(sql, /NÃO vai em migrations/);
+  assert.match(sql, /revoke all on public\.push_subscriptions from anon/);
+});
+
+test("CloudPrefs snapshot and type include groups and customGroups", () => {
+  const server = read("src/lib/news/prefs-server.ts");
+  const sync = read("src/lib/news/prefs-sync.ts");
+  assert.match(server, /groups\?:/);
+  assert.match(server, /customGroups\?:/);
+  assert.match(sync, /getGroupOverrides/);
+  assert.match(sync, /loadCustomGroups/);
+  assert.match(sync, /setGroupOverrides|replaceCustomGroups/);
+});
+
+test("loadFontesLive reads the store; enrichFontes runs on ingest", () => {
+  const server = read("src/lib/news/server.ts");
+  const start = server.indexOf("export const loadFontesLive");
+  const end = server.indexOf("const summaryCache");
+  const live = server.slice(start, end);
+  assert.match(live, /loadFontesFast/);
+  assert.doesNotMatch(live, /enrichFontes/);
+  assert.match(read("src/lib/news/ingest.ts"), /enrichFontes/);
+});
+
+test("summarizeProfile spends the LLM key only when spendKeyAllowed", () => {
+  const src = read("src/lib/news/server.ts");
+  assert.match(src, /spendKeyAllowed/);
+  assert.match(src, /userIdFromHeaders/);
+});
+
+test("mapPool is defined once and reused", () => {
+  const pool = read("src/lib/news/map-pool.ts");
+  assert.match(pool, /export async function mapPool/);
+  const influence = read("src/lib/news/influence.ts");
+  const ingest = read("src/lib/news/ingest.ts");
+  assert.match(influence, /from ["'].\/map-pool["']/);
+  assert.match(ingest, /from ["'].\/map-pool["']/);
+  assert.doesNotMatch(influence, /async function mapPool/);
+  assert.doesNotMatch(ingest, /async function mapPool/);
+});
+
+test("readStoredProfile uses storedProfileFromRow and does not require summary_pt", () => {
+  const src = read("src/lib/news/profile-store.ts");
+  assert.match(src, /storedProfileFromRow/);
+  assert.doesNotMatch(src, /rows\[0\]\?\.summary_pt/);
+  assert.doesNotMatch(src, /if \(!row\?\.summary_pt\) return null/);
+});
+
+test("card hrefs go through safeHttpHref", () => {
+  assert.match(read("src/components/news/quote-card.tsx"), /safeHttpHref/);
+  assert.match(read("src/components/news/article-view.tsx"), /safeHttpHref/);
+  assert.match(read("src/components/news/fontes-profile-row.tsx"), /safeHttpHref/);
+  assert.match(read("src/lib/news/x-media.ts"), /safeHttpHref/);
+});

@@ -1,6 +1,7 @@
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
 import { lastPostHref, preferNewerLast, storedToLastHit } from "./last-post";
 import { listXLastPosts } from "./last-post-store";
+import { mapPool } from "./map-pool";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listWatchAccounts } from "./watch";
@@ -128,14 +129,6 @@ async function fetchOne(handle: string): Promise<LiveStats> {
   } catch {
     return hit?.stats ?? emptyStats();
   }
-}
-
-async function mapPool<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const out: R[] = [];
-  for (let i = 0; i < items.length; i += size) {
-    out.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
-  }
-  return out;
 }
 
 function scoreOf(stats: LiveStats, inFeed: number): number {

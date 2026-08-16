@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { cloudKvGet, cloudKvSet } from "./cloud-kv";
 import type { ExtraFonte } from "./extra-fontes";
+import type { CustomGroup } from "./groups";
 
 export type CloudPrefs = {
   starred?: string[];
@@ -10,6 +11,8 @@ export type CloudPrefs = {
   extras?: ExtraFonte[];
   settings?: object;
   theme?: string;
+  groups?: Record<string, string>;
+  customGroups?: CustomGroup[];
 };
 
 export const loadPrefs = createServerFn({ method: "GET" })

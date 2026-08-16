@@ -80,6 +80,20 @@ export async function getSessionUser(
  *   read/write everyone's rows.
  * - Auth disabled + no database -> the shared dev user id.
  */
+/** Resolve user id from request headers without throwing (empty = signed out). */
+export async function userIdFromHeaders(headers: Headers): Promise<string> {
+  if (!authConfigured) {
+    if (databaseConfigured) return "";
+    return DEV_USER_ID;
+  }
+  try {
+    const session = await auth.api.getSession({ headers });
+    return session?.user?.id || "";
+  } catch {
+    return "";
+  }
+}
+
 export async function requireUserId(bearerToken?: string): Promise<string> {
   if (!authConfigured) {
     if (databaseConfigured) {

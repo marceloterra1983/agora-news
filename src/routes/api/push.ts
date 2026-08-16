@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/push")({
     handlers: {
       GET: async () => Response.json({ key: VAPID_PUBLIC_KEY }),
       POST: async ({ request }) => {
-        if (!requestWriteAllowed("app", request)) return denyWrite("app");
+        if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
         const body = (await request.json().catch(() => ({}))) as {
           endpoint?: string;
           keys?: { p256dh?: string; auth?: string };

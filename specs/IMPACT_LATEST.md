@@ -1,28 +1,31 @@
 ## Target
-Runtime de produção do Agora News: processo que escuta **3080** atrás do nginx `news.automatizems.com`. Hoje: PM2 `news` = `npx vite dev --host 0.0.0.0 --port 3080` em `/home/marce/news`. Destino: Docker Compose serviço `news` (Nitro `node-server`) no mesmo bind.
+Fechamento da revisão Agora News: writes `profile`/`watch`/`push` + `summarizeProfile`, store de push fora de `category:push`, `readStoredProfile`, `loadFontesLive`, CloudPrefs de grupos, `href` http(s).
 
-## Dependents (6)
-- `/etc/nginx/sites-enabled/news.automatizems.com`: `proxy_pass http://127.0.0.1:3080` (Host forçado `127.0.0.1:3080`)
-- Cloudflare → origem HTTPS do host → nginx :80
-- crontab `*/15` → `scripts/ingest-cron.sh` → `POST http://127.0.0.1:3080/api/ingest` + Bearer `CRON_SECRET`
-- PM2 processo `news` (cwd `/home/marce/news`)
-- Clientes públicos: `/` (307→`/?secao=ai`), `/fontes?secao=ai`, `/api/health`
-- `scripts/ingest-cron.sh` e testes `scripts/fontes-last-post.test.mjs` (contrato 3080 + Bearer)
+## Dependents (9)
+- `src/routes/api/profile.ts`, `watch.ts`, `push.ts`: `requestWriteAllowed("app")`
+- `src/lib/news/write-guard.ts` + `scripts/write-guard.mjs`: regra única de escrita
+- `src/lib/news/push-server.ts` + `cloud-kv.ts`: persistência de Web Push
+- `src/lib/news/server.ts`: `summarizeProfile`, `loadFontesLive`
+- `src/lib/news/influence.ts` + `ingest.ts`: enrich fxtwitter / `mapPool`
+- `src/lib/news/prefs-server.ts` + `prefs-sync.ts`: CloudPrefs
+- `src/lib/news/profile-store.ts`: leitura de perfil persistido
+- `src/lib/news/use-open-x-profile.ts`: POST `/api/profile` após summarize
+- `src/lib/news/notify-favorites.ts`: POST `/api/push`
 
 ## Affected Stories
-- e03s01: contrato Docker (Dockerfile/compose/start/testes)
-- e03s02: cutover PM2 → compose + rollback
-- e01 (harden): ingest Bearer + CRON_SECRET deve continuar igual
-- e02: sem impacto de código de domínio
+- Harden writes/auth (e01): sessão passa a ser obrigatória em writes de app
+- Fontes live/ingest: pageview deixa de fan-out fxtwitter
+- Sem epic de schema Supabase — SQL manual em `scripts/`
 
 ## Test Coverage
-- `scripts/harden-contract.test.mjs`: ingest/health/gitignore — não cobre Docker
-- `scripts/fontes-last-post.test.mjs`: cron aponta 3080
-- Gap: nenhum teste de Dockerfile/compose/porta/segredo até e03s01
-- Gap: smoke vivo não está na suite (barra do gauntlet = curl no host)
+- `scripts/write-guard.test.mjs`: same-origin; **gap** sessão/`userId`
+- `scripts/last-post-behavior.test.mjs`: last-post core; **gap** `href` javascript:
+- `scripts/harden-contract.test.mjs`: prefs authMiddleware; **gap** groups/customGroups
+- Gap: `readStoredProfile` exige `summary_pt`
+- Gap: push em `posts.category=push` (SELECT anon)
 
-## Risk: High
-Troca o processo que segura o site público; bind 3080 é exclusão mútua com PM2; health `/api/health` pode 503 se o feed ficar stale (não usar 200-only como healthcheck do Compose).
+## Risk: Medium
+Writes de app sem sessão quebram push/watch/profile para visitante anônimo (intencional). Tabela `push_subscriptions` não existe em prod até SQL manual. `loadFontesLive` mais barato; avatar/buzz só no cron.
 
 ## Recommended action
-Proceed. Contrato TDD primeiro. Imagem validada em porta temporária **3081** antes de soltar 3080. Cutover atômico. Rollback: `docker compose down && pm2 start news`.
+Proceed. TDD no guard + `readStoredProfile` + contratos de live/push. SQL no repo, sem migrate em prod.
