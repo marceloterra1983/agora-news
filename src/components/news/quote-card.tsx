@@ -129,7 +129,7 @@ export function QuoteCard({ quote }: { quote: StoryQuote }) {
               target="_blank"
               rel="noreferrer"
               aria-label="Abrir post original"
-              className="mt-3 grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
+              className="mt-3 grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
             >
               <XLogo className="size-3.5" />
             </a>

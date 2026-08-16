@@ -70,7 +70,7 @@ export function AppMenu() {
           aria-expanded={open}
           aria-haspopup="menu"
           onClick={() => setOpen((v) => !v)}
-          className="grid size-9 shrink-0 place-items-center rounded-full border border-line bg-card text-ink"
+          className="grid size-[44px] shrink-0 place-items-center rounded-full border border-line bg-card text-ink"
         >
           {open ? <X className="size-4" strokeWidth={2} /> : <Menu className="size-4" strokeWidth={2} />}
         </button>
