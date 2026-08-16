@@ -17,6 +17,8 @@ import { Tip } from "./icon-btn";
 import { PrefsSync } from "./prefs-sync";
 
 const GROUP_KEY = "agora-feed-group";
+const GROUP_CHIP =
+  "inline-flex h-[32px] shrink-0 items-center rounded-full px-3 text-[12px] font-semibold";
 
 export function AppChrome({
   category,
@@ -168,10 +170,11 @@ function GrokHeader({
             <>
               <button
                 type="button"
+                data-group-chip=""
                 aria-pressed={group === "all"}
                 onClick={() => pickGroup("all")}
                 className={cn(
-                  "inline-flex h-[44px] min-h-[44px] min-w-[44px] shrink-0 items-center rounded-full px-2 text-[13px] font-semibold",
+                  GROUP_CHIP,
                   group === "all" ? "bg-ink text-paper ring-1 ring-ink/40" : "bg-paper-2 text-mute",
                 )}
               >
@@ -184,10 +187,11 @@ function GrokHeader({
                   <button
                     key={g.id}
                     type="button"
+                    data-group-chip=""
                     aria-pressed={on}
                     onClick={() => pickGroup(g.id)}
                     className={cn(
-                      "inline-flex h-[44px] min-h-[44px] min-w-[44px] shrink-0 items-center rounded-full px-2 text-[13px] font-semibold",
+                      GROUP_CHIP,
                       on ? st.chipOn : st.chip,
                     )}
                   >

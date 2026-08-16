@@ -35,12 +35,14 @@ test("chrome pins top+bottom and reserves feed space with bar tokens", () => {
   assert.match(css, /--agora-tap:\s*44px/);
 });
 
-test("phone chrome tap targets share 44px height", () => {
+test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () => {
   const css = read("src/lib/news/phone-layout.css");
   const chrome = read("src/components/news/app-chrome.tsx");
+  const styles = read("src/styles.css");
 
-  assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,160}height:\s*44px/);
-  assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,200}padding-left:\s*8px/);
+  assert.match(css, /\[data-h-scroll\] > button[\s\S]{0,160}height:\s*32px/);
+  assert.match(css, /\[data-group-chip\][\s\S]{0,160}padding:\s*10px 12px/);
+  assert.doesNotMatch(css, /\[data-h-scroll\][^\n]{0,40}button[\s\S]{0,160}height:\s*44px/);
   assert.doesNotMatch(
     css,
     /\[data-h-scroll\] button[\s\S]{0,80}\[aria-haspopup="listbox"\][\s\S]{0,160}padding-left:\s*16px/,
@@ -50,6 +52,10 @@ test("phone chrome tap targets share 44px height", () => {
   assert.match(css, /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*44px/);
   assert.doesNotMatch(css, /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*56px/);
   assert.match(chrome, /h-\[var\(--agora-tap\)\]|h-\[44px\]/);
+  assert.match(chrome, /data-group-chip/);
+  assert.match(chrome, /h-\[32px\]/);
+  assert.match(styles, /\[data-h-scroll\][\s\S]{0,280}scrollbar-width:\s*none/);
+  assert.match(styles, /\[data-h-scroll\]::-webkit-scrollbar[\s\S]{0,80}display:\s*none/);
 });
 
 const phoneCss = read("src/lib/news/phone-layout.css");
@@ -153,13 +159,12 @@ test("Playwright 390px: chrome is fixed and tap heights match 44px", async (t) =
     assert.equal(before.tabsPos, "fixed", `tabs position ${before.tabsPos}`);
     assert.ok(before.header.t <= 1, `header top ${before.header.t}`);
     assert.ok(Math.abs(before.tabs.b - before.vh) <= 1, `tabs bottom ${before.tabs.b} vh ${before.vh}`);
-    assert.ok(before.chipH >= 44, `chip ${before.chipH}`);
+    assert.ok(before.chipH >= 31 && before.chipH <= 33, `chip ${before.chipH}`);
     assert.ok(before.iaH >= 44, `IA ${before.iaH}`);
     assert.ok(before.menuH >= 44, `menu ${before.menuH}`);
     assert.ok(before.navH >= 44, `nav ${before.navH}`);
-    assert.ok(Math.abs(before.chipH - before.iaH) <= 1, `chip/IA ${before.chipH}/${before.iaH}`);
+    assert.ok(before.iaH - before.chipH >= 10, `chip/IA ${before.chipH}/${before.iaH}`);
     assert.ok(Math.abs(before.iaH - before.menuH) <= 1, `IA/menu ${before.iaH}/${before.menuH}`);
-    assert.ok(Math.abs(before.navH - before.chipH) <= 1, `nav/chip ${before.navH}/${before.chipH}`);
     assert.ok(before.mainPadTop >= before.header.h - 1, `pad-top ${before.mainPadTop} header ${before.header.h}`);
     assert.ok(before.mainPadBottom >= before.tabs.h - 1, `pad-bottom ${before.mainPadBottom} tabs ${before.tabs.h}`);
 

@@ -111,7 +111,10 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
         meta: px(meta, "fontSize"),
       };
     });
-    if (scale.chipH) assert.ok(scale.chipH >= 44, `live chip ${scale.chipH}`);
+    const compactChips = html.includes("[data-group-chip]") || html.includes("[data-h-scroll] > button");
+    if (scale.chipH && compactChips) {
+      assert.ok(scale.chipH >= 31 && scale.chipH <= 34, `live chip ${scale.chipH}`);
+    }
     if (scale.navH) assert.ok(scale.navH >= 44, `live nav ${scale.navH}`);
     const readerScale = /html\[data-font="sm"\]\s*\{\s*font-size:\s*14px/.test(html);
     if (readerScale && scale.headline) {

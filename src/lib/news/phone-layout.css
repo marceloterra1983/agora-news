@@ -17,12 +17,38 @@ html[data-font="xl"] {
   font-size: 20px;
 }
 
+/* Swipe local, barra horizontal invisível (Firefox + WebKit). */
+[data-h-scroll] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-h-scroll]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pílulas de grupo: compactas em phone e desktop — não o 44×44 de IA/menu. */
+[data-h-scroll] > button,
+[data-group-chip] {
+  height: 32px !important;
+  min-height: 32px !important;
+  min-width: 0 !important;
+  padding: 10px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
 @media (max-width: 640px) {
   html {
     --agora-type: 1rem;
     --agora-headline: 1.25rem;
     --agora-meta: 0.875rem;
-    --agora-chip-label: 13px;
+    --agora-chip-h: 32px;
+    --agora-chip-label: 12px;
     --agora-tap: 44px;
     --agora-nav-tap: 44px;
     --agora-header: 64px;
@@ -67,15 +93,6 @@ html[data-font="xl"] {
     font-size: 13px !important;
     line-height: 1.1 !important;
   }
-  [data-chrome="compact"] [data-h-scroll] button {
-    min-height: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-    font-size: 13px !important;
-    line-height: 1.1 !important;
-  }
   [data-chrome="compact"] [aria-haspopup="menu"] {
     width: 44px !important;
     height: 44px !important;
@@ -84,7 +101,6 @@ html[data-font="xl"] {
     padding: 0 !important;
   }
   [data-chrome="compact"] [aria-haspopup="menu"] svg,
-  [data-chrome="compact"] [data-h-scroll] button svg,
   [data-testid="fontes-toolbar"] svg {
     width: 24px !important;
     height: 24px !important;
@@ -172,7 +188,8 @@ html[data-shell="phone"] {
   --agora-type: 1rem;
   --agora-headline: 1.25rem;
   --agora-meta: 0.875rem;
-  --agora-chip-label: 13px;
+  --agora-chip-h: 32px;
+  --agora-chip-label: 12px;
   --agora-tap: 44px;
   --agora-nav-tap: 44px;
   --agora-header: 64px;
@@ -211,15 +228,6 @@ html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="listbox"] {
   font-size: 13px !important;
   line-height: 1.1 !important;
 }
-html[data-shell="phone"] [data-chrome="compact"] [data-h-scroll] button {
-  min-height: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
-  font-size: 13px !important;
-  line-height: 1.1 !important;
-}
 html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="menu"] {
   width: 44px !important;
   height: 44px !important;
@@ -228,7 +236,6 @@ html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="menu"] {
   padding: 0 !important;
 }
 html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="menu"] svg,
-html[data-shell="phone"] [data-chrome="compact"] [data-h-scroll] button svg,
 html[data-shell="phone"] [data-testid="fontes-toolbar"] svg {
   width: 24px !important;
   height: 24px !important;
