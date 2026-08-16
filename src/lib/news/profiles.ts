@@ -16,7 +16,7 @@ export const GROUP_LABELS: Record<ProfileGroup, string> = {
   pesquisa: "Cientistas",
   imprensa: "Imprensa",
   builders: "Devs",
-  novos: "Novos",
+  novos: "Outros",
 };
 
 export const GROUP_HINTS: Record<ProfileGroup, string> = {
@@ -25,7 +25,7 @@ export const GROUP_HINTS: Record<ProfileGroup, string> = {
   pesquisa: "Pesquisadores e autores de papers",
   imprensa: "Newsletters e quem seleciona o que importa",
   builders: "Engenheiros e makers que constroem com IA",
-  novos: "Adicionados por você. O grupo pode ser definido depois.",
+  novos: "Sem grupo definido ou adicionados por você.",
 };
 
 export const GROUP_ORDER: ProfileGroup[] = [

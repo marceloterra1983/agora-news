@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
 import { GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "@/lib/news/profiles";
+import { groupStyle } from "@/lib/news/group-style";
 import { cn } from "@/lib/utils";
 import { AppMenu } from "./app-menu";
 import { Tip } from "./icon-btn";
@@ -130,25 +131,30 @@ function GrokHeader({
             onClick={() => pickGroup("all")}
             className={cn(
               "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-              group === "all" ? "bg-ink text-paper" : "bg-paper-2 text-mute",
+              group === "all" ? "bg-paper text-ink" : "bg-paper-2 text-mute",
             )}
           >
             Todos
           </button>
-          {GROUP_ORDER.map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={group === id}
-              onClick={() => pickGroup(id)}
-              className={cn(
-                "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-                group === id ? "bg-ink text-paper" : "bg-paper-2 text-mute",
-              )}
-            >
-              {GROUP_LABELS[id]}
-            </button>
-          ))}
+          {GROUP_ORDER.map((id) => {
+            const st = groupStyle(id);
+            const on = group === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => pickGroup(id)}
+                className={cn(
+                  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold",
+                  on ? st.chipOn : st.chip,
+                )}
+              >
+                <span className={cn("size-1.5 rounded-full", st.dot)} aria-hidden />
+                {GROUP_LABELS[id]}
+              </button>
+            );
+          })}
         </div>
 
         <AppMenu />
