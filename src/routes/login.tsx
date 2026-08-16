@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { GROK_PROVIDERS, authEnabled, signIn, signOut } from "@/lib/auth/client";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { IconBtn, Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
 function Login() {
+  const { user, isPending } = useCurrentUserState();
+
   return (
     <main className="grid min-h-dvh place-items-center bg-paper px-6 text-ink">
       <div className="w-full max-w-sm">
@@ -17,30 +20,21 @@ function Login() {
         >
           IA
         </Link>
-        <p className="mt-2 text-sm text-ink-soft">
-          Entre para levar favoritos, fontes e o tamanho da letra para qualquer aparelho.
-        </p>
-        <div className="mt-8 flex items-center gap-2">
-          {authEnabled ? (
-            GROK_PROVIDERS.map((p) => (
-              <IconBtn
-                key={p.providerId}
-                label={`Continuar com ${p.label}`}
-                className="size-11"
-                onClick={() => signIn(p.providerId, { callbackURL: "/" })}
-              >
-                {p.idp === "google" ? <GoogleMark /> : <XLogo className="size-4" />}
-              </IconBtn>
-            ))
-          ) : (
-            <p className="text-sm text-mute">O login está desligado.</p>
-          )}
-        </div>
-        <Tip label="Voltar sem entrar">
+        {isPending ? (
+          <p className="mt-2 text-sm text-ink-soft">Carregando a sessão…</p>
+        ) : user ? (
+          <SignedInPanel
+            name={user.displayName ?? user.primaryEmail ?? "Conta"}
+            email={user.primaryEmail}
+          />
+        ) : (
+          <SignInPanel />
+        )}
+        <Tip label="Voltar ao feed">
           <Link
             to="/"
             search={{ secao: "ai" }}
-            aria-label="Voltar sem entrar"
+            aria-label="Voltar ao feed"
             className="mt-8 grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
           >
             <ArrowLeft className="size-4" />
@@ -48,6 +42,62 @@ function Login() {
         </Tip>
       </div>
     </main>
+  );
+}
+
+function SignedInPanel({ name, email }: { name: string; email: string | null }) {
+  return (
+    <>
+      <p className="mt-2 text-sm text-ink-soft">
+        Você já entrou. Favoritos, fontes e o tamanho da letra sobem para a nuvem neste aparelho.
+      </p>
+      <p className="mt-6 text-sm font-medium text-ink">{name}</p>
+      {email ? <p className="mt-0.5 text-xs text-mute">{email}</p> : null}
+      <div className="mt-6 flex flex-col gap-2">
+        <Link
+          to="/configuracoes"
+          className="inline-flex h-11 items-center justify-center rounded-md border border-line px-4 text-sm text-ink hover:bg-paper-2"
+        >
+          Configurações
+        </Link>
+        {authEnabled ? (
+          <button
+            type="button"
+            onClick={() => void signOut("/")}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line px-4 text-sm text-ink hover:bg-paper-2"
+          >
+            <LogOut className="size-4" />
+            Sair
+          </button>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function SignInPanel() {
+  return (
+    <>
+      <p className="mt-2 text-sm text-ink-soft">
+        Entre para levar favoritos, fontes e o tamanho da letra para qualquer aparelho.
+      </p>
+      <div className="mt-8 flex items-center gap-2">
+        {authEnabled ? (
+          GROK_PROVIDERS.map((p) => (
+            <IconBtn
+              key={p.providerId}
+              label={`Continuar com ${p.label}`}
+              className="size-11"
+              onClick={() => signIn(p.providerId, { callbackURL: "/" })}
+            >
+              {p.idp === "google" ? <GoogleMark /> : <XLogo className="size-4" />}
+            </IconBtn>
+          ))
+        ) : (
+          <p className="text-sm text-mute">O login está desligado.</p>
+        )}
+      </div>
+    </>
   );
 }
 

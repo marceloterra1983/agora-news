@@ -13,6 +13,7 @@ function lines(rel) {
 test("buscar and fontes routes stay under 300 lines", () => {
   assert.ok(lines("src/routes/buscar.tsx") <= 300, `buscar.tsx is ${lines("src/routes/buscar.tsx")}`);
   assert.ok(lines("src/routes/fontes.tsx") <= 300, `fontes.tsx is ${lines("src/routes/fontes.tsx")}`);
+  assert.ok(lines("src/routes/configuracoes.tsx") <= 300, `configuracoes.tsx is ${lines("src/routes/configuracoes.tsx")}`);
 });
 
 test("extracted page modules stay under 200 lines", () => {

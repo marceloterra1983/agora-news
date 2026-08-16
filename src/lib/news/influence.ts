@@ -1,14 +1,13 @@
 import { hydrateBuzzCache } from "./fonte-buzz-store";
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
 import { lastPostHref, preferNewerLast, storedToLastHit } from "./last-post";
-import { listXLastPosts } from "./last-post-store";
+import { lastPostsByAccount, type LastHit } from "./fontes-last";
 import { mapPool } from "./map-pool";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listKnownSections } from "./sections";
 import { extrasForSection } from "./watch-section.mjs";
 import { listWatchAccounts } from "./watch";
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 import type { Category } from "./types";
 
 export type InfluenceRow = {
@@ -16,8 +15,6 @@ export type InfluenceRow = {
   name: string;
   group: XProfile["group"] | string;
   followers: number;
-  following: number;
-  tweets: number;
   verified: boolean;
   avatar: string | null;
   bio: string | null;
@@ -41,30 +38,17 @@ export type InfluenceRow = {
   engagement: number;
   views: number;
   er: number;
-  score: number;
 };
 
 type LiveStats = {
   followers: number;
-  following: number;
-  tweets: number;
   verified: boolean;
   avatar: string | null;
   bio: string | null;
 };
 
-type LastHit = { id: string; title: string; publishedAt: string; count: number };
-
 const USER_TTL = 60 * 60_000;
 const userCache = new Map<string, { at: number; stats: LiveStats }>();
-const lastCache = new Map<string, { at: number; feed: Map<string, LastHit>; last: Map<string, LastHit> }>();
-const LAST_TTL = 45_000;
-
-const AUTH = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  Accept: "application/json",
-};
 
 function norm(h: string): string {
   return String(h || "")
@@ -73,7 +57,7 @@ function norm(h: string): string {
 }
 
 function emptyStats(): LiveStats {
-  return { followers: 0, following: 0, tweets: 0, verified: false, avatar: null, bio: null };
+  return { followers: 0, verified: false, avatar: null, bio: null };
 }
 
 function seedFromStore(
@@ -86,8 +70,6 @@ function seedFromStore(
     at: Date.now(),
     stats: {
       followers: Number(row.followers) || 0,
-      following: 0,
-      tweets: 0,
       verified: false,
       avatar: row.avatar || null,
       bio: row.bio || row.summary_pt || null,
@@ -110,8 +92,6 @@ async function fetchOne(handle: string): Promise<LiveStats> {
     const body = (await res.json()) as {
       user?: {
         followers?: number;
-        following?: number;
-        tweets?: number;
         avatar_url?: string;
         description?: string;
         verification?: { verified?: boolean };
@@ -121,8 +101,6 @@ async function fetchOne(handle: string): Promise<LiveStats> {
     if (!user) return hit?.stats ?? emptyStats();
     const stats: LiveStats = {
       followers: Number(user.followers) || 0,
-      following: Number(user.following) || 0,
-      tweets: Number(user.tweets) || 0,
       verified: Boolean(user.verification?.verified),
       avatar: user.avatar_url ?? null,
       bio: user.description?.trim() || null,
@@ -132,11 +110,6 @@ async function fetchOne(handle: string): Promise<LiveStats> {
   } catch {
     return hit?.stats ?? emptyStats();
   }
-}
-
-function scoreOf(stats: LiveStats, inFeed: number): number {
-  const reach = Math.log10(stats.followers + 1);
-  return reach * 28 + Math.min(inFeed, 24) * 5 + (stats.verified ? 3 : 0);
 }
 
 function lastWithBuzz(last: LastHit | null, handle: string, inApp: boolean): InfluenceRow["lastPost"] {
@@ -153,68 +126,11 @@ function lastWithBuzz(last: LastHit | null, handle: string, inApp: boolean): Inf
 function recencySort(a: InfluenceRow, b: InfluenceRow): number {
   const ta = a.lastPost ? Date.parse(a.lastPost.publishedAt) : 0;
   const tb = b.lastPost ? Date.parse(b.lastPost.publishedAt) : 0;
-  return tb - ta || b.score - a.score || b.followers - a.followers;
+  return tb - ta || b.followers - a.followers;
 }
 
 function cachedStats(handle: string): LiveStats {
   return userCache.get(norm(handle).toLowerCase())?.stats ?? emptyStats();
-}
-
-/** Feed da seção separado do x-last — inApp só vale se o id está no feed. */
-async function lastPostsByAccount(
-  section: Category,
-): Promise<{ feed: Map<string, LastHit>; last: Map<string, LastHit> }> {
-  const key = section;
-  const hit = lastCache.get(key);
-  if (hit && Date.now() - hit.at < LAST_TTL) return { feed: hit.feed, last: hit.last };
-
-  const feed = new Map<string, LastHit>();
-  try {
-    const params = new URLSearchParams();
-    params.set("select", "post_id,account,posted_at,summary_pt");
-    params.set("category", `eq.${section}`);
-    params.set("order", "posted_at.desc");
-    params.set("limit", "1000");
-    const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
-      headers: AUTH,
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (res.ok) {
-      const rows = (await res.json()) as Array<{
-        post_id?: string;
-        account?: string;
-        posted_at?: string;
-        summary_pt?: string;
-      }>;
-      for (const row of rows) {
-        const handle = norm(row.account || "").toLowerCase();
-        if (!handle || !row.post_id) continue;
-        const prev = feed.get(handle);
-        if (prev) {
-          prev.count += 1;
-          continue;
-        }
-        feed.set(handle, {
-          id: String(row.post_id),
-          title: String(row.summary_pt || "Sem título").slice(0, 180),
-          publishedAt: String(row.posted_at || ""),
-          count: 1,
-        });
-      }
-    }
-  } catch {
-    /* empty map */
-  }
-  const last = new Map(feed);
-  const storedLast = await listXLastPosts();
-  for (const [handle, post] of storedLast) {
-    const stored = storedToLastHit(post);
-    if (!stored) continue;
-    const next = preferNewerLast(last.get(handle) ?? null, stored);
-    if (next) last.set(handle, next);
-  }
-  lastCache.set(key, { at: Date.now(), feed, last });
-  return { feed, last };
 }
 
 async function hydrateStore() {
@@ -262,7 +178,10 @@ function buildRows(
       handle: p.handle,
       name: p.name,
       group: p.group,
-      ...stats,
+      followers: stats.followers,
+      verified: stats.verified,
+      avatar: stats.avatar,
+      bio: stats.bio,
       lastPost: lastWithBuzz(last, p.handle, inApp),
       inFeed: recentCount,
       articles: last?.count ?? 0,
@@ -271,7 +190,6 @@ function buildRows(
       engagement: 0,
       views: 0,
       er: buzzFor(p.handle)?.profileEr ?? 0,
-      score: scoreOf(stats, recentCount),
     } satisfies InfluenceRow;
   });
 
@@ -289,8 +207,6 @@ function buildRows(
       name: w.name || w.handle,
       group: "novos",
       followers: stats.followers || w.followers,
-      following: 0,
-      tweets: 0,
       verified: false,
       avatar: stats.avatar || w.avatar,
       bio: stats.bio || w.summary || null,
@@ -302,7 +218,6 @@ function buildRows(
       engagement: 0,
       views: 0,
       er: buzzFor(w.handle)?.profileEr ?? 0,
-      score: scoreOf(stats, last?.count ?? 0),
     });
   }
   return [...extras, ...base].sort(recencySort);
@@ -375,7 +290,4 @@ export async function loadInfluence(section: Category): Promise<InfluenceRow[]> 
   return loadFontesFast(section);
 }
 
-/** Invalida cache de last-posts (chamar após ingest). */
-export function invalidateFontesLastCache() {
-  lastCache.clear();
-}
+export { invalidateFontesLastCache } from "./fontes-last";

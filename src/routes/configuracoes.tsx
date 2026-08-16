@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogIn, RotateCcw, Smartphone } from "lucide-react";
 import { AppChrome } from "@/components/news/app-chrome";
+import { SettingsChoice, SettingsRow, SettingsSection, SettingsToggle } from "@/components/news/settings-ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useNewsStore } from "@/lib/news/store";
 import { FONT_STEPS, TYPEFACES, type Density, type FontSize, type Typeface } from "@/lib/news/settings";
@@ -50,14 +51,14 @@ function SettingsPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mark">App</p>
         <h1 className="mt-1 font-display text-3xl tracking-tight">Configurações</h1>
         <p className="mt-2 text-sm text-ink-soft">
-          Vale só neste aparelho. Muda na hora.
+          Neste aparelho agora. Se você entrar, favoritos e letra sobem para a nuvem.
         </p>
 
-        <Section title="Leitura">
+        <SettingsSection title="Leitura">
           <p className="mb-3 text-xs text-mute">Tamanho da letra</p>
           <div className="flex items-end gap-1.5">
             {FONT_STEPS.map((step, i) => (
-              <Choice
+              <SettingsChoice
                 key={step.id}
                 active={settings.fontSize === step.id}
                 onClick={() => set({ fontSize: step.id as FontSize })}
@@ -67,7 +68,7 @@ function SettingsPage() {
                 <span style={{ fontSize: 13 + i * 4 }} className="font-display leading-none">
                   A
                 </span>
-              </Choice>
+              </SettingsChoice>
             ))}
           </div>
           <p className="mt-4 font-display text-lg leading-snug text-ink">
@@ -75,20 +76,20 @@ function SettingsPage() {
           </p>
           <p className="mt-5 mb-3 text-xs text-mute">Espaçamento</p>
           <div className="grid grid-cols-2 gap-1.5">
-            <Choice
+            <SettingsChoice
               active={settings.density === "regular"}
               onClick={() => set({ density: "regular" as Density })}
               label="Confortável"
             >
               Confortável
-            </Choice>
-            <Choice
+            </SettingsChoice>
+            <SettingsChoice
               active={settings.density === "compact"}
               onClick={() => set({ density: "compact" as Density })}
               label="Compacto"
             >
               Compacto
-            </Choice>
+            </SettingsChoice>
           </div>
           <p className="mt-5 mb-3 text-xs text-mute">Letra</p>
           <TypefaceLoader all />
@@ -120,9 +121,9 @@ function SettingsPage() {
               </button>
             ))}
           </div>
-        </Section>
+        </SettingsSection>
 
-        <Section title="Aparência">
+        <SettingsSection title="Aparência">
           <p className="mb-3 text-xs text-mute">Tema</p>
           <div className="grid grid-cols-3 gap-1.5">
             {(
@@ -132,7 +133,7 @@ function SettingsPage() {
                 ["dark", "Escuro"],
               ] as const
             ).map(([id, label]) => (
-              <Choice
+              <SettingsChoice
                 key={id}
                 active={theme === id}
                 onClick={() => {
@@ -142,31 +143,31 @@ function SettingsPage() {
                 label={label}
               >
                 {label}
-              </Choice>
+              </SettingsChoice>
             ))}
           </div>
-          <Toggle
+          <SettingsToggle
             on={settings.showImages}
             onClick={() => set({ showImages: !settings.showImages })}
             title="Mostrar fotos"
             hint="Desligue para um feed só de texto, mais leve."
           />
-          <Toggle
+          <SettingsToggle
             on={settings.reduceMotion}
             onClick={() => set({ reduceMotion: !settings.reduceMotion })}
             title="Menos movimento"
             hint="Corta animações do app."
           />
-        </Section>
+        </SettingsSection>
 
-        <Section title="Avisos">
-          <Toggle
+        <SettingsSection title="Avisos">
+          <SettingsToggle
             on={settings.highlightUnread}
             onClick={() => set({ highlightUnread: !settings.highlightUnread })}
             title="Marcar posts novos"
             hint="Destaque até você abrir o app e ler."
           />
-          <Toggle
+          <SettingsToggle
             on={notify.enabled}
             onClick={() => void notify.toggle()}
             title="Avisar favoritos"
@@ -175,13 +176,13 @@ function SettingsPage() {
                 ? "Este aparelho não permite avisos."
                 : notify.permission === "denied"
                   ? "O navegador bloqueou. Libere nas permissões do site."
-                  : "Só contas com estrela e aviso ligado em Fontes."
+                  : "Contas com o sino ligado em Fontes."
             }
           />
-        </Section>
+        </SettingsSection>
 
-        <Section title="Neste aparelho">
-          <Row
+        <SettingsSection title="Neste aparelho">
+          <SettingsRow
             title={`Limpar ${savedCount} salvo${savedCount === 1 ? "" : "s"}`}
             hint="Tira as matérias da lista Salvos."
             action={() => {
@@ -190,7 +191,7 @@ function SettingsPage() {
             }}
             disabled={savedCount === 0}
           />
-          <Row
+          <SettingsRow
             title="Esquecer o que já li"
             hint="Os destaques de novos posts recomeçam daqui."
             action={() => {
@@ -198,7 +199,7 @@ function SettingsPage() {
               flash("Leitura reiniciada");
             }}
           />
-          <Row
+          <SettingsRow
             title="Restaurar padrão"
             hint="Volta letra, tema de leitura e fotos ao original."
             action={() => {
@@ -206,9 +207,9 @@ function SettingsPage() {
               flash("Configurações restauradas");
             }}
           />
-        </Section>
+        </SettingsSection>
 
-        <Section title="App">
+        <SettingsSection title="App">
           <Link
             to="/instalar"
             className="flex items-center gap-3 border-b border-line py-3.5 text-sm text-ink"
@@ -230,7 +231,7 @@ function SettingsPage() {
             <RotateCcw className="size-4 shrink-0 text-mute" />
             Diagnóstico do feed
           </Link>
-        </Section>
+        </SettingsSection>
 
         {note ? (
           <p className="mt-6 text-center text-sm text-mute" role="status">
@@ -239,108 +240,5 @@ function SettingsPage() {
         ) : null}
       </main>
     </AppChrome>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mt-8">
-      <h2 className="text-xs font-semibold uppercase tracking-widest text-mute">{title}</h2>
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
-
-function Choice({
-  active,
-  onClick,
-  label,
-  children,
-  className,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      aria-label={label}
-      onClick={onClick}
-      className={cn(
-        "grid min-h-11 place-items-center rounded-md border px-2 py-2 text-sm",
-        active ? "border-ink bg-paper-2 text-ink" : "border-line text-mute",
-        className,
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Toggle({
-  on,
-  onClick,
-  title,
-  hint,
-}: {
-  on: boolean;
-  onClick: () => void;
-  title: string;
-  hint: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={onClick}
-      className="flex w-full items-center gap-3 border-b border-line py-3.5 text-left last:border-0"
-    >
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm text-ink">{title}</span>
-        <span className="mt-0.5 block text-xs text-mute">{hint}</span>
-      </span>
-      <span
-        className={cn(
-          "relative h-6 w-10 shrink-0 rounded-full transition-colors",
-          on ? "bg-ink" : "bg-paper-2",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 size-5 rounded-full bg-paper transition-transform",
-            on ? "translate-x-4" : "translate-x-0.5",
-          )}
-        />
-      </span>
-    </button>
-  );
-}
-
-function Row({
-  title,
-  hint,
-  action,
-  disabled,
-}: {
-  title: string;
-  hint: string;
-  action: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={action}
-      disabled={disabled}
-      className="flex w-full flex-col items-start border-b border-line py-3.5 text-left last:border-0 disabled:opacity-40"
-    >
-      <span className="text-sm text-ink">{title}</span>
-      <span className="mt-0.5 text-xs text-mute">{hint}</span>
-    </button>
   );
 }

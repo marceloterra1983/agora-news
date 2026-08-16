@@ -247,6 +247,7 @@ export const CACHE_KEYS = {
   list: (category: string, limit: number) => `agora:v2:list:${category}:${limit}`,
   lock: "agora:v2:lock:ingest",
   newest: "agora:v2:newest",
+  scanCursor: "agora:v2:scan",
 };
 
 export async function invalidateNewsCache() {

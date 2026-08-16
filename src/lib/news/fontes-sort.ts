@@ -1,6 +1,7 @@
 import { Clock, Layers, Star, Users } from "lucide-react";
 import { extraFonteToRow, type ExtraFonte } from "./extra-fontes";
 import { extrasForSection } from "./watch-section.mjs";
+import { matchProfiles } from "./profiles";
 import type { InfluenceRow } from "./influence";
 import { normHandle } from "./fontes-prefs";
 import { allGroupIds, groupHint, groupLabel } from "./groups";
@@ -41,8 +42,6 @@ export function emptyFonteRow(p: ReturnType<typeof profilesFor>[number]): Influe
     name: p.name,
     group: p.group,
     followers: 0,
-    following: 0,
-    tweets: 0,
     verified: false,
     avatar: null,
     bio: null,
@@ -54,7 +53,6 @@ export function emptyFonteRow(p: ReturnType<typeof profilesFor>[number]): Influe
     engagement: 0,
     views: 0,
     er: 0,
-    score: 0,
   };
 }
 
@@ -71,6 +69,19 @@ export function mergeExtraFontes(
   const seen = new Set(base.map((r) => r.handle.toLowerCase()));
   const added = scoped.filter((e) => !seen.has(e.handle.toLowerCase())).map(extraFonteToRow);
   return [...added, ...base];
+}
+
+export function filterFontesRows(rows: InfluenceRow[], raw: string): InfluenceRow[] {
+  const q = raw.trim();
+  if (!q) return rows;
+  const hits = new Set(matchProfiles(q, 80).map((p) => p.handle.toLowerCase()));
+  const needle = q.toLowerCase().replace(/^@+/, "");
+  return rows.filter(
+    (r) =>
+      hits.has(r.handle.toLowerCase()) ||
+      r.handle.toLowerCase().includes(needle) ||
+      r.name.toLowerCase().includes(needle),
+  );
 }
 
 export function sortFontesRows(
@@ -97,8 +108,10 @@ export type FonteGroup = {
 };
 
 export function groupFontesRows(rows: InfluenceRow[], groupIds: string[] = allGroupIds()): FonteGroup[] {
+  const known = new Set(groupIds);
+  const normalized = rows.map((r) => (known.has(r.group) ? r : { ...r, group: "novos" }));
   return groupIds.map((id) => {
-    const items = rows.filter((r) => r.group === id).sort(byRecent);
+    const items = normalized.filter((r) => r.group === id).sort(byRecent);
     const latest = items.find((r) => r.lastPost)?.lastPost?.publishedAt ?? null;
     const known = [...items].sort((a, b) => (b.followers || 0) - (a.followers || 0));
     return {

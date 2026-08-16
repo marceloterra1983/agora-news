@@ -1,3 +1,5 @@
+import { suggestGroup } from "./groups";
+import { setGroupOverride } from "./fontes-prefs";
 import type { InfluenceRow } from "./influence";
 import { lastPostHref } from "./last-post";
 import { readLastSection } from "./section-pref";
@@ -92,6 +94,11 @@ function write(list: ExtraFonte[]): ExtraFonte[] {
   return list;
 }
 
+/** Substitui a lista local — `[]` limpa o aparelho (pull da nuvem). */
+export function replaceExtraFontes(list: ExtraFonte[]): ExtraFonte[] {
+  return write(Array.isArray(list) ? list : []);
+}
+
 export function addExtraFonteFromProfile(
   result: {
     handle: string;
@@ -130,6 +137,8 @@ export function addExtraFonte(row: ExtraFonte): ExtraFonte[] {
     ...loadExtraFontes().filter((x) => x.handle.toLowerCase() !== handle.toLowerCase()),
   ];
   pushWatch(next[0]);
+  const group = suggestGroup({ handle, name: next[0].name, bio: next[0].summary });
+  if (group !== "novos") setGroupOverride(handle, group);
   return write(next);
 }
 
@@ -155,8 +164,6 @@ export function extraFonteToRow(e: ExtraFonte): InfluenceRow {
     name: e.name,
     group: "novos",
     followers: e.followers,
-    following: 0,
-    tweets: 0,
     verified: e.verified,
     avatar: e.avatar,
     bio: e.summary || null,
@@ -170,6 +177,5 @@ export function extraFonteToRow(e: ExtraFonte): InfluenceRow {
     engagement: 0,
     views: 0,
     er: 0,
-    score: 0,
   };
 }

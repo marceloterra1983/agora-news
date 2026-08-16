@@ -1,3 +1,4 @@
+import { getGroupOverrides, setGroupOverrides } from "./fontes-prefs";
 import { GROUP_HINTS, GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "./profiles";
 
 export type CustomGroup = { id: string; label: string };
@@ -70,6 +71,19 @@ export function replaceCustomGroups(list: CustomGroup[]): CustomGroup[] {
   localStorage.setItem(CUSTOM_KEY, JSON.stringify(out));
   window.dispatchEvent(new CustomEvent(EVENT));
   return out;
+}
+
+export function removeCustomGroup(id: string): CustomGroup[] {
+  const key = String(id || "").trim();
+  if (!key || GROUP_ORDER.includes(key as ProfileGroup)) return loadCustomGroups();
+  const next = replaceCustomGroups(loadCustomGroups().filter((g) => g.id !== key));
+  const overrides = getGroupOverrides();
+  const cleaned: Record<string, string> = {};
+  for (const [handle, group] of Object.entries(overrides)) {
+    if (group !== key) cleaned[handle] = group;
+  }
+  setGroupOverrides(cleaned);
+  return next;
 }
 
 export function addCustomGroup(label: string): CustomGroup | null {

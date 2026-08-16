@@ -8,6 +8,7 @@ import {
   FONTES_SORT_KEY,
   FONTES_SORTS,
   groupFontesRows,
+  filterFontesRows,
   mergeExtraFontes,
   readStoredSort,
   seedFontes,
@@ -48,6 +49,7 @@ function FontesPage() {
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
   const [groupIds, setGroupIds] = useState<string[]>(() => allGroupIds());
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     setSort(readStoredSort());
@@ -88,7 +90,8 @@ function FontesPage() {
       })),
     [withExtras, prefs.starred, prefs.groups, sort],
   );
-  const grouped = useMemo(() => groupFontesRows(rows, groupIds), [rows, groupIds]);
+  const visible = useMemo(() => filterFontesRows(rows, q), [rows, q]);
+  const grouped = useMemo(() => groupFontesRows(visible, groupIds), [visible, groupIds]);
 
   async function onToggleNotify(handle: string) {
     const turningOn = !prefs.isNotify(handle);
@@ -163,6 +166,18 @@ function FontesPage() {
     >
       <main className="mx-auto max-w-2xl px-4 pb-24">
         <h1 className="sr-only">Fontes</h1>
+        <label className="mt-3 block">
+          <span className="sr-only">Filtrar no catálogo</span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Filtrar no catálogo"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            className="h-10 w-full rounded-md border border-line bg-paper px-3 text-sm text-ink outline-none"
+          />
+        </label>
         {picking ? <FontesBatchBar count={picked.size} groupIds={groupIds} onMove={movePicked} /> : null}
 
         {sort === "groups" ? (
@@ -252,13 +267,13 @@ function FontesPage() {
               );
             })}
           </ul>
-        ) : rows.length === 0 ? (
+        ) : visible.length === 0 ? (
           <p className="py-10 text-center text-sm text-mute">
             {sort === "starred" ? "Nenhum favorito ainda. Toque na estrela de um perfil." : "Nenhum perfil."}
           </p>
         ) : (
           <ol data-testid="fontes-list">
-            {rows.map((row, i) => (
+            {visible.map((row, i) => (
               <ProfileRow
                 key={row.handle}
                 row={row}

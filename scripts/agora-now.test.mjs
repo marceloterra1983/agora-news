@@ -49,7 +49,7 @@ test("inApp is true only when the last tweet id is in the section feed map", () 
 
 test("ingest translates the full post, keeps QT out of content, caches Story[]", () => {
   const src = read("src/lib/news/ingest.ts");
-  assert.match(src, /translateToPt\(content\)/);
+  assert.match(src, /translateToPt\(content/);
   assert.doesNotMatch(src, /content: `\$\{content\}\$\{quoteBit\}`/);
   assert.doesNotMatch(src, /translateToPt\(`\$\{content\}/);
   assert.match(src, /storiesFromDbPosts|dbPostToStory/);
