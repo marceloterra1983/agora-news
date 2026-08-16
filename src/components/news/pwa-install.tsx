@@ -33,36 +33,6 @@ export function usePwaInstall() {
   };
 }
 
-export function AndroidInstallBanner() {
-  const { canInstall, installed, install } = usePwaInstall();
-  const [busy, setBusy] = useState(false);
-  if (installed || !canInstall) return null;
-
-  return (
-    <aside className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-card px-4 py-3">
-      <div>
-        <p className="font-medium text-ink">Instalar no Android</p>
-        <p className="mt-0.5 text-sm text-ink-soft">
-          Abre em tela cheia, como um app da Play Store.
-        </p>
-      </div>
-      <Tip label="Instalar app">
-        <Button
-          disabled={busy}
-          size="icon"
-          aria-label="Instalar app"
-          onClick={() => {
-            setBusy(true);
-            void install().finally(() => setBusy(false));
-          }}
-        >
-          <Download />
-        </Button>
-      </Tip>
-    </aside>
-  );
-}
-
 export function AndroidInstallPanel() {
   const { canInstall, installed, install } = usePwaInstall();
   const [busy, setBusy] = useState(false);

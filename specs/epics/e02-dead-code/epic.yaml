@@ -1,0 +1,6 @@
+id: e02
+slug: dead-code
+title: Cortar mortos e um manifesto PWA
+status: in_progress
+stories:
+  - e02s01

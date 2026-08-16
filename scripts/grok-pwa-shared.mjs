@@ -184,7 +184,9 @@ export function injectGrokPwaHead(
   if (typeof html !== "string") return html;
   const missing = grokPwaHeadTags(appName)
     .filter(([key]) => {
-      if (key === "manifest") return !html.includes('href="/__grok/manifest.webmanifest"');
+      if (key === "manifest") {
+        return !html.includes('rel="manifest"') && !html.includes("rel='manifest'");
+      }
       if (key === "apple-touch-icon") return !html.includes('href="/__grok/icon-180.png"');
       if (key === "twitter:card") {
         return (
