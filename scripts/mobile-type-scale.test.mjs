@@ -104,22 +104,22 @@ async function measure(page) {
   });
 }
 
-test("Playwright 390px: chip ≥44, nav ≥48, headline ≥22, meta ≥14", async (t) => {
+test("Playwright 390px: chip ≥48, nav ≥56, headline ≥26, meta ≥16", async (t) => {
   const browser = await launchChromium(t);
   if (!browser) return;
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await page.setContent(FIXTURE, { waitUntil: "domcontentloaded" });
     const s = await measure(page);
-    assert.ok(s.chipH >= 44, `chip height ${s.chipH}`);
-    assert.ok(s.chipFs >= 15, `chip label ${s.chipFs}`);
-    assert.ok(s.iaH >= 44 && s.iaW >= 44, `IA ${s.iaW}x${s.iaH}`);
-    assert.ok(s.menuH >= 44 && s.menuW >= 44, `menu ${s.menuW}x${s.menuH}`);
-    assert.ok(s.navH >= 48 && s.navW >= 48, `nav ${s.navW}x${s.navH}`);
-    assert.ok(s.iconH >= 22, `nav icon ${s.iconH}`);
-    assert.ok(s.headline >= 22, `headline ${s.headline}`);
-    assert.ok(s.meta >= 14, `meta ${s.meta}`);
-    assert.ok(s.updated >= 14, `updated ${s.updated}`);
+    assert.ok(s.chipH >= 48, `chip height ${s.chipH}`);
+    assert.ok(s.chipFs >= 17, `chip label ${s.chipFs}`);
+    assert.ok(s.iaH >= 48 && s.iaW >= 48, `IA ${s.iaW}x${s.iaH}`);
+    assert.ok(s.menuH >= 48 && s.menuW >= 48, `menu ${s.menuW}x${s.menuH}`);
+    assert.ok(s.navH >= 56 && s.navW >= 56, `nav ${s.navW}x${s.navH}`);
+    assert.ok(s.iconH >= 26, `nav icon ${s.iconH}`);
+    assert.ok(s.headline >= 26, `headline ${s.headline}`);
+    assert.ok(s.meta >= 16, `meta ${s.meta}`);
+    assert.ok(s.updated >= 16, `updated ${s.updated}`);
   } finally {
     await browser.close();
   }
@@ -151,10 +151,10 @@ test("Playwright 1280px + data-shell=phone still uses the phone scale", async (t
       waitUntil: "domcontentloaded",
     });
     const s = await measure(page);
-    assert.ok(s.chipH >= 44, `shell chip ${s.chipH}`);
-    assert.ok(s.headline >= 22, `shell headline ${s.headline}`);
-    assert.ok(s.meta >= 14, `shell meta ${s.meta}`);
-    assert.ok(s.navH >= 48, `shell nav ${s.navH}`);
+    assert.ok(s.chipH >= 48, `shell chip ${s.chipH}`);
+    assert.ok(s.headline >= 26, `shell headline ${s.headline}`);
+    assert.ok(s.meta >= 16, `shell meta ${s.meta}`);
+    assert.ok(s.navH >= 56, `shell nav ${s.navH}`);
   } finally {
     await browser.close();
   }
