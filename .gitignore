@@ -1,1 +1,16 @@
 scripts/__pycache__/
+__pycache__/
+node_modules/
+.vercel/
+.output/
+.nitro/
+.tanstack/
+dist/
+.env
+.env.*
+!.env.example
+/news/
+.worktrees/
+worktrees/
+*.log
+.DS_Store

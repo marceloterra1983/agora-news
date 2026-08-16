@@ -19,6 +19,7 @@ import { Route as ReferenciasRouteImport } from './routes/referencias'
 import { Route as SalvosRouteImport } from './routes/salvos'
 import { Route as ApiCacheRouteImport } from './routes/api/cache'
 import { Route as ApiFeedRouteImport } from './routes/api/feed'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiIngestRouteImport } from './routes/api/ingest'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
 import { Route as ApiPushRouteImport } from './routes/api/push'
@@ -76,6 +77,11 @@ const ApiFeedRoute = ApiFeedRouteImport.update({
   path: '/api/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiIngestRoute = ApiIngestRouteImport.update({
   id: '/api/ingest',
   path: '/api/ingest',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/salvos': typeof SalvosRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/ingest': typeof ApiIngestRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/push': typeof ApiPushRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/salvos': typeof SalvosRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/ingest': typeof ApiIngestRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/push': typeof ApiPushRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/salvos': typeof SalvosRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/ingest': typeof ApiIngestRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/push': typeof ApiPushRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/salvos'
     | '/api/cache'
     | '/api/feed'
+    | '/api/health'
     | '/api/ingest'
     | '/api/profile'
     | '/api/push'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/salvos'
     | '/api/cache'
     | '/api/feed'
+    | '/api/health'
     | '/api/ingest'
     | '/api/profile'
     | '/api/push'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/salvos'
     | '/api/cache'
     | '/api/feed'
+    | '/api/health'
     | '/api/ingest'
     | '/api/profile'
     | '/api/push'
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   SalvosRoute: typeof SalvosRoute
   ApiCacheRoute: typeof ApiCacheRoute
   ApiFeedRoute: typeof ApiFeedRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiIngestRoute: typeof ApiIngestRoute
   ApiProfileRoute: typeof ApiProfileRoute
   ApiPushRoute: typeof ApiPushRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiFeedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ingest': {
       id: '/api/ingest'
       path: '/api/ingest'
@@ -366,6 +386,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalvosRoute: SalvosRoute,
   ApiCacheRoute: ApiCacheRoute,
   ApiFeedRoute: ApiFeedRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiIngestRoute: ApiIngestRoute,
   ApiProfileRoute: ApiProfileRoute,
   ApiPushRoute: ApiPushRoute,

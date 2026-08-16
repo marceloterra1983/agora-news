@@ -1,0 +1,10 @@
+id: e01
+slug: harden
+title: Endurecer escritas e higiene do repo
+status: in_progress
+decisions:
+  - "Não rotacionar service role / VAPID — fallbacks no source permanecem"
+  - "CRON_SECRET opcional: se ausente, ingest aceita cron Vercel e clientes sem Sec-Fetch-Site"
+  - "Mutações do app exigem Sec-Fetch-Site: same-origin"
+stories:
+  - e01s01

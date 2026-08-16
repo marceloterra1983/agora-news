@@ -55,6 +55,7 @@ const WARM_MS = 90_000;
 const STALE_MS = 300_000;
 const listCache = new Map<string, { at: number; stories: Story[]; headId: string }>();
 const listInflight = new Map<string, Promise<Story[]>>();
+const revalidateInflight = new Set<string>();
 
 /** Cache de post individual (abrir matéria). */
 const POST_TTL = 60_000;
@@ -63,6 +64,7 @@ const postCache = new Map<string, { at: number; story: Story }>();
 export function invalidateSupabaseList() {
   listCache.clear();
   listInflight.clear();
+  revalidateInflight.clear();
   postCache.clear();
   void invalidateNewsCache();
 }
@@ -167,8 +169,9 @@ function storeList(key: string, stories: Story[], headId: string) {
  */
 function revalidateInBackground(slug: Category, limit: number, key: string, knownHead: string) {
   // single-flight por key
-  if (listInflight.has(`rv:${key}`)) return;
-  const job = (async () => {
+  if (revalidateInflight.has(key)) return;
+  revalidateInflight.add(key);
+  void (async () => {
     try {
       const headId = await fetchHeadId(slug);
       if (!headId) return;
@@ -186,9 +189,10 @@ function revalidateInBackground(slug: Category, limit: number, key: string, know
       }
     } catch {
       /* silent */
+    } finally {
+      revalidateInflight.delete(key);
     }
-  })().finally(() => listInflight.delete(`rv:${key}`));
-  listInflight.set(`rv:${key}`, job as Promise<Story[]>);
+  })();
 }
 
 export async function downloadSupabase(

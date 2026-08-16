@@ -4,6 +4,7 @@ import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
 import { listWatchAccounts } from "./watch";
 import { invalidateFeedCache } from "./feed";
+import { invalidateFontesLastCache } from "./influence";
 import { embedForStory } from "./x-media";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL, invalidateSupabaseList } from "./supabase";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson, cacheSetNx, cacheBackend } from "./cache";
@@ -312,6 +313,7 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
   if (written.ok && rows.length) {
     invalidateSupabaseList();
     invalidateFeedCache();
+    invalidateFontesLastCache();
     try {
       await cloudKvSet(CACHE_KEYS.list("ai", 40), JSON.stringify(rows.slice(0, 40)), 60);
     } catch {

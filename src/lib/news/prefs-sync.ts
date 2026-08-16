@@ -37,16 +37,16 @@ function writeLocal(prefs: CloudPrefs) {
   }
 }
 
-export async function pullCloudPrefs(userId: string) {
-  const remote = await loadPrefs({ data: { userId } });
+export async function pullCloudPrefs(_userId?: string) {
+  const remote = await loadPrefs();
   if (!remote) return;
   writeLocal(remote);
 }
 
 let timer: number | undefined;
-export function pushCloudPrefs(userId: string) {
+export function pushCloudPrefs(_userId?: string) {
   window.clearTimeout(timer);
   timer = window.setTimeout(() => {
-    void savePrefs({ data: { userId, prefs: snapshotPrefs() } });
+    void savePrefs({ data: { prefs: snapshotPrefs() } });
   }, 800);
 }

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/lib/auth/middleware";
 import { cloudKvGet, cloudKvSet } from "./cloud-kv";
 import type { ExtraFonte } from "./extra-fontes";
 
@@ -12,12 +13,9 @@ export type CloudPrefs = {
 };
 
 export const loadPrefs = createServerFn({ method: "GET" })
-  .validator((input: { userId: string }) => ({
-    userId: String(input.userId || "").slice(0, 80),
-  }))
-  .handler(async ({ data }) => {
-    if (!data.userId) return null;
-    const raw = await cloudKvGet(`prefs:${data.userId}`);
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const raw = await cloudKvGet(`prefs:${context.userId}`);
     if (!raw) return null;
     try {
       return JSON.parse(raw) as CloudPrefs;
@@ -27,12 +25,11 @@ export const loadPrefs = createServerFn({ method: "GET" })
   });
 
 export const savePrefs = createServerFn({ method: "POST" })
-  .validator((input: { userId: string; prefs: CloudPrefs }) => ({
-    userId: String(input.userId || "").slice(0, 80),
+  .middleware([authMiddleware])
+  .validator((input: { prefs: CloudPrefs; userId?: string }) => ({
     prefs: input.prefs || {},
   }))
-  .handler(async ({ data }) => {
-    if (!data.userId) return { ok: false };
-    await cloudKvSet(`prefs:${data.userId}`, JSON.stringify(data.prefs), 60 * 60 * 24 * 365);
+  .handler(async ({ data, context }) => {
+    await cloudKvSet(`prefs:${context.userId}`, JSON.stringify(data.prefs), 60 * 60 * 24 * 365);
     return { ok: true };
   });

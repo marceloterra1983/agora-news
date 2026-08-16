@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { listWatchAccounts, registerWatch, unregisterWatch } from "@/lib/news/watch";
 import { upsertProfile } from "@/lib/news/admin";
+import { denyWrite, requestWriteAllowed } from "@/lib/news/write-guard";
 
 export const Route = createFileRoute("/api/watch")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        if (!requestWriteAllowed("app", request)) return denyWrite("app");
         const handles = await listWatchAccounts();
         return Response.json({ handles });
       },
       POST: async ({ request }) => {
+        if (!requestWriteAllowed("app", request)) return denyWrite("app");
         const body = (await request.json().catch(() => ({}))) as {
           handle?: string;
           name?: string;
@@ -40,6 +43,7 @@ export const Route = createFileRoute("/api/watch")({
         return Response.json({ ok });
       },
       DELETE: async ({ request }) => {
+        if (!requestWriteAllowed("app", request)) return denyWrite("app");
         const url = new URL(request.url);
         const handle = String(url.searchParams.get("handle") || "").replace(/^@+/, "");
         const ok = await unregisterWatch(handle);
