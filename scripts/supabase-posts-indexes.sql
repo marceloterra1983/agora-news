@@ -1,4 +1,5 @@
--- Deploy (DATABASE_URL) + SQL Editor. Índices do feed + tabela de perfis + Realtime.
+-- Manual: cole no SQL Editor do Supabase (projeto uqcaodtgrkphuhdkchyh) e rode uma vez.
+-- NÃO vai em migrations/ — o bootstrap Neon/PGLite só tem auth. O feed vive no Supabase.
 
 update public.posts
   set category = 'ai'

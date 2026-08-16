@@ -3,6 +3,12 @@ import { Bookmark, Newspaper, Search, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
+import {
+  keepsSectionInUrl,
+  readLastSection,
+  sectionNavTarget,
+  writeLastSection,
+} from "@/lib/news/section-pref";
 import { GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "@/lib/news/profiles";
 import { groupStyle } from "@/lib/news/group-style";
 import { cn } from "@/lib/utils";
@@ -24,12 +30,34 @@ export function AppChrome({
   group?: ProfileGroup | "all";
   onGroup?: (g: ProfileGroup | "all") => void;
 }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const [remembered, setRemembered] = useState<Category | null>(null);
+  const shown = keepsSectionInUrl(pathname) ? category : (remembered ?? category);
+
+  useEffect(() => {
+    if (keepsSectionInUrl(pathname)) {
+      writeLastSection(category);
+      setRemembered(null);
+      return;
+    }
+    setRemembered((cur) => cur ?? readLastSection());
+  }, [pathname, category]);
+
+  function pickSec(slug: Category) {
+    if (slug === shown) return;
+    writeLastSection(slug);
+    const dest = sectionNavTarget(pathname, slug);
+    if (dest) void navigate(dest);
+    else setRemembered(slug);
+  }
+
   return (
     <div className="min-h-dvh bg-paper text-ink">
       <PrefsSync />
-      <GrokHeader category={category} group={group} onGroup={onGroup} />
+      <GrokHeader category={shown} group={group} onGroup={onGroup} onPickSec={pickSec} />
       <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]">{children}</div>
-      <TabBar category={category} />
+      <TabBar category={shown} />
     </div>
   );
 }
@@ -38,12 +66,13 @@ function GrokHeader({
   category,
   group = "all",
   onGroup,
+  onPickSec,
 }: {
   category: Category;
   group?: ProfileGroup | "all";
   onGroup?: (g: ProfileGroup | "all") => void;
+  onPickSec: (slug: Category) => void;
 }) {
-  const navigate = useNavigate();
   const [secOpen, setSecOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = SECTIONS.find((s) => s.slug === category) ?? SECTIONS[0];
@@ -66,13 +95,7 @@ function GrokHeader({
 
   function pickSec(slug: Category) {
     setSecOpen(false);
-    if (slug === category) return;
-    try {
-      localStorage.setItem("agora-last-secao", slug);
-    } catch {
-      /* ignore */
-    }
-    void navigate({ to: "/", search: { secao: slug } });
+    onPickSec(slug);
   }
 
   function pickGroup(next: ProfileGroup | "all") {
@@ -132,7 +155,7 @@ function GrokHeader({
               onClick={() => pickGroup("all")}
               className={cn(
                 "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-                group === "all" ? "bg-paper text-ink" : "bg-paper-2 text-mute",
+                group === "all" ? "bg-paper-2 text-ink ring-1 ring-ink/25" : "bg-paper-2 text-mute",
               )}
             >
               Todos
