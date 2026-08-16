@@ -1,6 +1,8 @@
 import { AppChrome } from "@/components/news/app-chrome";
+import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
 import { FontesChip } from "@/components/news/fontes-chip";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
+import { groupOf } from "@/components/news/group-tag";
 import { loadExtraFontes, syncExtraFontes } from "@/lib/news/extra-fontes";
 import {
   FONTES_SORT_KEY,
@@ -12,8 +14,8 @@ import {
   sortFontesRows,
   type SortKey,
 } from "@/lib/news/fontes-sort";
+import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
 import { enableFavoriteNotify } from "@/lib/news/notify-favorites";
-import { type ProfileGroup } from "@/lib/news/profiles";
 import { loadFontes, loadFontesLive } from "@/lib/news/server";
 import { relativeTime } from "@/lib/news/format";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "@/lib/news/types";
@@ -21,7 +23,7 @@ import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronDown } from "lucide-react";
+import { CheckSquare, ChevronDown, Square } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 type FontesSearch = { secao: Category };
@@ -41,9 +43,12 @@ function FontesPage() {
   const prefs = useFontesPrefs();
   const [openHandle, setOpenHandle] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("recent");
-  const [openGroups, setOpenGroups] = useState<Set<ProfileGroup>>(() => new Set());
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const [extras, setExtras] = useState<ReturnType<typeof loadExtraFontes>>([]);
   const [liveEnabled, setLiveEnabled] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(() => new Set());
+  const [groupIds, setGroupIds] = useState<string[]>(() => allGroupIds());
 
   useEffect(() => {
     setSort(readStoredSort());
@@ -54,7 +59,8 @@ function FontesPage() {
     return () => window.removeEventListener("agora-extra-fontes", refresh);
   }, []);
 
-  // Enrichment fxtwitter só depois do paint — não compete com a 1ª renderização
+  useEffect(() => onCustomGroups(() => setGroupIds(allGroupIds())), []);
+
   useEffect(() => {
     setLiveEnabled(false);
     const t = window.setTimeout(() => setLiveEnabled(true), 280);
@@ -89,10 +95,14 @@ function FontesPage() {
   const base = live?.rows?.length ? live.rows : data?.rows?.length ? data.rows : seed;
   const withExtras = useMemo(() => mergeExtraFontes(base, extras), [base, extras]);
   const rows = useMemo(
-    () => sortFontesRows(withExtras, sort, prefs.starred),
-    [withExtras, prefs.starred, sort],
+    () =>
+      sortFontesRows(withExtras, sort, prefs.starred).map((r) => ({
+        ...r,
+        group: prefs.groupOf(r.handle) ?? groupOf(r.handle),
+      })),
+    [withExtras, prefs.starred, prefs.groups, sort],
   );
-  const grouped = useMemo(() => groupFontesRows(rows), [rows]);
+  const grouped = useMemo(() => groupFontesRows(rows, groupIds), [rows, groupIds]);
 
   async function onToggleNotify(handle: string) {
     const turningOn = !prefs.isNotify(handle);
@@ -100,13 +110,38 @@ function FontesPage() {
     prefs.toggleNotify(handle);
   }
 
-  function toggleGroup(id: ProfileGroup) {
+  function toggleGroup(id: string) {
     setOpenGroups((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  }
+
+  function togglePicked(handle: string) {
+    const key = handle.toLowerCase();
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function movePicked(group: string) {
+    for (const h of picked) prefs.setGroup(h, group);
+    setPicked(new Set());
+    setPicking(false);
+  }
+
+  function rowToggle(handle: string) {
+    if (picking) {
+      togglePicked(handle);
+      return;
+    }
+    const key = handle.toLowerCase();
+    setOpenHandle(openHandle === key ? null : key);
   }
 
   return (
@@ -123,8 +158,20 @@ function FontesPage() {
                 </FontesChip>
               );
             })}
+            <FontesChip
+              active={picking}
+              label="Mover em lote"
+              onClick={() => {
+                setPicking((v) => !v);
+                setPicked(new Set());
+              }}
+            >
+              {picking ? <CheckSquare className="size-3.5" /> : <Square className="size-3.5" />}
+            </FontesChip>
           </div>
         </div>
+
+        {picking ? <FontesBatchBar count={picked.size} groupIds={groupIds} onMove={movePicked} /> : null}
 
         {sort === "groups" ? (
           <ul>
@@ -188,16 +235,12 @@ function FontesPage() {
                             key={row.handle}
                             row={row}
                             index={i}
-                            open={openHandle === row.handle.toLowerCase()}
+                            open={!picking && openHandle === row.handle.toLowerCase()}
                             prefs={prefs}
                             hideGroup
-                            onToggle={() =>
-                              setOpenHandle(
-                                openHandle === row.handle.toLowerCase()
-                                  ? null
-                                  : row.handle.toLowerCase(),
-                              )
-                            }
+                            picking={picking}
+                            picked={picked.has(row.handle.toLowerCase())}
+                            onToggle={() => rowToggle(row.handle)}
                             onToggleNotify={onToggleNotify}
                           />
                         ))}
@@ -219,13 +262,11 @@ function FontesPage() {
                 key={row.handle}
                 row={row}
                 index={i}
-                open={openHandle === row.handle.toLowerCase()}
+                open={!picking && openHandle === row.handle.toLowerCase()}
                 prefs={prefs}
-                onToggle={() =>
-                  setOpenHandle(
-                    openHandle === row.handle.toLowerCase() ? null : row.handle.toLowerCase(),
-                  )
-                }
+                picking={picking}
+                picked={picked.has(row.handle.toLowerCase())}
+                onToggle={() => rowToggle(row.handle)}
                 onToggleNotify={onToggleNotify}
               />
             ))}

@@ -2,7 +2,8 @@ import { Clock, Layers, Star, Users } from "lucide-react";
 import { extraFonteToRow, type ExtraFonte } from "./extra-fontes";
 import type { InfluenceRow } from "./influence";
 import { normHandle } from "./fontes-prefs";
-import { GROUP_HINTS, GROUP_LABELS, GROUP_ORDER, profilesFor, type ProfileGroup } from "./profiles";
+import { allGroupIds, groupHint, groupLabel } from "./groups";
+import { profilesFor } from "./profiles";
 import type { Category } from "./types";
 
 export type SortKey = "recent" | "followers" | "groups" | "starred";
@@ -80,7 +81,7 @@ export function sortFontesRows(
 }
 
 export type FonteGroup = {
-  id: ProfileGroup;
+  id: string;
   label: string;
   hint: string;
   items: InfluenceRow[];
@@ -89,15 +90,15 @@ export type FonteGroup = {
   preview: string;
 };
 
-export function groupFontesRows(rows: InfluenceRow[]): FonteGroup[] {
-  return GROUP_ORDER.map((id) => {
+export function groupFontesRows(rows: InfluenceRow[], groupIds: string[] = allGroupIds()): FonteGroup[] {
+  return groupIds.map((id) => {
     const items = rows.filter((r) => r.group === id).sort(byRecent);
     const latest = items.find((r) => r.lastPost)?.lastPost?.publishedAt ?? null;
     const known = [...items].sort((a, b) => (b.followers || 0) - (a.followers || 0));
     return {
       id,
-      label: GROUP_LABELS[id],
-      hint: GROUP_HINTS[id],
+      label: groupLabel(id),
+      hint: groupHint(id),
       items,
       latest,
       faces: known.filter((r) => r.avatar).slice(0, 3),

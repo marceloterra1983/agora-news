@@ -105,6 +105,18 @@ export const loadFontes = createServerFn({ method: "GET" })
     );
   });
 
+export const loadFonteMetrics = createServerFn({ method: "GET" })
+  .validator((input: { handle: string }) => ({
+    handle: String(input.handle || "")
+      .replace(/^@+/, "")
+      .trim()
+      .slice(0, 15),
+  }))
+  .handler(async ({ data }) => {
+    const { getProfileMetrics } = await import("./fonte-metrics");
+    return getProfileMetrics(data.handle);
+  });
+
 export const loadFontesLive = createServerFn({ method: "GET" })
   .validator((input: { category?: Category } | undefined) => ({
     category: normalizeSection(input?.category || DEFAULT_SECTION),

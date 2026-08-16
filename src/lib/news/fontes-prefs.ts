@@ -1,4 +1,6 @@
-/** Preferências de Fontes — favoritos, pausadas e avisos por conta. */
+/** Preferências de Fontes — favoritos, pausadas, avisos e grupo por conta. */
+
+const GROUP_KEY = "agora-fontes-groups-v1";
 
 const STAR_KEY = "agora-fontes-starred-v1";
 const DISABLED_KEY = "agora-fontes-disabled-v1";
@@ -96,6 +98,38 @@ export function toggleNotifyHandle(handle: string): boolean {
 
 export function setNotifyHandle(handle: string, on: boolean): void {
   setIn(NOTIFY_KEY, handle, on);
+}
+
+export function getGroupOverrides(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(GROUP_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const handle = normHandle(k);
+      if (!handle) continue;
+      if (typeof v === "string" && v.trim()) out[handle] = v.trim();
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function groupOverrideOf(handle: string): string | null {
+  return getGroupOverrides()[normHandle(handle)] ?? null;
+}
+
+export function setGroupOverride(handle: string, group: string): void {
+  if (typeof window === "undefined") return;
+  const h = normHandle(handle);
+  if (!h || !group) return;
+  const next = { ...getGroupOverrides(), [h]: group };
+  window.localStorage.setItem(GROUP_KEY, JSON.stringify(next));
+  window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key: GROUP_KEY } }));
 }
 
 export function filterStoriesByPrefs<T extends { source?: string; sourceLabel?: string; account?: string }>(
