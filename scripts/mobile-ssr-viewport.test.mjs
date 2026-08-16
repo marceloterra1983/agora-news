@@ -30,7 +30,7 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
   assert.ok(res.ok, `GET / status ${res.status}`);
   const html = await res.text();
   const cc = `${res.headers.get("cache-control") ?? ""} ${res.headers.get("cdn-cache-control") ?? ""}`;
-  if (!html.includes("agora-cache-bust-v13")) {
+  if (!html.includes("agora-cache-bust-v14")) {
     t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
     return;
   }
@@ -65,7 +65,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     });
     assert.ok(res && res.status() < 400, `status ${res?.status()}`);
     const html = await page.content();
-    if (!html.includes("agora-cache-bust-v13")) {
+    if (!html.includes("agora-cache-bust-v14")) {
       t.skip("3080 ainda serve HTML antigo — o rebuild publica o documento novo");
       return;
     }
@@ -87,6 +87,24 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
       feedBox.width >= box.inner - 40,
       `feed ${feedBox.width}px should fill ~${box.inner}px`,
     );
+    const scale = await page.evaluate(() => {
+      const chip = document.querySelector("[data-chrome=compact] [data-h-scroll] button");
+      const nav = document.querySelector("[data-chrome=tabs] a");
+      const h3 = document.querySelector("[data-story] h3");
+      const meta = document.querySelector("[data-story] > p");
+      const px = (el, prop) => (el ? parseFloat(getComputedStyle(el)[prop]) : 0);
+      const boxOf = (el) => (el ? el.getBoundingClientRect() : { width: 0, height: 0 });
+      return {
+        chipH: boxOf(chip).height,
+        navH: boxOf(nav).height,
+        headline: px(h3, "fontSize"),
+        meta: px(meta, "fontSize"),
+      };
+    });
+    if (scale.chipH) assert.ok(scale.chipH >= 44, `live chip ${scale.chipH}`);
+    if (scale.navH) assert.ok(scale.navH >= 48, `live nav ${scale.navH}`);
+    if (scale.headline) assert.ok(scale.headline >= 22, `live headline ${scale.headline}`);
+    if (scale.meta) assert.ok(scale.meta >= 14, `live meta ${scale.meta}`);
   } finally {
     await browser.close();
   }

@@ -31,6 +31,14 @@
 
   --agora-header: 3.75rem;
   --agora-subbar: 2.5rem;
+
+  /* Desktop defaults — phone overrides live in phone-layout.css (crítico, !). */
+  --agora-type: 16px;
+  --agora-headline: 1.25rem;
+  --agora-meta: 13px;
+  --agora-chip-label: 11px;
+  --agora-tap: 44px;
+  --agora-nav-tap: 3.5rem;
 }
 
 .dark {
