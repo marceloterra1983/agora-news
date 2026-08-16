@@ -28,6 +28,15 @@ export function ProfileRow({
 }) {
   const pausedRow = prefs.isDisabled(row.handle);
   const followers = row.followers ? formatCount(row.followers) : "";
+  const controlProps = {
+    handle: row.handle,
+    starred: prefs.isStarred(row.handle),
+    disabled: pausedRow,
+    notify: prefs.isNotify(row.handle),
+    onToggleStar: prefs.toggleStar,
+    onToggleDisabled: prefs.toggleDisabled,
+    onToggleNotify,
+  };
   return (
     <li className={cn("border-b border-line", pausedRow && "opacity-55")}>
       <div className="flex items-start gap-1">
@@ -90,15 +99,7 @@ export function ProfileRow({
             </span>
           </span>
         </button>
-        <FonteControls
-          handle={row.handle}
-          starred={prefs.isStarred(row.handle)}
-          disabled={pausedRow}
-          notify={prefs.isNotify(row.handle)}
-          onToggleStar={prefs.toggleStar}
-          onToggleDisabled={prefs.toggleDisabled}
-          onToggleNotify={onToggleNotify}
-        />
+        {!open ? <FonteControls {...controlProps} /> : null}
       </div>
 
       {open ? (
@@ -136,17 +137,20 @@ export function ProfileRow({
               <p className="mt-1 text-sm text-mute">Nenhum post nas últimas 48 horas.</p>
             )}
           </div>
-          <Tip label={`Abrir @${row.handle} no X`}>
-            <a
-              href={`https://x.com/${row.handle}`}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`Abrir @${row.handle} no X`}
-              className="mt-3 grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
-            >
-              <XLogo className="size-3.5" />
-            </a>
-          </Tip>
+          <div className="mt-3 flex items-center gap-1">
+            <Tip label={`Abrir @${row.handle} no X`}>
+              <a
+                href={`https://x.com/${row.handle}`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Abrir @${row.handle} no X`}
+                className="grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
+              >
+                <XLogo className="size-3.5" />
+              </a>
+            </Tip>
+            <FonteControls {...controlProps} />
+          </div>
         </div>
       ) : null}
     </li>

@@ -1,7 +1,7 @@
 active_flow: build_epic
 active_epic_id: e03
 active_story_id: e03s01
-active_bug_id: BUG-2026-08-16T094800
+active_bug_id: null
 release:
   target_version: null
   last_tag: null
