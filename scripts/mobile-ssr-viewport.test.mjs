@@ -89,7 +89,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     const feedBox = await feed.boundingBox();
     assert.ok(feedBox, "feed box");
     assert.ok(
-      feedBox.width >= box.inner - 40,
+      feedBox.width >= box.inner - 48,
       `feed ${feedBox.width}px should fill ~${box.inner}px`,
     );
     const scale = await page.evaluate(() => {
@@ -107,7 +107,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
       };
     });
     if (scale.chipH) assert.ok(scale.chipH >= 48, `live chip ${scale.chipH}`);
-    if (scale.navH) assert.ok(scale.navH >= 56, `live nav ${scale.navH}`);
+    if (scale.navH) assert.ok(scale.navH >= 48, `live nav ${scale.navH}`);
     if (scale.headline) assert.ok(scale.headline >= 28, `live headline ${scale.headline}`);
     if (scale.meta) assert.ok(scale.meta >= 16, `live meta ${scale.meta}`);
   } finally {

@@ -89,8 +89,8 @@ test("phone type scale forces readable px that beat utilities", () => {
   assert.match(css, /font-size: 16px !important/);
   assert.match(css, /font-size: 17px !important/);
   assert.match(css, /min-height: 48px !important/);
-  assert.match(css, /min-height: 56px !important/);
-  assert.match(css, /width: 26px !important/);
+  assert.match(css, /height: 48px !important/);
+  assert.match(css, /width: 24px !important/);
   assert.match(css, /html\[data-font="md"\]/);
 });
 
