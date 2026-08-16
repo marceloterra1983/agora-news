@@ -124,38 +124,42 @@ function GrokHeader({
           ) : null}
         </div>
 
-        <div data-h-scroll className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
-          <button
-            type="button"
-            aria-pressed={group === "all"}
-            onClick={() => pickGroup("all")}
-            className={cn(
-              "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-              group === "all" ? "bg-paper text-ink" : "bg-paper-2 text-mute",
-            )}
-          >
-            Todos
-          </button>
-          {GROUP_ORDER.map((id) => {
-            const st = groupStyle(id);
-            const on = group === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={on}
-                onClick={() => pickGroup(id)}
-                className={cn(
-                  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold",
-                  on ? st.chipOn : st.chip,
-                )}
-              >
-                <span className={cn("size-1.5 rounded-full", st.dot)} aria-hidden />
-                {GROUP_LABELS[id]}
-              </button>
-            );
-          })}
-        </div>
+        {onGroup ? (
+          <div data-h-scroll className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+            <button
+              type="button"
+              aria-pressed={group === "all"}
+              onClick={() => pickGroup("all")}
+              className={cn(
+                "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
+                group === "all" ? "bg-paper text-ink" : "bg-paper-2 text-mute",
+              )}
+            >
+              Todos
+            </button>
+            {GROUP_ORDER.map((id) => {
+              const st = groupStyle(id);
+              const on = group === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => pickGroup(id)}
+                  className={cn(
+                    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold",
+                    on ? st.chipOn : st.chip,
+                  )}
+                >
+                  <span className={cn("size-1.5 rounded-full", st.dot)} aria-hidden />
+                  {GROUP_LABELS[id]}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="min-w-0 flex-1" />
+        )}
 
         <AppMenu />
       </div>

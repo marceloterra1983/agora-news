@@ -29,6 +29,12 @@ test("app-chrome uses groupStyle for chips", () => {
   assert.match(src, /st\.chip/);
 });
 
+test("group chips only render when the page can filter (onGroup)", () => {
+  const src = readFileSync(join(root, "src/components/news/app-chrome.tsx"), "utf8");
+  assert.match(src, /onGroup\s*\?/);
+  assert.match(src, /GROUP_ORDER\.map/);
+});
+
 test("group-tag uses colored tag + dot", () => {
   const src = readFileSync(join(root, "src/components/news/group-tag.tsx"), "utf8");
   assert.match(src, /groupStyle/);
