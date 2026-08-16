@@ -3,8 +3,7 @@
  * Fonte única — o TS em src/lib/news/write-guard.ts reexporta este módulo.
  *
  * app: só fetch same-origin (PWA). Bloqueia curl e CSRF cross-site.
- * ingest: se CRON_SECRET existir, exige Bearer; senão aceita cron Vercel,
- *         same-origin, ou cliente sem Sec-Fetch-Site (cron/curl legado).
+ * ingest: só Bearer ${CRON_SECRET}. Sem secret, ninguém passa (fail-closed).
  * ops: same-origin ou cron Vercel (ex.: /api/cache).
  */
 
@@ -29,9 +28,7 @@ export function writeAllowed(kind, headers, env = {}) {
 
   const secret = String(env.cronSecret || "").trim();
   const auth = String(headers.authorization || "");
-  if (secret) return auth === `Bearer ${secret}`;
-  if (isVercelCron || site === "same-origin") return true;
-  return !site || site === "none";
+  return Boolean(secret) && auth === `Bearer ${secret}`;
 }
 
 /**
@@ -39,6 +36,6 @@ export function writeAllowed(kind, headers, env = {}) {
  * @param {{ cronSecret?: string }} [env]
  */
 export function writeDenialStatus(kind, env = {}) {
-  if (kind === "ingest" && String(env.cronSecret || "").trim()) return 401;
+  if (kind === "ingest") return 401;
   return 403;
 }

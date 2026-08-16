@@ -1,5 +1,4 @@
 import { BadgeCheck, CheckSquare, ChevronDown, Eye, MessageCircle, Percent, Square } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { FonteControls, FonteDisabledBadge } from "@/components/news/fonte-controls";
 import { ProfileEr } from "@/components/news/fontes-profile-er";
 import { GroupTag } from "@/components/news/group-tag";
@@ -142,13 +141,14 @@ export function ProfileRow({
               ) : null}
             </p>
             {row.lastPost ? (
-              <Link
-                to="/materia/$id"
-                params={{ id: row.lastPost.id }}
+              <a
+                href={row.lastPost.href}
+                target={row.lastPost.href.startsWith("http") ? "_blank" : undefined}
+                rel={row.lastPost.href.startsWith("http") ? "noreferrer" : undefined}
                 className="mt-1 block text-sm font-medium leading-snug text-ink"
               >
                 {row.lastPost.title}
-              </Link>
+              </a>
             ) : (
               <p className="mt-1 text-sm text-mute">Nenhum post encontrado.</p>
             )}

@@ -1,6 +1,6 @@
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
-import { preferNewerLast, storedToLastHit } from "./last-post";
-import { fillMissingLastPosts, listXLastPosts } from "./last-post-store";
+import { lastPostHref, preferNewerLast, storedToLastHit } from "./last-post";
+import { listXLastPosts } from "./last-post-store";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listWatchAccounts } from "./watch";
@@ -19,6 +19,7 @@ export type InfluenceRow = {
   bio: string | null;
   lastPost: {
     id: string;
+    href: string;
     title: string;
     publishedAt: string;
     likes?: number;
@@ -155,9 +156,15 @@ function scoreOf(stats: LiveStats, inFeed: number): number {
   return reach * 28 + Math.min(inFeed, 24) * 5 + (stats.verified ? 3 : 0);
 }
 
-function lastWithBuzz(last: LastHit | null, handle: string): InfluenceRow["lastPost"] {
+function lastWithBuzz(last: LastHit | null, handle: string, inApp: boolean): InfluenceRow["lastPost"] {
   if (!last) return null;
-  return { id: last.id, title: last.title, publishedAt: last.publishedAt, ...(buzzFor(handle) ?? {}) };
+  return {
+    id: last.id,
+    href: lastPostHref(handle, last.id, inApp),
+    title: last.title,
+    publishedAt: last.publishedAt,
+    ...(buzzFor(handle) ?? {}),
+  };
 }
 
 function recencySort(a: InfluenceRow, b: InfluenceRow): number {
@@ -252,7 +259,9 @@ function buildRows(
   const base = profilesFor(section).map((p) => {
     const key = norm(p.handle).toLowerCase();
     const stats = cachedStats(key);
-    const last = preferNewerLast(lastMap.get(key) ?? null, fromStore.get(key) ?? null);
+    const fromFeed = lastMap.get(key) ?? null;
+    const last = preferNewerLast(fromFeed, fromStore.get(key) ?? null);
+    const inApp = Boolean(fromFeed && last && fromFeed.id === last.id);
     const recentCount =
       last && Date.parse(last.publishedAt) >= since ? last.count : last ? Math.min(last.count, 1) : 0;
     return {
@@ -260,7 +269,7 @@ function buildRows(
       name: p.name,
       group: p.group,
       ...stats,
-      lastPost: lastWithBuzz(last, p.handle),
+      lastPost: lastWithBuzz(last, p.handle, inApp),
       inFeed: recentCount,
       articles: last?.count ?? 0,
       longform: 0,
@@ -278,7 +287,9 @@ function buildRows(
     const key = norm(w.handle).toLowerCase();
     if (!key || seen.has(key)) continue;
     const stats = cachedStats(key);
-    const last = preferNewerLast(lastMap.get(key) ?? null, fromStore.get(key) ?? null);
+    const fromFeed = lastMap.get(key) ?? null;
+    const last = preferNewerLast(fromFeed, fromStore.get(key) ?? null);
+    const inApp = Boolean(fromFeed && last && fromFeed.id === last.id);
     extras.push({
       handle: w.handle,
       name: w.name || w.handle,
@@ -289,7 +300,7 @@ function buildRows(
       verified: false,
       avatar: stats.avatar || w.avatar,
       bio: stats.bio || w.summary || null,
-      lastPost: lastWithBuzz(last, w.handle),
+      lastPost: lastWithBuzz(last, w.handle, inApp),
       inFeed: last?.count ?? 0,
       articles: last?.count ?? 0,
       longform: 0,
@@ -320,12 +331,6 @@ export async function enrichFontes(section: Category): Promise<InfluenceRow[]> {
     await mapPool(missing.slice(0, 8), 6, (p) => fetchOne(p.handle));
   }
   let rows = await loadFontesFast(section);
-  const missingLast = rows.filter((r) => !r.lastPost).map((r) => r.handle);
-  if (missingLast.length) {
-    await fillMissingLastPosts(missingLast);
-    lastCache.delete(section);
-    rows = await loadFontesFast(section);
-  }
   const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle)).slice(0, 20);
   if (needBuzz.length) {
     await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle));

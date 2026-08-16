@@ -1,4 +1,5 @@
 import type { InfluenceRow } from "./influence";
+import { lastPostHref } from "./last-post";
 
 const KEY = "agora-extra-fontes-v1";
 
@@ -152,7 +153,9 @@ export function extraFonteToRow(e: ExtraFonte): InfluenceRow {
     verified: e.verified,
     avatar: e.avatar,
     bio: e.summary || null,
-    lastPost: e.lastPost,
+    lastPost: e.lastPost
+      ? { ...e.lastPost, href: lastPostHref(e.handle, e.lastPost.id, false) }
+      : null,
     inFeed: 0,
     articles: 0,
     longform: 0,

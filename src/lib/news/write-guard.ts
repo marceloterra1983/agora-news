@@ -18,12 +18,10 @@ export function requestWriteAllowed(kind: WriteKind, request: Request): boolean 
 
   const secret = cronSecret();
   const auth = request.headers.get("authorization") || "";
-  if (secret) return auth === `Bearer ${secret}`;
-  if (isVercelCron || site === "same-origin") return true;
-  return !site || site === "none";
+  return Boolean(secret) && auth === `Bearer ${secret}`;
 }
 
 export function denyWrite(kind: WriteKind): Response {
-  const status = kind === "ingest" && cronSecret() ? 401 : 403;
+  const status = kind === "ingest" ? 401 : 403;
   return Response.json({ ok: false, error: "forbidden" }, { status });
 }
