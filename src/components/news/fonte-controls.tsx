@@ -1,6 +1,7 @@
 import { Bell, BellOff, Layers, Power, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { addCustomGroup, allGroupIds, groupLabel, groupPip, onCustomGroups } from "@/lib/news/groups";
+import { addCustomGroup, allGroupIds, groupLabel, groupPip, onCustomGroups, removeCustomGroup } from "@/lib/news/groups";
+import { GROUP_ORDER } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
 
@@ -14,6 +15,7 @@ export function FonteControls({
   onToggleDisabled,
   onToggleNotify,
   onSetGroup,
+  onResetGroup,
 }: {
   handle: string;
   starred: boolean;
@@ -24,6 +26,7 @@ export function FonteControls({
   onToggleDisabled: (handle: string) => void;
   onToggleNotify: (handle: string) => void;
   onSetGroup: (handle: string, group: string) => void;
+  onResetGroup?: (handle: string) => void;
 }) {
   const starLabel = starred ? "Remover dos favoritos" : "Marcar como favorito";
   const notifyLabel = notify ? "Desligar aviso deste perfil" : "Ativar aviso deste perfil";
@@ -156,6 +159,36 @@ export function FonteControls({
                 </li>
               );
             })}
+            {onResetGroup ? (
+              <li className="border-t border-line">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onResetGroup(handle);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center px-3 py-2 text-left text-[13px] font-medium text-ink-soft hover:bg-paper-2 hover:text-ink"
+                >
+                  Grupo padrão
+                </button>
+              </li>
+            ) : null}
+            {group && !(GROUP_ORDER as readonly string[]).includes(group) ? (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    removeCustomGroup(group);
+                    onResetGroup?.(handle);
+                    setOpen(false);
+                    setIds(allGroupIds());
+                  }}
+                  className="flex w-full items-center px-3 py-2 text-left text-[13px] font-medium text-ink-soft hover:bg-paper-2 hover:text-ink"
+                >
+                  Apagar grupo
+                </button>
+              </li>
+            ) : null}
             <li className="border-t border-line">
               {creating ? (
                 <form onSubmit={create} className="px-2 py-1.5">

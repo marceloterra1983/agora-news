@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
 import { downloadPostById } from "./supabase";
 import { hydrateStory } from "./story-hydrate";
+import { persistHydratedBody } from "./story-persist";
 import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
@@ -82,5 +83,9 @@ export const loadStory = createServerFn({ method: "GET" })
     const full = await downloadPostById(id);
     const base = full ?? peekStory(id);
     if (!base) return null;
-    return hydrateStory(base);
+    const hydrated = await hydrateStory(base);
+    if (hydrated.body && hydrated.body !== (base.body || "").trim()) {
+      void persistHydratedBody(base, hydrated.body);
+    }
+    return hydrated;
   });

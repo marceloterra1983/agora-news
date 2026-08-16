@@ -124,7 +124,7 @@ export function ProfileRow({
             <p className="text-[12px] font-medium text-mute">{groupLabel(row.group)}</p>
           )}
           <p className={cn("text-[13px] leading-relaxed text-ink-soft", !hideGroup && row.group !== "novos" && "mt-1")}>
-            {row.group === "novos" && row.bio ? row.bio : blurbFor(row.handle, row.name)}
+            {row.bio || blurbFor(row.handle, row.name)}
           </p>
           <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
             {row.followers ? <span>{formatCount(row.followers)} seguidores</span> : null}
@@ -177,6 +177,7 @@ export function ProfileRow({
               onToggleDisabled={prefs.toggleDisabled}
               onToggleNotify={onToggleNotify}
               onSetGroup={prefs.setGroup}
+              onResetGroup={prefs.clearGroup}
             />
           </div>
         </div>

@@ -80,7 +80,7 @@ test("last posts persist in posts category x-last when x_profiles is absent", ()
 });
 
 test("Fontes feed last-map merges x-last and does not stop at 120 rows", () => {
-  const src = read("src/lib/news/influence.ts");
+  const src = read("src/lib/news/fontes-last.ts");
   assert.match(src, /listXLastPosts/);
   assert.match(src, /"1000"/);
 });

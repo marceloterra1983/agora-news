@@ -135,6 +135,15 @@ export function setGroupOverrides(map: Record<string, string>): void {
   window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key: GROUP_KEY } }));
 }
 
+export function clearGroupOverride(handle: string): void {
+  if (typeof window === "undefined") return;
+  const h = normHandle(handle);
+  if (!h) return;
+  const next = { ...getGroupOverrides() };
+  delete next[h];
+  setGroupOverrides(next);
+}
+
 export function setGroupOverride(handle: string, group: string): void {
   if (typeof window === "undefined") return;
   const h = normHandle(handle);

@@ -15,6 +15,7 @@ export const SUPABASE_ANON_KEY =
 export const SUPABASE_POSTS_URL = `${SUPABASE_URL}/rest/v1/posts`;
 
 import { PAGE_SIZE } from "./page-size.mjs";
+import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { normalizeSection, type Category, type Story } from "./types";
 import { CACHE_KEYS, cacheDel, cacheGetJson, cacheSetJson, invalidateNewsCache } from "./cache";
 
@@ -35,7 +36,7 @@ type DbPost = {
 
 /** Lista do feed: sem content/translation pesados — só o que a card precisa. */
 const LIST_SELECT =
-  "post_id,account,posted_at,summary_pt,post_url,media_label,image_url,category,batch_name";
+  "post_id,account,posted_at,summary_pt,translation_pt,post_url,media_label,image_url,category,batch_name";
 const FULL_SELECT =
   "post_id,account,posted_at,posted_at_sp,content,translation_pt,summary_pt,post_url,media_label,image_url,category,batch_name";
 
@@ -124,6 +125,20 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
         ? `https://x.com/${source}/status/${id}`
         : "";
   const image = p.image_url && p.image_url.startsWith("http") ? p.image_url : null;
+  const packed = unpackMediaLabel(p.media_label);
+  const meta = packed.meta as {
+    quoted?: Story["quoted"];
+    replyTo?: Story["replyTo"];
+    card?: Story["card"];
+    xArticle?: Story["xArticle"];
+    assets?: Story["assets"];
+  } | null;
+  const assets =
+    meta?.assets?.length
+      ? meta.assets
+      : image
+        ? [{ type: "photo" as const, url: image }]
+        : [];
   return {
     id: id || `${source}-${p.posted_at}`,
     title: title.slice(0, 280),
@@ -132,12 +147,16 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
     original,
     url,
     image,
-    assets: image ? [{ type: "photo" as const, url: image }] : [],
+    assets,
+    quoted: meta?.quoted ?? null,
+    replyTo: meta?.replyTo ?? null,
+    card: meta?.card ?? null,
+    xArticle: meta?.xArticle ?? null,
     publishedAt: p.posted_at || new Date().toISOString(),
     source,
     sourceLabel,
     category: normalizeSection(p.category || fallbackCategory),
-    media: p.media_label || (image ? "Foto" : "Nenhuma"),
+    media: packed.label || (image ? "Foto" : "Nenhuma"),
     batch: p.batch_name || "supabase",
   };
 }

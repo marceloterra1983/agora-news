@@ -6,6 +6,7 @@ import {
   getStarred,
   normHandle,
   setDisabled as persistDisabled,
+  clearGroupOverride as persistClearGroup,
   setGroupOverride as persistGroup,
   setNotifyHandle as persistNotify,
   setStarred as persistStarred,
@@ -53,6 +54,10 @@ export function useFontesPrefs() {
     groupOf: (h: string) => groups[normHandle(h)] ?? null,
     setGroup: (h: string, group: string) => {
       persistGroup(h, group);
+      refresh();
+    },
+    clearGroup: (h: string) => {
+      persistClearGroup(h);
       refresh();
     },
     toggleStar: (h: string) => {

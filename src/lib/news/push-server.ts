@@ -155,6 +155,25 @@ export async function deletePushSub(endpoint: string): Promise<boolean> {
   return tableOk || legacy;
 }
 
+/** Só o próprio usuário: { saved, handles } — sem endpoint nem a tabela. */
+export async function getPushForUser(userId: string): Promise<{ saved: boolean; handles: string[] }> {
+  const uid = String(userId || "").trim();
+  if (!uid) return { saved: false, handles: [] };
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${encodeURIComponent(uid)}&select=handles&limit=8`,
+      { headers: adminHeaders(), signal: AbortSignal.timeout(5_000) },
+    );
+    if (!res.ok) return { saved: false, handles: [] };
+    const rows = (await res.json()) as Array<{ handles?: string[] }>;
+    if (!Array.isArray(rows) || !rows.length) return { saved: false, handles: [] };
+    const handles = [...new Set(rows.flatMap((r) => (Array.isArray(r.handles) ? r.handles.map(String) : [])))];
+    return { saved: true, handles };
+  } catch {
+    return { saved: false, handles: [] };
+  }
+}
+
 export async function savePushSub(sub: PushSub): Promise<boolean> {
   const id = subId(sub.endpoint);
   const tableOk = await upsertPushTable(id, sub);
