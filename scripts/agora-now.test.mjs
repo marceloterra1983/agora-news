@@ -19,6 +19,9 @@ test("PAGE_SIZE is 40 and the feed/list/hasMore share it", () => {
   assert.match(read("src/lib/news/supabase.ts"), /PAGE_SIZE/);
   assert.doesNotMatch(read("src/lib/news/feed.ts"), /FIRST_LIMIT\s*=\s*24/);
   assert.doesNotMatch(read("src/lib/news/server-news.ts"), />= 40/);
+  const feed = read("src/components/news/feed.tsx");
+  assert.match(feed, /aria-label="Carregar mais"/);
+  assert.doesNotMatch(feed, /Tip label="Carregar mais"/);
 });
 
 test("watch extras without a matching section stay out of IA", () => {

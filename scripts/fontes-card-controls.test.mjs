@@ -20,3 +20,19 @@ test("FonteControls render only inside the open Fontes card, next to X", () => {
     "X should sit left of the three controls in the open card footer",
   );
 });
+
+test("closed last post is a link outside the leftover expand button", () => {
+  const header = src.slice(0, src.indexOf("{open ?"));
+  const btnStart = header.indexOf("<button");
+  const btnEnd = header.indexOf("</button>");
+  assert.ok(btnStart >= 0 && btnEnd > btnStart, "closed row still has an expand button");
+  const button = header.slice(btnStart, btnEnd);
+  assert.match(button, /aria-expanded=\{open\}/);
+  assert.match(button, /ml-auto/);
+  assert.doesNotMatch(button, /displayTitle\(row\.lastPost/);
+  assert.doesNotMatch(button, /lastPost\?\.title/);
+  const after = header.slice(btnEnd);
+  assert.match(after, /<a\b/);
+  assert.match(after, /lastHref/);
+  assert.match(after, /data-testid=["']fonte-last-post["']/);
+});

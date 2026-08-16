@@ -22,6 +22,7 @@ test("extracted page modules stay under 200 lines", () => {
     "src/components/news/x-profile-card.tsx",
     "src/components/news/fontes-chip.tsx",
     "src/components/news/fontes-profile-row.tsx",
+    "src/components/news/fontes-closed-post.tsx",
     "src/components/news/fontes-profile-er.tsx",
     "src/components/news/fontes-batch-bar.tsx",
     "src/lib/news/groups.ts",

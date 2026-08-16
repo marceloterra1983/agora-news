@@ -1,10 +1,10 @@
-import { BadgeCheck, CheckSquare, ChevronDown, Eye, MessageCircle, Percent, Square } from "lucide-react";
+import { BadgeCheck, CheckSquare, ChevronDown, Square } from "lucide-react";
 import { FonteControls, FonteDisabledBadge } from "@/components/news/fonte-controls";
+import { ClosedPostMeta } from "@/components/news/fontes-closed-post";
 import { ProfileEr } from "@/components/news/fontes-profile-er";
 import { GroupTag } from "@/components/news/group-tag";
 import { Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
-import { formatPostEr, formatPostQuality, formatPostReach } from "@/lib/news/fonte-metrics";
 import { displayTitle, formatCount, relativeTime } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { groupLabel } from "@/lib/news/groups";
@@ -79,44 +79,39 @@ export function ProfileRow({
               ) : null}
               <FonteDisabledBadge show={pausedRow} />
               <ChevronDown
+                aria-hidden
                 className={cn(
-                  "size-3 shrink-0 text-mute transition-transform",
+                  "ml-auto size-3.5 shrink-0 text-mute transition-transform",
                   open && "rotate-180",
                 )}
               />
             </span>
-            {row.lastPost?.title ? (
-              <span className="mt-0.5 block truncate text-[11px] leading-snug text-mute">
-                {displayTitle(row.lastPost.title)}
-              </span>
-            ) : null}
-            <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-mute">
-              {row.lastPost ? (
-                <>
-                  <time dateTime={row.lastPost.publishedAt} suppressHydrationWarning className="shrink-0 tabular-nums">
-                    {relativeTime(row.lastPost.publishedAt)}
-                  </time>
-                  {[
-                    { key: "er", label: "Engajamento", value: formatPostEr(row.lastPost, row.er), Icon: Percent },
-                    { key: "alc", label: "Alcance", value: formatPostReach(row.lastPost, row.followers), Icon: Eye },
-                    { key: "ql", label: "Qualidade", value: formatPostQuality(row.lastPost), Icon: MessageCircle },
-                  ]
-                    .filter((m) => m.value)
-                    .map((m) => (
-                      <Tip key={m.key} label={`${m.label} ${m.value}`}>
-                        <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
-                          <m.Icon className="size-3" aria-hidden />
-                          <span className="sr-only">{m.label} </span>
-                          {m.value}
-                        </span>
-                      </Tip>
-                    ))}
-                </>
-              ) : null}
-            </span>
           </span>
         </button>
       </div>
+      {!open && row.lastPost ? (
+        lastHref ? (
+          <a
+            data-testid="fonte-last-post"
+            href={lastHref}
+            target={lastHref.startsWith("http") ? "_blank" : undefined}
+            rel={lastHref.startsWith("http") ? "noreferrer" : undefined}
+            className="-mt-0.5 mb-2 ml-7 mr-0.5 block text-mute hover:text-ink"
+          >
+            <span className="block truncate text-[11px] leading-snug">
+              {displayTitle(row.lastPost.title)}
+            </span>
+            <ClosedPostMeta row={row} />
+          </a>
+        ) : (
+          <div data-testid="fonte-last-post" className="-mt-0.5 mb-2 ml-7 mr-0.5 text-mute">
+            <span className="block truncate text-[11px] leading-snug">
+              {displayTitle(row.lastPost.title)}
+            </span>
+            <ClosedPostMeta row={row} />
+          </div>
+        )
+      ) : null}
 
       {open ? (
         <div className="mb-2.5 ml-7 mr-0.5 rounded-md bg-paper-2 px-3 py-2.5">
