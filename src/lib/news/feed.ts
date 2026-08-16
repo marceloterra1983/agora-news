@@ -1,6 +1,9 @@
 import fallbackCsv from "./agora-feed.csv?raw";
 import { mergeStories, storiesFromCsv } from "./csv";
+import { profilesFor } from "./profiles";
+import { catalogFor, filterStoriesForCatalog, type SectionCatalog } from "./section-catalog.mjs";
 import { getSection, mergeSectionList } from "./sections";
+import { serverCatalogFor } from "./server-catalog";
 import { downloadSupabase } from "./supabase";
 import { loadXStories } from "./x-search";
 import { invalidateNewsCache } from "./cache";
@@ -61,12 +64,16 @@ export function filterStories(
   stories: Story[],
   category: Category,
   q?: string,
+  catalog?: SectionCatalog,
 ): Story[] {
   const section = normalizeSection(category);
-  const base = stories.filter((s) => normalizeSection(s.category) === section);
+  const scoped = filterStoriesForCatalog(
+    stories.filter((s) => normalizeSection(s.category) === section),
+    catalog ?? catalogFor(section, { profiles: profilesFor(section) }),
+  );
   const needle = q?.trim().toLowerCase();
-  if (!needle) return base;
-  return base.filter(
+  if (!needle) return scoped;
+  return scoped.filter(
     (s) =>
       s.title.toLowerCase().includes(needle) ||
       s.excerpt.toLowerCase().includes(needle) ||
@@ -82,7 +89,7 @@ export function listFallbackStories(): Story[] {
 
 export function fallbackPayload(category: Category = DEFAULT_SECTION): FeedPayload {
   const section = getSection(category);
-  const stories = fallbackStories.filter((s) => normalizeSection(s.category) === section.slug);
+  const stories = filterStories(fallbackStories, section.slug);
   return wrap(stories, false, `NEWS/${section.folderName}`, "2026-08-14T00:06:00.000Z", "copia");
 }
 
@@ -137,6 +144,7 @@ function startJob(slug: Category, fromX: boolean, jobKey: string): Promise<FeedP
 
 async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayload> {
   const section = getSection(category);
+  const catalog = await serverCatalogFor(section.slug);
   const previous = lastGood.get(section.slug);
   let remote: Story[] = [];
   let x: Awaited<ReturnType<typeof loadXStories>> = {
@@ -145,7 +153,7 @@ async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayl
     available: false,
   };
   try {
-    const remoteJob = downloadSupabase(section.slug, { limit: FIRST_LIMIT });
+    const remoteJob = downloadSupabase(section.slug, { limit: FIRST_LIMIT, accounts: catalog.handles });
     const xJob = fromX
       ? loadXStories(section.slug, true)
       : Promise.resolve<Awaited<ReturnType<typeof loadXStories>>>({
@@ -183,7 +191,7 @@ async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayl
     return fallback;
   }
 
-  const stories = mergeStories(remote, x.stories);
+  const stories = filterStories(mergeStories(remote, x.stories), section.slug, undefined, catalog);
   const payload = wrap(
     stories,
     true,

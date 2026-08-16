@@ -1,8 +1,9 @@
 import { PAGE_SIZE } from "./page-size.mjs";
 import { rotateFrom } from "./ingest-scan-core.mjs";
-import { profilesFor } from "./profiles";
+import { allProfiles, profilesFor } from "./profiles";
+import { sectionOfHandle } from "./section-catalog.mjs";
 import { listKnownSections } from "./sections";
-import { listWatchAccounts } from "./watch";
+import { listWatchAccounts, type WatchAccount } from "./watch";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson } from "./cache";
 
@@ -25,11 +26,16 @@ function take(list: string[], room: number): string[] {
 }
 
 /** Prefixo rotativo: a cauda do catálogo entra no próximo cron. */
-export async function handlesToScan(limit: number): Promise<{ catalog: string[]; extra: string[] }> {
+export async function handlesToScan(
+  limit: number,
+): Promise<{ catalog: string[]; extra: string[]; watch: WatchAccount[] }> {
   const catalog = listKnownSections().flatMap((s) =>
     profilesFor(s).map((p) => p.handle.replace(/^@/, "")),
   );
-  const extra = (await listWatchAccounts()).map((w) => w.handle.replace(/^@/, ""));
+  const watch = await listWatchAccounts();
+  const extra = watch
+    .map((w) => w.handle.replace(/^@/, ""))
+    .filter((handle) => sectionOfHandle(handle, { profiles: allProfiles(), extras: watch }));
   const extras = take(extra, Math.min(16, limit));
   const cursor = Number((await cacheGetJson<number>(CACHE_KEYS.scanCursor)) || 0);
   const { start, rotated } = rotateFrom(catalog, cursor);
@@ -40,7 +46,7 @@ export async function handlesToScan(limit: number): Promise<{ catalog: string[];
   if (catalog.length) {
     void cacheSetJson(CACHE_KEYS.scanCursor, (start + mains.length) % catalog.length, 86_400);
   }
-  return { catalog: mains, extra: extras };
+  return { catalog: mains, extra: extras, watch };
 }
 
 /** Newest por seção — Tech/Brasil entram no skip de 10 min. */

@@ -2,9 +2,9 @@ import { keepLastPost } from "./last-post";
 import { persistLastPost } from "./last-post-store";
 import { fillCatalogGaps } from "./last-post-store";
 import { allProfiles, blurbFor, profileByHandle } from "./profiles";
+import { sectionOfHandle } from "./section-catalog.mjs";
 import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
-import { listWatchAccounts } from "./watch";
 import { invalidateFeedCache } from "./feed";
 import { persistBuzzCache } from "./fonte-buzz-store";
 import { enrichFontesCatalog, invalidateFontesLastCache } from "./influence";
@@ -50,7 +50,8 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
   const locked = await acquireLock();
   if (!locked) return { ok: true, skipped: true, reason: "locked" as const };
 
-  const { catalog, extra } = await handlesToScan(opts?.limitHandles ?? 64);
+  const { catalog, extra, watch } = await handlesToScan(opts?.limitHandles ?? 64);
+  const catalogInput = { profiles: allProfiles(), extras: watch };
   const newest = await latestByAccount();
   const now = Date.now();
   const extraSet = new Set(extra.map((h) => h.toLowerCase()));
@@ -92,7 +93,8 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
       return true;
     })
     .sort((a, b) => Date.parse(postedIso(b.status)) - Date.parse(postedIso(a.status)))
-    .slice(0, MAX_INSERT);
+    .slice(0, MAX_INSERT)
+    .filter((c) => sectionOfHandle(c.handle, catalogInput));
 
   let gtxFail = 0;
   const built = await mapPool(fresh, 8, async ({ handle, status }) => {
@@ -150,7 +152,7 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
       post_url: status.url || `https://x.com/${handle}/status/${status.id}`,
       media_label: packMediaLabel(media, embedMeta),
       image_url: photo,
-      category: profileByHandle(handle)?.section || "ai",
+      category: sectionOfHandle(handle, catalogInput),
       batch_name: batch,
       source: "x",
     };
@@ -245,7 +247,7 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
 
   const lastFilled = await fillCatalogGaps([
     ...allProfiles().map((p) => p.handle),
-    ...(await listWatchAccounts()).map((w) => w.handle),
+    ...watch.map((w) => w.handle),
   ]);
   if (lastFilled) invalidateFontesLastCache();
 

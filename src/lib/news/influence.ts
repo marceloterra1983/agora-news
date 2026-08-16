@@ -6,7 +6,7 @@ import { mapPool } from "./map-pool";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listKnownSections } from "./sections";
-import { extrasForSection } from "./watch-section.mjs";
+import { catalogFor } from "./section-catalog.mjs";
 import { listWatchAccounts } from "./watch";
 import type { Category } from "./types";
 
@@ -166,7 +166,8 @@ function buildRows(
 ): InfluenceRow[] {
   const since = Date.now() - 48 * 60 * 60_000;
   const fromStore = storedLastMap(stored);
-  const base = profilesFor(section).map((p) => {
+  const catalog = catalogFor(section, { profiles: profilesFor(section), extras: watch });
+  const base = catalog.profiles.map((p) => {
     const key = norm(p.handle).toLowerCase();
     const stats = cachedStats(key);
     const fromFeed = feedMap.get(key) ?? null;
@@ -195,7 +196,7 @@ function buildRows(
 
   const seen = new Set(base.map((r) => norm(r.handle).toLowerCase()));
   const extras: InfluenceRow[] = [];
-  for (const w of extrasForSection(watch, section)) {
+  for (const w of catalog.extras as typeof watch) {
     const key = norm(w.handle).toLowerCase();
     if (!key || seen.has(key)) continue;
     const stats = cachedStats(key);
