@@ -69,6 +69,12 @@ export function longDate(iso: string): string {
   });
 }
 
+export function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1).replace(".", ",")} mi`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1).replace(".", ",")} mil`;
+  return String(n);
+}
+
 export function displayTitle(title: string): string {
   const clean = title
     .replace(/\s*\((?:com\s+)?imagem\s+diferente\)\.?\s*$/i, "")
