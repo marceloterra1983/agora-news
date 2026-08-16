@@ -94,3 +94,11 @@ test("reader card has avatar, word ellipsis and no-referrer on the header face",
   assert.match(article, /referrerPolicy=["']no-referrer["']/);
   assert.match(read("src/lib/news/format.ts"), /clipAtWord/);
 });
+
+test("unread mark is the left stripe only, without a Novo chip", () => {
+  const card = read("src/components/news/story-card.tsx");
+  assert.match(card, /data-unread-mark=""/);
+  assert.match(card, /absolute bottom-6 left-0 top-6 w-0\.5 rounded-full bg-mark/);
+  assert.doesNotMatch(card, />\s*Novo\s*</);
+  assert.doesNotMatch(card, /text-mark-fg/);
+});
