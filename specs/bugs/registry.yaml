@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-16T094800
+    date: 2026-08-16
+    severity: high
+    priority: p0
+    scope: prod-ssr
+    summary: Site público 500 após HMR de migrations deletadas no vite dev
+    file: specs/bugs/BUG-2026-08-16-prod-500.md
   - bug_id: BUG-2026-08-16T023400
     date: 2026-08-16
     severity: medium

@@ -133,20 +133,28 @@ async function createPgliteSql(): Promise<Sql> {
   // reload after adding a migration file applies it live — with passes
   // serialized on a global chain so concurrent callers never double-apply.
   const migrate = async (): Promise<void> => {
-    const migrations = import.meta.glob("/migrations/*.sql", {
+    // Lazy glob: an eager load pins deleted files in the Vite module graph and
+    // 500s every SSR request (news.automatizems.com / vite dev via PM2).
+    const loaders = import.meta.glob("/migrations/*.sql", {
       query: "?raw",
       import: "default",
-      eager: true,
-    }) as Record<string, string>;
+    }) as Record<string, () => Promise<string>>;
     const doneRows = await pg.query<{ name: string }>(
       "select name from _migrations",
     );
     const done = new Set(doneRows.rows.map((r) => r.name));
-    for (const [path, text] of Object.entries(migrations).sort(([a], [b]) =>
+    for (const [path, load] of Object.entries(loaders).sort(([a], [b]) =>
       a.localeCompare(b),
     )) {
       const name = path.split("/").pop() as string;
       if (done.has(name)) continue;
+      let text: string;
+      try {
+        text = await load();
+      } catch (err) {
+        console.error("[db] skip missing migration", name, err);
+        continue;
+      }
       // Apply + record atomically (parity with scripts/migrate.mjs) so a failed
       // statement can't leave a file half-applied but untracked.
       await pg.transaction(async (tx) => {

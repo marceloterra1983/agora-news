@@ -1,7 +1,7 @@
 active_flow: build_epic
 active_epic_id: e03
 active_story_id: e03s01
-active_bug_id: null
+active_bug_id: BUG-2026-08-16T094800
 release:
   target_version: null
   last_tag: null
@@ -17,10 +17,10 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase]
 git:
-  branch: feat/fix-section-nav
-  hash: c46df86
+  branch: fix/vite-glob-missing-migration
+  hash: pending
 handoff:
-  last_step_completed: "fix section nav stay-on-page + last-secao"
+  last_step_completed: "lazy PGLite migration glob so deleted SQL cannot 500 SSR"
   open_decisions:
     - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
     - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
