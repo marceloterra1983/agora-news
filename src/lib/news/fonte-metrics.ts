@@ -123,7 +123,7 @@ export function formatPostEr(
   return formatRate(Number(post?.er) || 0);
 }
 
-/** Views ÷ seguidores. Só no card se o alcance for outlier (≥25% dos seguidores). */
+/** Views ÷ seguidores. Só no card se o alcance for outlier (≥75% dos seguidores). */
 export function formatPostReach(
   post: { views?: number } | null | undefined,
   followers?: number,

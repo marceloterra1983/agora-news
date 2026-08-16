@@ -6,7 +6,7 @@
 
 export const OUTLIER = {
   er: { floorPct: 3, vsProfile: 2 },
-  reach: { minViews: 200, minFollowers: 100, floorRatio: 0.25 },
+  reach: { minViews: 200, minFollowers: 100, floorRatio: 0.75 },
   quality: { minLikes: 20, floorPct: 25 },
 };
 
