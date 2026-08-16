@@ -9,8 +9,9 @@ const src = readFileSync(
   "utf8",
 );
 
-test("closed Fontes row keeps star/bell/power; open card moves them next to X", () => {
-  assert.match(src, /\{!open \?[\s\S]*<FonteControls[\s\S]*: null\}/);
+test("FonteControls render only inside the open Fontes card, next to X", () => {
+  const header = src.slice(0, src.indexOf("{open ?"));
+  assert.doesNotMatch(header, /<FonteControls/);
   const card = src.slice(src.indexOf("{open ?"));
   assert.match(card, /<FonteControls/);
   assert.match(card, /<XLogo/);

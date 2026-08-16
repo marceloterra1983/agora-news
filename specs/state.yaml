@@ -17,10 +17,10 @@ project_cycle:
   current_phase: execute
   completed_steps: [survey-context, map-codebase]
 git:
-  branch: fix/fontes-controls-in-card
+  branch: fix/fontes-controls-footer-only
   hash: pending
 handoff:
-  last_step_completed: "move Fontes star/bell/power into open profile card footer"
+  last_step_completed: "Fontes star/bell/power only in open card footer"
   open_decisions:
     - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
     - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
