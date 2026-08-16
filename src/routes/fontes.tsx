@@ -41,18 +41,17 @@ export const Route = createFileRoute("/fontes")({
 function FontesPage() {
   const { secao } = Route.useSearch();
   const initial = Route.useLoaderData();
-  const prefs = useFontesPrefs();
+  const prefs = useFontesPrefs(secao);
   const [openHandle, setOpenHandle] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortKey>("recent");
+  const [sort, setSort] = useState<SortKey>(readStoredSort);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const [extras, setExtras] = useState<ReturnType<typeof loadExtraFontes>>([]);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
-  const [groupIds, setGroupIds] = useState<string[]>(() => allGroupIds());
+  const [groupIds, setGroupIds] = useState<string[]>(() => allGroupIds(secao));
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    setSort(readStoredSort());
     const refresh = () => setExtras(loadExtraFontes());
     refresh();
     syncExtraFontes();
@@ -60,7 +59,13 @@ function FontesPage() {
     return () => window.removeEventListener("agora-extra-fontes", refresh);
   }, []);
 
-  useEffect(() => onCustomGroups(() => setGroupIds(allGroupIds())), []);
+  useEffect(() => {
+    setGroupIds(allGroupIds(secao));
+    setOpenHandle(null);
+    setPicked(new Set());
+    setPicking(false);
+    return onCustomGroups(() => setGroupIds(allGroupIds(secao)));
+  }, [secao]);
 
   function changeSort(next: SortKey) {
     setSort(next);
@@ -86,11 +91,11 @@ function FontesPage() {
     () =>
       sortFontesRows(withExtras, sort, prefs.starred).map((r) => ({
         ...r,
-        group: prefs.groupOf(r.handle) ?? groupOf(r.handle),
+        group: prefs.groupOf(r.handle) ?? groupOf(r.handle, secao),
       })),
-    [withExtras, prefs.starred, prefs.groups, sort],
+    [withExtras, prefs.starred, prefs.groups, sort, secao],
   );
-  const visible = useMemo(() => filterFontesRows(rows, q), [rows, q]);
+  const visible = useMemo(() => filterFontesRows(rows, q, secao), [rows, q, secao]);
   const grouped = useMemo(() => groupFontesRows(visible, groupIds), [visible, groupIds]);
 
   async function onToggleNotify(handle: string) {

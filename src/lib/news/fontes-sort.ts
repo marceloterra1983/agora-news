@@ -71,10 +71,10 @@ export function mergeExtraFontes(
   return [...added, ...base];
 }
 
-export function filterFontesRows(rows: InfluenceRow[], raw: string): InfluenceRow[] {
+export function filterFontesRows(rows: InfluenceRow[], raw: string, section?: Category): InfluenceRow[] {
   const q = raw.trim();
   if (!q) return rows;
-  const hits = new Set(matchProfiles(q, 80).map((p) => p.handle.toLowerCase()));
+  const hits = new Set(matchProfiles(q, 80, section).map((p) => p.handle.toLowerCase()));
   const needle = q.toLowerCase().replace(/^@+/, "");
   return rows.filter(
     (r) =>

@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppChrome } from "@/components/news/app-chrome";
 import { Feed } from "@/components/news/feed";
 import { loadNews } from "@/lib/news/server";
-import { type ProfileGroup } from "@/lib/news/profiles";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "@/lib/news/types";
 
 type HomeSearch = {
@@ -30,11 +29,11 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { secao, q } = Route.useSearch();
   const initial = Route.useLoaderData();
-  const [group, setGroup] = useState<ProfileGroup | "all">("all");
+  const [group, setGroup] = useState<string>("all");
   return (
     <AppChrome category={secao} query={q} group={group} onGroup={setGroup}>
       <main className="px-4 pb-24">
-        <Feed category={secao} query={q} initial={initial} group={group} onGroupChange={setGroup} />
+        <Feed key={secao} category={secao} query={q} initial={initial} group={group} onGroupChange={setGroup} />
       </main>
     </AppChrome>
   );

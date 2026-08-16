@@ -9,8 +9,10 @@ import {
   sectionNavTarget,
   writeLastSection,
 } from "@/lib/news/section-pref";
-import { GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "@/lib/news/profiles";
+import { GROUP_LABELS, type ProfileGroup } from "@/lib/news/profiles";
 import { groupStyle } from "@/lib/news/group-style";
+import { groupLabel } from "@/lib/news/groups";
+import { useSectionCatalog } from "@/lib/news/use-section-catalog";
 import { cn } from "@/lib/utils";
 import { AppMenu } from "./app-menu";
 import { Tip } from "./icon-btn";
@@ -28,8 +30,8 @@ export function AppChrome({
   category: Category;
   query?: string;
   children: React.ReactNode;
-  group?: ProfileGroup | "all";
-  onGroup?: (g: ProfileGroup | "all") => void;
+  group?: string;
+  onGroup?: (g: string) => void;
   toolbar?: React.ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -78,14 +80,15 @@ function GrokHeader({
   toolbar,
 }: {
   category: Category;
-  group?: ProfileGroup | "all";
-  onGroup?: (g: ProfileGroup | "all") => void;
+  group?: string;
+  onGroup?: (g: string) => void;
   onPickSec: (slug: Category) => void;
   toolbar?: React.ReactNode;
 }) {
   const [secOpen, setSecOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = SECTIONS.find((s) => s.slug === category) ?? SECTIONS[0];
+  const catalog = useSectionCatalog(category);
 
   useEffect(() => {
     if (!secOpen) return;
@@ -108,10 +111,10 @@ function GrokHeader({
     onPickSec(slug);
   }
 
-  function pickGroup(next: ProfileGroup | "all") {
+  function pickGroup(next: string) {
     onGroup?.(next);
     try {
-      sessionStorage.setItem(GROUP_KEY, next);
+      sessionStorage.setItem(`${GROUP_KEY}:${category}`, next);
     } catch {
       /* ignore */
     }
@@ -170,8 +173,9 @@ function GrokHeader({
             >
               Todos
             </button>
-            {GROUP_ORDER.map((id) => {
-              const st = groupStyle(id);
+            {catalog.groupIds.map((id) => {
+              const builtIn = id in GROUP_LABELS;
+              const st = groupStyle((builtIn ? id : "novos") as ProfileGroup);
               const on = group === id;
               return (
                 <button
@@ -184,7 +188,7 @@ function GrokHeader({
                     on ? st.chipOn : st.chip,
                   )}
                 >
-                  {GROUP_LABELS[id]}
+                  {builtIn ? GROUP_LABELS[id as ProfileGroup] : groupLabel(id)}
                 </button>
               );
             })}
@@ -204,8 +208,8 @@ function TabBar({ category }: { category: Category }) {
   const items = [
     { to: "/" as const, label: "Feed", icon: Newspaper, search: { secao: category } },
     { to: "/fontes" as const, label: "Fontes", icon: UserRound, search: { secao: category } },
-    { to: "/buscar" as const, label: "Buscar", icon: Search, search: undefined },
-    { to: "/salvos" as const, label: "Salvos", icon: Bookmark, search: undefined },
+    { to: "/buscar" as const, label: "Buscar", icon: Search, search: { secao: category } },
+    { to: "/salvos" as const, label: "Salvos", icon: Bookmark, search: { secao: category } },
   ];
   return (
     <nav

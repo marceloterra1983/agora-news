@@ -4,18 +4,26 @@ import { BuscarInterests } from "@/components/news/buscar-interests";
 import { Input } from "@/components/ui/input";
 import { loadExtraFontes, syncExtraFontes } from "@/lib/news/extra-fontes";
 import { loadInterests, removeInterest } from "@/lib/news/profile-interests";
+import { profilesFor } from "@/lib/news/profiles";
+import { catalogFor, handleInCatalog } from "@/lib/news/section-catalog.mjs";
 import { searchXUsers } from "@/lib/news/server";
-import { DEFAULT_SECTION } from "@/lib/news/types";
+import { DEFAULT_SECTION, normalizeSection, type Category } from "@/lib/news/types";
 import { useOpenXProfile } from "@/lib/news/use-open-x-profile";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+type BuscarSearch = { secao: Category };
+
 export const Route = createFileRoute("/buscar")({
+  validateSearch: (raw: Record<string, unknown>): BuscarSearch => ({
+    secao: normalizeSection(typeof raw.secao === "string" ? raw.secao : DEFAULT_SECTION),
+  }),
   component: BuscarPage,
 });
 
 function BuscarPage() {
+  const { secao } = Route.useSearch();
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<Awaited<ReturnType<typeof searchXUsers>>["users"]>([]);
   const [searching, setSearching] = useState(false);
@@ -51,11 +59,11 @@ function BuscarPage() {
       try {
         const res = await searchXUsers({ data: { q } });
         if (id !== searchSeq.current) return;
-        const extras = new Set(loadExtraFontes().map((e) => e.handle.toLowerCase()));
+        const catalog = catalogFor(secao, { profiles: profilesFor(secao), extras: loadExtraFontes() });
         setHits(
           res.users.map((u) => ({
             ...u,
-            inFeed: u.inFeed || extras.has(u.handle.toLowerCase()),
+            inFeed: handleInCatalog(u.handle, catalog),
           })),
         );
       } catch {
@@ -66,7 +74,7 @@ function BuscarPage() {
       }
     }, 280);
     return () => window.clearTimeout(t);
-  }, [query]);
+  }, [query, secao]);
 
   function toggleSearch(handle: string) {
     if (profile.isActive("search", handle)) {
@@ -89,7 +97,7 @@ function BuscarPage() {
   const showList = query.replace(/^@+/, "").trim().length >= 2;
 
   return (
-    <AppChrome category={DEFAULT_SECTION}>
+    <AppChrome category={secao}>
       <main className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:px-6">
         <h1 className="sr-only">Buscar</h1>
 
@@ -113,6 +121,7 @@ function BuscarPage() {
 
         {showList ? (
           <BuscarHitList
+            secao={secao}
             hits={hits}
             searching={searching}
             result={profile.result}
@@ -133,6 +142,7 @@ function BuscarPage() {
         ) : null}
 
         <BuscarInterests
+          secao={secao}
           interests={interests}
           result={profile.result}
           summary={profile.summary}

@@ -3,17 +3,19 @@ import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 export const LAST_SECTION_KEY = "agora-last-secao";
 
 export type SectionNav = {
-  to: "/" | "/fontes";
+  to: "/" | "/fontes" | "/buscar" | "/salvos";
   search: { secao: Category };
 };
 
 export function keepsSectionInUrl(pathname: string): boolean {
-  return pathname === "/" || pathname === "/fontes";
+  return pathname === "/" || pathname === "/fontes" || pathname === "/buscar" || pathname === "/salvos";
 }
 
 export function sectionNavTarget(pathname: string, slug: Category): SectionNav | null {
   const secao = normalizeSection(slug);
   if (pathname === "/fontes") return { to: "/fontes", search: { secao } };
+  if (pathname === "/buscar") return { to: "/buscar", search: { secao } };
+  if (pathname === "/salvos") return { to: "/salvos", search: { secao } };
   if (pathname === "/") return { to: "/", search: { secao } };
   return null;
 }

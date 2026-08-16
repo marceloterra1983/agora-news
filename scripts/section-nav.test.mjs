@@ -8,11 +8,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function sectionNavTarget(pathname, slug) {
   if (pathname === "/fontes") return { to: "/fontes", search: { secao: slug } };
+  if (pathname === "/buscar") return { to: "/buscar", search: { secao: slug } };
+  if (pathname === "/salvos") return { to: "/salvos", search: { secao: slug } };
   if (pathname === "/") return { to: "/", search: { secao: slug } };
   return null;
 }
 
-test("sectionNavTarget stays on Fontes and only goes home from home", () => {
+test("sectionNavTarget stays on Fontes, Buscar and Salvos", () => {
   assert.deepEqual(sectionNavTarget("/fontes", "tech"), {
     to: "/fontes",
     search: { secao: "tech" },
@@ -21,8 +23,14 @@ test("sectionNavTarget stays on Fontes and only goes home from home", () => {
     to: "/",
     search: { secao: "brasil" },
   });
-  assert.equal(sectionNavTarget("/buscar", "tech"), null);
-  assert.equal(sectionNavTarget("/salvos", "ai"), null);
+  assert.deepEqual(sectionNavTarget("/buscar", "tech"), {
+    to: "/buscar",
+    search: { secao: "tech" },
+  });
+  assert.deepEqual(sectionNavTarget("/salvos", "ai"), {
+    to: "/salvos",
+    search: { secao: "ai" },
+  });
   assert.equal(sectionNavTarget("/configuracoes", "brasil"), null);
 });
 
@@ -30,6 +38,8 @@ test("section-pref implements the same stay-on-page table", () => {
   const src = readFileSync(join(root, "src/lib/news/section-pref.ts"), "utf8");
   assert.match(src, /LAST_SECTION_KEY = "agora-last-secao"/);
   assert.match(src, /pathname === "\/fontes"/);
+  assert.match(src, /pathname === "\/buscar"/);
+  assert.match(src, /pathname === "\/salvos"/);
   assert.match(src, /pathname === "\/"/);
   assert.match(src, /return null/);
   assert.match(src, /export function readLastSection/);

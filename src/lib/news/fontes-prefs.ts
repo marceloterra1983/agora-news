@@ -1,6 +1,15 @@
 /** Preferências de Fontes — favoritos, pausadas, avisos e grupo por conta. */
 
+import { readGroupOverrides, writeGroupOverrides } from "./section-prefs.mjs";
+import { readLastSection } from "./section-pref";
+import type { Category } from "./types";
+
 const GROUP_KEY = "agora-fontes-groups-v1";
+void GROUP_KEY;
+
+function sectionOf(section?: Category): Category {
+  return section || (typeof window === "undefined" ? "ai" : readLastSection());
+}
 
 const STAR_KEY = "agora-fontes-starred-v1";
 const DISABLED_KEY = "agora-fontes-disabled-v1";
@@ -100,57 +109,36 @@ export function setNotifyHandle(handle: string, on: boolean): void {
   setIn(NOTIFY_KEY, handle, on);
 }
 
-export function getGroupOverrides(): Record<string, string> {
+export function getGroupOverrides(section?: Category): Record<string, string> {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(GROUP_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (!parsed || typeof parsed !== "object") return {};
-    const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      const handle = normHandle(k);
-      if (!handle) continue;
-      if (typeof v === "string" && v.trim()) out[handle] = v.trim();
-    }
-    return out;
-  } catch {
-    return {};
-  }
+  return readGroupOverrides(sectionOf(section));
 }
 
-export function groupOverrideOf(handle: string): string | null {
-  return getGroupOverrides()[normHandle(handle)] ?? null;
+export function groupOverrideOf(handle: string, section?: Category): string | null {
+  return getGroupOverrides(section)[normHandle(handle)] ?? null;
 }
 
-export function setGroupOverrides(map: Record<string, string>): void {
+export function setGroupOverrides(map: Record<string, string>, section?: Category): void {
   if (typeof window === "undefined") return;
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(map || {})) {
-    const handle = normHandle(k);
-    if (!handle || typeof v !== "string" || !v.trim()) continue;
-    out[handle] = v.trim();
-  }
-  window.localStorage.setItem(GROUP_KEY, JSON.stringify(out));
-  window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key: GROUP_KEY } }));
+  writeGroupOverrides(sectionOf(section), map || {});
 }
 
-export function clearGroupOverride(handle: string): void {
+export function clearGroupOverride(handle: string, section?: Category): void {
   if (typeof window === "undefined") return;
   const h = normHandle(handle);
   if (!h) return;
-  const next = { ...getGroupOverrides() };
+  const secao = sectionOf(section);
+  const next = { ...getGroupOverrides(secao) };
   delete next[h];
-  setGroupOverrides(next);
+  setGroupOverrides(next, secao);
 }
 
-export function setGroupOverride(handle: string, group: string): void {
+export function setGroupOverride(handle: string, group: string, section?: Category): void {
   if (typeof window === "undefined") return;
   const h = normHandle(handle);
   if (!h || !group) return;
-  const next = { ...getGroupOverrides(), [h]: group };
-  window.localStorage.setItem(GROUP_KEY, JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key: GROUP_KEY } }));
+  const secao = sectionOf(section);
+  setGroupOverrides({ ...getGroupOverrides(secao), [h]: group }, secao);
 }
 
 export function filterStoriesByPrefs<T extends { source?: string; sourceLabel?: string; account?: string }>(

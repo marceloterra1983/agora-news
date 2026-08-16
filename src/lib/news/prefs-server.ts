@@ -4,6 +4,11 @@ import { cloudKvGet, cloudKvSet } from "./cloud-kv";
 import type { ExtraFonte } from "./extra-fontes";
 import type { CustomGroup } from "./groups";
 
+export type SectionPrefsSlice = {
+  groups?: Record<string, string>;
+  customGroups?: CustomGroup[];
+};
+
 export type CloudPrefs = {
   starred?: string[];
   disabled?: string[];
@@ -13,6 +18,7 @@ export type CloudPrefs = {
   theme?: string;
   groups?: Record<string, string>;
   customGroups?: CustomGroup[];
+  bySection?: Record<string, SectionPrefsSlice>;
 };
 
 export const loadPrefs = createServerFn({ method: "GET" })
