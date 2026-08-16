@@ -16,7 +16,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 test("outlier floors are the documented X baselines", () => {
   assert.equal(OUTLIER.er.floorPct, 3);
   assert.equal(OUTLIER.er.vsProfile, 2);
-  assert.equal(OUTLIER.reach.floorRatio, 0.25);
+  assert.equal(OUTLIER.reach.floorRatio, 0.75);
   assert.equal(OUTLIER.reach.minViews, 200);
   assert.equal(OUTLIER.quality.floorPct, 25);
   assert.equal(OUTLIER.quality.minLikes, 20);
@@ -33,13 +33,16 @@ test("ER 0,35% stays hidden; 3%+ or 2× profileEr shows", () => {
   assert.match(formatPostEr({ er: 3.2 }, 1.2), /3/);
 });
 
-test("reach 4% stays hidden; 25% of followers or 1× shows", () => {
+test("reach 4% and 25% stay hidden; 75%+ of followers or 1× shows", () => {
   assert.equal(isHighPostReach({ views: 400 }, 10_000), false);
-  assert.equal(isHighPostReach({ views: 2_500 }, 10_000), true);
+  assert.equal(isHighPostReach({ views: 2_500 }, 10_000), false);
+  assert.equal(isHighPostReach({ views: 7_500 }, 10_000), true);
   assert.equal(isHighPostReach({ views: 12_000 }, 10_000), true);
   assert.equal(isHighPostReach({ views: 80 }, 10_000), false);
   assert.equal(formatPostReach({ views: 400 }, 10_000), "");
-  assert.match(formatPostReach({ views: 2_500 }, 10_000), /25/);
+  assert.equal(formatPostReach({ views: 2_500 }, 10_000), "");
+  assert.match(formatPostReach({ views: 7_500 }, 10_000), /75/);
+  assert.match(formatPostReach({ views: 12_000 }, 10_000), /×/);
 });
 
 test("quality 16% stays hidden; 25% replies/likes with enough likes shows", () => {
