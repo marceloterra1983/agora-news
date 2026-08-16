@@ -15,7 +15,6 @@ import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
 import { groupOf } from "./group-tag";
 import { StoryCard } from "./story-card";
-import { Tip } from "./icon-btn";
 
 const LAST_FEED = "agora-last-live-v3";
 const GROUP_KEY = "agora-feed-group";
@@ -252,17 +251,15 @@ export function Feed({
 
       {hasMore && rawStories.length >= PAGE ? (
         <div className="flex justify-center py-6">
-          <Tip label="Carregar mais">
-            <button
-              type="button"
-              aria-label="Carregar mais"
-              disabled={loadingMore}
-              onClick={() => void loadMore()}
-              className="grid size-10 place-items-center rounded-full bg-paper-2 text-ink disabled:opacity-40"
-            >
-              <ChevronDown className={cn("size-5", loadingMore && "opacity-50")} />
-            </button>
-          </Tip>
+          <button
+            type="button"
+            aria-label="Carregar mais"
+            disabled={loadingMore}
+            onClick={() => void loadMore()}
+            className="grid size-10 place-items-center rounded-full bg-paper-2 text-ink disabled:opacity-40"
+          >
+            <ChevronDown className={cn("size-5", loadingMore && "opacity-50")} />
+          </button>
         </div>
       ) : null}
     </div>

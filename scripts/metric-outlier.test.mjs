@@ -54,6 +54,6 @@ test("quality 16% stays hidden; 25% replies/likes with enough likes shows", () =
 });
 
 test("Fontes row passes profileEr into formatPostEr", () => {
-  const src = readFileSync(join(root, "src/components/news/fontes-profile-row.tsx"), "utf8");
+  const src = readFileSync(join(root, "src/components/news/fontes-closed-post.tsx"), "utf8");
   assert.match(src, /formatPostEr\(row\.lastPost,\s*row\.er\)/);
 });

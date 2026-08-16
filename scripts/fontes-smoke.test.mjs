@@ -46,6 +46,16 @@ test("Playwright opens /fontes and sees the catalog list", async (t) => {
     assert.ok(n >= 8, `esperava ≥8 fontes, veio ${n}`);
     assert.equal(await page.locator("h1").innerText(), "Fontes");
     assert.ok(await page.getByRole("button", { name: "Recente" }).count());
+    const first = rows.first();
+    const expand = first.locator("button[aria-expanded]").first();
+    const post = first.locator('[data-testid="fonte-last-post"]');
+    if (await post.count()) {
+      const href = await post.getAttribute("href");
+      assert.ok(href && (href.startsWith("/materia/") || href.startsWith("http")), `last post href ${href}`);
+    }
+    await expand.click();
+    assert.equal(await expand.getAttribute("aria-expanded"), "true");
+    assert.ok(await first.getByText("Último post").count());
   } finally {
     await browser.close();
   }

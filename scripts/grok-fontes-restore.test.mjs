@@ -27,7 +27,7 @@ test("open Fontes card keeps star/bell/power/group only in the footer", () => {
   assert.match(open, /onSetGroup/);
   const header = row.slice(0, row.indexOf("{open ?"));
   assert.doesNotMatch(header, /<FonteControls/);
-  assert.match(row, /formatPostEr/);
+  assert.match(read("src/components/news/fontes-closed-post.tsx"), /formatPostEr/);
   assert.match(row, /GroupTag/);
 });
 
