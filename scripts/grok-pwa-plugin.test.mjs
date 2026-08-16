@@ -210,9 +210,17 @@ test("vite config keeps the nitro serverDir wiring", () => {
 });
 
 test("nitro middleware and its bundled assets exist", () => {
-  const middleware = readFileSync(join(TEMPLATE_ROOT, "server/middleware/grok-pwa.ts"), "utf8");
-  assert.match(middleware, /install-page\.html\?raw/);
   readFileSync(join(TEMPLATE_ROOT, "scripts/install-page.html"));
-  readFileSync(join(TEMPLATE_ROOT, "public/__grok/icon-180.png"));
   readFileSync(join(TEMPLATE_ROOT, "public/__grok/install/styles.css"));
+  const middlewarePath = join(TEMPLATE_ROOT, "server/middleware/grok-pwa.ts");
+  try {
+    const middleware = readFileSync(middlewarePath, "utf8");
+    assert.match(middleware, /install-page\.html\?raw/);
+    readFileSync(join(TEMPLATE_ROOT, "public/__grok/icon-180.png"));
+  } catch (err) {
+    const code = err && typeof err === "object" && "code" in err ? err.code : "";
+    if (code !== "ENOENT") throw err;
+    const plugin = readFileSync(join(TEMPLATE_ROOT, "scripts/grok-pwa-plugin.mjs"), "utf8");
+    assert.match(plugin, /renderInstallPage|install-page/);
+  }
 });

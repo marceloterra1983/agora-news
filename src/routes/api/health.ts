@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL, SUPABASE_URL } from "@/lib/news/supabase";
+import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "@/lib/news/supabase";
 import { elapsedMs, nowMs } from "@/lib/news/timing";
 
 type Head = {
@@ -45,37 +45,6 @@ async function probePosts(): Promise<{
   }
 }
 
-async function probeSources(): Promise<{ ok: boolean; ms: number; active: number; error?: string }> {
-  const t0 = nowMs();
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/sources?active=eq.true&select=handle&limit=1`,
-      {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          Accept: "application/json",
-          Prefer: "count=exact",
-        },
-        signal: AbortSignal.timeout(5_000),
-      },
-    );
-    const ms = elapsedMs(t0);
-    if (!res.ok) return { ok: false, ms, active: 0, error: `HTTP ${res.status}` };
-    const range = res.headers.get("content-range") || "";
-    // content-range: 0-0/70
-    const total = Number(range.split("/")[1]) || 0;
-    return { ok: true, ms, active: total };
-  } catch (err) {
-    return {
-      ok: false,
-      ms: elapsedMs(t0),
-      active: 0,
-      error: err instanceof Error ? err.message : "fail",
-    };
-  }
-}
-
 function ageSeconds(iso?: string): number | null {
   if (!iso) return null;
   const t = Date.parse(iso);
@@ -88,10 +57,10 @@ export const Route = createFileRoute("/api/health")({
     handlers: {
       GET: async () => {
         const t0 = nowMs();
-        const [posts, sources] = await Promise.all([probePosts(), probeSources()]);
+        const posts = await probePosts();
         const age = ageSeconds(posts.head?.posted_at);
-        const stale = age != null && age > 2 * 60 * 60; // > 2h
-        const ok = posts.ok && sources.ok && !stale;
+        const stale = age != null && age > 2 * 60 * 60;
+        const ok = posts.ok && !stale;
 
         const body = {
           ok,
@@ -99,11 +68,8 @@ export const Route = createFileRoute("/api/health")({
           totalMs: elapsedMs(t0),
           supabase: {
             postsMs: posts.ms,
-            sourcesMs: sources.ms,
             postsOk: posts.ok,
-            sourcesOk: sources.ok,
-            sourcesActive: sources.active,
-            error: posts.error || sources.error || null,
+            error: posts.error || null,
           },
           head: posts.head
             ? {

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { upsertProfile } from "@/lib/news/admin";
 import { readStoredProfile } from "@/lib/news/profile-store";
+import { denyWrite, requestWriteAllowed } from "@/lib/news/write-guard";
 
 export const Route = createFileRoute("/api/profile")({
   server: {
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/api/profile")({
         });
       },
       POST: async ({ request }) => {
+        if (!requestWriteAllowed("app", request)) return denyWrite("app");
         const body = (await request.json()) as {
           handle?: string;
           name?: string;

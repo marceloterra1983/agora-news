@@ -1,0 +1,38 @@
+active_flow: build_epic
+active_epic_id: e01
+active_story_id: e01s01
+active_bug_id: null
+release:
+  target_version: null
+  last_tag: null
+  last_publish: null
+epic_cycle:
+  current_step: develop-tdd
+  next_skill: verify-work
+  completed_steps: [survey-context, map-codebase, kickoff-branch]
+bug_cycle:
+  current_step: null
+  completed_steps: []
+project_cycle:
+  current_phase: execute
+  completed_steps: [survey-context, map-codebase]
+git:
+  branch: feat/harden-agora
+  hash: 274794e
+handoff:
+  last_step_completed: "e01s01 write-guard + prefs session-bound + hygiene"
+  open_decisions:
+    - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
+    - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
+  required_reading:
+    - specs/tech-architecture/tech-stack.md
+    - src/lib/news/write-guard.ts
+    - src/lib/news/prefs-server.ts
+  next_skill: verify-work
+learned_preferences:
+  - "PT-BR, conciso, dono do repo a partir de 2026-08-16"
+  - "Não rotacionar chaves neste ciclo — fallbacks no source permanecem"
+workspace_facts:
+  - "Feed canônico é Supabase public.posts, não Neon/PGLite"
+  - "Mutações /api/watch|profile|push exigem Sec-Fetch-Site same-origin"
+  - "CRON_SECRET opcional em /api/ingest"

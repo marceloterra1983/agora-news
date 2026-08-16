@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { runIngest } from "@/lib/news/ingest";
+import { denyWrite, requestWriteAllowed } from "@/lib/news/write-guard";
 
 export const Route = createFileRoute("/api/ingest")({
   server: {
@@ -10,7 +11,8 @@ export const Route = createFileRoute("/api/ingest")({
   },
 });
 
-async function handle() {
+async function handle({ request }: { request: Request }) {
+  if (!requestWriteAllowed("ingest", request)) return denyWrite("ingest");
   try {
     const result = await runIngest({ withProfiles: true });
     return Response.json(result, {
