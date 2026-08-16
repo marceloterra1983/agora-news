@@ -1,0 +1,19 @@
+id: e03
+slug: docker-prod
+title: Produção Docker (Nitro node-server) no host 3080
+status: in_progress
+decisions:
+  - "Nginx no host permanece; container escuta 3080; compose publica 127.0.0.1:3080:3080"
+  - "Não usar 8080 (Evolution). Não vite dev no container."
+  - "Start documentado: node .output/server/index.mjs (TanStack hosting + Nitro NITRO_PORT/NITRO_HOST)"
+  - "Montar .env existente (não copiar para a imagem, não commitar). Hoje só CRON_SECRET."
+  - "Preflight da imagem em 127.0.0.1:3081; cutover 3080 só depois. PM2 e compose nunca juntos na 3080."
+  - "Healthcheck Compose aceita 200 ou 503 em /api/health (503 = feed stale, processo vivo)"
+  - "Sem orquestração nova; um serviço news; Compose only"
+delta: ADDED
+stories:
+  - e03s01
+  - e03s02
+bcps:
+  e03s01: 5
+  e03s02: 5

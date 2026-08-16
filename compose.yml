@@ -1,0 +1,25 @@
+services:
+  news:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3080"
+      NITRO_PORT: "3080"
+      NITRO_HOST: "0.0.0.0"
+    ports:
+      - "127.0.0.1:3080:3080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3080/api/health').then(r=>process.exit(r.status===200||r.status===503?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
