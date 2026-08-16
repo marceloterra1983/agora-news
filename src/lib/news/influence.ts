@@ -1,5 +1,6 @@
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
-import { fillMissingLastPosts, preferNewerLast, storedToLastHit } from "./last-post";
+import { preferNewerLast, storedToLastHit } from "./last-post";
+import { fillMissingLastPosts, listXLastPosts } from "./last-post-store";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listWatchAccounts } from "./watch";
@@ -181,35 +182,44 @@ async function lastPostsByAccount(section: Category): Promise<Map<string, LastHi
     params.set("select", "post_id,account,posted_at,summary_pt");
     params.set("category", `eq.${section}`);
     params.set("order", "posted_at.desc");
-    params.set("limit", "120");
+    params.set("limit", "1000");
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
       headers: AUTH,
       signal: AbortSignal.timeout(5_000),
     });
-    if (!res.ok) return map;
-    const rows = (await res.json()) as Array<{
-      post_id?: string;
-      account?: string;
-      posted_at?: string;
-      summary_pt?: string;
-    }>;
-    for (const row of rows) {
-      const handle = norm(row.account || "").toLowerCase();
-      if (!handle || !row.post_id) continue;
-      const prev = map.get(handle);
-      if (prev) {
-        prev.count += 1;
-        continue;
+    if (res.ok) {
+      const rows = (await res.json()) as Array<{
+        post_id?: string;
+        account?: string;
+        posted_at?: string;
+        summary_pt?: string;
+      }>;
+      for (const row of rows) {
+        const handle = norm(row.account || "").toLowerCase();
+        if (!handle || !row.post_id) continue;
+        const prev = map.get(handle);
+        if (prev) {
+          prev.count += 1;
+          continue;
+        }
+        map.set(handle, {
+          id: String(row.post_id),
+          title: String(row.summary_pt || "Sem título").slice(0, 180),
+          publishedAt: String(row.posted_at || ""),
+          count: 1,
+        });
       }
-      map.set(handle, {
-        id: String(row.post_id),
-        title: String(row.summary_pt || "Sem título").slice(0, 180),
-        publishedAt: String(row.posted_at || ""),
-        count: 1,
-      });
     }
   } catch {
     /* empty map */
+  }
+  const storedLast = await listXLastPosts();
+  for (const [handle, post] of storedLast) {
+    const hit = storedToLastHit(post);
+    if (!hit) continue;
+    const cur = map.get(handle) ?? null;
+    const next = preferNewerLast(cur, hit);
+    if (next) map.set(handle, next);
   }
   lastCache.set(key, { at: Date.now(), map });
   return map;

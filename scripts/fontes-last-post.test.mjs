@@ -39,6 +39,25 @@ test("profile and watch writes preserve last_post instead of wiping it", () => {
   assert.doesNotMatch(profile, /last_post:\s*null/);
 });
 
+test("last posts persist in posts category x-last when x_profiles is absent", () => {
+  const src = read("src/lib/news/last-post.ts");
+  const store = read("src/lib/news/last-post-store.ts");
+  assert.match(src, /export const LAST_POST_CATEGORY = "x-last"/);
+  assert.match(store, /export async function listXLastPosts/);
+  assert.match(store, /category:\s*LAST_POST_CATEGORY/);
+  assert.match(src, /account", `eq\./);
+  assert.doesNotMatch(src, /ilike\.\$\{/);
+  assert.doesNotMatch(src, /new Date\(\)\.toISOString\(\)/);
+  assert.match(store, /fillMissingLastPosts/);
+  assert.match(store, /\.slice\(0,\s*80\)/);
+});
+
+test("Fontes feed last-map merges x-last and does not stop at 120 rows", () => {
+  const src = read("src/lib/news/influence.ts");
+  assert.match(src, /listXLastPosts/);
+  assert.match(src, /"1000"/);
+});
+
 test("empty Fontes card does not claim the gap is 48 hours", () => {
   const src = read("src/components/news/fontes-profile-row.tsx");
   assert.doesNotMatch(src, /últimas 48 horas/);
