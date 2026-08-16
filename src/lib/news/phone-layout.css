@@ -1,8 +1,20 @@
-/* Layout telefone: @media (max-width: 640px) é a fonte de verdade.
-   html[data-shell=phone] cobre PWA / WebView que ainda reportam ~980px. */
+/* Layout + escala de telefone. Unlayered (crítico) para vencer utilities Tailwind.
+   @media (max-width: 640px) é a fonte de verdade; [data-shell=phone] cobre PWA ~980px. */
+
 @media (max-width: 640px) {
-  html {
-    font-size: 17px;
+  html,
+  html[data-font="sm"],
+  html[data-font="md"],
+  html[data-font="lg"],
+  html[data-font="xl"] {
+    --agora-type: 18px;
+    --agora-headline: 22px;
+    --agora-meta: 14px;
+    --agora-chip-label: 15px;
+    --agora-tap: 44px;
+    --agora-nav-tap: 48px;
+    --agora-header: 3.7rem;
+    font-size: 18px !important;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -32,24 +44,102 @@
     margin-left: 0;
     margin-right: 0;
   }
+
+  [data-chrome="compact"] [data-h-scroll] button,
+  [data-chrome="compact"] [aria-haspopup="listbox"] {
+    min-height: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    font-size: 15px !important;
+    line-height: 1.1 !important;
+  }
+  [data-chrome="compact"] [aria-haspopup="menu"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+  }
+  [data-chrome="compact"] [aria-haspopup="menu"] svg,
+  [data-chrome="compact"] [data-h-scroll] button svg,
+  [data-testid="fontes-toolbar"] svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  [data-chrome="compact"] [role="listbox"] button {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  [data-chrome="tabs"] a {
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+  [data-chrome="tabs"] svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
   [data-story] h3,
-  [data-story] h3 a {
-    font-size: 1.3rem;
-    line-height: 1.35;
-  }
-  [data-story] p {
-    font-size: 1rem;
-  }
+  [data-story] h3 a,
+  html[data-density="compact"] [data-story] h3,
+  html[data-density="compact"] [data-story] h3 a,
   [data-post] h1 {
-    font-size: 1.35rem;
+    font-size: 22px !important;
+    line-height: 1.35 !important;
+  }
+  [data-story] > p,
+  [data-story] > p *,
+  [data-feed] > p,
+  [data-group],
+  [data-unread-mark],
+  [data-post] > p:first-of-type,
+  [data-post] > p:first-of-type * {
+    font-size: 14px !important;
+  }
+  [data-group] {
+    height: auto !important;
+    min-height: 22px !important;
+    padding: 0.2em 0.5em !important;
+    line-height: 1.2 !important;
   }
   [data-post] p {
-    font-size: 1.05rem;
+    font-size: 18px !important;
+  }
+  [data-post] > p:first-of-type,
+  [data-post] > p:first-of-type * {
+    font-size: 14px !important;
+  }
+  [data-testid="fonte-row"] p,
+  [data-testid="fonte-row"] span,
+  [data-testid="fonte-row"] button {
+    font-size: 14px !important;
+  }
+  [data-testid="fonte-row"] span.truncate,
+  [data-testid="fonte-row"] a {
+    font-size: 16px !important;
+  }
+  [data-testid="fonte-row"] button[aria-expanded],
+  [data-testid="fonte-last-post"] {
+    min-height: 44px !important;
   }
 }
 
-html[data-shell="phone"] {
-  font-size: 17px;
+html[data-shell="phone"],
+html[data-shell="phone"][data-font="sm"],
+html[data-shell="phone"][data-font="md"],
+html[data-shell="phone"][data-font="lg"],
+html[data-shell="phone"][data-font="xl"] {
+  --agora-type: 18px;
+  --agora-headline: 22px;
+  --agora-meta: 14px;
+  --agora-chip-label: 15px;
+  --agora-tap: 44px;
+  --agora-nav-tap: 48px;
+  --agora-header: 3.7rem;
+  font-size: 18px !important;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -74,10 +164,71 @@ html[data-shell="phone"] [data-story] {
   margin-left: 0;
   margin-right: 0;
 }
-html[data-shell="phone"] [data-story] h3,
-html[data-shell="phone"] [data-story] h3 a {
-  font-size: 1.3rem;
+html[data-shell="phone"] [data-chrome="compact"] [data-h-scroll] button,
+html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="listbox"] {
+  min-height: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  font-size: 15px !important;
+  line-height: 1.1 !important;
 }
-html[data-shell="phone"] [data-story] p {
-  font-size: 1rem;
+html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="menu"] {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+}
+html[data-shell="phone"] [data-chrome="compact"] [aria-haspopup="menu"] svg,
+html[data-shell="phone"] [data-chrome="compact"] [data-h-scroll] button svg,
+html[data-shell="phone"] [data-testid="fontes-toolbar"] svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+html[data-shell="phone"] [data-chrome="tabs"] a {
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+html[data-shell="phone"] [data-chrome="tabs"] svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+html[data-shell="phone"] [data-story] h3,
+html[data-shell="phone"] [data-story] h3 a,
+html[data-shell="phone"][data-density="compact"] [data-story] h3,
+html[data-shell="phone"] [data-post] h1 {
+  font-size: 22px !important;
+  line-height: 1.35 !important;
+}
+html[data-shell="phone"] [data-story] > p,
+html[data-shell="phone"] [data-story] > p *,
+html[data-shell="phone"] [data-feed] > p,
+html[data-shell="phone"] [data-group],
+html[data-shell="phone"] [data-unread-mark],
+html[data-shell="phone"] [data-post] > p:first-of-type,
+html[data-shell="phone"] [data-post] > p:first-of-type * {
+  font-size: 14px !important;
+}
+html[data-shell="phone"] [data-group] {
+  height: auto !important;
+  min-height: 22px !important;
+  padding: 0.2em 0.5em !important;
+}
+html[data-shell="phone"] [data-post] p {
+  font-size: 18px !important;
+}
+html[data-shell="phone"] [data-post] > p:first-of-type,
+html[data-shell="phone"] [data-post] > p:first-of-type * {
+  font-size: 14px !important;
+}
+html[data-shell="phone"] [data-testid="fonte-row"] p,
+html[data-shell="phone"] [data-testid="fonte-row"] span,
+html[data-shell="phone"] [data-testid="fonte-row"] button {
+  font-size: 14px !important;
+}
+html[data-shell="phone"] [data-testid="fonte-row"] span.truncate,
+html[data-shell="phone"] [data-testid="fonte-row"] a {
+  font-size: 16px !important;
 }
