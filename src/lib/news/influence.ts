@@ -1,9 +1,11 @@
+import { hydrateBuzzCache } from "./fonte-buzz-store";
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
 import { lastPostHref, preferNewerLast, storedToLastHit } from "./last-post";
 import { listXLastPosts } from "./last-post-store";
 import { mapPool } from "./map-pool";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
+import { listKnownSections } from "./sections";
 import { listWatchAccounts } from "./watch";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 import type { Category } from "./types";
@@ -213,6 +215,7 @@ async function lastPostsByAccount(section: Category): Promise<Map<string, LastHi
 }
 
 async function hydrateStore() {
+  await hydrateBuzzCache();
   const [stored, watch] = await Promise.all([listStoredProfiles(), listWatchAccounts()]);
   for (const row of stored) seedFromStore(row.handle, row);
   for (const row of watch) seedFromStore(row.handle, row);
@@ -298,6 +301,41 @@ function buildRows(
 export async function loadFontesFast(section: Category): Promise<InfluenceRow[]> {
   const [lastMap, { stored, watch }] = await Promise.all([lastPostsByAccount(section), hydrateStore()]);
   return buildRows(section, lastMap, stored, watch);
+}
+
+/** Um passe de fxtwitter no cron: avatares + buzz de todo o catálogo. */
+export async function enrichFontesCatalog(): Promise<InfluenceRow[]> {
+  const seen = new Set<string>();
+  const profiles = listKnownSections()
+    .flatMap((section) => profilesFor(section))
+    .filter((p) => {
+      const key = norm(p.handle).toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  const missing = profiles.filter((p) => {
+    const hit = userCache.get(norm(p.handle).toLowerCase());
+    return !hit || Date.now() - hit.at >= USER_TTL || (!hit.stats.followers && !hit.stats.avatar);
+  });
+  if (missing.length) {
+    await mapPool(missing.slice(0, 12), 6, (p) => fetchOne(p.handle));
+  }
+  const rows: InfluenceRow[] = [];
+  const rowSeen = new Set<string>();
+  for (const section of listKnownSections()) {
+    for (const row of await loadFontesFast(section)) {
+      const key = norm(row.handle).toLowerCase();
+      if (rowSeen.has(key)) continue;
+      rowSeen.add(key);
+      rows.push(row);
+    }
+  }
+  const needBuzz = rows.filter((r) => r.lastPost && !buzzIsFresh(r.handle)).slice(0, 20);
+  if (needBuzz.length) {
+    await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle));
+  }
+  return rows;
 }
 
 /** Completa só o que ainda não tem avatar/seguidores (máx 8, pool 6). */

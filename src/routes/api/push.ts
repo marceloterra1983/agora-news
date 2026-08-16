@@ -9,6 +9,8 @@ export const Route = createFileRoute("/api/push")({
       GET: async () => Response.json({ key: VAPID_PUBLIC_KEY }),
       POST: async ({ request }) => {
         if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
+        const { userIdFromHeaders } = await import("@/lib/auth/verify.server");
+        const userId = await userIdFromHeaders(request.headers);
         const body = (await request.json().catch(() => ({}))) as {
           endpoint?: string;
           keys?: { p256dh?: string; auth?: string };
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/api/push")({
           endpoint: body.endpoint,
           keys: { p256dh: body.keys.p256dh, auth: body.keys.auth },
           handles: Array.isArray(body.handles) ? body.handles.map(String) : [],
+          userId,
         });
         return Response.json({ ok: true });
       },

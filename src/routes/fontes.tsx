@@ -16,7 +16,7 @@ import {
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
 import { enableFavoriteNotify } from "@/lib/news/notify-favorites";
-import { loadFontes, loadFontesLive } from "@/lib/news/server";
+import { loadFontes } from "@/lib/news/server";
 import { relativeTime } from "@/lib/news/format";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "@/lib/news/types";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
@@ -45,7 +45,6 @@ function FontesPage() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const [extras, setExtras] = useState<ReturnType<typeof loadExtraFontes>>([]);
-  const [liveEnabled, setLiveEnabled] = useState(false);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
   const [groupIds, setGroupIds] = useState<string[]>(() => allGroupIds());
@@ -60,12 +59,6 @@ function FontesPage() {
   }, []);
 
   useEffect(() => onCustomGroups(() => setGroupIds(allGroupIds())), []);
-
-  useEffect(() => {
-    setLiveEnabled(false);
-    const t = window.setTimeout(() => setLiveEnabled(true), 280);
-    return () => window.clearTimeout(t);
-  }, [secao]);
 
   function changeSort(next: SortKey) {
     setSort(next);
@@ -84,15 +77,8 @@ function FontesPage() {
     initialData: initial,
     staleTime: 45_000,
   });
-  const { data: live } = useQuery({
-    queryKey: ["fontes-live", secao],
-    queryFn: () => loadFontesLive({ data: { category: secao } }),
-    enabled: liveEnabled,
-    staleTime: 15 * 60_000,
-    refetchOnWindowFocus: false,
-  });
 
-  const base = live?.rows?.length ? live.rows : data?.rows?.length ? data.rows : seed;
+  const base = data?.rows?.length ? data.rows : seed;
   const withExtras = useMemo(() => mergeExtraFontes(base, extras), [base, extras]);
   const rows = useMemo(
     () =>

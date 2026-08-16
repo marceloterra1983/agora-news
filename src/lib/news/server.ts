@@ -114,7 +114,9 @@ export const loadFonteMetrics = createServerFn({ method: "GET" })
       .slice(0, 15),
   }))
   .handler(async ({ data }) => {
+    const { hydrateBuzzCache } = await import("./fonte-buzz-store");
     const { getProfileMetrics } = await import("./fonte-metrics");
+    await hydrateBuzzCache();
     return getProfileMetrics(data.handle);
   });
 
