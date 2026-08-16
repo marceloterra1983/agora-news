@@ -60,7 +60,7 @@ test("fontes catalog filter uses matchProfiles", () => {
   assert.match(page, /Filtrar no catálogo/);
 });
 
-test("cloud extras \[\] clears the device list and pull applies theme", () => {
+test("cloud extras [] clears the device list and pull applies theme", () => {
   const sync = read("src/lib/news/prefs-sync.ts");
   assert.match(sync, /Array\.isArray\(prefs\.extras\)/);
   assert.match(sync, /replaceExtraFontes/);
