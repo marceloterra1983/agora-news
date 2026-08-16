@@ -123,6 +123,18 @@ export function groupOverrideOf(handle: string): string | null {
   return getGroupOverrides()[normHandle(handle)] ?? null;
 }
 
+export function setGroupOverrides(map: Record<string, string>): void {
+  if (typeof window === "undefined") return;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(map || {})) {
+    const handle = normHandle(k);
+    if (!handle || typeof v !== "string" || !v.trim()) continue;
+    out[handle] = v.trim();
+  }
+  window.localStorage.setItem(GROUP_KEY, JSON.stringify(out));
+  window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key: GROUP_KEY } }));
+}
+
 export function setGroupOverride(handle: string, group: string): void {
   if (typeof window === "undefined") return;
   const h = normHandle(handle);

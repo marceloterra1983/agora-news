@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/cache")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!requestWriteAllowed("ops", request)) return denyWrite("ops");
+        if (!(await requestWriteAllowed("ops", request))) return denyWrite("ops");
         resetCacheProbe();
         const key = "agora:v1:ping";
         const token = String(Date.now());

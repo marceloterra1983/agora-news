@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/profile")({
         });
       },
       POST: async ({ request }) => {
-        if (!requestWriteAllowed("app", request)) return denyWrite("app");
+        if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
         const body = (await request.json()) as {
           handle?: string;
           name?: string;

@@ -9,6 +9,7 @@ import { blurbFor } from "@/lib/news/profiles";
 import { loadExtraFontes } from "@/lib/news/extra-fontes";
 import { loadTweetEmbed } from "@/lib/news/server";
 import { displayTitle } from "@/lib/news/format";
+import { safeHttpHref } from "@/lib/news/last-post";
 import { StoryAssetBlock, StoryMedia } from "./story-media";
 import { GroupTag } from "./group-tag";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
@@ -111,9 +112,9 @@ export function ArticleView({ story }: { story: Story }) {
         </details>
       )}
       <div className="mt-10 flex items-center gap-1.5">
-        {story.url ? (
+        {safeHttpHref(story.url, { allowPath: false }) ? (
           <IconLink
-            href={story.url}
+            href={safeHttpHref(story.url, { allowPath: false })}
             target="_blank"
             rel="noreferrer"
             data-cta="open-x"

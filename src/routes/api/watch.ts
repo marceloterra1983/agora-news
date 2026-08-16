@@ -9,12 +9,12 @@ export const Route = createFileRoute("/api/watch")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!requestWriteAllowed("app", request)) return denyWrite("app");
+        if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
         const handles = await listWatchAccounts();
         return Response.json({ handles });
       },
       POST: async ({ request }) => {
-        if (!requestWriteAllowed("app", request)) return denyWrite("app");
+        if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
         const body = (await request.json().catch(() => ({}))) as {
           handle?: string;
           name?: string;
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/api/watch")({
         return Response.json({ ok });
       },
       DELETE: async ({ request }) => {
-        if (!requestWriteAllowed("app", request)) return denyWrite("app");
+        if (!(await requestWriteAllowed("app", request))) return denyWrite("app");
         const url = new URL(request.url);
         const handle = String(url.searchParams.get("handle") || "").replace(/^@+/, "");
         const ok = await unregisterWatch(handle);

@@ -1,4 +1,4 @@
-import { upsertPosts, deletePost, SUPABASE_URL } from "./admin";
+import { adminHeaders, upsertPosts, deletePost, SUPABASE_URL } from "./admin";
 
 function env(name: string): string {
   if (typeof process === "undefined" || !process.env) return "";
@@ -62,6 +62,28 @@ export async function cloudKvSet(key: string, value: string, ttlSec = 60): Promi
 
 export async function cloudKvDel(key: string): Promise<void> {
   await deletePost(kvId(key));
+}
+
+export function cloudKvId(key: string): string {
+  return kvId(key);
+}
+
+/** Lista por prefixo de post_id com service-role (não usa SELECT anon). */
+export async function cloudKvListPrefix(prefix: string): Promise<Array<{ id: string; content: string }>> {
+  const idPrefix = kvId(prefix);
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/posts?post_id=like.${encodeURIComponent(`${idPrefix}*`)}&select=post_id,content&limit=200`,
+      { headers: adminHeaders(), signal: AbortSignal.timeout(5_000) },
+    );
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<{ post_id?: string; content?: string }>;
+    return rows
+      .filter((r) => r.post_id && r.content)
+      .map((r) => ({ id: String(r.post_id), content: String(r.content) }));
+  } catch {
+    return [];
+  }
 }
 
 export async function cloudKvList(category: string): Promise<Array<{ id: string; content: string }>> {

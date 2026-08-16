@@ -1,5 +1,6 @@
 import { loadExtraFontes } from "./extra-fontes";
-import { getDisabled, getNotifyHandles, getStarred } from "./fontes-prefs";
+import { getDisabled, getGroupOverrides, getNotifyHandles, getStarred, setGroupOverrides } from "./fontes-prefs";
+import { loadCustomGroups, replaceCustomGroups } from "./groups";
 import { SETTINGS_KEY } from "./settings";
 import { loadPrefs, savePrefs, type CloudPrefs } from "./prefs-server";
 
@@ -19,6 +20,8 @@ export function snapshotPrefs(): CloudPrefs {
     extras: loadExtraFontes(),
     settings,
     theme,
+    groups: getGroupOverrides(),
+    customGroups: loadCustomGroups(),
   };
 }
 
@@ -30,6 +33,8 @@ function writeLocal(prefs: CloudPrefs) {
     if (prefs.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(prefs.settings));
     if (prefs.theme) localStorage.setItem("agora-theme", prefs.theme);
     if (prefs.extras?.length) localStorage.setItem("agora-extra-fontes-v1", JSON.stringify(prefs.extras));
+    if (prefs.groups) setGroupOverrides(prefs.groups);
+    if (Array.isArray(prefs.customGroups)) replaceCustomGroups(prefs.customGroups);
     window.dispatchEvent(new Event("agora-fontes-prefs"));
     window.dispatchEvent(new Event("agora-settings"));
   } catch {

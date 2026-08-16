@@ -7,7 +7,8 @@ import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
 import { listWatchAccounts } from "./watch";
 import { invalidateFeedCache } from "./feed";
-import { invalidateFontesLastCache } from "./influence";
+import { enrichFontes, invalidateFontesLastCache } from "./influence";
+import { mapPool } from "./map-pool";
 import { embedForStory } from "./x-media";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL, invalidateSupabaseList } from "./supabase";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson, cacheSetNx, cacheBackend } from "./cache";
@@ -157,14 +158,6 @@ async function latestByAccount(): Promise<Map<string, number>> {
     if (out.size) void cacheSetJson(CACHE_KEYS.newest, [...out.entries()], 60);
   } catch {
     /* scan everyone */
-  }
-  return out;
-}
-
-async function mapPool<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const out: R[] = [];
-  for (let i = 0; i < items.length; i += size) {
-    out.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
   }
   return out;
 }
@@ -393,6 +386,29 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
   ]);
   if (lastFilled) invalidateFontesLastCache();
 
+  const storedForEnrich = await listStoredProfiles();
+  const storedAtEnrich = new Map(storedForEnrich.map((p) => [p.handle.toLowerCase(), p]));
+  let enriched = 0;
+  for (const section of listKnownSections()) {
+    const liveRows = await enrichFontes(section);
+    const needStore = liveRows
+      .filter((r) => (r.avatar || r.followers) && !storedAtEnrich.get(r.handle.toLowerCase())?.avatar)
+      .slice(0, 8);
+    await mapPool(needStore, 4, async (r) => {
+      const prev = storedAtEnrich.get(r.handle.toLowerCase());
+      const ok = await upsertProfile({
+        handle: r.handle,
+        name: r.name,
+        bio: r.bio || prev?.bio || "",
+        summary_pt: prev?.summary_pt || r.bio || r.handle,
+        avatar: r.avatar,
+        followers: r.followers || prev?.followers || 0,
+        last_post: prev?.last_post ?? null,
+      });
+      if (ok) enriched += 1;
+    });
+  }
+
   return {
     batch,
     scanned: due.length,
@@ -405,6 +421,7 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
     error: written.error,
     profiles,
     lastFilled,
+    enriched,
     pushed,
     cache: cacheBackend(),
   };

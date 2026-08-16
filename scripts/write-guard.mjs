@@ -11,19 +11,31 @@
 
 /**
  * @param {WriteKind} kind
- * @param {{ site?: string | null, authorization?: string | null, userAgent?: string | null }} headers
- * @param {{ cronSecret?: string }} [env]
+ * @param {{ site?: string | null, authorization?: string | null, userAgent?: string | null, userId?: string | null }} headers
+ * @param {{ cronSecret?: string, userId?: string }} [env]
  */
 export function writeAllowed(kind, headers, env = {}) {
   const site = String(headers.site || "");
   if (site === "cross-site" || site === "same-site") return false;
 
-  if (kind === "app") return site === "same-origin";
+  if (kind === "app") {
+    const userId = String(headers.userId || env.userId || "").trim();
+    return site === "same-origin" && Boolean(userId);
+  }
   if (kind === "ops") return site === "same-origin";
 
   const secret = String(env.cronSecret || "").trim();
   const auth = String(headers.authorization || "");
   return Boolean(secret) && auth === `Bearer ${secret}`;
+}
+
+/**
+ * Grok/xAI: só sessão same-origin ou ingest com Bearer.
+ * @param {{ site?: string | null, authorization?: string | null, userId?: string | null }} headers
+ * @param {{ cronSecret?: string, userId?: string }} [env]
+ */
+export function spendKeyAllowed(headers, env = {}) {
+  return writeAllowed("app", headers, env) || writeAllowed("ingest", headers, env);
 }
 
 /**

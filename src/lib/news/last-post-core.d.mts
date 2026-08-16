@@ -5,6 +5,7 @@ export type StoredLastPost = {
   publishedAt: string;
 };
 
+export function safeHttpHref(raw: unknown, opts?: { allowPath?: boolean }): string;
 export function parseLastPost(raw: unknown): StoredLastPost | null;
 export function lastPostHref(handle: string, id: string, inApp: boolean): string;
 export function keepLastPost(

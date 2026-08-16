@@ -12,6 +12,7 @@ export {
   lastPostHref,
   parseLastPost,
   preferNewerLast,
+  safeHttpHref,
   storedToLastHit,
 } from "./last-post-core.mjs";
 

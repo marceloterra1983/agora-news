@@ -18,7 +18,7 @@ test("keepLastPost never replaces a stored tweet with null", () => {
 test("listStoredProfiles reads last_post from x_profiles", () => {
   const src = read("src/lib/news/profile-store.ts");
   assert.match(src, /x_profiles\?select=[^"'`]*last_post/);
-  assert.match(src, /parseLastPost/);
+  assert.match(src, /storedProfileFromRow|parseLastPost/);
 });
 
 test("Fontes lastPost falls back to stored last_post, not only the recent feed window", () => {

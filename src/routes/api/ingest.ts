@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/ingest")({
 });
 
 async function handle({ request }: { request: Request }) {
-  if (!requestWriteAllowed("ingest", request)) return denyWrite("ingest");
+  if (!(await requestWriteAllowed("ingest", request))) return denyWrite("ingest");
   try {
     const result = await runIngest({ withProfiles: true });
     return Response.json(result, {

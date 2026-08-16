@@ -5,6 +5,7 @@ import {
   lastPostHref,
   parseLastPost,
   preferNewerLast,
+  safeHttpHref,
   storedToLastHit,
 } from "../src/lib/news/last-post-core.mjs";
 
@@ -53,6 +54,27 @@ test("parseLastPost accepts title alias and rejects incomplete rows", () => {
     url: "https://x.com/i/status/9",
     publishedAt: older.publishedAt,
   });
+});
+
+test("safeHttpHref keeps http(s) and in-app paths, drops other schemes", () => {
+  assert.equal(safeHttpHref("https://x.com/a/status/1"), "https://x.com/a/status/1");
+  assert.equal(safeHttpHref("http://example.com/a"), "http://example.com/a");
+  assert.equal(safeHttpHref("/materia/123"), "/materia/123");
+  assert.equal(safeHttpHref("javascript:alert(1)"), "");
+  assert.equal(safeHttpHref("data:text/html,x"), "");
+  assert.equal(safeHttpHref("//evil.example/phish"), "");
+  assert.equal(safeHttpHref("https://x.com/a/status/1", { allowPath: false }), "https://x.com/a/status/1");
+  assert.equal(safeHttpHref("/materia/123", { allowPath: false }), "");
+});
+
+test("parseLastPost drops javascript urls", () => {
+  const parsed = parseLastPost({
+    id: "9",
+    text: "hi",
+    url: "javascript:alert(1)",
+    publishedAt: older.publishedAt,
+  });
+  assert.equal(parsed?.url, "https://x.com/i/status/9");
 });
 
 test("preferNewerLast and storedToLastHit keep the newest stored tweet", () => {

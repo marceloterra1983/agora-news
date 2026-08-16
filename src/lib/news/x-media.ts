@@ -1,3 +1,4 @@
+import { safeHttpHref } from "./last-post-core.mjs";
 import type { Story, StoryAsset, StoryQuote, StoryQuoteCard, StoryXArticle } from "./types";
 
 export type { StoryAsset };
@@ -121,7 +122,7 @@ function cardFrom(raw?: FxCard | null): StoryQuoteCard | null {
         ? raw.image.url
         : null;
   return {
-    url: raw.url || "",
+    url: safeHttpHref(raw.url || "", { allowPath: false }),
     title: raw.title || raw.domain || "Link",
     description: raw.description || "",
     domain: raw.domain || "",
@@ -142,7 +143,7 @@ function articleFrom(raw: FxArticle | undefined, tweet: FxTweet): StoryXArticle 
     title: raw.title || "Artigo",
     preview: raw.preview_text || paragraphs[0] || "",
     cover: raw.cover_media?.media_info?.original_img_url || null,
-    url: id ? `https://x.com/${handle}/article/${id}` : tweet.url || "",
+    url: safeHttpHref(id ? `https://x.com/${handle}/article/${id}` : tweet.url || "", { allowPath: false }),
     paragraphs,
   };
 }
@@ -161,7 +162,7 @@ function quoteFromTweet(inner: FxTweet | undefined, kind: StoryQuote["kind"]): S
     name: inner.author?.name || handle,
     avatar: inner.author?.avatar_url || null,
     text,
-    url: inner.url || (id ? `https://x.com/${handle}/status/${id}` : ""),
+    url: safeHttpHref(inner.url || (id ? `https://x.com/${handle}/status/${id}` : ""), { allowPath: false }),
     image: photo?.url || card?.image || null,
     kind,
     card,
