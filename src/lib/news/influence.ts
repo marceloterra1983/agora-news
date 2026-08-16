@@ -138,19 +138,6 @@ async function mapPool<T, R>(items: T[], size: number, fn: (item: T) => Promise<
   return out;
 }
 
-export function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1).replace(".", ",")} mi`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1).replace(".", ",")} mil`;
-  return String(n);
-}
-
-export function formatRate(pct: number): string {
-  if (!pct) return "—";
-  if (pct >= 10) return `${pct.toFixed(0)}%`;
-  if (pct >= 1) return `${pct.toFixed(1).replace(".", ",")}%`;
-  return `${pct.toFixed(2).replace(".", ",")}%`;
-}
-
 function scoreOf(stats: LiveStats, inFeed: number): number {
   const reach = Math.log10(stats.followers + 1);
   return reach * 28 + Math.min(inFeed, 24) * 5 + (stats.verified ? 3 : 0);

@@ -1,8 +1,7 @@
 import { BadgeCheck, Bookmark, BookmarkCheck, Plus, X } from "lucide-react";
 import { IconBtn, IconLink, iconBtnSolid } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
-import { formatCount } from "@/lib/news/influence";
-import { relativeTime } from "@/lib/news/format";
+import { formatCount, relativeTime } from "@/lib/news/format";
 import type { FoundProfile } from "@/lib/news/server";
 
 export type { FoundProfile };

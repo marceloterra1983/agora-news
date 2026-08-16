@@ -8,9 +8,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
 test("keepLastPost never replaces a stored tweet with null", () => {
-  const src = read("src/lib/news/last-post.ts");
+  const src = read("src/lib/news/last-post-core.mjs");
+  const barrel = read("src/lib/news/last-post.ts");
   assert.match(src, /export function keepLastPost/);
   assert.match(src, /if \(!next\) return prev/);
+  assert.match(barrel, /keepLastPost/);
 });
 
 test("listStoredProfiles reads last_post from x_profiles", () => {
@@ -33,11 +35,13 @@ test("last-post fill runs on ingest cron, not on Fontes GET", () => {
 });
 
 test("Fontes last-post link uses in-app materia only when the tweet is in the feed", () => {
-  const href = read("src/lib/news/last-post.ts");
+  const href = read("src/lib/news/last-post-core.mjs");
+  const barrel = read("src/lib/news/last-post.ts");
   const row = read("src/components/news/fontes-profile-row.tsx");
   assert.match(href, /export function lastPostHref/);
   assert.match(href, /\/materia\//);
   assert.match(href, /https:\/\/x\.com\//);
+  assert.match(barrel, /lastPostHref/);
   assert.match(row, /lastPost\.href|lastPostHref/);
 });
 

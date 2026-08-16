@@ -4,12 +4,16 @@ import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
 
 export const LAST_POST_CATEGORY = "x-last";
 
-export type StoredLastPost = {
-  id: string;
-  text: string;
-  url: string;
-  publishedAt: string;
-};
+import type { StoredLastPost } from "./last-post-core.mjs";
+
+export type { StoredLastPost };
+export {
+  keepLastPost,
+  lastPostHref,
+  parseLastPost,
+  preferNewerLast,
+  storedToLastHit,
+} from "./last-post-core.mjs";
 
 const AUTH = {
   apikey: SUPABASE_ANON_KEY,
@@ -19,57 +23,6 @@ const AUTH = {
 
 function tweetIdOf(id: string, url: string): string {
   return url.match(/status\/(\d+)/)?.[1] || id;
-}
-
-export function parseLastPost(raw: unknown): StoredLastPost | null {
-  if (!raw || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  const id = String(o.id || "").trim();
-  const text = String(o.text || o.title || "").replace(/\s+/g, " ").trim();
-  const publishedAt = String(o.publishedAt || "").trim();
-  if (!id || !publishedAt) return null;
-  return {
-    id,
-    text,
-    url: String(o.url || `https://x.com/i/status/${id}`),
-    publishedAt,
-  };
-}
-
-export function lastPostHref(handle: string, id: string, inApp: boolean): string {
-  const key = handle.replace(/^@+/, "").trim();
-  if (inApp && id) return `/materia/${id}`;
-  if (id) return `https://x.com/${key}/status/${id}`;
-  return `https://x.com/${key}`;
-}
-
-export function keepLastPost(
-  prev: StoredLastPost | null | undefined,
-  next: StoredLastPost | null | undefined,
-): StoredLastPost | null {
-  if (!next) return prev ?? null;
-  if (!prev) return next;
-  const pt = Date.parse(prev.publishedAt);
-  const nt = Date.parse(next.publishedAt);
-  if (!Number.isFinite(nt)) return prev;
-  if (Number.isFinite(pt) && nt < pt) return prev;
-  return next;
-}
-
-export function storedToLastHit(post: StoredLastPost | null | undefined): {
-  id: string;
-  title: string;
-  publishedAt: string;
-  count: number;
-} | null {
-  if (!post?.id) return null;
-  return { id: post.id, title: post.text.slice(0, 180), publishedAt: post.publishedAt, count: 1 };
-}
-
-export function preferNewerLast<T extends { publishedAt: string }>(a: T | null, b: T | null): T | null {
-  if (!a) return b;
-  if (!b) return a;
-  return Date.parse(b.publishedAt) > Date.parse(a.publishedAt) ? b : a;
 }
 
 export async function fetchLastPost(handle: string): Promise<StoredLastPost | null> {
