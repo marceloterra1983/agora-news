@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bookmark, Newspaper, Search, User } from "lucide-react";
+import { Bookmark, Newspaper, Search, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
@@ -23,12 +23,14 @@ export function AppChrome({
   children,
   group,
   onGroup,
+  toolbar,
 }: {
   category: Category;
   query?: string;
   children: React.ReactNode;
   group?: ProfileGroup | "all";
   onGroup?: (g: ProfileGroup | "all") => void;
+  toolbar?: React.ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -55,7 +57,13 @@ export function AppChrome({
   return (
     <div className="min-h-dvh bg-paper text-ink">
       <PrefsSync />
-      <GrokHeader category={shown} group={group} onGroup={onGroup} onPickSec={pickSec} />
+      <GrokHeader
+        category={shown}
+        group={group}
+        onGroup={onGroup}
+        onPickSec={pickSec}
+        toolbar={toolbar}
+      />
       <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]">{children}</div>
       <TabBar category={shown} />
     </div>
@@ -67,11 +75,13 @@ function GrokHeader({
   group = "all",
   onGroup,
   onPickSec,
+  toolbar,
 }: {
   category: Category;
   group?: ProfileGroup | "all";
   onGroup?: (g: ProfileGroup | "all") => void;
   onPickSec: (slug: Category) => void;
+  toolbar?: React.ReactNode;
 }) {
   const [secOpen, setSecOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -109,17 +119,17 @@ function GrokHeader({
 
   return (
     <header data-chrome="compact" className="sticky top-0 z-30 border-b border-line bg-paper">
-      <div className="mx-auto flex max-w-2xl items-center gap-1.5 px-3 py-2.5">
+      <div className="mx-auto flex h-[var(--agora-header)] max-w-2xl items-center gap-1.5 pr-3 pl-2">
         <div ref={rootRef} className="relative shrink-0">
           <button
             type="button"
             aria-haspopup="listbox"
             aria-expanded={secOpen}
-            aria-label={`Seção ${current.label}`}
+            aria-label={`Assunto ${current.label}`}
             onClick={() => setSecOpen((v) => !v)}
-            className="inline-flex h-8 items-center rounded-full bg-ink px-3 text-[12px] font-semibold tracking-wide text-paper"
+            className="inline-flex h-7 items-center rounded-full bg-ink px-2.5 text-[13px] font-semibold tracking-wide text-paper"
           >
-            {current.label}
+            <span>{current.label}</span>
           </button>
           {secOpen ? (
             <ul
@@ -147,7 +157,7 @@ function GrokHeader({
           ) : null}
         </div>
 
-        {onGroup ? (
+        {toolbar ?? (onGroup ? (
           <div data-h-scroll className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
             <button
               type="button"
@@ -182,7 +192,7 @@ function GrokHeader({
           </div>
         ) : (
           <div className="min-w-0 flex-1" />
-        )}
+        ))}
 
         <AppMenu />
       </div>
@@ -194,7 +204,7 @@ function TabBar({ category }: { category: Category }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = [
     { to: "/" as const, label: "Feed", icon: Newspaper, search: { secao: category } },
-    { to: "/fontes" as const, label: "Fontes", icon: User, search: { secao: category } },
+    { to: "/fontes" as const, label: "Fontes", icon: UserRound, search: { secao: category } },
     { to: "/buscar" as const, label: "Buscar", icon: Search, search: undefined },
     { to: "/salvos" as const, label: "Salvos", icon: Bookmark, search: undefined },
   ];
