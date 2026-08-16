@@ -9,8 +9,8 @@ import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { useUnread } from "@/lib/news/use-unread";
 import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "@/lib/news/supabase";
-import { GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "@/lib/news/profiles";
-import { displayTitle } from "@/lib/news/format";
+import { type ProfileGroup } from "@/lib/news/profiles";
+import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
 import { groupOf } from "./group-tag";
 import { StoryCard } from "./story-card";
@@ -48,53 +48,26 @@ function readGroup(): ProfileGroup | "all" {
   try {
     const v = sessionStorage.getItem(GROUP_KEY);
     if (v === "all") return "all";
-    if (v && (GROUP_ORDER as string[]).includes(v)) return v as ProfileGroup;
+    if (v && ["labs", "lideres", "pesquisa", "imprensa", "builders", "novos"].includes(v))
+      return v as ProfileGroup;
   } catch {
     /* ignore */
   }
   return "all";
 }
 
-function Briefing({ stories }: { stories: NewsPayload["stories"] }) {
-  const items = useMemo(() => {
-    const since = Date.now() - 6 * 60 * 60_000;
-    const seen = new Set<string>();
-    const out: typeof stories = [];
-    for (const story of stories) {
-      if (Date.parse(story.publishedAt) < since) continue;
-      const key = story.source.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push(story);
-      if (out.length >= 3) break;
-    }
-    return out;
-  }, [stories]);
-  if (items.length < 2) return null;
-  return (
-    <aside className="mb-5 rounded-2xl border border-line bg-paper-2 px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-mute">Nas últimas 6 horas</p>
-      <ul className="mt-2 space-y-2">
-        {items.map((story) => (
-          <li key={story.id} className="text-[13px] leading-snug text-ink">
-            <span className="text-mute">@{story.source.replace(/^@/, "")}</span>
-            <span className="text-mute"> · </span>
-            {displayTitle(story.title)}
-          </li>
-        ))}
-      </ul>
-    </aside>
-  );
-}
-
 export function Feed({
   category,
   query,
   initial,
+  group,
+  onGroupChange,
 }: {
   category: Category;
   query?: string;
   initial?: NewsPayload;
+  group?: ProfileGroup | "all";
+  onGroupChange?: (g: ProfileGroup | "all") => void;
 }) {
   const ingest = useNewsStore((s) => s.ingest);
   const prefs = useFontesPrefs();
@@ -115,15 +88,18 @@ export function Feed({
   const [older, setOlder] = useState<NewsPayload["stories"]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [group, setGroup] = useState<ProfileGroup | "all">("all");
+  const [groupLocal, setGroupLocal] = useState<ProfileGroup | "all">("all");
+  const group = group ?? groupLocal;
 
   useEffect(() => {
-    setGroup(readGroup());
+    const g = readGroup();
+    setGroupLocal(g);
+    onGroupChange?.(g);
     setOlder([]);
     setHasMore(true);
   }, [category, query]);
 
-  const { data, isError } = useQuery({
+  const { data, isError, dataUpdatedAt } = useQuery({
     queryKey: ["news", category, query ?? ""],
     queryFn: async () => {
       const next = await loadNews({
@@ -230,14 +206,11 @@ export function Feed({
     }
   }
 
-  function pickGroup(next: ProfileGroup | "all") {
-    setGroup(next);
-    try {
-      sessionStorage.setItem(GROUP_KEY, next);
-    } catch {
-      /* ignore */
-    }
-  }
+  const updatedLabel = useMemo(() => {
+    const top = stories[0]?.publishedAt || data?.meta?.syncedAt;
+    if (!top) return null;
+    return relativeTime(top);
+  }, [stories, data?.meta?.syncedAt, dataUpdatedAt]);
 
   if (isError && !stories.length) {
     return (
@@ -252,40 +225,9 @@ export function Feed({
 
   return (
     <div className="mx-auto max-w-2xl pt-3">
-      <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
-        <Tip label="Todos">
-          <button
-            type="button"
-            aria-label="Todos"
-            aria-pressed={group === "all"}
-            onClick={() => pickGroup("all")}
-            className={cn(
-              "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-              group === "all" ? "bg-ink text-paper" : "bg-paper-2 text-mute",
-            )}
-          >
-            Todos
-          </button>
-        </Tip>
-        {GROUP_ORDER.map((id) => (
-          <Tip key={id} label={GROUP_LABELS[id]}>
-            <button
-              type="button"
-              aria-label={GROUP_LABELS[id]}
-              aria-pressed={group === id}
-              onClick={() => pickGroup(id)}
-              className={cn(
-                "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
-                group === id ? "bg-ink text-paper" : "bg-paper-2 text-mute",
-              )}
-            >
-              {GROUP_LABELS[id]}
-            </button>
-          </Tip>
-        ))}
-      </div>
-
-      {group === "all" ? <Briefing stories={rawStories} /> : null}
+      {updatedLabel ? (
+        <p className="mb-4 text-[12px] text-mute">Atualizado {updatedLabel}</p>
+      ) : null}
 
       {stories.length ? (
         stories.map((story) => (

@@ -1,56 +1,59 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bookmark, ChevronDown, Newspaper, Search, User } from "lucide-react";
+import { Bookmark, Newspaper, Search, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
+import { GROUP_LABELS, GROUP_ORDER, type ProfileGroup } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
 import { AppMenu } from "./app-menu";
 import { Tip } from "./icon-btn";
 import { PrefsSync } from "./prefs-sync";
 
-/**
- * Altura da faixa "Created with Grok / Remix" injetada pelo host.
- * Não dá para remover; sobimos a TabBar e o conteúdo por cima.
- */
-const HOST_CHROME = "3.25rem";
+const GROUP_KEY = "agora-feed-group";
 
 export function AppChrome({
   category,
   children,
+  group,
+  onGroup,
 }: {
   category: Category;
   query?: string;
   children: React.ReactNode;
+  group?: ProfileGroup | "all";
+  onGroup?: (g: ProfileGroup | "all") => void;
 }) {
   return (
-    <div
-      className="min-h-dvh bg-paper text-ink"
-      style={{ ["--host-chrome" as string]: HOST_CHROME }}
-    >
+    <div className="min-h-dvh bg-paper text-ink">
       <PrefsSync />
-      <CompactHeader category={category} />
-      {/* pb = tab bar (~3.5rem) + host chrome + safe area */}
-      <div className="pb-[calc(3.5rem+var(--host-chrome,3.25rem)+env(safe-area-inset-bottom,0px))]">
-        {children}
-      </div>
+      <GrokHeader category={category} group={group} onGroup={onGroup} />
+      <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]">{children}</div>
       <TabBar category={category} />
     </div>
   );
 }
 
-function SectionSelect({ category }: { category: Category }) {
+function GrokHeader({
+  category,
+  group = "all",
+  onGroup,
+}: {
+  category: Category;
+  group?: ProfileGroup | "all";
+  onGroup?: (g: ProfileGroup | "all") => void;
+}) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [secOpen, setSecOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = SECTIONS.find((s) => s.slug === category) ?? SECTIONS[0];
 
   useEffect(() => {
-    if (!open) return;
+    if (!secOpen) return;
     function onDoc(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!rootRef.current?.contains(e.target as Node)) setSecOpen(false);
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setSecOpen(false);
     }
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
@@ -58,10 +61,10 @@ function SectionSelect({ category }: { category: Category }) {
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [secOpen]);
 
-  function pick(slug: Category) {
-    setOpen(false);
+  function pickSec(slug: Category) {
+    setSecOpen(false);
     if (slug === category) return;
     try {
       localStorage.setItem("agora-last-secao", slug);
@@ -71,54 +74,83 @@ function SectionSelect({ category }: { category: Category }) {
     void navigate({ to: "/", search: { secao: slug } });
   }
 
-  return (
-    <div ref={rootRef} className="relative shrink-0">
-      <button
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label={`Seção ${current.label}`}
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-9 min-w-[5.5rem] items-center justify-between gap-1.5 rounded-full bg-ink px-3.5 text-sm font-semibold tracking-wide text-paper"
-      >
-        <span>{current.label}</span>
-        <ChevronDown className={cn("size-4 opacity-80 transition-transform", open && "rotate-180")} />
-      </button>
-      {open ? (
-        <ul
-          role="listbox"
-          aria-label="Escolher seção"
-          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[8.5rem] overflow-hidden rounded-xl border border-line bg-paper shadow-card"
-        >
-          {SECTIONS.map((s) => {
-            const on = s.slug === category;
-            return (
-              <li key={s.slug} role="option" aria-selected={on}>
-                <button
-                  type="button"
-                  onClick={() => pick(s.slug)}
-                  className={cn(
-                    "flex w-full items-center px-3.5 py-2.5 text-left text-sm font-semibold",
-                    on ? "bg-paper-2 text-ink" : "text-ink-soft hover:bg-paper-2 hover:text-ink",
-                  )}
-                >
-                  {s.label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
+  function pickGroup(next: ProfileGroup | "all") {
+    onGroup?.(next);
+    try {
+      sessionStorage.setItem(GROUP_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  }
 
-function CompactHeader({ category }: { category: Category }) {
   return (
     <header data-chrome="compact" className="sticky top-0 z-30 border-b border-line bg-paper">
-      <div className="mx-auto flex max-w-2xl items-center gap-2 px-4 py-3">
-        <SectionSelect category={category} />
-        <div className="min-w-0 flex-1" />
+      <div className="mx-auto flex max-w-2xl items-center gap-1.5 px-3 py-2.5">
+        <div ref={rootRef} className="relative shrink-0">
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={secOpen}
+            aria-label={`Seção ${current.label}`}
+            onClick={() => setSecOpen((v) => !v)}
+            className="inline-flex h-8 items-center rounded-full bg-ink px-3 text-[12px] font-semibold tracking-wide text-paper"
+          >
+            {current.label}
+          </button>
+          {secOpen ? (
+            <ul
+              role="listbox"
+              className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[7.5rem] overflow-hidden rounded-xl border border-line bg-paper shadow-card"
+            >
+              {SECTIONS.map((s) => {
+                const on = s.slug === category;
+                return (
+                  <li key={s.slug} role="option" aria-selected={on}>
+                    <button
+                      type="button"
+                      onClick={() => pickSec(s.slug)}
+                      className={cn(
+                        "flex w-full items-center px-3.5 py-2.5 text-left text-sm font-semibold",
+                        on ? "bg-paper-2 text-ink" : "text-ink-soft hover:bg-paper-2",
+                      )}
+                    >
+                      {s.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
+
+        <div data-h-scroll className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+          <button
+            type="button"
+            aria-pressed={group === "all"}
+            onClick={() => pickGroup("all")}
+            className={cn(
+              "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
+              group === "all" ? "bg-ink text-paper" : "bg-paper-2 text-mute",
+            )}
+          >
+            Todos
+          </button>
+          {GROUP_ORDER.map((id) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={group === id}
+              onClick={() => pickGroup(id)}
+              className={cn(
+                "h-8 shrink-0 rounded-full px-2.5 text-[11px] font-semibold",
+                group === id ? "bg-ink text-paper" : "bg-paper-2 text-mute",
+              )}
+            >
+              {GROUP_LABELS[id]}
+            </button>
+          ))}
+        </div>
+
         <AppMenu />
       </div>
     </header>
@@ -136,10 +168,7 @@ function TabBar({ category }: { category: Category }) {
   return (
     <nav
       data-chrome="tabs"
-      className="fixed inset-x-0 z-40 border-t border-line bg-paper"
-      style={{
-        bottom: `calc(var(--host-chrome, ${HOST_CHROME}) + env(safe-area-inset-bottom, 0px))`,
-      }}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto grid max-w-2xl grid-cols-4">
         {items.map((item) => {
