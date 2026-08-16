@@ -40,6 +40,11 @@ test("phone chrome tap targets share 44px height", () => {
   const chrome = read("src/components/news/app-chrome.tsx");
 
   assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,160}height:\s*44px/);
+  assert.match(css, /\[data-chrome="compact"\] \[data-h-scroll\] button[\s\S]{0,200}padding-left:\s*8px/);
+  assert.doesNotMatch(
+    css,
+    /\[data-h-scroll\] button[\s\S]{0,80}\[aria-haspopup="listbox"\][\s\S]{0,160}padding-left:\s*16px/,
+  );
   assert.match(css, /\[data-chrome="compact"\] \[aria-haspopup="listbox"\][\s\S]{0,200}height:\s*44px/);
   assert.match(css, /\[data-chrome="compact"\] \[aria-haspopup="menu"\][\s\S]{0,160}height:\s*44px/);
   assert.match(css, /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*44px/);

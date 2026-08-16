@@ -38,7 +38,7 @@ function fixture(font = "") {
       <button type="button" aria-haspopup="listbox">IA</button>
       <div data-h-scroll>
         <button type="button">Todos</button>
-        <button type="button">Empresas</button>
+        <button type="button">Instituições</button>
       </div>
       <button type="button" aria-haspopup="menu" aria-label="Menu">☰</button>
     </div>
@@ -95,7 +95,12 @@ async function measure(page) {
       html: px(html, "fontSize"),
       font: html.getAttribute("data-font"),
       chipH: box(chip).h,
+      chipW: box(chip).w,
       chipFs: px(chip, "fontSize"),
+      chipPadL: chip ? parseFloat(getComputedStyle(chip).paddingLeft) : 0,
+      chipPadR: chip ? parseFloat(getComputedStyle(chip).paddingRight) : 0,
+      longW: box(document.querySelector("[data-h-scroll] button:last-child")).w,
+      iaFs: px(ia, "fontSize"),
       iaH: box(ia).h,
       iaW: box(ia).w,
       menuH: box(menu).h,
@@ -124,6 +129,11 @@ test("Playwright 390px default: reader scale, not 22/28 floors", async (t) => {
     assert.ok(s.html < 20, `default html must not be the old 22px floor (${s.html})`);
     assert.ok(s.headline < 26, `default headline must not be the old 28px floor (${s.headline})`);
     assert.ok(s.chipH >= 44 && s.chipH <= 45, `chip height ${s.chipH}`);
+    assert.ok(Math.abs(s.chipH - s.iaH) <= 1, `chip/IA height ${s.chipH}/${s.iaH}`);
+    assert.ok(s.chipFs >= 12 && s.chipFs <= 13.5, `chip label ${s.chipFs}`);
+    assert.ok(Math.abs(s.chipFs - s.iaFs) <= 1, `chip/IA type ${s.chipFs}/${s.iaFs}`);
+    assert.ok(s.chipPadL <= 10 && s.chipPadR <= 10, `chip pad ${s.chipPadL}/${s.chipPadR}`);
+    assert.ok(s.longW < 160, `Instituições width ${s.longW} should stay compact`);
     assert.ok(s.iaH >= 44 && s.iaW >= 44, `IA ${s.iaW}x${s.iaH}`);
     assert.ok(s.menuH >= 44 && s.menuW >= 44, `menu ${s.menuW}x${s.menuH}`);
     assert.ok(s.navH >= 44 && s.navW >= 44, `nav ${s.navW}x${s.navH}`);
