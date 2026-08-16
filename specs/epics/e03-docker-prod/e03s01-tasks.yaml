@@ -1,0 +1,31 @@
+story_id: e03s01
+title: Contrato Docker de produção (Nitro)
+status: passing
+bcps: 5
+risk: P0
+security: low
+tasks:
+  - id: 1
+    description: "RED — testes de contrato Docker/compose/start/segredo"
+    verify: "node --experimental-strip-types --test scripts/docker-prod.test.mjs; test $? -ne 0"
+    risk: P0
+    status: passing
+    allure:
+      severity: critical
+      categories: ["infra", "contract"]
+  - id: 2
+    description: "GREEN — Dockerfile, dockerignore, compose, npm start"
+    verify: "node --experimental-strip-types --test scripts/docker-prod.test.mjs"
+    risk: P0
+    status: passing
+    allure:
+      severity: critical
+      categories: ["infra"]
+  - id: 3
+    description: "Gates do repo verdes"
+    verify: "npm test && npm run typecheck"
+    risk: P0
+    status: passing
+    allure:
+      severity: critical
+      categories: ["ci"]

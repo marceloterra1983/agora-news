@@ -8,27 +8,25 @@ release:
   last_publish: null
 epic_cycle:
   current_step: develop-tdd
-  next_skill: verify-work
-  completed_steps: [kickoff-branch]
+  next_skill: develop-tdd
+  completed_steps: [plan-work, assess-impact]
 bug_cycle:
   current_step: null
   completed_steps: []
 project_cycle:
   current_phase: execute
-  completed_steps: [survey-context, map-codebase]
+  completed_steps: [survey-context, map-codebase, plan-work]
 git:
-  branch: fix/fontes-controls-footer-only
+  branch: feat/docker-prod-news
   hash: pending
 handoff:
-  last_step_completed: "Fontes star/bell/power only in open card footer"
-  open_decisions:
-    - "Manter god-table posts no curto prazo ou extrair kv/push/watch/prefs"
-    - "Stash local (0002, lockfile, routeTree.gen) — não misturar com este epic"
+  last_step_completed: "Plano e03-docker-prod escrito; baseline vivo capturado"
+  open_decisions: []
   required_reading:
-    - specs/tech-architecture/tech-stack.md
-    - public/manifest.webmanifest
-    - src/routes/__root.tsx
-  next_skill: verify-work
+    - specs/epics/e03-docker-prod/PLAN.md
+    - specs/verifications/2026-08-16-docker-prod-baseline.md
+    - specs/IMPACT_LATEST.md
+  next_skill: develop-tdd
 learned_preferences:
   - "PT-BR, conciso, dono do repo a partir de 2026-08-16"
   - "Não rotacionar chaves neste ciclo — fallbacks no source permanecem"
