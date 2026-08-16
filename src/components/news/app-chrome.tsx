@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bookmark, ChevronDown, Newspaper, Search, Wifi } from "lucide-react";
+import { Bookmark, ChevronDown, Newspaper, Search, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
@@ -7,6 +7,12 @@ import { cn } from "@/lib/utils";
 import { AppMenu } from "./app-menu";
 import { Tip } from "./icon-btn";
 import { PrefsSync } from "./prefs-sync";
+
+/**
+ * Altura da faixa "Created with Grok / Remix" injetada pelo host.
+ * Não dá para remover; sobimos a TabBar e o conteúdo por cima.
+ */
+const HOST_CHROME = "3.25rem";
 
 export function AppChrome({
   category,
@@ -17,10 +23,16 @@ export function AppChrome({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-paper text-ink">
+    <div
+      className="min-h-dvh bg-paper text-ink"
+      style={{ ["--host-chrome" as string]: HOST_CHROME }}
+    >
       <PrefsSync />
       <CompactHeader category={category} />
-      {children}
+      {/* pb = tab bar (~3.5rem) + host chrome + safe area */}
+      <div className="pb-[calc(3.5rem+var(--host-chrome,3.25rem)+env(safe-area-inset-bottom,0px))]">
+        {children}
+      </div>
       <TabBar category={category} />
     </div>
   );
@@ -117,14 +129,17 @@ function TabBar({ category }: { category: Category }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = [
     { to: "/" as const, label: "Feed", icon: Newspaper, search: { secao: category } },
-    { to: "/fontes" as const, label: "Fontes", icon: Wifi, search: { secao: category } },
+    { to: "/fontes" as const, label: "Fontes", icon: User, search: { secao: category } },
     { to: "/buscar" as const, label: "Buscar", icon: Search, search: undefined },
     { to: "/salvos" as const, label: "Salvos", icon: Bookmark, search: undefined },
   ];
   return (
     <nav
       data-chrome="tabs"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 z-40 border-t border-line bg-paper"
+      style={{
+        bottom: `calc(var(--host-chrome, ${HOST_CHROME}) + env(safe-area-inset-bottom, 0px))`,
+      }}
     >
       <div className="mx-auto grid max-w-2xl grid-cols-4">
         {items.map((item) => {
