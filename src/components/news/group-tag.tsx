@@ -1,7 +1,7 @@
 import { groupOverrideOf } from "@/lib/news/fontes-prefs";
-import { groupStyle } from "@/lib/news/group-style";
+import { groupStyle, hasGroupStyle } from "@/lib/news/group-style";
 import { groupLabel, groupStyle as customGroupStyle } from "@/lib/news/groups";
-import { GROUP_LABELS, profileByHandle, type ProfileGroup } from "@/lib/news/profiles";
+import { profileByHandle } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
 
 export function groupOf(handle?: string | null, section?: string): string {
@@ -24,10 +24,9 @@ export function GroupTag({
   className?: string;
 }) {
   const id = group || groupOf(handle);
-  const label = id in GROUP_LABELS ? GROUP_LABELS[id as ProfileGroup] : groupLabel(id);
+  const label = groupLabel(id);
   if (!label) return null;
-  const builtIn = id in GROUP_LABELS;
-  const st = builtIn ? groupStyle(id as ProfileGroup) : null;
+  const st = hasGroupStyle(id) ? groupStyle(id) : null;
   return (
     <span
       data-group={id}

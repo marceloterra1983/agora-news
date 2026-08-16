@@ -16,11 +16,11 @@ const FIXTURES = [
   { handle: "ylecun", name: "Yann LeCun", group: "pesquisa", section: "ai" },
   { handle: "TheRundownAI", name: "The Rundown", group: "imprensa", section: "ai" },
   { handle: "simonw", name: "Simon Willison", group: "builders", section: "ai" },
-  { handle: "verge", name: "The Verge", group: "imprensa", section: "tech" },
-  { handle: "Apple", name: "Apple", group: "labs", section: "tech" },
-  { handle: "MKBHD", name: "Marques Brownlee", group: "builders", section: "tech" },
-  { handle: "folha", name: "Folha de S.Paulo", group: "imprensa", section: "brasil" },
-  { handle: "g1", name: "g1", group: "imprensa", section: "brasil" },
+  { handle: "verge", name: "The Verge", group: "tech-imprensa", section: "tech" },
+  { handle: "Apple", name: "Apple", group: "tech-empresas", section: "tech" },
+  { handle: "MKBHD", name: "Marques Brownlee", group: "tech-gadgets", section: "tech" },
+  { handle: "folha", name: "Folha de S.Paulo", group: "br-jornais", section: "brasil" },
+  { handle: "g1", name: "g1", group: "br-jornais", section: "brasil" },
 ];
 
 const EXTRAS = [
@@ -56,10 +56,11 @@ test("switching secao from ai to tech changes group chips and fontes handles", (
   assert.ok(ai.groupIds.includes("labs"));
   assert.ok(!tech.groupIds.includes("lideres"));
   assert.ok(!tech.groupIds.includes("pesquisa"));
-  assert.ok(tech.groupIds.includes("imprensa"));
-  assert.ok(tech.groupIds.includes("labs"));
-  assert.ok(tech.groupIds.includes("builders"));
-  assert.deepEqual(brasil.groupIds.filter((id) => id !== "novos"), ["imprensa"]);
+  assert.ok(!tech.groupIds.includes("labs"));
+  assert.ok(tech.groupIds.includes("tech-imprensa"));
+  assert.ok(tech.groupIds.includes("tech-empresas"));
+  assert.ok(tech.groupIds.includes("tech-gadgets"));
+  assert.deepEqual(brasil.groupIds.filter((id) => id !== "novos"), ["br-jornais"]);
   assert.ok(brasil.groupIds.includes("novos"));
 });
 

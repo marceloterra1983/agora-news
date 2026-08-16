@@ -1,5 +1,6 @@
+import { reservedGroupIds } from "./catalog-taxonomy.mjs";
+
 const DEFAULT_SECTION = "ai";
-const GROUP_ORDER = ["labs", "lideres", "pesquisa", "imprensa", "builders", "novos"];
 
 export const CUSTOM_KEY = "agora-custom-groups-v1";
 export const GROUP_MAP_KEY = "agora-fontes-groups-v1";
@@ -56,7 +57,7 @@ function writeJson(key, value) {
 
 function sanitizeCustom(raw) {
   if (!Array.isArray(raw)) return [];
-  const seen = new Set(GROUP_ORDER);
+  const seen = reservedGroupIds();
   const out = [];
   for (const item of raw) {
     if (!item || typeof item !== "object") continue;

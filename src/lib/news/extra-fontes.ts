@@ -138,7 +138,7 @@ export function addExtraFonte(row: ExtraFonte): ExtraFonte[] {
     ...loadExtraFontes().filter((x) => x.handle.toLowerCase() !== handle.toLowerCase()),
   ];
   pushWatch(next[0]);
-  const group = suggestGroup({ handle, name: next[0].name, bio: next[0].summary });
+  const group = suggestGroup({ handle, name: next[0].name, bio: next[0].summary }, next[0].section);
   if (group !== "novos") setGroupOverride(handle, group, next[0].section);
   return write(next);
 }

@@ -9,9 +9,7 @@ import {
   sectionNavTarget,
   writeLastSection,
 } from "@/lib/news/section-pref";
-import { GROUP_LABELS, type ProfileGroup } from "@/lib/news/profiles";
 import { groupStyle } from "@/lib/news/group-style";
-import { groupLabel } from "@/lib/news/groups";
 import { useSectionCatalog } from "@/lib/news/use-section-catalog";
 import { cn } from "@/lib/utils";
 import { AppMenu } from "./app-menu";
@@ -173,22 +171,21 @@ function GrokHeader({
             >
               Todos
             </button>
-            {catalog.groupIds.map((id) => {
-              const builtIn = id in GROUP_LABELS;
-              const st = groupStyle((builtIn ? id : "novos") as ProfileGroup);
-              const on = group === id;
+            {catalog.groups.map((g) => {
+              const st = groupStyle(g.id);
+              const on = group === g.id;
               return (
                 <button
-                  key={id}
+                  key={g.id}
                   type="button"
                   aria-pressed={on}
-                  onClick={() => pickGroup(id)}
+                  onClick={() => pickGroup(g.id)}
                   className={cn(
                     "inline-flex h-8 shrink-0 items-center rounded-full px-2.5 text-[11px] font-semibold",
                     on ? st.chipOn : st.chip,
                   )}
                 >
-                  {builtIn ? GROUP_LABELS[id as ProfileGroup] : groupLabel(id)}
+                  {g.label}
                 </button>
               );
             })}
