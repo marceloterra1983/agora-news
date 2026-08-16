@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   getDisabled,
+  getGroupOverrides,
   getNotifyHandles,
   getStarred,
   normHandle,
   setDisabled as persistDisabled,
+  setGroupOverride as persistGroup,
   setNotifyHandle as persistNotify,
   setStarred as persistStarred,
   toggleDisabled as persistToggleDisabled,
@@ -16,11 +18,13 @@ export function useFontesPrefs() {
   const [starred, setStarredState] = useState<string[]>([]);
   const [disabled, setDisabledState] = useState<string[]>([]);
   const [notify, setNotifyState] = useState<string[]>([]);
+  const [groups, setGroupsState] = useState<Record<string, string>>({});
 
   const refresh = useCallback(() => {
     setStarredState(getStarred());
     setDisabledState(getDisabled());
     setNotifyState(getNotifyHandles());
+    setGroupsState(getGroupOverrides());
   }, []);
 
   useEffect(() => {
@@ -41,9 +45,15 @@ export function useFontesPrefs() {
     starred,
     disabled,
     notify,
+    groups,
     isStarred: (h: string) => starred.includes(normHandle(h)),
     isDisabled: (h: string) => disabled.includes(normHandle(h)),
     isNotify: (h: string) => notify.includes(normHandle(h)),
+    groupOf: (h: string) => groups[normHandle(h)] ?? null,
+    setGroup: (h: string, group: string) => {
+      persistGroup(h, group);
+      refresh();
+    },
     toggleStar: (h: string) => {
       const next = persistToggleStar(h);
       refresh();

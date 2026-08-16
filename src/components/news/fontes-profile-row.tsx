@@ -1,11 +1,15 @@
-import { BadgeCheck, ChevronDown } from "lucide-react";
+import { BadgeCheck, CheckSquare, ChevronDown, Eye, MessageCircle, Percent, Square } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { FonteControls, FonteDisabledBadge } from "@/components/news/fonte-controls";
+import { ProfileEr } from "@/components/news/fontes-profile-er";
+import { GroupTag } from "@/components/news/group-tag";
 import { Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
+import { formatPostEr, formatPostQuality, formatPostReach } from "@/lib/news/fonte-metrics";
+import { displayTitle, relativeTime } from "@/lib/news/format";
 import { formatCount, type InfluenceRow } from "@/lib/news/influence";
-import { relativeTime } from "@/lib/news/format";
-import { blurbFor, GROUP_LABELS } from "@/lib/news/profiles";
+import { groupLabel } from "@/lib/news/groups";
+import { blurbFor } from "@/lib/news/profiles";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +19,8 @@ export function ProfileRow({
   open,
   prefs,
   hideGroup,
+  picking,
+  picked,
   onToggle,
   onToggleNotify,
 }: {
@@ -23,20 +29,13 @@ export function ProfileRow({
   open: boolean;
   prefs: ReturnType<typeof useFontesPrefs>;
   hideGroup?: boolean;
+  picking?: boolean;
+  picked?: boolean;
   onToggle: () => void;
   onToggleNotify: (handle: string) => void;
 }) {
   const pausedRow = prefs.isDisabled(row.handle);
   const followers = row.followers ? formatCount(row.followers) : "";
-  const controlProps = {
-    handle: row.handle,
-    starred: prefs.isStarred(row.handle),
-    disabled: pausedRow,
-    notify: prefs.isNotify(row.handle),
-    onToggleStar: prefs.toggleStar,
-    onToggleDisabled: prefs.toggleDisabled,
-    onToggleNotify,
-  };
   return (
     <li className={cn("border-b border-line", pausedRow && "opacity-55")}>
       <div className="flex items-start gap-1">
@@ -61,10 +60,21 @@ export function ProfileRow({
             </span>
           )}
           <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5">
               <span className="truncate text-sm font-medium text-ink">{row.name}</span>
               {row.verified ? (
                 <BadgeCheck className="size-3 shrink-0 text-ink" aria-label="verificado" />
+              ) : null}
+              {followers ? (
+                <span className="shrink-0 text-[11px] tabular-nums text-mute">{followers}</span>
+              ) : null}
+              <GroupTag group={row.group} />
+              {picking ? (
+                picked ? (
+                  <CheckSquare className="size-3.5 shrink-0 text-ink" />
+                ) : (
+                  <Square className="size-3.5 shrink-0 text-mute" />
+                )
               ) : null}
               <FonteDisabledBadge show={pausedRow} />
               <ChevronDown
@@ -74,26 +84,32 @@ export function ProfileRow({
                 )}
               />
             </span>
-            <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-mute">
-              {GROUP_LABELS[row.group] && row.group !== "novos" ? (
-                <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-paper-2 px-1.5 text-[9px] font-semibold leading-none text-ink-soft">
-                  {GROUP_LABELS[row.group]}
-                </span>
-              ) : (
-                <span className="truncate">@{row.handle}</span>
-              )}
+            {row.lastPost?.title ? (
+              <span className="mt-0.5 block truncate text-[11px] leading-snug text-mute">
+                {displayTitle(row.lastPost.title)}
+              </span>
+            ) : null}
+            <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-mute">
               {row.lastPost ? (
                 <>
-                  <span className="shrink-0 text-line-strong">·</span>
                   <time dateTime={row.lastPost.publishedAt} suppressHydrationWarning className="shrink-0 tabular-nums">
                     {relativeTime(row.lastPost.publishedAt)}
                   </time>
-                </>
-              ) : null}
-              {followers ? (
-                <>
-                  <span className="shrink-0 text-line-strong">·</span>
-                  <span className="shrink-0 tabular-nums">{followers}</span>
+                  {[
+                    { key: "er", label: "Engajamento", value: formatPostEr(row.lastPost), Icon: Percent },
+                    { key: "alc", label: "Alcance", value: formatPostReach(row.lastPost, row.followers), Icon: Eye },
+                    { key: "ql", label: "Qualidade", value: formatPostQuality(row.lastPost), Icon: MessageCircle },
+                  ]
+                    .filter((m) => m.value)
+                    .map((m) => (
+                      <Tip key={m.key} label={`${m.label} ${m.value}`}>
+                        <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
+                          <m.Icon className="size-3" aria-hidden />
+                          <span className="sr-only">{m.label} </span>
+                          {m.value}
+                        </span>
+                      </Tip>
+                    ))}
                 </>
               ) : null}
             </span>
@@ -104,14 +120,15 @@ export function ProfileRow({
       {open ? (
         <div className="mb-2.5 ml-7 mr-0.5 rounded-md bg-paper-2 px-3 py-2.5">
           {hideGroup || row.group === "novos" ? null : (
-            <p className="text-[12px] font-medium text-mute">{GROUP_LABELS[row.group]}</p>
+            <p className="text-[12px] font-medium text-mute">{groupLabel(row.group)}</p>
           )}
           <p className={cn("text-[13px] leading-relaxed text-ink-soft", !hideGroup && row.group !== "novos" && "mt-1")}>
             {row.group === "novos" && row.bio ? row.bio : blurbFor(row.handle, row.name)}
           </p>
-          {row.followers ? (
-            <p className="mt-2 text-[12px] text-mute">{formatCount(row.followers)} seguidores</p>
-          ) : null}
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
+            {row.followers ? <span>{formatCount(row.followers)} seguidores</span> : null}
+            <ProfileEr handle={row.handle} fallback={row.er} />
+          </p>
           <div className="mt-3 border-t border-line pt-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-mute">
               Último post
@@ -143,12 +160,22 @@ export function ProfileRow({
                 target="_blank"
                 rel="noreferrer"
                 aria-label={`Abrir @${row.handle} no X`}
-                className="grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
+                className="grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper"
               >
                 <XLogo className="size-3.5" />
               </a>
             </Tip>
-            <FonteControls {...controlProps} />
+            <FonteControls
+              handle={row.handle}
+              starred={prefs.isStarred(row.handle)}
+              disabled={pausedRow}
+              notify={prefs.isNotify(row.handle)}
+              group={row.group}
+              onToggleStar={prefs.toggleStar}
+              onToggleDisabled={prefs.toggleDisabled}
+              onToggleNotify={onToggleNotify}
+              onSetGroup={prefs.setGroup}
+            />
           </div>
         </div>
       ) : null}

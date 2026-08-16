@@ -1,3 +1,4 @@
+import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles } from "./profile-store";
 import { listWatchAccounts } from "./watch";
@@ -7,14 +8,25 @@ import type { Category } from "./types";
 export type InfluenceRow = {
   handle: string;
   name: string;
-  group: XProfile["group"];
+  group: XProfile["group"] | string;
   followers: number;
   following: number;
   tweets: number;
   verified: boolean;
   avatar: string | null;
   bio: string | null;
-  lastPost: { id: string; title: string; publishedAt: string } | null;
+  lastPost: {
+    id: string;
+    title: string;
+    publishedAt: string;
+    likes?: number;
+    views?: number;
+    replies?: number;
+    reposts?: number;
+    quotes?: number;
+    bookmarks?: number;
+    er?: number;
+  } | null;
   inFeed: number;
   articles: number;
   longform: number;
@@ -141,6 +153,11 @@ function scoreOf(stats: LiveStats, inFeed: number): number {
   return reach * 28 + Math.min(inFeed, 24) * 5 + (stats.verified ? 3 : 0);
 }
 
+function lastWithBuzz(last: LastHit | null, handle: string): InfluenceRow["lastPost"] {
+  if (!last) return null;
+  return { id: last.id, title: last.title, publishedAt: last.publishedAt, ...(buzzFor(handle) ?? {}) };
+}
+
 function recencySort(a: InfluenceRow, b: InfluenceRow): number {
   const ta = a.lastPost ? Date.parse(a.lastPost.publishedAt) : 0;
   const tb = b.lastPost ? Date.parse(b.lastPost.publishedAt) : 0;
@@ -221,16 +238,14 @@ function buildRows(
       name: p.name,
       group: p.group,
       ...stats,
-      lastPost: last
-        ? { id: last.id, title: last.title, publishedAt: last.publishedAt }
-        : null,
+      lastPost: lastWithBuzz(last, p.handle),
       inFeed: recentCount,
       articles: last?.count ?? 0,
       longform: 0,
       likes: 0,
       engagement: 0,
       views: 0,
-      er: 0,
+      er: buzzFor(p.handle)?.profileEr ?? 0,
       score: scoreOf(stats, recentCount),
     } satisfies InfluenceRow;
   });
@@ -252,16 +267,14 @@ function buildRows(
       verified: false,
       avatar: stats.avatar || w.avatar,
       bio: stats.bio || w.summary || null,
-      lastPost: last
-        ? { id: last.id, title: last.title, publishedAt: last.publishedAt }
-        : null,
+      lastPost: lastWithBuzz(last, w.handle),
       inFeed: last?.count ?? 0,
       articles: last?.count ?? 0,
       longform: 0,
       likes: 0,
       engagement: 0,
       views: 0,
-      er: 0,
+      er: buzzFor(w.handle)?.profileEr ?? 0,
       score: scoreOf(stats, last?.count ?? 0),
     });
   }
@@ -283,6 +296,12 @@ export async function enrichFontes(section: Category): Promise<InfluenceRow[]> {
   });
   if (missing.length) {
     await mapPool(missing.slice(0, 8), 6, (p) => fetchOne(p.handle));
+  }
+  const needBuzz = (await loadFontesFast(section))
+    .filter((r) => r.lastPost && !buzzIsFresh(r.handle))
+    .slice(0, 20);
+  if (needBuzz.length) {
+    await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle));
   }
   return loadFontesFast(section);
 }
