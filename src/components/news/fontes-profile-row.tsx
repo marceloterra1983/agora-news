@@ -99,7 +99,6 @@ export function ProfileRow({
             </span>
           </span>
         </button>
-        {!open ? <FonteControls {...controlProps} /> : null}
       </div>
 
       {open ? (
