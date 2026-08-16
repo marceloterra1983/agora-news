@@ -50,14 +50,6 @@ export function StoryCard({
               {story.source.replace(/^@/, "").charAt(0).toUpperCase()}
             </span>
           )}
-          {unread ? (
-            <span
-              data-unread-mark=""
-              className="rounded-full bg-mark px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-mark-fg"
-            >
-              Novo
-            </span>
-          ) : null}
           <span className="lowercase">@{story.source.replace(/^@/, "")}</span>
           <GroupTag handle={story.source} />
           <span aria-hidden>·</span>
@@ -118,14 +110,6 @@ export function StoryCard({
       )}
       <div className="min-w-0">
         <p className="mb-1.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-mute">
-          {unread ? (
-            <span
-              data-unread-mark=""
-              className="rounded-full bg-mark px-1.5 py-px text-[10px] tracking-wider text-mark-fg"
-            >
-              Novo
-            </span>
-          ) : null}
           <span className="text-mark">{story.sourceLabel}</span>
           <GroupTag handle={story.source} className="normal-case tracking-normal" />
           <span aria-hidden>·</span>
