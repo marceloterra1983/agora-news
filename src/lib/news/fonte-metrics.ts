@@ -1,5 +1,7 @@
 /** Métricas de post/perfil via fxtwitter — extraídas do Grok (reef-blade). */
 
+import { isHighPostEr, isHighPostQuality, isHighPostReach } from "./metric-outlier.mjs";
+
 export type PostBuzz = {
   likes: number;
   views: number;
@@ -113,38 +115,34 @@ export function getProfileMetrics(handle: string): { profileEr: number } {
   return { profileEr: buzzFor(handle.replace(/^@+/, "").trim())?.profileEr ?? 0 };
 }
 
-export function formatPostEr(post: { er?: number } | null | undefined): string {
-  const er = Number(post?.er) || 0;
-  if (er <= 0) return "";
-  return formatRate(er);
+export function formatPostEr(
+  post: { er?: number } | null | undefined,
+  profileEr?: number,
+): string {
+  if (!isHighPostEr(post, profileEr)) return "";
+  return formatRate(Number(post?.er) || 0);
 }
 
-/** Views ÷ seguidores. >100% = o post saiu da bolha. */
+/** Views ÷ seguidores. Só no card se o alcance for outlier (≥25% dos seguidores). */
 export function formatPostReach(
   post: { views?: number } | null | undefined,
   followers?: number,
 ): string {
-  const views = Number(post?.views) || 0;
-  const fol = Number(followers) || 0;
-  if (views < 50 || fol < 100) return "";
-  const r = views / fol;
+  if (!isHighPostReach(post, followers)) return "";
+  const r = (Number(post?.views) || 0) / (Number(followers) || 0);
   if (r >= 1) {
     const x = r >= 10 ? r.toFixed(0) : r.toFixed(1).replace(".", ",").replace(/,0$/, "");
     return `${x}×`;
   }
-  const pct = r * 100;
-  if (pct < 0.05) return "";
-  return formatRate(pct);
+  return formatRate(r * 100);
 }
 
-/** Respostas ÷ curtidas. Alto = conversa; baixo = like passivo. */
+/** Respostas ÷ curtidas. Só no card se a conversa for outlier (≥25%). */
 export function formatPostQuality(
   post: { replies?: number; likes?: number } | null | undefined,
 ): string {
-  const likes = Number(post?.likes) || 0;
-  const replies = Number(post?.replies) || 0;
-  if (likes < 10) return "";
-  return formatRate((replies / likes) * 100);
+  if (!isHighPostQuality(post)) return "";
+  return formatRate(((Number(post?.replies) || 0) / (Number(post?.likes) || 0)) * 100);
 }
 
 export function formatRate(pct: number): string {
