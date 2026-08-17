@@ -75,3 +75,97 @@ test("public catalog is anonymous-only and owner watches are isolated", async (t
     "owner catalog must query only the verified owner",
   );
 });
+
+test("retained feed snapshots are refiltered for the current owner", async (t) => {
+  const previousFetch = globalThis.fetch;
+  const previousSecret = process.env.SUPABASE_SECRET_KEY;
+  const previousPublishable = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const previousUrl = process.env.SUPABASE_URL;
+  let unavailable = false;
+
+  process.env.SUPABASE_SECRET_KEY = "sb_secret_test_only";
+  process.env.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_test_only";
+  process.env.SUPABASE_URL = "https://supabase.test";
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.includes("/user_watches")) {
+      return Response.json(
+        url.includes("user_id=eq.user-a")
+          ? [
+              {
+                handle: "usera-source",
+                name: "A",
+                avatar: null,
+                summary: "A",
+                followers: 1,
+                section: "ai",
+              },
+            ]
+          : [
+              {
+                handle: "userb-source",
+                name: "B",
+                avatar: null,
+                summary: "B",
+                followers: 2,
+                section: "ai",
+              },
+            ],
+      );
+    }
+    if (unavailable) return new Response("unavailable", { status: 503 });
+    return Response.json([
+      {
+        post_id: "owner-a-story",
+        account: "usera-source",
+        posted_at: "2026-08-17T00:00:00.000Z",
+        posted_at_sp: null,
+        content: "A",
+        translation_pt: "A",
+        summary_pt: "A",
+        post_url: "https://x.com/usera-source/status/owner-a-story",
+        media_label: null,
+        image_url: null,
+        category: "ai",
+        batch_name: "test",
+      },
+    ]);
+  };
+
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+    for (const [name, value] of [
+      ["SUPABASE_SECRET_KEY", previousSecret],
+      ["SUPABASE_PUBLISHABLE_KEY", previousPublishable],
+      ["SUPABASE_URL", previousUrl],
+    ]) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  });
+
+  const { createServer } = await import("vite");
+  const server = await createServer({
+    configFile: false,
+    logLevel: "silent",
+    resolve: { alias: { "@": join(root, "src") } },
+    server: { middlewareMode: true },
+  });
+  t.after(() => server.close());
+
+  const [catalog, feed, supabase] = await Promise.all([
+    server.ssrLoadModule(`/src/lib/news/server-catalog.ts?retained=${Date.now()}`),
+    server.ssrLoadModule(`/src/lib/news/feed.ts?retained=${Date.now()}`),
+    server.ssrLoadModule(`/src/lib/news/supabase.ts?retained=${Date.now()}`),
+  ]);
+  const ownerA = await catalog.serverCatalogFor("ai", "user-a");
+  const ownerB = await catalog.serverCatalogFor("ai", "user-b");
+  const fresh = await feed.loadFeed("ai", ownerA);
+  assert.deepEqual(fresh.stories.map((story) => story.source), ["usera-source"]);
+
+  unavailable = true;
+  supabase.invalidateSupabaseList();
+  const retained = await feed.loadFeed("ai", ownerB);
+  assert.equal(retained.live, false);
+  assert.deepEqual(retained.stories, []);
+});
