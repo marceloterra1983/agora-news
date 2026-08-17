@@ -1,6 +1,6 @@
 epic_id: e04
 status: active
-current_story: e04s07
+current_story: e04s08
 stories:
   e04s01: passing
   e04s02: passing
@@ -9,6 +9,7 @@ stories:
   e04s05: passing
   e04s06: passing
   e04s07: passing
+  e04s08: failing
 last_verified_baseline:
   commit: a73451c
   tests: "270 passed, 0 failed, 0 skipped"

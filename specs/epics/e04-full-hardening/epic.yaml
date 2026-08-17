@@ -19,6 +19,7 @@ stories:
   - e04s05
   - e04s06
   - e04s07
+  - e04s08
 bcps:
   e04s01: 8
   e04s02: 8
@@ -27,6 +28,7 @@ bcps:
   e04s05: 8
   e04s06: 5
   e04s07: 8
+  e04s08: 8
 deltas:
   e04s01: MODIFIED
   e04s02: MODIFIED
@@ -35,3 +37,4 @@ deltas:
   e04s05: MODIFIED
   e04s06: MODIFIED
   e04s07: MODIFIED
+  e04s08: MODIFIED

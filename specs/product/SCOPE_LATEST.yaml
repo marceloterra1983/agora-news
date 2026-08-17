@@ -25,6 +25,8 @@ in_scope:
     outcome: "Confirmed duplicate/dead runtime paths are removed and documentation matches the verified deployment."
   - id: e04s07
     outcome: "The owner signs in through closed-by-default single-user email authentication without an unavailable OAuth broker."
+  - id: e04s08
+    outcome: "Public and personalized catalogs are isolated, remaining audited UI and operational gaps close, and verified dead code is removed."
 
 out_of_scope:
   - item: "Microservices, event bus, queue platform or multiple production replicas"

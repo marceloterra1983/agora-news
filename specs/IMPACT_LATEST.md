@@ -1,74 +1,87 @@
-## Status
+# Impacto — e04s08 audit remediation closeout
 
-Concluído no commit `07c2e256`: Better Auth email/senha para uma conta
-allowlisted, sem o broker Grok OAuth. Os testes de contrato, typecheck e lint
-passam; resta apenas a verificação operacional de build/rollback e a manutenção
-de índices/documentação.
+## Target
 
-## Target (histórico)
-
-Replace the unavailable Grok OAuth broker with Better Auth email/password for
-one allowlisted production account, following
-`docs/superpowers/specs/2026-08-17-single-user-email-auth-design.md`.
-
-## Dependents (7 boundary groups)
-
-1. **Auth construction** — `src/lib/auth/server.ts` creates Better Auth and
-   exports `authConfigured`; `/api/auth/*`, `verify.server.ts`, every private
-   preference/watch/push API and SSR session read depend on that contract.
-2. **Runtime safety** — `src/lib/runtime-config.ts` and
-   `src/lib/auth/runtime-config.ts` fail production startup closed; the Nitro
-   runtime plugin calls them before accepting traffic.
-3. **Browser auth** — `src/lib/auth/client.ts` supplies session/sign-out to
-   `login.tsx`, `app-menu.tsx`, `use-current-user.ts` and auth middleware.
-4. **Login UI** — `src/routes/login.tsx` owns signed-out, pending and signed-in
-   email/password states, including the temporary allowlisted signup flow.
-5. **Removed broker path** — the former popup/provider modules are historical;
-   no production caller should depend on them.
-6. **Release configuration** — `.env.example`, `compose.yml`,
-   `scripts/ci-release-smoke.sh` and `docs/production-runbook.md` describe and
-   inject the production auth contract.
-7. **Regression gates** — `production-config.behavior.test.mjs`,
-   `agora-next.test.mjs`, `accessibility-contract.test.mjs` and
-   `mobile-viewport.test.mjs` encode current startup, login and responsive
-   behavior.
+Executar as recomendações confirmadas na auditoria do HEAD `c71c4fe`, com
+prioridade para a separação entre catálogo público e `user_watches`, seguida
+pela consistência do feed, pequenos contratos de UI/PWA, continuidade
+operacional, documentação viva e limpeza de código sem callers.
 
 ## Purpose, callers and contracts
 
-- `server.ts` owns one same-origin Better Auth instance. Its callers require a
-  persistent session, host-only secure cookie, canonical origin and no shared
-  production fallback user.
-- `client.ts` exposes `authClient`, session and sign-out behavior. UI callers
-  must retain these interfaces while OAuth/popup code is deleted.
-- Runtime config owns fail-fast production validation. Env-less builds and
-  explicit local/preview modes must remain valid.
-- `/login` owns accessible authentication UI. It must keep one descriptive
-  heading, visible labels, announced errors, busy controls and signed-in state.
+- `server-catalog.ts` monta o catálogo permitido para uma seção. Seus callers
+  são `loadFeed()` e `loadNews()`; o contrato novo é: visitante recebe somente
+  perfis públicos, usuário autenticado recebe somente as próprias watches.
+- `feed.ts` baixa, limita e retém o último feed válido. Seus callers são
+  `server-news.ts`, testes de acessibilidade e o cache em memória; um único
+  snapshot de catálogo deve atravessar a consulta, todos os filtros e a
+  refiltragem de `lastGood` após falha.
+- `server-news.ts` atende SSR, server functions e `/api/feed`; deve resolver a
+  sessão apenas no servidor e impedir cache público de respostas personalizadas.
+- `theme.ts`, `pwa.ts` e `pwa-install.tsx` aplicam o tema inicial e o contrato de
+  instalação; devem preservar SSR/hydration e anunciar mudanças de estado.
+- `backup-production.sh`, o wrapper externo do cron e o runbook formam o
+  contrato de recuperação; o snapshot deve registrar o agendamento e o wrapper,
+  e os logs do host precisam de retenção limitada.
+
+## Dependents (18 boundary groups)
+
+- Feed público: `src/routes/api/feed.ts`.
+- SSR e paginação: `src/lib/news/server-news.ts`.
+- Lista e fallback: `src/lib/news/feed.ts` e `src/lib/news/supabase.ts`.
+- Catálogo: `src/lib/news/server-catalog.ts`, `section-catalog.mjs` e
+  `profiles.ts`.
+- Sessão: `src/lib/auth/verify.server.ts`.
+- Persistência de watches: `src/lib/news/watch.ts` e `/api/watch`.
+- Ingestão: `src/lib/news/ingest.ts` e `ingest-scan.ts`.
+- UI personalizada: `use-section-catalog.ts`, `extra-fontes.ts`, `fontes.tsx`
+  e `buscar.tsx`.
+- Tema/PWA: `__root.tsx`, `theme.ts`, `pwa.ts`, `pwa-install.tsx` e o manifest.
+- Operação: Compose, scripts de backup, crontab, wrapper e runbook.
+- Gates: testes de catálogo, persistência privada, acessibilidade, release e
+  simplificação.
 
 ## Affected stories
 
-- New `e04s07`: single-user email authentication.
-- `e04s01`: production auth variables and startup contract are modified.
-- `e04s04`: Nitro/Docker release smokes must use the new variables.
-- `e04s05`: the login interaction and accessibility contract change.
-- `e04s06`: broker-only runtime and documentation become deletable.
+- `e04s02`: ownership de watches e persistência privada.
+- `e04s04`: cache HTTP, CI, artifact smoke e operação.
+- `e04s05`: tema, formulários, estados anunciados e PWA.
+- `e04s06`: documentação viva e zero-consumer cleanup.
+- `e04s08`: fechamento das recomendações desta auditoria.
 
 ## Test coverage
 
-- Configuration and single-user auth tests cover fail-closed startup, the
-  normalized allowlist, bootstrap default-closed behavior, password bounds,
-  unauthorized sign-in/sign-up and safe errors.
-- Accessibility and release tests cover the login state, responsive behavior
-  and absence of broker consumers.
+- `private-persistence.behavior.test.mjs`: ownership e união usada pela ingestão.
+- `catalog-feed-scope.test.mjs`: allowlist do catálogo e escopo por seção.
+- `accessibility-contract.test.mjs`: feed truthful, tema, formulários e PWA.
+- `release-gates.behavior.test.mjs`: Compose, CI e release smoke.
+- `simplification-contract.test.mjs`: documentação e zero consumers.
+- Gap P0: não existe teste que prove que uma watch de A nunca entra no feed
+  anônimo ou no feed de B, inclusive quando a dependência falha depois de
+  `lastGood` receber o snapshot personalizado de A.
+- Gap P1: não existe teste que prove o mesmo catálogo em download e pós-filtro.
+- Gap P2: não há contrato para `theme-color` no boot, metadados dos inputs,
+  live region do instalador, logrotate ou recuperação do cron.
 
-## Residual risk: operational
+## Risk: High
 
-The implementation risk is closed by the current behavior gates. Remaining
-risk is operational: verify a fresh production build/rollback and keep the
-allowlisted-account policy explicit.
+O feed é uma fronteira pública compartilhada e hoje combina dados owner-scoped
+com cache HTTP público. O conserto atravessa sessão, catálogo e filtragem; uma
+mudança parcial pode vazar dados ou fazer fontes do dono desaparecerem.
 
-## Recommended action (closeout)
+## Risk score
 
-Preserve `/api/auth/*`, persistent Postgres, cookie/CSRF settings, session
-consumers and owner-scoped APIs. Do not add a new auth broker or infrastructure
-layer without a measured requirement.
+- Fan-in: 4/4 — SSR, API, React Query, testes e ingestão dependem do contrato.
+- Fan-out: 3/3 — sessão, Supabase, catálogo, cache e watches são consultados.
+- Recent churn: 3/3 — os arquivos mudaram repetidamente no hardening recente.
+- Total: 10/10.
+
+## Recommended action
+
+Adicionar primeiro um teste comportamental de isolamento, depois fazer o feed
+resolver um catálogo owner-scoped uma única vez e refiltrar qualquer fallback
+por esse mesmo catálogo. Respostas personalizadas devem ser `private, no-store`;
+a união global permanece exclusiva da ingestão. UI, operação, documentação e
+limpeza entram somente após o gate P1 passar.
+
+Nenhuma chave será rotacionada ou revogada. Nenhum pacote novo será adicionado.

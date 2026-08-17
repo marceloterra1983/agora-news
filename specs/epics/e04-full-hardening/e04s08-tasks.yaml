@@ -1,0 +1,82 @@
+story_id: e04s08
+title: "Close confirmed post-audit gaps"
+status: failing
+bcps: 8
+tasks:
+  - id: 1
+    description: "RED: specify anonymous, owner-scoped, retained-fallback and ingest-union catalog behavior"
+    verify: "node --experimental-strip-types --test scripts/public-catalog-privacy.behavior.test.mjs"
+    risk: P0
+    security: low
+    status: failing
+    allure:
+      { severity: critical, categories: ["Security Review", "Privacy", "unit"] }
+  - id: 2
+    description: "Use one verified public-or-owner catalog through download and filtering"
+    verify: "node --experimental-strip-types --test scripts/public-catalog-privacy.behavior.test.mjs scripts/private-persistence.behavior.test.mjs scripts/catalog-feed-scope.test.mjs && npm run typecheck && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
+    risk: P0
+    security: high
+    status: failing
+    allure:
+      {
+        severity: critical,
+        categories: ["Security Review", "Feed", "Ownership"],
+      }
+  - id: 3
+    description: "Prevent public caching of any personalized feed response"
+    verify: "node --experimental-strip-types --test --test-name-pattern='cache|anonymous|owner' scripts/public-catalog-privacy.behavior.test.mjs scripts/release-gates.behavior.test.mjs && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
+    risk: P0
+    security: high
+    status: failing
+    allure:
+      {
+        severity: critical,
+        categories: ["Security Review", "HTTP Cache", "integration"],
+      }
+  - id: 4
+    description: "Close confirmed first-paint theme, form metadata and PWA announcement gaps"
+    verify: "node --experimental-strip-types --test scripts/accessibility-contract.test.mjs scripts/mobile-viewport.test.mjs"
+    risk: P2
+    security: none
+    status: failing
+    allure: { severity: normal, categories: ["Accessibility", "PWA", "UI"] }
+  - id: 5
+    description: "Bound host cron logs and include schedule/wrapper in production snapshots"
+    verify: "node --experimental-strip-types --test --test-name-pattern='log|cron|backup|restore' scripts/release-gates.behavior.test.mjs scripts/backup-contract.test.mjs && logrotate -d ops/logrotate/agora-news >/dev/null"
+    risk: P1
+    security: low
+    status: failing
+    allure: { severity: high, categories: ["Operations", "Backup", "Recovery"] }
+  - id: 6
+    description: "Align live release documentation and preserve the no-rotation key decision"
+    verify: "node --experimental-strip-types --test --test-name-pattern='documentation|runbook|state' scripts/simplification-contract.test.mjs scripts/release-gates.behavior.test.mjs && git diff --check"
+    risk: P3
+    security: none
+    status: failing
+    allure: { severity: minor, categories: ["Documentation", "Release"] }
+  - id: 7
+    description: "Remove confirmed zero-consumer exports while preserving module-format boundaries"
+    verify: "node --experimental-strip-types --test scripts/simplification-contract.test.mjs scripts/section-catalog.test.mjs scripts/catalog-feed-scope.test.mjs && npm run typecheck"
+    risk: P3
+    security: none
+    status: failing
+    allure: { severity: minor, categories: ["Simplification", "Refactor"] }
+  - id: 8
+    description: "Run full gates and an affected-path security review"
+    verify: "npm test && npm run typecheck && npm run lint && npm run build && npm audit --omit=dev && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
+    risk: P0
+    security: high
+    status: failing
+    allure:
+      {
+        severity: critical,
+        categories: ["Security Review", "Regression", "Build"],
+      }
+  - id: 9
+    description: "Deploy a versioned image with unchanged secrets and smoke production"
+    verify: "CI_REQUIRED_SMOKES=1 NEWS_SMOKE_URL=https://news.automatizems.com npm test && curl -fsS https://news.automatizems.com/api/health/live >/dev/null && curl -fsS https://news.automatizems.com/api/health >/dev/null && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
+    risk: P0
+    security: high
+    status: failing
+    allure:
+      { severity: critical, categories: ["Release", "Production", "Rollback"] }
