@@ -66,7 +66,8 @@ test("loadStory hydrates the full post before the list stub", () => {
   const fn = src.slice(src.indexOf("export const loadStory"));
   assert.match(fn, /downloadPostById/);
   assert.match(fn, /hydrateStory/);
-  assert.ok(fn.indexOf("downloadPostById") < fn.indexOf("peekStory"));
+  assert.match(fn, /if\s*\(!full\)\s*return null/);
+  assert.doesNotMatch(fn, /peekStory/);
 });
 
 test("ArticleView shows avatar and hides a duplicated title", () => {
