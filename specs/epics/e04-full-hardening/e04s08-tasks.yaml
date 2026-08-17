@@ -52,7 +52,7 @@ tasks:
     verify: "node --experimental-strip-types --test --test-name-pattern='documentation|runbook|state' scripts/simplification-contract.test.mjs scripts/release-gates.behavior.test.mjs && git diff --check"
     risk: P3
     security: none
-    status: failing
+    status: passing
     allure: { severity: minor, categories: ["Documentation", "Release"] }
   - id: 7
     description: "Remove confirmed zero-consumer exports while preserving module-format boundaries"

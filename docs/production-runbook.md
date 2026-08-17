@@ -26,7 +26,8 @@ Depois do primeiro cadastro, defina `false` e reinicie o serviço.
 
 ## Cutover
 
-1. Crie o Postgres persistente, chaves Supabase novas e um novo par VAPID.
+1. Reutilize o Postgres persistente e as chaves Supabase/VAPID atualmente
+   configuradas. Não gere, revogue ou substitua chaves nesta operação.
    Preencha o `.env` no host e defina `AUTH_ALLOWED_EMAIL` para o único e-mail.
 2. No SQL Editor do Supabase, aplique `scripts/supabase-domain-tables.sql` e depois
    `scripts/supabase-private-persistence-migrate.sql`. Guarde e confira o manifesto
@@ -63,14 +64,20 @@ tail -f /home/marce/backups/news/cron-alerts.log
 Os jobs usam logs dedicados em `/home/marce/backups/news/`; o caminho legado
 `~/.pm2/logs/news-ingest-cron.log` não é mais usado.
 
+A política versionada `ops/logrotate/agora-news` gira esses logs diariamente,
+mantém 14 cópias compactadas e gira antecipadamente a partir de 10 MiB. Neste
+host, a crontab do usuário `marce` executa a política às 00:15 com estado em
+`/home/marce/backups/news/logrotate.status`; a instalação em `/etc/logrotate.d`
+fica reservada ao operador root quando a política global do host for revisada.
+
 ## Backup periódico
 
 O host executa `/home/marce/news/scripts/backup-production.sh` diariamente às
 03:30 (horário local), pelo crontab do usuário `marce`. Em seguida,
 `/home/marce/news/scripts/backup-to-drive.sh` copia o snapshot para o remote
 privado `gdrive:` e conserva os 30 snapshots remotos mais recentes. Cada
-snapshot contém o dump custom do Postgres, bundle Git, imagem Docker, manifesto
-e hashes; o `.env` é criptografado com age. Os scripts evitam concorrência,
+snapshot contém o dump custom do Postgres, bundle Git, imagem Docker, manifesto,
+crontab, wrapper de alertas e hashes; o `.env` é criptografado com age. Os scripts evitam concorrência,
 validam o dump e verificam os hashes locais e remotos.
 
 A identidade privada age fica fora do repositório em
