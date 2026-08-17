@@ -13,24 +13,6 @@ export type XProfile = {
   blurb: string;
 };
 
-export const GROUP_LABELS: Record<string, string> = {
-  labs: "Empresas",
-  lideres: "CEOs",
-  pesquisa: "Cientistas",
-  imprensa: "Imprensa",
-  builders: "Devs",
-  novos: "Outros",
-};
-
-export const GROUP_ORDER: ProfileGroup[] = [
-  "labs",
-  "lideres",
-  "pesquisa",
-  "imprensa",
-  "builders",
-  "novos",
-];
-
 const ALL: XProfile[] = [...AI_PROFILES, ...TECH_PROFILES, ...BRASIL_PROFILES];
 
 export function allProfiles(): XProfile[] {

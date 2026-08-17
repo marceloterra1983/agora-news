@@ -94,7 +94,7 @@ function InstallPage() {
             to="/"
             search={{ secao: "ai" }}
             aria-label="Voltar para IA"
-            className="mt-8 grid size-8 place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
+            className="mt-8 grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
           >
             <ArrowLeft className="size-4" />
           </Link>

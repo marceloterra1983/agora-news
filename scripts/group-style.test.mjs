@@ -6,8 +6,8 @@ import test from "node:test";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-test("GROUP_LABELS maps novos → Outros", () => {
-  const src = readFileSync(join(root, "src/lib/news/profiles.ts"), "utf8");
+test("taxonomy maps novos → Outros", () => {
+  const src = readFileSync(join(root, "src/lib/news/catalog-taxonomy.mjs"), "utf8");
   assert.match(src, /novos:\s*"Outros"/);
   assert.doesNotMatch(src, /novos:\s*"Novos"/);
 });

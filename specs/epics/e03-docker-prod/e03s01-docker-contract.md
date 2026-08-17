@@ -50,7 +50,7 @@ Processo de produção reproduzível, restart automático, sem `vite dev` no ar.
 ## 9. Requirements
 
 #### ADDED: Imagem de produção multi-stage
-Build: `npm ci` + `npx vite build` (não `npm run build` no stage de imagem — `db:migrate` precisa `DATABASE_URL` e não deve rodar sem o `.env` montado). Runtime: `node .output/server/index.mjs`, user `node`, `EXPOSE 3080`, `ENV PORT=3080 NITRO_PORT=3080 NITRO_HOST=0.0.0.0 NODE_ENV=production`. Sem `vite dev` / `npm run dev`.
+Build: `npm ci` + `npx vite build` (`npm run build` no host também é só `vite build`; migrate é `npm run db:migrate` e precisa `DATABASE_URL` no `.env` montado). Runtime: `node .output/server/index.mjs`, user `node`, `EXPOSE 3080`, `ENV PORT=3080 NITRO_PORT=3080 NITRO_HOST=0.0.0.0 NODE_ENV=production`. Sem `vite dev` / `npm run dev`.
 
 #### ADDED: Compose serviço `news`
 `restart: unless-stopped`, `env_file: .env`, `ports: ["127.0.0.1:3080:3080"]`, healthcheck HTTP em `/api/health` aceitando 200 **ou** 503 (processo up; 503 = feed stale). Sem publicar 8080.

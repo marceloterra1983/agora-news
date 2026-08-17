@@ -11,8 +11,8 @@ stories:
   e04s07: passing
   e04s08: passing
 last_verified_baseline:
-  commit: 48985d3
-  tests: "283 passed, 0 failed, 0 skipped"
+  commit: 3bfa24f
+  tests: "288 passed, 0 failed, 0 skipped"
   typecheck: passed
   dependency_audit: "0 vulnerabilities"
   security_review: "no new findings in affected paths at confidence >= 8"

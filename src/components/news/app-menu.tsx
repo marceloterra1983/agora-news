@@ -55,11 +55,19 @@ export function AppMenu() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
+    const onFocusOut = (e: FocusEvent) => {
+      const next = e.relatedTarget as Node | null;
+      if (next && box.current?.contains(next)) return;
+      setOpen(false);
+    };
+    const root = box.current;
     document.addEventListener("pointerdown", onPointer);
     document.addEventListener("keydown", onKey);
+    root?.addEventListener("focusout", onFocusOut);
     return () => {
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
+      root?.removeEventListener("focusout", onFocusOut);
     };
   }, [open]);
 
