@@ -92,14 +92,6 @@ export function fallbackPayload(
   );
 }
 
-export function peekStory(id: string): Story | null {
-  for (const payload of lastGood.values()) {
-    const hit = payload.stories.find((s) => s.id === id);
-    if (hit) return hit;
-  }
-  return fallbackStories.find((s) => s.id === id) ?? null;
-}
-
 export async function loadFeed(
   category: Category = DEFAULT_SECTION,
   catalog?: SectionCatalog,

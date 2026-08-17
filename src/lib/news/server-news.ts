@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { fallbackPayload, filterStories, loadFeed, peekStory } from "./feed";
+import { fallbackPayload, filterStories, loadFeed } from "./feed";
 import { serverCatalogFor } from "./server-catalog";
 import { downloadPostById } from "./supabase";
 import { hydrateStory } from "./story-hydrate";
@@ -93,11 +93,10 @@ export const loadStory = createServerFn({ method: "GET" })
   .validator((id: string) => String(id || ""))
   .handler(async ({ data: id }) => {
     const full = await downloadPostById(id);
-    const base = full ?? peekStory(id);
-    if (!base) return null;
-    const hydrated = await hydrateStory(base);
-    if (hydrated.body && hydrated.body !== (base.body || "").trim()) {
-      void persistHydratedBody(base, hydrated.body);
+    if (!full) return null;
+    const hydrated = await hydrateStory(full);
+    if (hydrated.body && hydrated.body !== (full.body || "").trim()) {
+      void persistHydratedBody(full, hydrated.body);
     }
     return hydrated;
   });

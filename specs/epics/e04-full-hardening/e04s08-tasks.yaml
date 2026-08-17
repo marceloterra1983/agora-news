@@ -16,7 +16,7 @@ tasks:
     verify: "node --experimental-strip-types --test scripts/public-catalog-privacy.behavior.test.mjs scripts/private-persistence.behavior.test.mjs scripts/catalog-feed-scope.test.mjs && npm run typecheck && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
     risk: P0
     security: high
-    status: failing
+    status: passing
     allure:
       {
         severity: critical,
@@ -24,10 +24,10 @@ tasks:
       }
   - id: 3
     description: "Prevent public caching of any personalized feed response"
-    verify: "node --experimental-strip-types --test --test-name-pattern='cache|anonymous|owner' scripts/public-catalog-privacy.behavior.test.mjs scripts/release-gates.behavior.test.mjs && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
+    verify: "node --experimental-strip-types --test scripts/public-catalog-privacy.behavior.test.mjs scripts/release-gates.behavior.test.mjs && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
     risk: P0
     security: high
-    status: failing
+    status: passing
     allure:
       {
         severity: critical,
