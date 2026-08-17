@@ -24,6 +24,19 @@ The reviewed controls include explicit production-mode validation, server-side o
 - Focused auth suite: 11 passed, including six-character password behavior and broker removal.
 - Manual browser evidence: the allowlisted account was created and then signed in successfully; bootstrap signup was closed afterward.
 
+## 2026-08-17 re-audit — closed
+
+Accepted findings F-P1-01 through F-P3-03 are implemented and deployed.
+Production: `news-news:2ab7717` on `127.0.0.1:3080`. Suite at close: 288
+passed. No finding at confidence >= 8/10. Keys were not rotated.
+
+Out of scope (cruzada): unify extras/`user_watches`, merge `groupStyle`,
+redesign `posts`/`x-last`, delete `/api/feed` or `/api/profile`, cut
+zod/bridge/`cn`, hover/Title Case/virtualize, empty-feed rewrite,
+`grill-with-docs` on `prefs-sync`→`admin`.
+
 ## Release note
 
-The current production process on port 3080 is intentionally not modified until the hardening image is built and the post-merge smoke passes. The cutover must retain the existing `.env` outside the image and keep the Better Auth migration additive.
+Production on port 3080 runs `news-news:2ab7717` with the host `.env` outside
+the image. Rollback: `NEWS_IMAGE_TAG=3bfa24f docker compose up -d --no-build news`.
+Better Auth migrations stay additive and explicit.
