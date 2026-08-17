@@ -32,7 +32,7 @@ git:
   baseline: 2ab7717b18efea14e6666e0f15d74f48f4fd2378
   hash: 2ab7717b18efea14e6666e0f15d74f48f4fd2378
 handoff:
-  last_step_completed: "Deployed news-news:2ab7717 with S3 UI; rollback is 3bfa24f"
+  last_step_completed: "Audit 2026-08-17 closed; accepted findings live on news-news:2ab7717"
   open_decisions: []
   required_reading:
     - docs/superpowers/specs/2026-08-16-full-hardening-design.md
