@@ -59,7 +59,7 @@ tasks:
     verify: "node --experimental-strip-types --test scripts/simplification-contract.test.mjs scripts/section-catalog.test.mjs scripts/catalog-feed-scope.test.mjs && npm run typecheck"
     risk: P3
     security: none
-    status: failing
+    status: passing
     allure: { severity: minor, categories: ["Simplification", "Refactor"] }
   - id: 8
     description: "Run full gates and an affected-path security review"
