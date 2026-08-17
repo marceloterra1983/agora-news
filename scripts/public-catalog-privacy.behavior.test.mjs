@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -168,4 +169,11 @@ test("retained feed snapshots are refiltered for the current owner", async (t) =
   const retained = await feed.loadFeed("ai", ownerB);
   assert.equal(retained.live, false);
   assert.deepEqual(retained.stories, []);
+});
+
+test("feed route never publishes a personalized response to a shared cache", () => {
+  const route = readFileSync(join(root, "src/routes/api/feed.ts"), "utf8");
+  assert.match(route, /Cache-Control["']\s*:\s*["']private, no-store["']/);
+  assert.match(route, /CDN-Cache-Control["']\s*:\s*["']no-store["']/);
+  assert.doesNotMatch(route, /Cache-Control["']\s*:\s*["']public,/);
 });
