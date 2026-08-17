@@ -47,7 +47,7 @@ export function AndroidInstallPanel() {
 
   if (installed) {
     return (
-      <p className="rounded-md border border-line bg-paper-2 px-4 py-3 text-sm text-ink-soft">
+      <p role="status" aria-live="polite" className="rounded-md border border-line bg-paper-2 px-4 py-3 text-sm text-ink-soft">
         O Agora já está instalado neste aparelho.
       </p>
     );
@@ -55,7 +55,7 @@ export function AndroidInstallPanel() {
 
   if (canInstall) {
     return (
-      <div className="rounded-md border border-line bg-hero px-4 py-5 text-hero-fg">
+      <div role="status" aria-live="polite" className="rounded-md border border-line bg-hero px-4 py-5 text-hero-fg">
         <p className="text-xs font-semibold uppercase tracking-widest">
           Chrome Android
         </p>
@@ -85,7 +85,7 @@ export function AndroidInstallPanel() {
   }
 
   return (
-    <p className="flex items-start gap-2 text-sm text-mute">
+    <p role="status" aria-live="polite" className="flex items-start gap-2 text-sm text-mute">
       <Smartphone className="mt-0.5 size-4 shrink-0" />
       <span>
         Abra este site no Chrome do Android. Se o navegador oferecer instalação,

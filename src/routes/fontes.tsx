@@ -175,6 +175,8 @@ function FontesPage() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
+            autoComplete="off"
+            name="fontes-filter"
             className="h-10 w-full rounded-md border border-line bg-paper px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
           />
         </label>

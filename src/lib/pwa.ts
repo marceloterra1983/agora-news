@@ -5,6 +5,7 @@ type BeforeInstallPromptEvent = Event & {
 
 let deferred: BeforeInstallPromptEvent | null = null;
 const listeners = new Set<() => void>();
+let initialized = false;
 
 function emit() {
   for (const fn of listeners) fn();
@@ -12,6 +13,8 @@ function emit() {
 
 export function initPwa() {
   if (typeof window === "undefined") return;
+  if (initialized) return;
+  initialized = true;
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferred = event as BeforeInstallPromptEvent;
@@ -30,6 +33,7 @@ export function initPwa() {
 }
 
 export function subscribePwa(fn: () => void) {
+  initPwa();
   listeners.add(fn);
   return () => {
     listeners.delete(fn);

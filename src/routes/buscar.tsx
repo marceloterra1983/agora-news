@@ -140,6 +140,7 @@ function BuscarPage() {
             autoCorrect="off"
             spellCheck={false}
             autoComplete="off"
+            name="profile-search"
             className="h-11 pl-10"
           />
         </label>

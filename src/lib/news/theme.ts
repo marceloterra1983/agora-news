@@ -64,4 +64,4 @@ export function cycleTheme(): ThemeMode {
   return next;
 }
 
-export const THEME_BOOT_SCRIPT = `(()=>{try{var k="agora-theme";var t=localStorage.getItem(k);var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var el=document.documentElement;if(d){el.classList.add("dark");el.style.colorScheme="dark"}else{el.style.colorScheme="light"}}catch(e){}})();`;
+export const THEME_BOOT_SCRIPT = `(()=>{try{var k="agora-theme";var t=localStorage.getItem(k);var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var el=document.documentElement;var c=d?"#12100e":"#f2eee4";if(d){el.classList.add("dark");el.style.colorScheme="dark"}else{el.style.colorScheme="light"}var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c)}catch(e){}})();`;
