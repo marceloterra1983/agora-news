@@ -106,6 +106,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     }
     const content = await page
       .locator('meta[name="viewport"]')
+      .first()
       .getAttribute("content");
     assert.match(content ?? "", /width=(device-width|\d+)/);
     assert.match(content ?? "", /initial-scale=1/);
