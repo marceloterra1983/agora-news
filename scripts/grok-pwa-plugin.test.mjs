@@ -29,7 +29,7 @@ test("injects device-width viewport when the document has none", () => {
   const out = injectGrokPwaHead("<html><head><title>x</title></head></html>");
   assert.match(
     out,
-    /name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/,
+    /name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no"/,
   );
   assert.doesNotMatch(out, /width=1024|user-scalable=no|maximum-scale=1/);
 });

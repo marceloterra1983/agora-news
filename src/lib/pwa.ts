@@ -29,7 +29,12 @@ export function initPwa() {
   // Prod only: a fetch-caching SW once served HTML as CSS.
   // This worker has no fetch handler — notifications only.
   if (!import.meta.env.PROD) return;
-  void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+  void navigator.serviceWorker
+    .register("/sw.js", { scope: "/", updateViaCache: "none" })
+    .then((reg) => {
+      void reg.update();
+    })
+    .catch(() => {});
 }
 
 export function subscribePwa(fn: () => void) {
@@ -48,6 +53,8 @@ export function isStandalone() {
   if (typeof window === "undefined") return false;
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: minimal-ui)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
     Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone)
   );
 }

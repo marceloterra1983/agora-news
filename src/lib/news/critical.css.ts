@@ -1,5 +1,5 @@
 /** CSS no <head> — o publicado não pode depender só de /assets/*.css.
- * Viewport (phone-shell): width=device-width, initial-scale=1, viewport-fit=cover
+ * Viewport (phone-shell): width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no
  * — pinch-zoom livre, sem trava de escala. */
 export const CRITICAL_CSS = `
 html,body{margin:0;max-width:100%;overflow-x:clip;overflow-wrap:break-word;background:#f2eee4;color:#161411;font-family:"Source Sans 3",system-ui,sans-serif}
