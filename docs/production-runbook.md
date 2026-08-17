@@ -31,7 +31,9 @@ Depois do primeiro cadastro, defina `false` e reinicie o serviço.
 2. No SQL Editor do Supabase, aplique `scripts/supabase-domain-tables.sql` e depois
    `scripts/supabase-private-persistence-migrate.sql`. Guarde e confira o manifesto
    exportado antes de qualquer limpeza legada.
-3. Exija CI verde e construa a imagem: `docker compose build news`.
+3. Exija CI verde e construa a imagem: `docker compose build news`. Registre o
+   digest e mantenha uma tag de commit, por exemplo:
+   `docker image tag news-news:latest news-news:<commit>`.
 4. Aplique somente o schema Better Auth/Postgres:
    `docker compose run --rm news npm run db:migrate`.
 5. Suba o runtime: `docker compose up -d news`.
@@ -43,8 +45,10 @@ Depois do primeiro cadastro, defina `false` e reinicie o serviço.
    as legadas. Para VAPID, mantenha o novo par implantado até os clientes
    substituírem assinaturas incompatíveis; depois remova o segredo antigo.
 
-Rollback: restaure a imagem anterior sem desfazer migrations aditivas. Preserve
-`AUTH_ALLOWED_EMAIL` e a sessão Better Auth ao validar a imagem anterior.
+Rollback: restaure a imagem anterior sem desfazer migrations aditivas usando a
+tag registrada: `NEWS_IMAGE_TAG=<commit> docker compose up -d --no-build news`.
+Preserve `AUTH_ALLOWED_EMAIL` e a sessão Better Auth ao validar a imagem
+anterior. O valor padrão continua sendo `latest` para o cutover normal.
 
 ## Backup periódico
 
