@@ -32,8 +32,28 @@ passed. No finding at confidence >= 8/10. Keys were not rotated.
 
 Out of scope (cruzada): unify extras/`user_watches`, merge `groupStyle`,
 redesign `posts`/`x-last`, delete `/api/feed` or `/api/profile`, cut
-zod/bridge/`cn`, hover/Title Case/virtualize, empty-feed rewrite,
-`grill-with-docs` on `prefs-sync`→`admin`.
+zod/bridge/`cn`, hover/Title Case/virtualize, empty-feed rewrite.
+
+## Grill: prefs-sync → admin (2026-08-17)
+
+Source graph looks dangerous: the browser module `prefs-sync.ts` imports
+`loadPrefs` / `savePrefs` from `prefs-server.ts`, which also imports
+`adminHeaders` and `SUPABASE_SECRET_KEY`. That is not the client graph.
+
+TanStack Start docs:
+
+- [Execution model](https://tanstack.com/start/latest/docs/framework/react/guide/execution-model.md):
+  `createServerFn` runs on the server; the client issues an RPC.
+- [Import protection](https://tanstack.com/start/latest/docs/framework/react/guide/import-protection.md):
+  the compiler replaces `.handler(...)` with a client RPC stub and prunes
+  server-only imports that become unused. Imports stay alive only if they
+  remain referenced after the rewrite.
+
+Proof is the artifact, not the source import: `CI_ARTIFACT_GATES=1` scans
+`.output/public/assets` and forbids `adminHeaders`,
+`missing_supabase_secret_key`, `SUPABASE_SECRET_KEY`, and `sb_secret`.
+`prefs-sync.ts` may import only the server-fn stubs, never `./admin` or
+`readUserPrefs` / `writeUserPrefs`.
 
 ## Release note
 
