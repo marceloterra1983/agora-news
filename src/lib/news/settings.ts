@@ -61,13 +61,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   reduceMotion: false,
 };
 
-export const FONT_STEPS: { id: FontSize; label: string }[] = [
-  { id: "sm", label: "A" },
-  { id: "md", label: "A" },
-  { id: "lg", label: "A" },
-  { id: "xl", label: "A" },
-];
-
 function parseTypeface(value: unknown): Typeface {
   if (value === "source" || value === "newsreader" || value === "fraunces" || value === "sans" || value === "literata") {
     return value;

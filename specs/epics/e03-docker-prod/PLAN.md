@@ -21,7 +21,7 @@
 1. `vite.config.ts` no `build` liga `nitro({ preset: "node-server" })`.
 2. TanStack hosting: `"start": "node .output/server/index.mjs"`.
 3. Nitro node-server: `NITRO_PORT`, `NITRO_HOST` (docs nitro.build/deploy/runtimes/node). Também setar `PORT=3080`.
-4. `npm run build` no host = `vite build && db:migrate`. Na **imagem** rodar só `npx vite build` (migrate sem `DATABASE_URL` só loga skip; não precisa no build).
+4. `npm run build` no host = `vite build`. Migrate é `npm run db:migrate` explícito. Na **imagem** rodar só `npx vite build` (migrate sem `DATABASE_URL` só loga skip; não precisa no build).
 5. `startup.sh` / `npm run dev` / porta 8080 = preview Grok — **fora** do container.
 
 ## Story e03s01 — contrato

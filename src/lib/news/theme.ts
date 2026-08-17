@@ -30,8 +30,13 @@ export function applyTheme(mode?: ThemeMode): void {
   const dark = resolveDark(resolved);
   document.documentElement.classList.toggle("dark", dark);
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", dark ? "#12100e" : "#f2eee4");
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", "theme-color");
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", dark ? "#12100e" : "#f2eee4");
 }
 
 export function setTheme(mode: ThemeMode): void {
@@ -64,4 +69,4 @@ export function cycleTheme(): ThemeMode {
   return next;
 }
 
-export const THEME_BOOT_SCRIPT = `(()=>{try{var k="agora-theme";var t=localStorage.getItem(k);var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var el=document.documentElement;var c=d?"#12100e":"#f2eee4";if(d){el.classList.add("dark");el.style.colorScheme="dark"}else{el.style.colorScheme="light"}var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c)}catch(e){}})();`;
+export const THEME_BOOT_SCRIPT = `(()=>{try{var k="agora-theme";var t=localStorage.getItem(k);var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var el=document.documentElement;var c=d?"#12100e":"#f2eee4";if(d){el.classList.add("dark");el.style.colorScheme="dark"}else{el.style.colorScheme="light"}var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.setAttribute("name","theme-color");(document.head||el).appendChild(m)}m.setAttribute("content",c)}catch(e){}})();`;

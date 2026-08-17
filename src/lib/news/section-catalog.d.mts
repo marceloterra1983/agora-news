@@ -33,8 +33,3 @@ export function filterStoriesForCatalog<T extends { source?: string; account?: s
   stories: T[],
   catalog: Pick<SectionCatalog, "handles">,
 ): T[];
-export function scopeCachedStories<T extends { source?: string; account?: string; sourceLabel?: string }>(
-  stories: T[] | null | undefined,
-  catalog: Pick<SectionCatalog, "handles">,
-): T[];
-export function chipGroupIds(catalog: SectionCatalog): string[];

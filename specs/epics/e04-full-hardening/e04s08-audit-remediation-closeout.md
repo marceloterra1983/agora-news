@@ -8,9 +8,10 @@
 
 ## 2. Status
 
-Failing by design. The audit is complete and the current gates pass, but the
-public feed still reads the union of private watches and the remaining UI,
-operational, documentation and simplification recommendations are not closed.
+Passing. Anonymous feed uses the public seed catalog; authenticated feed adds
+only `listUserWatchAccounts(userId)` in `serverCatalogFor()`.
+`listAllWatchAccounts()` stays on ingest/cron. Remaining UI, docs and dead-code
+cleanup from the 2026-08-17 audit close in the follow-up PR.
 
 ## 3. Type
 
@@ -30,12 +31,12 @@ observe another user's watched sources.
 
 ## 6. Problem
 
-`serverCatalogFor()` calls `listAllWatchAccounts()` on the public feed path;
-`loadNews()` and `loadFeed()` also resolve different catalog snapshots and
-filter twice, which can discard allowed owner stories. The audit additionally
-confirmed a first-paint theme mismatch, missing form metadata and live regions,
-unbounded host cron logs, incomplete operational backup metadata, stale release
-evidence and small zero-consumer code paths.
+The public-feed ownership gap is closed: `serverCatalogFor()` loads seed
+profiles plus, when a verified `userId` is present, that user's watches.
+`listAllWatchAccounts()` is ingest-only. The 2026-08-17 audit still found a
+first-paint `theme-color` miss when the meta is absent, 32px secondary back
+targets, a menu that stayed open on Tab, stale release evidence, and a few
+zero-consumer symbols.
 
 ## 7. Outcome
 

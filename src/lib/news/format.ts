@@ -1,41 +1,5 @@
 import { clipAtWord } from "./summary-core.mjs";
 
-const WEEKDAYS = [
-  "domingo",
-  "segunda-feira",
-  "terça-feira",
-  "quarta-feira",
-  "quinta-feira",
-  "sexta-feira",
-  "sábado",
-];
-
-const MONTHS = [
-  "janeiro",
-  "fevereiro",
-  "março",
-  "abril",
-  "maio",
-  "junho",
-  "julho",
-  "agosto",
-  "setembro",
-  "outubro",
-  "novembro",
-  "dezembro",
-];
-
-export function readerDate(now = new Date()): string {
-  const d = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-  const week = WEEKDAYS[d.getDay()]
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join("-");
-  const month = MONTHS[d.getMonth()];
-  const monthLabel = month.charAt(0).toUpperCase() + month.slice(1);
-  return `${week}, ${d.getDate()} de ${monthLabel}`;
-}
-
 export function relativeTime(iso: string, now = Date.now()): string {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return "";
