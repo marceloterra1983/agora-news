@@ -78,7 +78,7 @@ export const loadNews = createServerFn({ method: "GET" })
             },
           };
         }
-        const payload = await loadFeed(data.refresh, data.category, data.fromX);
+        const payload = await loadFeed(data.refresh, data.category, data.fromX, catalog);
         const news = toNews(payload, data.category, data.q, catalog);
         return {
           ...news,

@@ -16,7 +16,7 @@ export const SUPABASE_POSTS_URL = `${SUPABASE_URL}/rest/v1/posts`;
 
 import { PAGE_SIZE } from "./page-size.mjs";
 import { profilesFor } from "./profiles";
-import { catalogFor } from "./section-catalog.mjs";
+import { catalogFor, scopeCachedStories } from "./section-catalog.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { normalizeSection, type Category, type Story } from "./types";
 import { CACHE_KEYS, cacheDel, cacheGetJson, cacheSetJson, invalidateNewsCache } from "./cache";
@@ -91,27 +91,31 @@ function isNewsRow(p: DbPost): boolean {
 
 export function storiesFromDbPosts(
   rows: Array<Partial<DbPost> & { post_id: string; posted_at: string }>,
-  fallbackCategory: Category,
+  fallbackCategory?: Category,
 ): Story[] {
-  return rows.map((p) =>
-    dbPostToStory(
-      {
-        post_id: p.post_id,
-        account: p.account ?? null,
-        posted_at: p.posted_at,
-        posted_at_sp: p.posted_at_sp ?? null,
-        content: p.content ?? null,
-        translation_pt: p.translation_pt ?? null,
-        summary_pt: p.summary_pt ?? null,
-        post_url: p.post_url ?? null,
-        media_label: p.media_label ?? null,
-        image_url: p.image_url ?? null,
-        category: p.category ?? fallbackCategory,
-        batch_name: p.batch_name ?? null,
-      },
-      p.category || fallbackCategory,
-    ),
-  );
+  return rows.flatMap((p) => {
+    const cat = p.category || fallbackCategory;
+    if (!cat) return [];
+    return [
+      dbPostToStory(
+        {
+          post_id: p.post_id,
+          account: p.account ?? null,
+          posted_at: p.posted_at,
+          posted_at_sp: p.posted_at_sp ?? null,
+          content: p.content ?? null,
+          translation_pt: p.translation_pt ?? null,
+          summary_pt: p.summary_pt ?? null,
+          post_url: p.post_url ?? null,
+          media_label: p.media_label ?? null,
+          image_url: p.image_url ?? null,
+          category: p.category ?? cat,
+          batch_name: p.batch_name ?? null,
+        },
+        cat,
+      ),
+    ];
+  });
 }
 
 export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
@@ -237,6 +241,19 @@ function storeList(key: string, stories: Story[], headId: string) {
   return stories;
 }
 
+async function allowCatalog(slug: Category, accounts?: string[]) {
+  return { handles: (accounts ?? (await accountsFor(slug))).map(normAccount) };
+}
+
+/** Snapshot Redis/memória: reaplicar allow-list — um payload pré-fix não pode ressuscitar handle. */
+async function scopedCachedList(
+  stories: Story[] | null | undefined,
+  slug: Category,
+  accounts?: string[],
+): Promise<Story[]> {
+  return scopeCachedStories(stories ?? [], await allowCatalog(slug, accounts));
+}
+
 /**
  * Revalida só o head. Se mudou → fetch lista completa.
  * Se igual → só renova o timestamp do cache (estende WARM).
@@ -289,15 +306,25 @@ export async function downloadSupabase(
   const hit = listCache.get(key);
   const age = hit ? Date.now() - hit.at : Number.POSITIVE_INFINITY;
 
-  // 1) Warm: zero rede
+  // 1) Warm: zero rede — mas o snapshot pode ser pré-fix (handle fora do catálogo)
   if (hit && age < WARM_MS) {
-    return hit.stories;
+    const scoped = await scopedCachedList(hit.stories, slug, opts.accounts);
+    if (scoped.length !== hit.stories.length) {
+      storeList(key, scoped, scoped[0]?.id || hit.headId);
+      void cacheSetJson(redisKey, scoped, 120);
+    }
+    return scoped;
   }
 
   // 2) Stale-while-revalidate: responde na hora, head em background
   if (hit && age < STALE_MS) {
     revalidateInBackground(slug, limit, key, hit.headId, opts.accounts);
-    return hit.stories;
+    const scoped = await scopedCachedList(hit.stories, slug, opts.accounts);
+    if (scoped.length !== hit.stories.length) {
+      storeList(key, scoped, scoped[0]?.id || hit.headId);
+      void cacheSetJson(redisKey, scoped, 120);
+    }
+    return scoped;
   }
 
   // 3) Cold: 1 request da lista (sem head separado — topo = stories[0])
@@ -318,8 +345,9 @@ export async function downloadSupabase(
 
     // fallback: cloud KV se lista vazia (ex.: falha intermitente)
     const remote = await remotePromise;
-    if (remote?.length) {
-      return storeList(key, remote, remote[0]?.id || "");
+    const scoped = await scopedCachedList(remote, slug, opts.accounts);
+    if (scoped.length) {
+      return storeList(key, scoped, scoped[0]?.id || "");
     }
     return stories;
   })().finally(() => listInflight.delete(key));
@@ -330,7 +358,7 @@ export async function downloadSupabase(
 
 export async function downloadPostById(
   id: string,
-  fallbackCategory: Category = "ai",
+  fallbackCategory?: Category,
 ): Promise<Story | null> {
   const clean = id.trim();
   if (!clean) return null;
@@ -350,7 +378,9 @@ export async function downloadPostById(
   const rows = (await res.json()) as DbPost[];
   const row = Array.isArray(rows) ? rows[0] : null;
   if (!row?.post_id || !isNewsRow(row)) return null;
-  const story = dbPostToStory(row, fallbackCategory);
+  const cat = row.category || fallbackCategory;
+  if (!cat) return null;
+  const story = dbPostToStory(row, cat);
   postCache.set(clean, { at: Date.now(), story });
   return story;
 }

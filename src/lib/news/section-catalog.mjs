@@ -90,6 +90,11 @@ export function filterStoriesForCatalog(stories, catalog) {
   );
 }
 
+/** Snapshot de cache/CSV/KV: nunca devolver a lista crua — o allow-list pode ter mudado. */
+export function scopeCachedStories(stories, catalog) {
+  return filterStoriesForCatalog(Array.isArray(stories) ? stories : [], catalog);
+}
+
 export function chipGroupIds(catalog) {
   return catalog.groupIds;
 }

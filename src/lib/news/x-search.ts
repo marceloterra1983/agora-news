@@ -1,4 +1,5 @@
 import { profilesFor } from "./profiles";
+import { catalogFor, scopeCachedStories } from "./section-catalog.mjs";
 import type { Category, Story } from "./types";
 import { normalizeSection } from "./types";
 
@@ -20,9 +21,13 @@ export function xApiAvailable() {
   return Boolean(process.env.XAI_API_KEY);
 }
 
+function scopeXStories(section: Category, stories: Story[]): Story[] {
+  return scopeCachedStories(stories, catalogFor(section, { profiles: profilesFor(section) }));
+}
+
 export function cachedXStories(section: Category): Story[] {
   if (!cache || cache.section !== section) return [];
-  return cache.stories;
+  return scopeXStories(section, cache.stories);
 }
 
 function handlesFor(section: Category) {
@@ -182,22 +187,30 @@ async function callXSearch(section: Category): Promise<Story[]> {
 export async function loadXStories(section: Category, force: boolean): Promise<XSyncResult> {
   const available = xApiAvailable();
   if (!available) {
-    return { stories: cache?.section === section ? cache.stories : [], used: false, available };
+    return {
+      stories: cache?.section === section ? scopeXStories(section, cache.stories) : [],
+      used: false,
+      available,
+    };
   }
   const fresh = cache && cache.section === section && Date.now() - cache.at < X_TTL_MS;
   if (!force && fresh) {
-    return { stories: cache!.stories, used: true, available };
+    return { stories: scopeXStories(section, cache!.stories), used: true, available };
   }
   if (!force) {
-    return { stories: cache?.section === section ? cache.stories : [], used: Boolean(cache), available };
+    return {
+      stories: cache?.section === section ? scopeXStories(section, cache.stories) : [],
+      used: Boolean(cache),
+      available,
+    };
   }
   try {
-    const stories = await callXSearch(section);
+    const stories = scopeXStories(section, await callXSearch(section));
     cache = { at: Date.now(), section, stories };
     return { stories, used: stories.length > 0, available };
   } catch (err) {
     return {
-      stories: cache?.section === section ? cache.stories : [],
+      stories: cache?.section === section ? scopeXStories(section, cache.stories) : [],
       used: Boolean(cache),
       available,
       error: err instanceof Error ? err.message : "falha na API do X",
