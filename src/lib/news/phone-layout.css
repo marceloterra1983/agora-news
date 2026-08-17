@@ -1,5 +1,5 @@
 /* Layout de telefone. Unlayered (crítico) para vencer utilities Tailwind.
-   @media (max-width: 640px) é a fonte de verdade; [data-shell=phone] cobre PWA ~980px.
+   @media (max-width: 640px) é a fonte de verdade; [data-shell=phone] cobre PWA.
    Escala de leitura via data-font no <html> — Médio = 16px, sem piso 22/28.
    Viewport fica zoomável (sem trava de escala). */
 
@@ -64,8 +64,7 @@ html[data-font="xl"] {
   [data-chrome="tabs"] {
     position: fixed !important;
     z-index: 40;
-    width: 100vw;
-    width: 100dvw;
+    width: 100%;
     max-width: 100%;
     left: 0;
     right: 0;
@@ -195,8 +194,7 @@ html[data-shell="phone"] [data-chrome="compact"],
 html[data-shell="phone"] [data-chrome="tabs"] {
   position: fixed !important;
   z-index: 40;
-  width: 100vw;
-  width: 100dvw;
+  width: 100%;
   max-width: 100%;
   left: 0;
   right: 0;

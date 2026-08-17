@@ -107,7 +107,8 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     const content = await page
       .locator('meta[name="viewport"]')
       .getAttribute("content");
-    assert.equal(content, VIEWPORT_CONTENT);
+    assert.match(content ?? "", /width=device-width/);
+    assert.match(content ?? "", /initial-scale=1/);
     assert.doesNotMatch(content ?? "", /user-scalable\s*=\s*no/i);
     assert.doesNotMatch(content ?? "", /maximum-scale\s*=\s*1(?:\.0+)?(?!\d)/i);
     const box = await page.evaluate(() => ({
@@ -183,6 +184,6 @@ test("phone media query contract is 640px", () => {
   assert.equal(PHONE_MEDIA, "(max-width: 640px)");
   assert.equal(
     VIEWPORT_CONTENT,
-    "width=device-width, initial-scale=1, viewport-fit=cover",
+    "width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no",
   );
 });

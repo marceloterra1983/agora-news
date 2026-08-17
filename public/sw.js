@@ -1,7 +1,7 @@
 /**
  * Push + update. Sem cache de HTML (isso já quebrou o app publicado).
  */
-const VERSION = "agora-2026-08-16-v16";
+const VERSION = "agora-2026-08-17-v18";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());

@@ -51,6 +51,8 @@ export const Route = createRootRoute({
       },
       { name: "application-name", content: APP_NAME },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "theme-color", content: "#f2eee4" },
       { name: "color-scheme", content: "light dark" },
@@ -99,7 +101,7 @@ function Root() {
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!("caches"in window))return;var k="agora-cache-bust-v17";if(sessionStorage.getItem(k)==="1")return;caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{var k="agora-cache-bust-v18";if(sessionStorage.getItem(k)==="1")return;var jobs=[];if("caches"in window)jobs.push(caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}));if(navigator.serviceWorker)jobs.push(navigator.serviceWorker.getRegistrations().then(function(regs){return Promise.all(regs.map(function(r){return r.update()}))}));Promise.all(jobs).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>
