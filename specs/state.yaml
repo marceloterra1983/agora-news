@@ -1,14 +1,14 @@
-active_flow: plan
+active_flow: verify
 active_epic_id: e04
 active_story_id: e04s08
 active_bug_id: null
 release:
-  target_version: null
-  last_tag: null
-  last_publish: null
+  target_version: "48985d3"
+  last_tag: "news-news:48985d3"
+  last_publish: "2026-08-17T16:13:56-03:00"
 epic_cycle:
-  current_step: plan-work
-  next_skill: kickoff-branch
+  current_step: verify
+  next_skill: verification-before-completion
   completed_steps:
     - brainstorming
     - scope-work
@@ -16,6 +16,7 @@ epic_cycle:
     - assess-impact
     - kickoff-branch
     - plan-work
+    - execute-plan
 bug_cycle:
   current_step: null
   completed_steps: []
@@ -28,18 +29,17 @@ project_cycle:
     - security-review
 git:
   branch: main
-  baseline: c71c4fe
-  hash: c71c4fe
+  baseline: 48985d3
+  hash: 48985d3
 handoff:
-  last_step_completed: "e04s08 post-audit remediation plan drafted"
-  open_decisions:
-    - "Approve the e04s08 implementation order before kickoff"
+  last_step_completed: "e04s08 implemented, deployed, smoke-tested and rollback-drilled"
+  open_decisions: []
   required_reading:
     - docs/superpowers/specs/2026-08-16-full-hardening-design.md
     - specs/IMPACT_LATEST.md
     - specs/product/SCOPE_LATEST.yaml
     - specs/epics/e04-full-hardening/epic.yaml
-  next_skill: kickoff-branch
+  next_skill: verification-before-completion
 learned_preferences:
   - "PT-BR, concise status, complete implementation requested and design approved"
   - "Keep the currently active keys; do not rotate or revoke without a new incident-driven decision"
@@ -50,6 +50,5 @@ workspace_facts:
   - "Private Better Auth user domains require server-enforced ownership"
   - "CI installs Chromium and makes every browser/live smoke mandatory"
 human_gates:
-  - "Approve production deployment and rollback checkpoints for e04s08"
   - "Keep production DATABASE_URL and allowlisted email available on the host"
-  - "Approve installation of the tracked host logrotate policy"
+  - "System-level /etc/logrotate.d installation remains optional; user crontab policy is active"

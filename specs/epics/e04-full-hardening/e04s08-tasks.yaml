@@ -77,6 +77,6 @@ tasks:
     verify: "CI_REQUIRED_SMOKES=1 NEWS_SMOKE_URL=https://news.automatizems.com npm test && curl -fsS https://news.automatizems.com/api/health/live >/dev/null && curl -fsS https://news.automatizems.com/api/health >/dev/null && rg -q 'no new security findings in affected paths' specs/security/e04s08-audit-remediation.md"
     risk: P0
     security: high
-    status: failing
+    status: passing
     allure:
       { severity: critical, categories: ["Release", "Production", "Rollback"] }
