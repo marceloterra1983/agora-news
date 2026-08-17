@@ -45,3 +45,16 @@ Depois do primeiro cadastro, defina `false` e reinicie o serviço.
 
 Rollback: restaure a imagem anterior sem desfazer migrations aditivas. Preserve
 `AUTH_ALLOWED_EMAIL` e a sessão Better Auth ao validar a imagem anterior.
+
+## Backup periódico
+
+O host executa `/home/marce/news/scripts/backup-production.sh` diariamente às
+03:30 (horário local), pelo crontab do usuário `marce`. Cada snapshot contém o
+dump custom do Postgres, bundle Git, imagem Docker, manifesto e hashes; o `.env`
+é criptografado com age. O script evita concorrência, valida o dump e conserva
+os 30 snapshots completos mais recentes.
+
+A identidade privada age fica fora do repositório em
+`/home/marce/.config/age/news-backup-key.txt`, com modo `600`. Copie o snapshot
+e essa identidade para um destino externo seguro; sem a identidade o `.env`
+criptografado não pode ser restaurado.
