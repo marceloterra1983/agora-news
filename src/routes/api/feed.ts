@@ -14,8 +14,8 @@ export const Route = createFileRoute("/api/feed")({
         });
         return Response.json(data, {
           headers: {
-            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=180",
-            "CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=180",
+            "Cache-Control": "private, no-store",
+            "CDN-Cache-Control": "no-store",
           },
         });
       },

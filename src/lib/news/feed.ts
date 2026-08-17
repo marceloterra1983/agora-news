@@ -102,17 +102,18 @@ export function peekStory(id: string): Story | null {
 
 export async function loadFeed(
   category: Category = DEFAULT_SECTION,
+  catalog?: SectionCatalog,
 ): Promise<FeedPayload> {
   const section = getSection(category);
-  const catalog = await serverCatalogFor(section.slug);
+  const scopedCatalog = catalog ?? (await serverCatalogFor(section.slug));
   const previous = lastGood.get(section.slug);
 
   try {
     const stories = await downloadSupabase(section.slug, {
       limit: FIRST_LIMIT,
-      accounts: catalog.handles,
+      accounts: scopedCatalog.handles,
     });
-    const scoped = filterStories(stories, section.slug, undefined, catalog);
+    const scoped = filterStories(stories, section.slug, undefined, scopedCatalog);
     const payload = wrap(
       scoped,
       true,
@@ -123,6 +124,13 @@ export async function loadFeed(
     lastGood.set(section.slug, payload);
     return payload;
   } catch {
-    return previous ? { ...previous, live: false } : fallbackPayload(section.slug);
+    if (previous) {
+      return {
+        ...previous,
+        stories: filterStories(previous.stories, section.slug, undefined, scopedCatalog),
+        live: false,
+      };
+    }
+    return fallbackPayload(section.slug);
   }
 }

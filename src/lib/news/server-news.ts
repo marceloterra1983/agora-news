@@ -8,6 +8,7 @@ import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 import type { SectionCatalog } from "./section-catalog.mjs";
+import { getSessionUser } from "@/lib/auth/verify.server";
 
 function toNews(
   payload: ReturnType<typeof fallbackPayload>,
@@ -51,7 +52,8 @@ export const loadNews = createServerFn({ method: "GET" })
     return timed(
       `loadNews ${data.category}`,
       async () => {
-        const catalog = await serverCatalogFor(data.category);
+        const user = await getSessionUser();
+        const catalog = await serverCatalogFor(data.category, user?.id);
         if (data.before) {
           const { downloadSupabase } = await import("./supabase");
           const older = await downloadSupabase(data.category, {
@@ -76,8 +78,8 @@ export const loadNews = createServerFn({ method: "GET" })
             },
           };
         }
-        const payload = await loadFeed(data.category);
-        const news = toNews(payload, data.category, data.q);
+        const payload = await loadFeed(data.category, catalog);
+        const news = toNews(payload, data.category, data.q, catalog);
         return {
           ...news,
           meta: { ...news.meta, hasMore: news.stories.length >= PAGE_SIZE },
