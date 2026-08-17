@@ -188,6 +188,11 @@ html[data-font="xl"] {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
+  /* WebAPK ignora o meta viewport depois do first paint; o guard preenche
+     --agora-standalone-zoom só quando scale < 1. Aba do Chrome não entra aqui. */
+  html {
+    zoom: var(--agora-standalone-zoom, 1);
+  }
 }
 
 html[data-shell="phone"],

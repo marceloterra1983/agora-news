@@ -36,7 +36,7 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
   assert.ok(res.ok, `GET / status ${res.status}`);
   const html = await res.text();
   const cc = `${res.headers.get("cache-control") ?? ""} ${res.headers.get("cdn-cache-control") ?? ""}`;
-  if (!html.includes("agora-cache-bust-v1")) {
+  if (!/agora-cache-bust-v(?:1[9]|[2-9]\d)/.test(html)) {
     unavailable(
       t,
       `${base} ainda serve HTML antigo — publique o documento novo`,
@@ -97,7 +97,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     });
     assert.ok(res && res.status() < 400, `status ${res?.status()}`);
     const html = await page.content();
-    if (!html.includes("agora-cache-bust-v1")) {
+    if (!/agora-cache-bust-v(?:1[9]|[2-9]\d)/.test(html)) {
       unavailable(
         t,
         `${base} ainda serve HTML antigo — publique o documento novo`,
@@ -106,6 +106,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     }
     const content = await page
       .locator('meta[name="viewport"]')
+      .first()
       .getAttribute("content");
     assert.match(content ?? "", /width=(device-width|\d+)/);
     assert.match(content ?? "", /initial-scale=1/);

@@ -260,3 +260,161 @@ test("Android PWA 980px layout viewport is forced to the phone CSS width", async
     await browser.close();
   }
 });
+
+const ANDROID_412 = {
+  userAgent:
+    "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36",
+  viewport: { width: 412, height: 915 },
+  deviceScaleFactor: 2.75,
+  isMobile: true,
+  hasTouch: true,
+};
+
+async function loadGuard(page, { standalone, scale }) {
+  const boot = `(()=>{
+    Object.defineProperty(navigator,"standalone",{configurable:true,get:function(){return ${standalone ? "true" : "false"};}});
+    var real=window.matchMedia.bind(window);
+    window.matchMedia=function(query){
+      var q=String(query);
+      if(/display-mode:\\s*(standalone|minimal-ui|fullscreen)/.test(q)){
+        return {matches:${standalone ? "true" : "false"},media:query,addEventListener:function(){},removeEventListener:function(){},addListener:function(){},removeListener:function(){},dispatchEvent:function(){return false;}};
+      }
+      return real(query);
+    };
+    var fake={scale:${scale},width:412,height:915,offsetLeft:0,offsetTop:0,pageLeft:0,pageTop:0,addEventListener:function(){},removeEventListener:function(){}};
+    Object.defineProperty(window,"visualViewport",{configurable:true,get:function(){return fake;}});
+  })();`;
+  await page.setContent(
+    `<!doctype html><html lang="pt-BR"><head>
+      <meta name="viewport" content="${VIEWPORT_CONTENT}">
+      <script>${boot}</script>
+      <script>${PHONE_VIEWPORT_GUARD}</script>
+    </head><body><main data-feed>ok</main></body></html>`,
+    { waitUntil: "domcontentloaded" },
+  );
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+  return page.evaluate(() => {
+    const h = document.documentElement;
+    return {
+      content:
+        document.querySelector('meta[name="viewport"]')?.getAttribute("content") ??
+        "",
+      shell: h.getAttribute("data-shell"),
+      zoom: h.style.zoom || "",
+      zoomVar: h.style.getPropertyValue("--agora-standalone-zoom"),
+      inner: window.innerWidth,
+      screen: screen.width,
+      ua: navigator.userAgent,
+      standalone: Boolean(
+        window.matchMedia("(display-mode: standalone)").matches ||
+          navigator.standalone,
+      ),
+      vvScale: window.visualViewport?.scale ?? null,
+    };
+  });
+}
+
+test("standalone CSS exposes a zoom hook; browser rem stays 16px", () => {
+  const css = read("src/lib/news/phone-layout.css");
+  assert.match(
+    css,
+    /@media \(display-mode:\s*standalone\).*--agora-standalone-zoom/s,
+  );
+  assert.doesNotMatch(css, /font-size:\s*22px\s*!important/);
+  assert.doesNotMatch(PHONE_VIEWPORT_GUARD, /user-scalable\s*=\s*no/i);
+  assert.doesNotMatch(PHONE_VIEWPORT_GUARD, /maximum-scale\s*=\s*1(?:\.0+)?(?!\d)/i);
+  assert.match(VIEWPORT_CONTENT, /width=device-width/);
+  assert.doesNotMatch(VIEWPORT_CONTENT, /minimum-scale/);
+});
+
+test("Android standalone with Chrome scale<1 restores via CSS zoom, not a global rem bump", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
+  try {
+    const context = await browser.newContext({
+      ...ANDROID_412,
+      locale: "pt-BR",
+    });
+    const page = await context.newPage();
+    const box = await loadGuard(page, { standalone: true, scale: 0.42 });
+    const zoom = parseFloat(box.zoom || box.zoomVar || "0");
+    assert.equal(box.shell, "phone");
+    assert.match(box.ua, /Android/i);
+    assert.ok(box.inner <= 430, `inner ${box.inner}`);
+    assert.match(box.content, /minimum-scale=1/);
+    assert.match(box.content, /shrink-to-fit=no/);
+    assert.doesNotMatch(box.content, /user-scalable\s*=\s*no/i);
+    assert.doesNotMatch(box.content, /maximum-scale\s*=\s*1(?:\.0+)?(?!\d)/i);
+    assert.ok(
+      zoom >= 2.2 && zoom <= 2.6,
+      `standalone must undo 0.42 scale, zoom=${box.zoom || box.zoomVar}`,
+    );
+  } finally {
+    await browser.close();
+  }
+});
+
+test("guard drops a second viewport meta injected after boot (HeadContent hydration)", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
+  try {
+    const context = await browser.newContext({
+      ...ANDROID_412,
+      locale: "pt-BR",
+    });
+    const page = await context.newPage();
+    await page.setContent(
+      `<!doctype html><html lang="pt-BR"><head>
+        <meta name="viewport" content="${VIEWPORT_CONTENT}">
+        <script>${PHONE_VIEWPORT_GUARD}</script>
+      </head><body><main data-feed>ok</main></body></html>`,
+      { waitUntil: "domcontentloaded" },
+    );
+    await page.evaluate(() => {
+      const extra = document.createElement("meta");
+      extra.setAttribute("name", "viewport");
+      extra.setAttribute(
+        "content",
+        "width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no",
+      );
+      document.head.appendChild(extra);
+    });
+    await page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => r(null))),
+    );
+    const box = await page.evaluate(() => ({
+      count: document.querySelectorAll('meta[name="viewport"]').length,
+      content:
+        document.querySelector('meta[name="viewport"]')?.getAttribute("content") ??
+        "",
+    }));
+    assert.equal(box.count, 1, `viewport metas ${box.count}`);
+    assert.match(box.content, /width=412/);
+    assert.doesNotMatch(box.content, /user-scalable\s*=\s*no/i);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("Android Chrome tab (not standalone) stays on the current pin — no zoom, no minimum-scale", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
+  try {
+    const context = await browser.newContext({
+      ...ANDROID_412,
+      locale: "pt-BR",
+    });
+    const page = await context.newPage();
+    const box = await loadGuard(page, { standalone: false, scale: 0.42 });
+    const zoom = parseFloat(box.zoom || box.zoomVar || "1") || 1;
+    assert.equal(box.shell, "phone");
+    assert.match(box.content, new RegExp(`width=${box.screen}`));
+    assert.doesNotMatch(box.content, /minimum-scale/);
+    assert.ok(
+      zoom <= 1.02,
+      `browser tab must not get standalone zoom (${box.zoom || box.zoomVar})`,
+    );
+  } finally {
+    await browser.close();
+  }
+});
