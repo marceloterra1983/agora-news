@@ -56,6 +56,7 @@ export default defineConfig(({ command }) => ({
             preset: "node-server",
             serverDir: "./server",
             routeRules: {
+              "/limpar": { redirect: "/limpar.html" },
               "/sw.js": {
                 headers: {
                   "cache-control": "no-cache, no-store, must-revalidate",
