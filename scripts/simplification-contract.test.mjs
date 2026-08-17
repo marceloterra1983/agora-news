@@ -237,6 +237,22 @@ test("dead paths and direct dependencies are removed only with zero consumers", 
     Object.keys(deps).length <= 34,
     `${Object.keys(deps).length} direct packages`,
   );
+
+  for (const [path, pattern] of [
+    ["src/lib/news/types.ts", /export const FALLBACK_CATEGORIES/],
+    ["src/lib/news/profiles.ts", /export const GROUP_HINTS|export function profileGroups/],
+    ["src/lib/news/x-media.ts", /export async function (?:assetsForStory|enrichStoryMedia)/],
+    ["src/lib/news/groups.ts", /export function groupChipStyle/],
+    ["src/lib/news/extra-fontes.ts", /export function isExtraFonte/],
+    ["src/lib/news/fontes-prefs.ts", /export function (?:isNotifyHandle|toggleNotifyHandle)/],
+    ["src/lib/news/format.ts", /export function (?:longDate|mastheadDate)/],
+    ["src/lib/news/settings.ts", /export function typefaceHref/],
+    ["src/lib/news/store.ts", /export function savedStories/],
+    ["src/lib/auth/server.ts", /export function readSessionToken/],
+    ["src/lib/auth/use-current-user.ts", /export function useCurrentUser\(/],
+  ]) {
+    assert.doesNotMatch(read(path), pattern, `${path} zero-consumer export`);
+  }
 });
 
 test("documentation describes the verified Docker and persistence path", () => {
