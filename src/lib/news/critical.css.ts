@@ -2,7 +2,7 @@
  * Viewport (phone-shell): width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no
  * — pinch-zoom livre, sem trava de escala. */
 export const CRITICAL_CSS = `
-html,body{margin:0;max-width:100%;overflow-x:clip;overflow-wrap:break-word;background:#f2eee4;color:#161411;font-family:"Source Sans 3",system-ui,sans-serif}
+html,body{margin:0;width:100%;max-width:100%;overflow-x:clip;overflow-wrap:break-word;background:#f2eee4;color:#161411;font-family:"Source Sans 3",system-ui,sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html.dark,html.dark body{background:#12100e;color:#f0e9e0}
 a{color:inherit;text-decoration:none}
 [data-chrome=compact]{position:sticky;top:0;z-index:40;border-bottom:1px solid #d5cfbf;background:#f2eee4}

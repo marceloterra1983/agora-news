@@ -6,10 +6,11 @@ export const VIEWPORT_CONTENT =
 export const PHONE_MEDIA = "(max-width: 640px)";
 
 /**
- * Primeiro script do <head>: garante 1 viewport e marca `data-shell=phone`
- * quando UA / pointer:coarse / PWA standalone disserem que é aparelho móvel.
- * Se o PWA/WebView ignorar device-width e ficar ~980px, força width=<screen>.
- * CSS `@media (max-width: 640px)` continua sendo a regra de layout.
+ * Primeiro script do <head>: marca `data-shell=phone` e, no Chrome Android
+ * standalone / WebAPK, pina width=<CSS px> sempre — não só quando innerWidth
+ * é 980. O PR #53 falhou no aparelho porque innerWidth === screen.width e o
+ * guard não disparava; "site para computador" ainda tira Mobile do UA e mente
+ * screen.width=980. Pinch-zoom livre — sem trava de escala.
  */
 export const PHONE_VIEWPORT_GUARD = `(function(){try{
 var C=${JSON.stringify(VIEWPORT_CONTENT)};
@@ -20,21 +21,28 @@ if(!m){m=document.createElement("meta");m.setAttribute("name","viewport");(docum
 for(var i=1;i<list.length;i++){if(list[i].parentNode)list[i].parentNode.removeChild(list[i]);}
 function apply(){
   var ua=navigator.userAgent||"";
+  var android=/Android/i.test(ua);
   var mobile=/iPhone|iPod|Android.+Mobile|Windows Phone|webOS|IEMobile|WhatsApp|FBAN|FBAV|Instagram|Line\\/|CriOS|FxiOS/i.test(ua);
   var coarse=false,standalone=false;
   try{coarse=window.matchMedia("(pointer: coarse)").matches&&window.matchMedia("(hover: none)").matches;}catch(e){}
   try{standalone=window.matchMedia("(display-mode: standalone)").matches||window.matchMedia("(display-mode: minimal-ui)").matches||window.matchMedia("(display-mode: fullscreen)").matches||!!(navigator.standalone);}catch(e){}
   var sw=typeof screen!=="undefined"?screen.width:0;
-  var layout=window.innerWidth||h.clientWidth||0;
+  var sh=typeof screen!=="undefined"?screen.height:0;
+  var shortSide=Math.min(sw||0,sh||0)||sw||0;
   var scale=1,vvw=0;
   try{if(window.visualViewport){scale=visualViewport.scale||1;vvw=visualViewport.width||0;}}catch(e){}
-  var phone=mobile||standalone||(coarse&&sw>0&&sw<=900);
+  var phone=mobile||(standalone&&(coarse||(shortSide>0&&shortSide<=640)))||(coarse&&shortSide>0&&shortSide<=900);
   var content=C;
   var cssW=0;
-  if(sw>0&&sw<=640)cssW=sw;
+  if(shortSide>0&&shortSide<=640)cssW=shortSide;
   else if(vvw>0&&vvw<=640)cssW=Math.round(vvw);
-  if(phone&&cssW&&(layout>cssW+40||(scale>0&&scale<0.98))){
+  else if(phone&&(standalone||android||mobile))cssW=360;
+  var userPinched=scale>1.02;
+  if(phone&&cssW&&!userPinched){
     content="width="+Math.round(cssW)+", initial-scale=1, viewport-fit=cover, shrink-to-fit=no";
+    h.style.width="100%";
+    h.style.maxWidth="100%";
+    h.style.overflowX="hidden";
   }
   m.setAttribute("content",content);
   if(phone) h.setAttribute("data-shell","phone");
@@ -42,4 +50,5 @@ function apply(){
 apply();
 try{requestAnimationFrame(apply);}catch(e){}
 try{window.addEventListener("pageshow",apply);}catch(e){}
+try{window.addEventListener("orientationchange",function(){setTimeout(apply,50);});}catch(e){}
 }catch(e){}})();`;

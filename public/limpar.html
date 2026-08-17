@@ -37,7 +37,8 @@
             await Promise.all(keys.map((k) => caches.delete(k)));
           }
         } catch (e) {}
-        location.replace("/?secao=ai&fresh=4");
+        try { sessionStorage.removeItem("agora-cache-bust-v18"); sessionStorage.removeItem("agora-cache-bust-v19"); } catch (e) {}
+        location.replace("/?secao=ai&fresh=5");
       })();
     </script>
   </body>
