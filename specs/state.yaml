@@ -3,9 +3,9 @@ active_epic_id: e04
 active_story_id: e04s08
 active_bug_id: null
 release:
-  target_version: "94270b0"
-  last_tag: "news-news:94270b0"
-  last_publish: "2026-08-17T19:35:28-03:00"
+  target_version: "60261c8"
+  last_tag: "news-news:60261c8"
+  last_publish: "2026-08-17T19:52:43-03:00"
 epic_cycle:
   current_step: verify
   next_skill: verification-before-completion
@@ -29,10 +29,10 @@ project_cycle:
     - security-review
 git:
   branch: main
-  baseline: 94270b0b2525ff2568c4dd7bb02ceee31078762d
-  hash: 94270b0b2525ff2568c4dd7bb02ceee31078762d
+  baseline: 60261c8b66a2d84c9711d086370905659947003e
+  hash: 60261c8b66a2d84c9711d086370905659947003e
 handoff:
-  last_step_completed: "prefs-store.server split live on news-news:94270b0; rollback is 2ab7717"
+  last_step_completed: "PWA phone scale fix live on news-news:60261c8; rollback is 94270b0"
   open_decisions: []
   required_reading:
     - docs/superpowers/specs/2026-08-16-full-hardening-design.md
