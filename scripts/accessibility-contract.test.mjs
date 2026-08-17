@@ -118,6 +118,25 @@ test("unread pressed focus contrast confirm: equivalent state stays visible", ()
   assert.match(controls, /\bconfirm\(/);
 });
 
+test("theme, forms and PWA announce state before effects", () => {
+  const theme = read("src/lib/news/theme.ts");
+  const pwa = read("src/lib/pwa.ts");
+  const install = read("src/components/news/pwa-install.tsx");
+  const search = read("src/routes/buscar.tsx");
+  const fontes = read("src/routes/fontes.tsx");
+  const controls = read("src/components/news/fonte-controls.tsx");
+
+  assert.match(theme, /THEME_BOOT_SCRIPT[\s\S]*theme-color/);
+  assert.match(theme, /THEME_BOOT_SCRIPT[\s\S]*#12100e[\s\S]*#f2eee4/);
+  assert.match(pwa, /let initialized = false/);
+  assert.match(pwa, /function initPwa[\s\S]*initialized/);
+  assert.match(pwa, /subscribePwa[\s\S]*initPwa\(\)/);
+  assert.match(install, /<p[^>]*role=["']status["'][^>]*aria-live=["']polite["']/);
+  assert.match(search, /<Input[\s\S]*name=["']profile-search["']/);
+  assert.match(fontes, /<input[\s\S]*name=["']fontes-filter["']/);
+  assert.match(controls, /<input[\s\S]*name=["']new-group["']/);
+});
+
 test("error busy: search failures and global exceptions stay distinct and safe", () => {
   const search = read("src/routes/buscar.tsx");
   const server = read("src/lib/news/server-profile.ts");
