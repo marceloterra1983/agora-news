@@ -236,7 +236,7 @@ export function FonteControls({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Nome do grupo"
-                    className="h-8 w-full rounded-md border border-line bg-paper px-2 text-[13px] text-ink outline-none"
+                    className="h-8 w-full rounded-md border border-line bg-paper px-2 text-[13px] text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
                   />
                 </form>
               ) : (

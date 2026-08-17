@@ -41,14 +41,27 @@ Depois do primeiro cadastro, defina `false` e reinicie o serviço.
    frescas. Com `AUTH_BOOTSTRAP_SIGNUP=true`, crie a conta allowlisted; depois
    desligue o cadastro, reinicie e teste o login, persistência após reinício,
    uma escrita autenticada e a reconciliação de push.
-7. Verifique o uso das chaves Supabase novas antes de desativar e depois revogar
-   as legadas. Para VAPID, mantenha o novo par implantado até os clientes
-   substituírem assinaturas incompatíveis; depois remova o segredo antigo.
+7. As chaves atualmente configuradas permanecem ativas nesta operação: não há
+   rotação nem revogação. Confirme somente que o container lê as variáveis do
+   `.env` e que nenhum segredo aparece na imagem ou nos logs.
 
 Rollback: restaure a imagem anterior sem desfazer migrations aditivas usando a
 tag registrada: `NEWS_IMAGE_TAG=<commit> docker compose up -d --no-build news`.
 Preserve `AUTH_ALLOWED_EMAIL` e a sessão Better Auth ao validar a imagem
 anterior. O valor padrão continua sendo `latest` para o cutover normal.
+
+O Compose limita os logs do container `news` a 5 arquivos de 10 MiB
+(aproximadamente 50 MiB no total). O ingest e o backup usam
+`/home/marce/ops/scripts/cron-alert-wrap.sh`: uma falha grava em
+`/home/marce/backups/news/cron-alerts.log` e no journal do host.
+
+```bash
+journalctl -t agora-news-cron -p user.err --since today
+tail -f /home/marce/backups/news/cron-alerts.log
+```
+
+Os jobs usam logs dedicados em `/home/marce/backups/news/`; o caminho legado
+`~/.pm2/logs/news-ingest-cron.log` não é mais usado.
 
 ## Backup periódico
 

@@ -99,7 +99,6 @@ function FontesPage() {
   }));
   const visible = filterFontesRows(rows, q, secao);
   const grouped = groupFontesRows(visible, groupIds);
-
   function toggleGroup(id: string) {
     setOpenGroups((prev) => {
       const next = new Set(prev);
@@ -176,7 +175,7 @@ function FontesPage() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-10 w-full rounded-md border border-line bg-paper px-3 text-sm text-ink outline-none"
+            className="h-10 w-full rounded-md border border-line bg-paper px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
           />
         </label>
         {picking ? <FontesBatchBar count={picked.size} groupIds={groupIds} onMove={movePicked} /> : null}
@@ -209,6 +208,7 @@ function FontesPage() {
                               alt=""
                               width={28}
                               height={28}
+                              loading="lazy"
                               className="size-7 rounded-full border border-paper bg-paper-2 object-cover"
                             />
                           ) : (

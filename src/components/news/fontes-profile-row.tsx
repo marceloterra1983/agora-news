@@ -56,6 +56,7 @@ export function ProfileRow({
               alt=""
               width={28}
               height={28}
+              loading={index === 0 ? "eager" : "lazy"}
               className="size-7 shrink-0 rounded-full bg-paper-2 object-cover"
             />
           ) : (
