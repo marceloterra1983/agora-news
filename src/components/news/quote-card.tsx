@@ -19,6 +19,8 @@ export function LinkCard({ card }: { card: StoryQuoteCard }) {
         <img
           src={card.image}
           alt=""
+          width={191}
+          height={100}
           className="aspect-[1.91/1] w-full object-cover"
           referrerPolicy="no-referrer"
         />
@@ -51,6 +53,8 @@ export function XArticleBlock({ article }: { article: StoryXArticle }) {
         <img
           src={article.cover}
           alt=""
+          width={16}
+          height={8}
           className="aspect-[16/8] w-full object-cover"
           referrerPolicy="no-referrer"
         />
@@ -94,6 +98,8 @@ export function QuoteCard({ quote }: { quote: StoryQuote }) {
             <img
               src={quote.avatar}
               alt=""
+              width={28}
+              height={28}
               className="size-7 rounded-full bg-paper-2 object-cover"
               referrerPolicy="no-referrer"
             />
@@ -118,6 +124,8 @@ export function QuoteCard({ quote }: { quote: StoryQuote }) {
           <img
             src={quote.image}
             alt=""
+            width={16}
+            height={9}
             className="mt-3 w-full rounded-lg object-contain"
             referrerPolicy="no-referrer"
           />

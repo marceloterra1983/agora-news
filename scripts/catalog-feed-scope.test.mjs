@@ -12,7 +12,6 @@ import {
   catalogFor,
   filterStoriesForCatalog,
   handleInCatalog,
-  scopeCachedStories,
   sectionOfHandle,
 } from "../src/lib/news/section-catalog.mjs";
 
@@ -136,10 +135,10 @@ test("real IA seed does not include Renan; feed/ingest/supabase share catalogFor
   }
 });
 
-test("cached Story[] with a Renan-like leak is filtered before return", () => {
+test("catalog-scoped cache keys cannot return a Renan-like leak", () => {
   const catalog = catalogFor("ai", { profiles: FIXTURES, extras: EXTRAS });
   const leaked = [story("RenanSantosMBL", "ai"), story("OpenAI", "ai")];
-  const listed = scopeCachedStories(leaked, catalog);
+  const listed = filterStoriesForCatalog(leaked, catalog);
   assert.equal(
     listed.some((s) => /renan/i.test(s.source)),
     false,
@@ -151,23 +150,15 @@ test("cached Story[] with a Renan-like leak is filtered before return", () => {
   );
 
   const supabase = read("src/lib/news/supabase.ts");
-  assert.match(supabase, /scopeCachedStories|filterStoriesForCatalog/);
-  assert.doesNotMatch(supabase, /age < WARM_MS\) \{\s*return hit\.stories/);
-  assert.doesNotMatch(supabase, /return storeList\(key,\s*remote/);
-  const afterKv = supabase.slice(supabase.indexOf("cacheGetJson<Story[]>"));
-  assert.match(
-    afterKv.slice(0, 900),
-    /scopedCachedList|scopeCachedStories|filterStoriesForCatalog/,
-    "Redis/KV snapshot must be filtered after cacheGetJson",
-  );
+  assert.match(supabase, /accounts/);
+  assert.match(supabase, /account.*in\.\(/s);
+  assert.match(supabase, /accountKey/);
 
   const feed = read("src/lib/news/feed.ts");
   assert.doesNotMatch(feed, /age < SOFT_MS\) return hit\.payload/);
   assert.doesNotMatch(feed, /return previous;/);
   assert.match(feed, /filterStories\(|scopeCachedStories|filterStoriesForCatalog/);
 
-  const xSearch = read("src/lib/news/x-search.ts");
-  assert.match(xSearch, /filterStoriesForCatalog|scopeCachedStories|catalogFor/);
 });
 
 test("csv parser never assigns ai to a handle outside the IA catalog", () => {
@@ -205,7 +196,7 @@ test("csv parser never assigns ai to a handle outside the IA catalog", () => {
   }
 });
 
-test("ingest/csv/feed/supabase/x-search/cloud-kv do not silently default to ai", () => {
+test("ingest/csv/feed/supabase do not silently default to ai", () => {
   const ingest = read("src/lib/news/ingest.ts");
   assert.doesNotMatch(ingest, /storiesFromDbPosts\([^)]*["']ai["']/);
   assert.doesNotMatch(ingest, SILENT_AI);
@@ -219,8 +210,6 @@ test("ingest/csv/feed/supabase/x-search/cloud-kv do not silently default to ai",
   for (const rel of [
     "src/lib/news/feed.ts",
     "src/lib/news/supabase.ts",
-    "src/lib/news/x-search.ts",
-    "src/lib/news/cloud-kv.ts",
     "src/lib/news/csv-category.mjs",
   ]) {
     assert.doesNotMatch(read(rel), /\|\|\s*["']ai["']/, `${rel} silent || "ai"`);

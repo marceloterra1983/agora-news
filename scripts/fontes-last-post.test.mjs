@@ -45,7 +45,7 @@ test("Fontes last-post link uses in-app materia only when the tweet is in the fe
   assert.match(row, /lastPost\.href|lastPostHref/);
 });
 
-test("ingest cron script sends Bearer to local PM2", () => {
+test("ingest cron script sends Bearer to the loopback Nitro service", () => {
   const src = read("scripts/ingest-cron.sh");
   assert.match(src, /CRON_SECRET/);
   assert.match(src, /Bearer/);
@@ -58,12 +58,12 @@ test("ingest keeps the previous last_post when the current batch has no tweet", 
   assert.doesNotMatch(src, /last_post:\s*last\?\.id\s*\?/);
 });
 
-test("profile and watch writes preserve last_post instead of wiping it", () => {
+test("profile catalog mutation stays in ingest", () => {
   const profile = read("src/routes/api/profile.ts");
   const watch = read("src/routes/api/watch.ts");
-  assert.match(profile, /keepLastPost|prev\?\.last_post|lastPost/);
-  assert.match(watch, /keepLastPost|lastPost|last_post:/);
-  assert.doesNotMatch(profile, /last_post:\s*null/);
+  assert.doesNotMatch(profile, /POST:\s*async|upsertProfile/);
+  assert.doesNotMatch(watch, /upsertProfile|last_post:/);
+  assert.match(read("src/lib/news/ingest.ts"), /upsertProfile/);
 });
 
 test("last posts persist in posts category x-last when x_profiles is absent", () => {

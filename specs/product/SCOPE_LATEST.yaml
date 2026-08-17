@@ -1,0 +1,76 @@
+initiative: "Agora News full production hardening"
+core_value: "Deliver a secure, persistent, truthful and operable news application without replacing the current single-runtime architecture."
+summary: >-
+  This initiative closes the confirmed production risks in credentials,
+  authentication, user-data ownership, ingestion correctness and operational
+  verification. It also completes the accessible product contract and removes
+  duplicated or dead runtime cost that makes the application harder to operate.
+
+  Delivery is staged so that schema and credentials expand first, application
+  behavior is verified next, and destructive contraction or credential
+  revocation happens only after evidence and an owner-controlled checkpoint.
+
+in_scope:
+  - id: e04s01
+    outcome: "Production configuration, authentication and privileged credentials are explicit, persistent and rotatable."
+  - id: e04s02
+    outcome: "Watches, preferences, subscriptions and global profiles use owner-correct dedicated persistence."
+  - id: e04s03
+    outcome: "Ingestion, cache and notifications remain correct during partial external or database failures."
+  - id: e04s04
+    outcome: "Health, CI, build and Docker gates exercise the real deployable artifact without silent skips."
+  - id: e04s05
+    outcome: "Core routes meet the audited accessibility and product-truth contracts."
+  - id: e04s06
+    outcome: "Confirmed duplicate/dead runtime paths are removed and documentation matches the verified deployment."
+  - id: e04s07
+    outcome: "The owner signs in through closed-by-default single-user email authentication without an unavailable OAuth broker."
+
+out_of_scope:
+  - item: "Microservices, event bus, queue platform or multiple production replicas"
+    reason: "Deferred until measured throughput or availability requirements exceed the documented single-container ceiling."
+  - item: "Full offline application shell and article caching"
+    reason: "The product can be truthful by removing the unsupported promise; building a durable offline product is a separate initiative."
+  - item: "New UI framework, state manager, ORM or runtime validation package"
+    reason: "Existing platform and narrow native guards cover the confirmed requirements with less operational surface."
+  - item: "Bulk conversion of unrelated .mjs/.d.mts pairs"
+    reason: "Broad mechanical churn has no production outcome; touched pairs may be consolidated locally."
+  - item: "Git history rewrite after credential revocation"
+    reason: "Revocation neutralizes the credentials; history rewriting is deferred unless a compliance requirement demands it."
+  - item: "Fabricated captions for upstream video without caption data"
+    reason: "The application will label media and render supplied captions, but cannot invent an accurate transcript."
+
+constraints:
+  architecture:
+    - "Keep one TanStack Start/Nitro application and the existing cron."
+    - "Keep Nginx on the host and one Docker service bound to loopback port 3080."
+    - "Use expand-verify-contract for schema and credential migration."
+    - "Do not expose secrets in Git, bundles, logs, command output or chat."
+  delivery:
+    - "Every behavior change follows red-green-refactor with a focused test."
+    - "Every story remains independently verifiable and deployable."
+    - "Gate changes may only reject more invalid states, never introduce bypasses."
+    - "Concurrent fixes already merged into main are not reimplemented."
+  external:
+    - "Final Supabase key creation/deactivation/revocation requires project-owner access."
+    - "Production OAuth client registration and secret installation require owner credentials."
+    - "Final destructive data cleanup requires exact-ID export and count verification."
+
+success_criteria:
+  - "No tracked or built artifact contains a privileged Supabase key or VAPID private key."
+  - "Production authentication uses persistent storage, the canonical origin and survives container restart."
+  - "Two authenticated users cannot access or mutate each other's private records."
+  - "Partial ingest failure cannot cache or notify unconfirmed stories."
+  - "Health separates liveness, dependency readiness and freshness by section."
+  - "CI runs all required browser tests with zero skips and validates Nitro and Docker artifacts."
+  - "Core routes satisfy the agreed headings, skip navigation, focus, naming and truthful-state checks."
+  - "Duplicate polling/cache paths and confirmed dead consumers are removed without regression."
+  - "Production smoke, tests, typecheck, zero-warning lint, dependency audit and documentation verification pass."
+
+references:
+  - "docs/superpowers/specs/2026-08-16-full-hardening-design.md"
+  - "specs/IMPACT_LATEST.md"
+  - "specs/tech-architecture/tech-stack.md"
+  - "https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys"
+  - "https://supabase.com/docs/guides/auth/signing-keys"
+  - "https://better-auth.com/docs/reference/options#baseurl"

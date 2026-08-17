@@ -64,12 +64,6 @@ export function buzzFor(handle: string, tweetId?: string): PostBuzz | null {
   return hit ? pickBuzz(hit) : null;
 }
 
-export function seedBuzz(handle: string, buzz: PostBuzz): void {
-  const key = handle.replace(/^@+/, "").trim().toLowerCase();
-  if (!key) return;
-  buzzCache.set(key, { at: Date.now(), ...buzz });
-}
-
 export function exportBuzzCache(): Record<string, PostBuzz> {
   const out: Record<string, PostBuzz> = {};
   for (const [key, hit] of buzzCache) out[key] = pickBuzz(hit);
@@ -121,10 +115,6 @@ export function buzzIsFresh(handle: string, tweetId?: string): boolean {
   const key = handle.toLowerCase();
   const hit = tweetId ? buzzCache.get(`${key}:${tweetId}`) || buzzCache.get(key) : buzzCache.get(key);
   return Boolean(hit && Date.now() - hit.at < BUZZ_TTL);
-}
-
-export function getProfileMetrics(handle: string): { profileEr: number } {
-  return { profileEr: buzzFor(handle.replace(/^@+/, "").trim())?.profileEr ?? 0 };
 }
 
 export function formatPostEr(

@@ -31,14 +31,14 @@ test("ingest requires bearer secret; fail-closed without it", () => {
   assert.equal(writeAllowed("ingest", { site: null }), false);
   assert.equal(writeAllowed("ingest", { site: "none" }), false);
   assert.equal(writeAllowed("ingest", { site: "cross-site" }), false);
-  assert.equal(writeDenialStatus("ingest", {}), 401);
+  assert.equal(writeDenialStatus("ingest"), 401);
 
   const env = { cronSecret: "s3cret" };
   assert.equal(writeAllowed("ingest", { authorization: "Bearer s3cret" }, env), true);
   assert.equal(writeAllowed("ingest", { authorization: "Bearer no" }, env), false);
   assert.equal(writeAllowed("ingest", { site: "same-origin" }, env), false);
   assert.equal(writeAllowed("ingest", { vercelCron: "1" }, env), false);
-  assert.equal(writeDenialStatus("ingest", env), 401);
+  assert.equal(writeDenialStatus("ingest"), 401);
 });
 
 test("ops write: same-origin only", () => {
@@ -62,7 +62,7 @@ test("TS port and API routes call the guard", () => {
   assert.match(watch, /await requestWriteAllowed\(\s*"app"/);
 
   const profile = readFileSync(join(root, "src/routes/api/profile.ts"), "utf8");
-  assert.match(profile, /await requestWriteAllowed\(\s*"app"/);
+  assert.doesNotMatch(profile, /POST:\s*async|requestWriteAllowed/);
 
   const push = readFileSync(join(root, "src/routes/api/push.ts"), "utf8");
   assert.match(push, /await requestWriteAllowed\(\s*"app"/);

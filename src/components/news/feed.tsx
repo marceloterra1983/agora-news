@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
 import { useNewsStore } from "@/lib/news/store";
@@ -9,109 +9,55 @@ import { normHandle } from "@/lib/news/fontes-prefs";
 import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { useUnread } from "@/lib/news/use-unread";
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "@/lib/news/supabase";
 import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
-import { groupOf } from "./group-tag";
+import { profileByHandle } from "@/lib/news/profiles";
 import { StoryCard } from "./story-card";
 
-const LAST_FEED = "agora-last-live-v3";
-const GROUP_KEY = "agora-feed-group";
 const PAGE = PAGE_SIZE;
 
 type NewsPayload = ReturnType<typeof newsFromFallback> & {
   meta: ReturnType<typeof newsFromFallback>["meta"] & { hasMore?: boolean };
 };
 
-function readLastGood(category: Category, query?: string) {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(`${LAST_FEED}:${category}:${query ?? ""}`);
-    return raw ? (JSON.parse(raw) as NewsPayload) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeLastGood(category: Category, query: string | undefined, data: NewsPayload) {
-  if (typeof window === "undefined" || !data.meta.live) return;
-  try {
-    sessionStorage.setItem(`${LAST_FEED}:${category}:${query ?? ""}`, JSON.stringify(data));
-  } catch {
-    // quota
-  }
-}
-
-function readGroup(category: Category): string {
-  if (typeof window === "undefined") return "all";
-  try {
-    const v = sessionStorage.getItem(`${GROUP_KEY}:${category}`) ?? sessionStorage.getItem(GROUP_KEY);
-    if (!v || v === "all") return "all";
-    return v;
-  } catch {
-    /* ignore */
-  }
-  return "all";
-}
-
 export function Feed({
   category,
   query,
   initial,
   group: groupProp,
-  onGroupChange,
 }: {
   category: Category;
   query?: string;
   initial?: NewsPayload;
   group?: string;
-  onGroupChange?: (g: string) => void;
 }) {
   const ingest = useNewsStore((s) => s.ingest);
   const prefs = useFontesPrefs(category);
   const unread = useUnread();
   const seedBaseline = unread.seedBaseline;
-  const queryClient = useQueryClient();
-  const seed = initial?.stories.length ? initial : newsFromFallback(category, query);
-  const stickyKey = `${category}:${query ?? ""}`;
-  const sticky = useRef(readLastGood(category, query) ?? seed);
-  const stickyFor = useRef(stickyKey);
-  if (stickyFor.current !== stickyKey) {
-    stickyFor.current = stickyKey;
-    sticky.current = readLastGood(category, query) ?? seed;
-  }
-  if (initial?.meta.live && initial.stories.length) {
-    sticky.current = initial;
-  }
+  const seed = initial ?? newsFromFallback(category, query);
   const [older, setOlder] = useState<NewsPayload["stories"]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [moreError, setMoreError] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [groupLocal, setGroupLocal] = useState<string>("all");
-  const group = groupProp ?? groupLocal;
+  const group = groupProp ?? "all";
 
   useEffect(() => {
-    const g = readGroup(category);
-    setGroupLocal(g);
-    onGroupChange?.(g);
     setOlder([]);
     setHasMore(true);
   }, [category, query]);
 
-  const { data, isError, dataUpdatedAt } = useQuery({
+  const { data, isError, isFetching, refetch } = useQuery({
     queryKey: ["news", category, query ?? ""],
     queryFn: async () => {
       const next = await loadNews({
-        data: { category, q: query, refresh: false, fromX: false },
+        data: { category, q: query },
       });
-      if (next.meta.live && next.stories.length) {
-        writeLastGood(category, query, next);
-        sticky.current = next;
-        return next;
-      }
-      return sticky.current.stories.length ? sticky.current : next;
+      if (!next.meta.live) throw new Error("feed_unavailable");
+      return next;
     },
-    initialData: initial?.meta.live && initial.stories.length ? initial : undefined,
-    placeholderData: sticky.current,
+    initialData: initial?.meta.live ? initial : undefined,
+    placeholderData: seed,
     staleTime: 60_000,
     refetchOnMount: "always",
     refetchOnWindowFocus: false,
@@ -119,46 +65,10 @@ export function Feed({
   });
 
   useEffect(() => {
-    let last = "";
-    let stop = false;
-    async function peek() {
-      try {
-        const res = await fetch(
-          `${SUPABASE_POSTS_URL}?select=post_id&order=posted_at.desc&limit=1&category=eq.${category}`,
-          {
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              Accept: "application/json",
-              Prefer: "count=none",
-            },
-            signal: AbortSignal.timeout(5_000),
-          },
-        );
-        if (!res.ok || stop) return;
-        const rows = (await res.json()) as Array<{ post_id?: string }>;
-        const id = rows[0]?.post_id || "";
-        if (id && last && id !== last) {
-          void queryClient.invalidateQueries({ queryKey: ["news", category] });
-        }
-        if (id) last = id;
-      } catch {
-        /* keep interval */
-      }
-    }
-    void peek();
-    const timer = window.setInterval(peek, 15_000);
-    return () => {
-      stop = true;
-      window.clearInterval(timer);
-    };
-  }, [category, queryClient]);
-
-  useEffect(() => {
     if (data?.stories.length) ingest(data.stories);
   }, [data, ingest]);
 
-  const rawStories = [...(data?.stories?.length ? data.stories : sticky.current.stories), ...older].filter(
+  const rawStories = [...(data?.stories ?? seed.stories), ...older].filter(
     (s, i, all) =>
       s.category !== "profile" &&
       !String(s.id).startsWith("prfl_") &&
@@ -170,10 +80,11 @@ export function Feed({
     return rawStories.filter((s) => {
       const h = normHandle(s.source || s.sourceLabel || "");
       if (h && disabled.has(h)) return false;
-      if (group !== "all" && groupOf(s.source, category) !== group) return false;
+      const storyGroup = prefs.groups[h] ?? profileByHandle(h)?.group ?? "novos";
+      if (group !== "all" && storyGroup !== group) return false;
       return true;
     });
-  }, [rawStories, prefs.disabled, group, category]);
+  }, [rawStories, prefs.disabled, prefs.groups, group]);
 
   useEffect(() => {
     if (!rawStories.length) return;
@@ -189,6 +100,7 @@ export function Feed({
     const last = rawStories.at(-1);
     if (!last || loadingMore) return;
     setLoadingMore(true);
+    setMoreError(false);
     try {
       const next = await loadNews({
         data: { category, q: query, before: last.publishedAt },
@@ -198,46 +110,46 @@ export function Feed({
       setOlder((cur) => [...cur, ...fresh]);
       setHasMore(Boolean(next.meta.hasMore) && fresh.length > 0);
     } catch {
-      setHasMore(false);
+      setMoreError(true);
     } finally {
       setLoadingMore(false);
     }
   }
 
-  const updatedLabel = useMemo(() => {
-    const top = stories[0]?.publishedAt || data?.meta?.syncedAt;
-    if (!top) return null;
-    return relativeTime(top);
-  }, [stories, data?.meta?.syncedAt, dataUpdatedAt]);
+  const updatedAt = stories[0]?.publishedAt || data?.meta?.syncedAt;
+  const updatedLabel = updatedAt ? relativeTime(updatedAt) : null;
 
   if (isError && !stories.length) {
     return (
-      <div className="mx-auto max-w-lg py-20 text-center">
-        <p className="font-display text-2xl">Nada nesta coleta</p>
+      <div className="mx-auto max-w-lg py-20 text-center" role="alert">
+        <p className="font-display text-2xl">Feed indisponível</p>
         <p className="mt-2 text-sm text-ink-soft">
-          Não foi possível ler o feed agora. A tentativa se repete sozinha.
+          Não foi possível ler as notícias agora.
         </p>
+        <button type="button" className="mt-4 h-11 rounded-md border border-line px-4 text-sm" onClick={() => void refetch()}>Tentar novamente</button>
       </div>
     );
   }
 
   return (
-    <div data-feed="" className="mx-auto max-w-2xl pt-3 max-sm:max-w-none">
+    <div data-feed="" aria-busy={isFetching || loadingMore} className="mx-auto max-w-2xl pt-3 max-sm:max-w-none">
+      {isError ? <p className="mb-3 text-sm text-mark" role="alert">Feed ao vivo indisponível. Exibindo o conteúdo disponível.</p> : null}
       {updatedLabel ? (
-        <p className="mb-4 text-[12px] text-mute">Atualizado {updatedLabel}</p>
+        <p className="mb-4 text-[12px] text-mute" role="status">Atualizado {updatedLabel}</p>
       ) : null}
 
       {stories.length ? (
-        stories.map((story) => (
+        stories.map((story, index) => (
           <StoryCard
             key={story.id}
             story={story}
             variant="reader"
             unread={unread.isUnread(story.id)}
+            priority={index === 0}
           />
         ))
       ) : (
-        <div className="mx-auto max-w-lg py-16 text-center">
+        <div className="mx-auto max-w-lg py-16 text-center" role="status">
           <p className="font-display text-2xl">Nada neste recorte</p>
           <p className="mt-2 text-sm text-ink-soft">
             {group === "all"
@@ -260,6 +172,7 @@ export function Feed({
           </button>
         </div>
       ) : null}
+      {moreError ? <p className="pb-6 text-center text-sm text-mark" role="alert">Não foi possível carregar mais. Tente novamente.</p> : null}
     </div>
   );
 }

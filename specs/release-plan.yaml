@@ -1,0 +1,29 @@
+release:
+  id: r04-production-hardening
+  title: "Agora News production hardening"
+  status: in_progress
+  objective: "Remove confirmed production security and correctness risks before further feature work."
+
+epics:
+  - id: e04
+    slug: full-hardening
+    title: "Secure, persistent and operable production"
+    status: active
+    wsjf:
+      business_value: 10
+      time_criticality: 10
+      risk_reduction: 10
+      job_size: 8
+      score: 3.75
+  - id: e01
+    slug: harden
+    title: "Historical write hardening"
+    status: superseded_by_e04
+  - id: e03
+    slug: docker-prod
+    title: "Historical Docker cutover"
+    status: reopened_by_e04
+  - id: e02
+    slug: dead-code
+    title: "Historical dead-code cleanup"
+    status: absorbed_by_e04

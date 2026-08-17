@@ -65,6 +65,6 @@ test("package.json dropped unused template UI libraries", () => {
   ]) {
     assert.equal(deps[name], undefined, name);
   }
-  assert.ok(deps["@radix-ui/react-slot"]);
-  assert.ok(deps["@radix-ui/react-tooltip"]);
+  assert.equal(deps["@radix-ui/react-slot"], undefined);
+  assert.equal(deps["@radix-ui/react-tooltip"], undefined);
 });

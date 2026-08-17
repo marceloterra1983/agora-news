@@ -5,6 +5,7 @@ services:
     env_file:
       - .env
     environment:
+      AGORA_RUNTIME_MODE: production
       NODE_ENV: production
       PORT: "3080"
       NITRO_PORT: "3080"
@@ -17,7 +18,7 @@ services:
           "CMD",
           "node",
           "-e",
-          "fetch('http://127.0.0.1:3080/api/health').then(r=>process.exit(r.status===200||r.status===503?0:1)).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:3080/api/health/live').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 15s
       timeout: 5s

@@ -27,7 +27,8 @@ test("closed last post is a link outside the leftover expand button", () => {
   const btnEnd = header.indexOf("</button>");
   assert.ok(btnStart >= 0 && btnEnd > btnStart, "closed row still has an expand button");
   const button = header.slice(btnStart, btnEnd);
-  assert.match(button, /aria-expanded=\{open\}/);
+  assert.match(button, /aria-expanded=\{picking \? undefined : open\}/);
+  assert.match(button, /aria-pressed=\{picking \? Boolean\(picked\) : undefined\}/);
   assert.match(button, /ml-auto/);
   assert.doesNotMatch(button, /displayTitle\(row\.lastPost/);
   assert.doesNotMatch(button, /lastPost\?\.title/);

@@ -1,36 +1,54 @@
-active_flow: build_epic
-active_epic_id: e01
-active_story_id: e01s01
+active_flow: plan_work
+active_epic_id: e04
+active_story_id: e04s07
 active_bug_id: null
 release:
   target_version: null
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: verify-work
-  next_skill: null
-  completed_steps: [plan-work, assess-impact, kickoff-branch, develop-tdd, verify-work]
+  current_step: plan
+  next_skill: develop-tdd
+  completed_steps:
+    - brainstorming
+    - scope-work
+    - slice-tasks
+    - assess-impact
+    - kickoff-branch
+    - plan-work
 bug_cycle:
   current_step: null
   completed_steps: []
 project_cycle:
-  current_phase: execute
-  completed_steps: [survey-context, map-codebase, plan-work]
+  current_phase: verify
+  completed_steps:
+    - survey-context
+    - map-codebase
+    - deepen-architecture
+    - security-review
 git:
-  branch: feat/review-next
-  hash: pending
+  branch: codex/full-hardening
+  baseline: 2cf09fe
+  hash: 74ca104
 handoff:
-  last_step_completed: "Review-next: last-post sintético, push 502, merge de perfil"
+  last_step_completed: "e04s07 single-user email authentication design and implementation plan approved"
   open_decisions: []
   required_reading:
-    - specs/epics/e01-harden/epic.yaml
-  next_skill: null
+    - docs/superpowers/specs/2026-08-16-full-hardening-design.md
+    - specs/IMPACT_LATEST.md
+    - specs/product/SCOPE_LATEST.yaml
+    - specs/epics/e04-full-hardening/epic.yaml
+  next_skill: develop-tdd
 learned_preferences:
-  - "PT-BR, conciso, dono do repo a partir de 2026-08-16"
-  - "Não rotacionar chaves neste ciclo — fallbacks no source permanecem"
+  - "PT-BR, concise status, complete implementation requested and design approved"
+  - "Rotate exposed keys using expand-verify-contract; never retain literal fallbacks"
 workspace_facts:
-  - "Feed canônico é Supabase public.posts, não Neon/PGLite"
-  - "Mutações /api/watch|profile|push exigem same-origin e userId"
-  - "CRON_SECRET obrigatório em /api/ingest (só Bearer)"
-  - "Prod é Docker Nitro em 127.0.0.1:3080, não vite dev nem Vercel"
-  - "MCP SQL: supabase-stdio via ~/.cursor/bin/supabase-mcp.sh + .env"
+  - "Production is Docker Nitro behind Nginx on 127.0.0.1:3080"
+  - "Canonical public feed is Supabase public.posts"
+  - "Production auth requires persistent Postgres and canonical OAuth callbacks"
+  - "Private Better Auth user domains require server-enforced ownership"
+  - "CI installs Chromium and makes every browser/live smoke mandatory"
+human_gates:
+  - "Create/install/disable/revoke Supabase API and signing keys"
+  - "Provide persistent DATABASE_URL and production OAuth credentials/callback registration"
+  - "Approve exact-ID legacy cleanup and final signing-secret revocation"

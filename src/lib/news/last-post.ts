@@ -1,10 +1,13 @@
 /** Last tweet per handle — any age. Stored in posts category x-last (x_profiles may be absent). */
 
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
+import { supabaseReadHeaders, SUPABASE_POSTS_URL } from "./supabase";
 
 export const LAST_POST_CATEGORY = "x-last";
 
-import { pickLatestFromPostRows, type StoredLastPost } from "./last-post-core.mjs";
+import {
+  pickLatestFromPostRows,
+  type StoredLastPost,
+} from "./last-post-core.mjs";
 
 export type { StoredLastPost };
 export {
@@ -23,19 +26,18 @@ export {
   xLastListParams,
 } from "./last-post-core.mjs";
 
-const AUTH = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  Accept: "application/json",
-};
-
-export async function fetchLastPost(handle: string): Promise<StoredLastPost | null> {
+export async function fetchLastPost(
+  handle: string,
+): Promise<StoredLastPost | null> {
   const key = handle.replace(/^@+/, "").trim();
   if (!key) return null;
   try {
     const res = await fetch(
       `https://api.fxtwitter.com/2/profile/${encodeURIComponent(key)}/statuses?count=5`,
-      { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8_000) },
+      {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8_000),
+      },
     );
     if (!res.ok) return null;
     const body = (await res.json()) as {
@@ -66,17 +68,22 @@ export async function fetchLastPost(handle: string): Promise<StoredLastPost | nu
   }
 }
 
-export async function latestFromPosts(handle: string): Promise<StoredLastPost | null> {
+export async function latestFromPosts(
+  handle: string,
+): Promise<StoredLastPost | null> {
   const key = handle.replace(/^@+/, "").trim();
   if (!key) return null;
   try {
     const params = new URLSearchParams();
-    params.set("select", "post_id,account,posted_at,summary_pt,content,post_url");
+    params.set(
+      "select",
+      "post_id,account,posted_at,summary_pt,content,post_url",
+    );
     params.set("account", `eq.${key}`);
     params.set("order", "posted_at.desc");
     params.set("limit", "8");
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
-      headers: AUTH,
+      headers: supabaseReadHeaders(),
       signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) return null;
@@ -92,4 +99,3 @@ export async function latestFromPosts(handle: string): Promise<StoredLastPost | 
     return null;
   }
 }
-

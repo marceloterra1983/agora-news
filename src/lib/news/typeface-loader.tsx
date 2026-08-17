@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { TYPEFACES, type Typeface } from "./settings";
+import { TYPEFACES } from "./settings";
 import { useSettings } from "./use-settings";
 
 function ensureLink(id: string, href: string) {
@@ -22,19 +22,4 @@ export function TypefaceLoader({ all = false }: { all?: boolean }) {
     }
   }, [all, settings.typeface]);
   return null;
-}
-
-export function typefaceFamily(id: Typeface): string {
-  switch (id) {
-    case "literata":
-      return '"Literata", Georgia, serif';
-    case "source":
-      return '"Source Serif 4", Georgia, serif';
-    case "newsreader":
-      return '"Newsreader", Georgia, serif';
-    case "fraunces":
-      return '"Fraunces", Georgia, serif';
-    default:
-      return "var(--font-sans)";
-  }
 }

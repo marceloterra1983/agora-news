@@ -28,7 +28,6 @@ test("no viewport or touch-action locks pinch-zoom", () => {
     "src/routes/__root.tsx",
     "src/lib/news/phone-shell.ts",
     "src/lib/news/critical.css.ts",
-    "src/lib/auth/popup.server.ts",
     "scripts/grok-pwa-shared.mjs",
     "scripts/install-page.html",
     "public/limpar.html",
@@ -55,7 +54,7 @@ test("phone layout is driven by max-width 640px media query", () => {
   assert.doesNotMatch(css, /--agora-type: 22px/);
   assert.doesNotMatch(css, /font-size: 22px !important/);
   assert.match(styles, /phone-layout\.css/);
-  assert.match(critical, /phone-layout\.css\?raw/);
+  assert.doesNotMatch(critical, /phone-layout\.css\?raw/);
 });
 
 test("chrome does not set a desktop min-width and keeps chips inside the bar", () => {

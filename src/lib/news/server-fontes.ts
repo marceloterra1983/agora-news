@@ -18,20 +18,3 @@ export const loadFontes = createServerFn({ method: "GET" })
       live: r.live,
     }));
   });
-
-/** Alias do store — a página Fontes não chama isto no GET. */
-export const loadFontesLive = loadFontes;
-
-export const loadFonteMetrics = createServerFn({ method: "GET" })
-  .validator((input: { handle: string }) => ({
-    handle: String(input.handle || "")
-      .replace(/^@+/, "")
-      .trim()
-      .slice(0, 15),
-  }))
-  .handler(async ({ data }) => {
-    const { hydrateBuzzCache } = await import("./fonte-buzz-store");
-    const { getProfileMetrics } = await import("./fonte-metrics");
-    await hydrateBuzzCache();
-    return getProfileMetrics(data.handle);
-  });

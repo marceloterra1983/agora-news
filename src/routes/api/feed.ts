@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/feed")({
         const category = normalizeSection(url.searchParams.get("secao") || DEFAULT_SECTION);
         const q = url.searchParams.get("q") || undefined;
         const data = await loadNews({
-          data: { category: category as Category, q, refresh: false, fromX: false },
+          data: { category: category as Category, q },
         });
         return Response.json(data, {
           headers: {

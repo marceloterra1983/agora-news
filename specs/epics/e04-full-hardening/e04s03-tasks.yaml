@@ -1,0 +1,47 @@
+story_id: e04s03
+title: "Make ingestion and notifications correct under failure"
+status: passing
+bcps: 8
+tasks:
+  - id: 1
+    description: "RED: specify partial writes, lookup failure, lock ownership and notification order"
+    verify: "node --experimental-strip-types --test scripts/ingest-correctness.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Ingest", "unit"] }
+  - id: 2
+    description: "Return complete/confirmed/failed upsert results and route confirmed rows only"
+    verify: "node --experimental-strip-types --test --test-name-pattern='upsert|confirmed' scripts/ingest-correctness.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Data Integrity"] }
+  - id: 3
+    description: "Abort incomplete existing-ID discovery and validate used upstream payload fields"
+    verify: "node --experimental-strip-types --test --test-name-pattern='existing|payload' scripts/ingest-correctness.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Trust Boundary"] }
+  - id: 4
+    description: "Add token-owned compare/renew/release lock behavior with finally cleanup"
+    verify: "node --experimental-strip-types --test --test-name-pattern='lock' scripts/ingest-correctness.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Concurrency"] }
+  - id: 5
+    description: "Filter favorites before limit, prune invalid subscriptions and emit structured summary"
+    verify: "node --experimental-strip-types --test --test-name-pattern='favorite|subscription|summary' scripts/ingest-correctness.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Notifications"] }
+  - id: 6
+    description: "Add bounded cron retries and run ingest/push regressions"
+    verify: "node --experimental-strip-types --test scripts/ingest-correctness.behavior.test.mjs scripts/agora-now.test.mjs scripts/review-next.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Cron", "Regression"] }
+  - id: 7
+    description: "Run full regression, dependency audit and affected-path security review"
+    verify: "npm test && npm run typecheck && npm audit --omit=dev"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Regression"] }

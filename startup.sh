@@ -3,6 +3,7 @@ set -eu
 cd /workspace
 PATH="/workspace/.local/bin:$PATH"
 export PATH
+export AGORA_RUNTIME_MODE=preview
 
 mkdir -p /tmp/redis-data
 if ! redis-cli -h 127.0.0.1 -p 6379 ping >/dev/null 2>&1; then

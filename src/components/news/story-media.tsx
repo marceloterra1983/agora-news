@@ -6,10 +6,12 @@ export function StoryMedia({
   src,
   alt,
   className,
+  priority = false,
 }: {
   src: string | null;
   alt: string;
   className?: string;
+  priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
@@ -31,7 +33,10 @@ export function StoryMedia({
     <img
       src={src}
       alt={alt}
-      loading="lazy"
+      width={16}
+      height={9}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
       className={cn("object-cover", className)}
@@ -42,17 +47,22 @@ export function StoryMedia({
 export function StoryAssetBlock({
   asset,
   alt,
+  priority = false,
 }: {
   asset: StoryAsset;
   alt: string;
+  priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   if (asset.type === "video") {
     return (
       <video
         controls
+        aria-label={`Vídeo: ${alt}`}
+        width={asset.width ?? 16}
+        height={asset.height ?? 9}
         playsInline
-        preload="metadata"
+        preload={priority ? "auto" : "metadata"}
         poster={asset.poster}
         className="mt-6 w-full rounded-lg bg-hero"
         style={
@@ -67,14 +77,22 @@ export function StoryAssetBlock({
   }
   if (failed) {
     return (
-      <StoryMedia src={asset.poster || null} alt={alt} className="mt-6 aspect-[16/9] w-full rounded-lg" />
+      <StoryMedia
+        src={asset.poster || null}
+        alt={alt}
+        priority={priority}
+        className="mt-6 aspect-[16/9] w-full rounded-lg"
+      />
     );
   }
   return (
     <img
       src={asset.url}
       alt={alt}
-      loading="lazy"
+      width={asset.width ?? 16}
+      height={asset.height ?? 9}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
       className="mt-6 h-auto w-full rounded-lg bg-hero object-contain"

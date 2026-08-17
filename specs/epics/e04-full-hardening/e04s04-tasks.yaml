@@ -1,0 +1,47 @@
+story_id: e04s04
+title: "Prove health and release artifacts in CI"
+status: passing
+bcps: 5
+tasks:
+  - id: 1
+    description: "RED: specify health matrix and mandatory browser/server smoke behavior"
+    verify: "node --experimental-strip-types --test scripts/release-gates.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Health", "unit"] }
+  - id: 2
+    description: "Add process-only liveness and per-section detailed readiness/freshness"
+    verify: "node --experimental-strip-types --test --test-name-pattern='health' scripts/release-gates.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Health"] }
+  - id: 3
+    description: "Point Compose at liveness and prove detailed 503 does not restart a living process"
+    verify: "node --experimental-strip-types --test scripts/release-gates.behavior.test.mjs scripts/docker-prod.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Docker"] }
+  - id: 4
+    description: "Fix current warnings before tightening lint to reject every warning"
+    verify: "npm run lint"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Lint Gate"] }
+  - id: 5
+    description: "Make build hermetic and mandatory live tests fail rather than skip in CI mode"
+    verify: "npm run build && node --experimental-strip-types --test --test-name-pattern='mandatory' scripts/release-gates.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Build", "Test Gate"] }
+  - id: 6
+    description: "Provision Chromium and exercise freshly built Nitro and Docker artifacts in CI"
+    verify: "npm test && npm run typecheck && npm run lint && npm run build"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "CI", "Release Gate"] }
+  - id: 7
+    description: "Compare old/new gates and run affected-path security review"
+    verify: "/home/marce/bin/audit-gate-diff.sh /home/marce/news /home/marce/news-full-hardening origin/HEAD"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Gate Diff"] }

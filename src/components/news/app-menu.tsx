@@ -72,7 +72,6 @@ export function AppMenu() {
           type="button"
           aria-label={open ? "Fechar menu" : "Menu"}
           aria-expanded={open}
-          aria-haspopup="menu"
           onClick={() => setOpen((v) => !v)}
           className="grid size-[44px] shrink-0 place-items-center rounded-full border border-line bg-card text-ink"
         >
@@ -80,17 +79,14 @@ export function AppMenu() {
         </button>
       </Tip>
       {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-lg border border-line bg-card shadow-lg"
-        >
+        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-lg border border-line bg-card shadow-lg">
           {isPending ? (
             <p className="px-3 py-3 text-sm text-mute">Carregando…</p>
           ) : user ? (
             <>
               <Link
                 to="/login"
-                role="menuitem"
+                search={{ cadastro: false }}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper-2"
               >
@@ -98,6 +94,8 @@ export function AppMenu() {
                   <img
                     src={user.profileImageUrl}
                     alt=""
+                    width={24}
+                    height={24}
                     className="size-6 shrink-0 rounded-full object-cover"
                   />
                 ) : (
@@ -108,7 +106,6 @@ export function AppMenu() {
               {authEnabled ? (
                 <button
                   type="button"
-                  role="menuitem"
                   onClick={() => {
                     setOpen(false);
                     void signOut();
@@ -123,7 +120,7 @@ export function AppMenu() {
           ) : (
             <Link
               to="/login"
-              role="menuitem"
+              search={{ cadastro: false }}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper-2"
             >
@@ -134,7 +131,6 @@ export function AppMenu() {
           <div className="h-px bg-line" />
           <button
             type="button"
-            role="menuitem"
             onClick={() => setMode(cycleTheme())}
             className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-ink hover:bg-paper-2"
           >
@@ -150,7 +146,6 @@ export function AppMenu() {
                   <button
                     key={step.id}
                     type="button"
-                    role="menuitem"
                     aria-pressed={on}
                     aria-label={step.label}
                     onClick={() => set({ fontSize: step.id })}
@@ -167,7 +162,6 @@ export function AppMenu() {
           </div>
           <Link
             to="/instalar"
-            role="menuitem"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper-2"
           >
@@ -176,7 +170,6 @@ export function AppMenu() {
           </Link>
           <Link
             to="/configuracoes"
-            role="menuitem"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper-2"
           >

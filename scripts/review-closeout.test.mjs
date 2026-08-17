@@ -7,17 +7,21 @@ import test from "node:test";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
-test("push writes go through cloud-kv or push_subscriptions, not category push", () => {
+test("push writes use only the private push_subscriptions table", () => {
   const src = read("src/lib/news/push-server.ts");
   assert.doesNotMatch(src, /category:\s*["']push["']/);
-  assert.match(src, /cloudKvSet/);
+  assert.doesNotMatch(src, /cloudKv(Set|ListPrefix)/);
+  assert.doesNotMatch(src, /listLegacyPushPosts/);
   assert.match(src, /adminHeaders/);
-  assert.match(src, /push_subscriptions|cloudKvListPrefix/);
-  assert.ok(existsSync(join(root, "scripts/supabase-push-subscriptions.sql")));
-  const sql = read("scripts/supabase-push-subscriptions.sql");
+  assert.match(src, /push_subscriptions/);
+  assert.ok(existsSync(join(root, "scripts/supabase-domain-tables.sql")));
+  const sql = read("scripts/supabase-domain-tables.sql");
   assert.match(sql, /create table if not exists public\.push_subscriptions/);
   assert.match(sql, /NÃO vai em migrations/);
-  assert.match(sql, /revoke all on public\.push_subscriptions from anon/);
+  assert.match(
+    sql,
+    /revoke all on public\.push_subscriptions from public, anon, authenticated/,
+  );
 });
 
 test("CloudPrefs snapshot and type include groups and customGroups", () => {
@@ -32,11 +36,11 @@ test("CloudPrefs snapshot and type include groups and customGroups", () => {
   assert.match(sync, /bySection/);
 });
 
-test("loadFontesLive reads the store; enrichFontes runs on ingest", () => {
+test("Fontes reads the store; catalog enrichment runs only on ingest", () => {
   const server = read("src/lib/news/server-fontes.ts");
   assert.match(server, /loadFontesFast/);
-  assert.doesNotMatch(server, /enrichFontes/);
-  assert.match(read("src/lib/news/ingest.ts"), /enrichFontes/);
+  assert.doesNotMatch(server, /loadFontesLive|enrichFontes/);
+  assert.match(read("src/lib/news/ingest.ts"), /enrichFontesCatalog/);
 });
 
 test("summarizeProfile spends the LLM key only when spendKeyAllowed", () => {

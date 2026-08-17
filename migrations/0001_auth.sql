@@ -5,16 +5,13 @@
 -- DATABASE_URL is set. The columns are camelCase and MUST stay double-quoted so
 -- Postgres preserves the case Better Auth queries by.
 --
--- Migrations in this folder are the single source of truth for your schema. They
--- apply to Neon during the Vercel build (`npm run build`) and to the local
--- PGLite fallback automatically on startup, so dev matches production. Applied
--- files are recorded by name in `_migrations` and NEVER run again.
+-- Migrations in this folder cover only Better Auth. Production applies them
+-- explicitly with `npm run db:migrate` against persistent `DATABASE_URL` before
+-- the Docker service starts. Local/preview PGLite applies them on startup.
+-- Applied files are recorded by name in `_migrations` and NEVER run again.
 --
--- Put YOUR app's schema in NEW ordered files (0002_*.sql, 0003_*.sql, …), never
--- in this one. For app tables, prefer snake_case and give per-user tables a
--- `user_id TEXT NOT NULL` column (TEXT, not UUID — the preview dev user id is
--- the string 'dev-user'), then scope every query to the authenticated user
--- server-side (see the `neon` + `auth` skills and src/lib/auth/verify.server.ts).
+-- Application-domain tables live in Supabase and are managed by the explicit
+-- scripts documented in `docs/production-runbook.md`, not by this migration.
 
 create table if not exists "user" (
   "id" text not null primary key,

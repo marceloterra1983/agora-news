@@ -1,0 +1,47 @@
+story_id: e04s05
+title: "Deliver an accessible and truthful product shell"
+status: passing
+bcps: 8
+tasks:
+  - id: 1
+    description: "RED: specify landmarks, names, focus, truthful states, hydration and media contracts"
+    verify: "node --experimental-strip-types --test scripts/accessibility-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "Playwright", "unit"] }
+  - id: 2
+    description: "Add shared skip/main structure, route headings and native subject/group controls"
+    verify: "node --experimental-strip-types --test --test-name-pattern='landmark|heading|select' scripts/accessibility-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "Navigation"] }
+  - id: 3
+    description: "Expose unread/pressed state, visible focus and contrast; confirm destructive actions"
+    verify: "node --experimental-strip-types --test --test-name-pattern='unread|pressed|focus|contrast|confirm' scripts/accessibility-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "Interaction"] }
+  - id: 4
+    description: "Separate async states, sanitize error output and commit notification state after success"
+    verify: "node --experimental-strip-types --test --test-name-pattern='error|notification|busy' scripts/accessibility-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "Product Truth", "Security Review"] }
+  - id: 5
+    description: "Stabilize SSR-derived state, selected URL state and live system-theme updates"
+    verify: "node --experimental-strip-types --test --test-name-pattern='hydration|URL|theme' scripts/accessibility-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "Hydration", "Navigation"] }
+  - id: 6
+    description: "Correct metadata/PWA truth, orientation, media, grouped-empty and live announcements"
+    verify: "node --experimental-strip-types --test scripts/accessibility-contract.test.mjs scripts/fontes-smoke.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "PWA", "Routes"] }
+  - id: 7
+    description: "Run all browser regressions and review affected rendered error/link paths"
+    verify: "npm test && npm run typecheck && npm audit --omit=dev"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Accessibility", "Security Review", "Regression"] }

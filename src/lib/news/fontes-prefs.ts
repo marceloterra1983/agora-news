@@ -2,6 +2,7 @@
 
 import { readGroupOverrides, writeGroupOverrides } from "./section-prefs.mjs";
 import { readLastSection } from "./section-pref";
+import { profileByHandle } from "./profiles";
 import type { Category } from "./types";
 
 const GROUP_KEY = "agora-fontes-groups-v1";
@@ -116,6 +117,11 @@ export function getGroupOverrides(section?: Category): Record<string, string> {
 
 export function groupOverrideOf(handle: string, section?: Category): string | null {
   return getGroupOverrides(section)[normHandle(handle)] ?? null;
+}
+
+export function groupOf(handle?: string | null, section?: Category): string {
+  if (!handle) return "novos";
+  return groupOverrideOf(handle, section) ?? profileByHandle(handle)?.group ?? "novos";
 }
 
 export function setGroupOverrides(map: Record<string, string>, section?: Category): void {

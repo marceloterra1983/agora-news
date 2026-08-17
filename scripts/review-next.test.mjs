@@ -10,8 +10,7 @@ import {
   usableTweetId,
   xLastListParams,
 } from "../src/lib/news/last-post-core.mjs";
-import { mergeClientProfile } from "../src/lib/news/profile-store-core.mjs";
-import { classifyPushTableHttp, pickPushList, pushPersisted } from "../src/lib/news/push-core.mjs";
+import { validPushEndpoint } from "../src/lib/news/push-core.mjs";
 import { writeAllowed } from "./write-guard.mjs";
 import { writeAllowed as writeAllowedTs } from "../src/lib/news/write-guard.ts";
 
@@ -101,69 +100,10 @@ test("xLastListParams orders by posted_at and asks for more than 400 rows", () =
   assert.ok(Number(params.get("limit")) >= 1000);
 });
 
-test("mergeClientProfile does not let a session overwrite a stored catalog profile", () => {
-  const prev = {
-    handle: "OpenAI",
-    name: "OpenAI",
-    bio: "official",
-    summary_pt: "lab",
-    avatar: "https://img.example/o.jpg",
-    followers: 100,
-    last_post: {
-      id: "1",
-      text: "old",
-      url: "https://x.com/OpenAI/status/1",
-      publishedAt: "2024-01-01T00:00:00.000Z",
-    },
-  };
-  const merged = mergeClientProfile(prev, {
-    handle: "OpenAI",
-    name: "HACKED",
-    bio: "vandal",
-    summary_pt: "nope",
-    avatar: "https://evil.example/x.jpg",
-    followers: 1,
-    lastPost: {
-      id: "2",
-      text: "newer",
-      url: "https://x.com/OpenAI/status/2",
-      publishedAt: "2025-01-01T00:00:00.000Z",
-    },
-  });
-  assert.equal(merged?.name, "OpenAI");
-  assert.equal(merged?.bio, "official");
-  assert.equal(merged?.summary_pt, "lab");
-  assert.equal(merged?.avatar, "https://img.example/o.jpg");
-  assert.equal(merged?.followers, 100);
-  assert.equal(merged?.last_post?.id, "2");
-});
-
-test("mergeClientProfile fills a new extra handle from the client body", () => {
-  const merged = mergeClientProfile(null, {
-    handle: "@Ada",
-    name: "Ada",
-    bio: "notes",
-    summary_pt: "math",
-    followers: 3,
-  });
-  assert.equal(merged?.handle, "Ada");
-  assert.equal(merged?.name, "Ada");
-  assert.equal(merged?.summary_pt, "math");
-  assert.equal(merged?.followers, 3);
-});
-
-test("push persist and list rules do not fail open", () => {
-  assert.equal(pushPersisted(true, false), true);
-  assert.equal(pushPersisted(false, true), true);
-  assert.equal(pushPersisted(false, false), false);
-  assert.equal(classifyPushTableHttp(201), "ok");
-  assert.equal(classifyPushTableHttp(404), "absent");
-  assert.equal(classifyPushTableHttp(500), "error");
-  const table = [{ id: "push_a" }];
-  const extras = [{ id: "kv_push:a" }];
-  assert.deepEqual(pickPushList("ok", table, extras), table);
-  assert.deepEqual(pickPushList("error", table, extras), extras);
-  assert.deepEqual(pickPushList("absent", table, extras), extras);
+test("push endpoints are restricted to HTTPS provider hosts", () => {
+  assert.equal(validPushEndpoint("https://push.services.mozilla.com/wpush/v2/x"), true);
+  assert.equal(validPushEndpoint("http://push.services.mozilla.com/wpush/v2/x"), false);
+  assert.equal(validPushEndpoint("https://push.services.mozilla.com.evil.test/x"), false);
 });
 
 test("write-guard.ts reexports the mjs rules so the two cannot drift", () => {
@@ -185,8 +125,8 @@ test("store and API wire the new last-post, push and profile helpers", () => {
   assert.match(last, /pickLatestFromPostRows/);
   assert.match(store, /xLastListParams/);
   assert.match(store, /lastPostFromXLastRow/);
-  assert.match(push, /pushPersisted|classifyPushTableHttp|pickPushList/);
+  assert.match(push, /validPushEndpoint/);
   assert.match(pushRoute, /status:\s*502/);
-  assert.match(profile, /mergeClientProfile/);
-  assert.match(watch, /mergeClientProfile/);
+  assert.doesNotMatch(profile, /POST:\s*async|mergeClientProfile|upsertProfile/);
+  assert.doesNotMatch(watch, /mergeClientProfile|upsertProfile/);
 });

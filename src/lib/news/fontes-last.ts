@@ -1,18 +1,20 @@
 import { preferNewerLast, storedToLastHit } from "./last-post";
 import { listXLastPosts } from "./last-post-store";
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
+import { supabaseReadHeaders, SUPABASE_POSTS_URL } from "./supabase";
 import type { Category } from "./types";
 
-export type LastHit = { id: string; title: string; publishedAt: string; count: number };
-
-const lastCache = new Map<string, { at: number; feed: Map<string, LastHit>; last: Map<string, LastHit> }>();
-const LAST_TTL = 45_000;
-
-const AUTH = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  Accept: "application/json",
+export type LastHit = {
+  id: string;
+  title: string;
+  publishedAt: string;
+  count: number;
 };
+
+const lastCache = new Map<
+  string,
+  { at: number; feed: Map<string, LastHit>; last: Map<string, LastHit> }
+>();
+const LAST_TTL = 45_000;
 
 function norm(h: string): string {
   return String(h || "")
@@ -26,7 +28,8 @@ export async function lastPostsByAccount(
 ): Promise<{ feed: Map<string, LastHit>; last: Map<string, LastHit> }> {
   const key = section;
   const hit = lastCache.get(key);
-  if (hit && Date.now() - hit.at < LAST_TTL) return { feed: hit.feed, last: hit.last };
+  if (hit && Date.now() - hit.at < LAST_TTL)
+    return { feed: hit.feed, last: hit.last };
 
   const feed = new Map<string, LastHit>();
   try {
@@ -36,7 +39,7 @@ export async function lastPostsByAccount(
     params.set("order", "posted_at.desc");
     params.set("limit", "1000");
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
-      headers: AUTH,
+      headers: supabaseReadHeaders(),
       signal: AbortSignal.timeout(5_000),
     });
     if (res.ok) {

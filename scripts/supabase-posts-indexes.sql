@@ -15,23 +15,6 @@ create index if not exists posts_feed_ai_posted
   on public.posts (posted_at desc)
   where category = 'ai';
 
-create table if not exists public.x_profiles (
-  handle text primary key,
-  name text not null default '',
-  bio text not null default '',
-  summary_pt text not null default '',
-  avatar text,
-  followers integer not null default 0,
-  last_post jsonb,
-  updated_at timestamptz not null default now()
-);
-
-alter table public.x_profiles enable row level security;
-
-drop policy if exists x_profiles_read on public.x_profiles;
-create policy x_profiles_read on public.x_profiles
-  for select using (true);
-
 do $$
 begin
   begin

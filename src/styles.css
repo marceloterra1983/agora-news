@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "./lib/news/phone-layout.css";
 
 @theme {
@@ -12,7 +11,7 @@
   --color-card: #faf7f0;
   --color-ink: #161411;
   --color-ink-soft: #3c382f;
-  --color-mute: #6e695d;
+  --color-mute: #686257;
   --color-line: #d5cfbf;
   --color-line-strong: #b9b19d;
   --color-mark: #8c1d18;
@@ -174,7 +173,7 @@
     padding-bottom: 0.9rem;
   }
 
-  html[data-density="compact"] [data-story] h3 {
+  html[data-density="compact"] [data-story] h2 {
     font-size: 1.1rem;
   }
 
@@ -229,4 +228,9 @@
 }
 [data-h-scroll]::-webkit-scrollbar {
   display: none;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--color-mark);
+  outline-offset: 2px;
 }

@@ -137,4 +137,19 @@ export function typefaceHref(id: Typeface): string | null {
   return TYPEFACES.find((t) => t.id === id)?.href ?? null;
 }
 
+export function typefaceFamily(id: Typeface): string {
+  switch (id) {
+    case "literata":
+      return '"Literata", Georgia, serif';
+    case "source":
+      return '"Source Serif 4", Georgia, serif';
+    case "newsreader":
+      return '"Newsreader", Georgia, serif';
+    case "fraunces":
+      return '"Fraunces", Georgia, serif';
+    default:
+      return "var(--font-sans)";
+  }
+}
+
 export const SETTINGS_BOOT_SCRIPT = `(()=>{try{var r=JSON.parse(localStorage.getItem("${SETTINGS_KEY}")||"{}");var e=document.documentElement;var t=r.typeface==="serif"?"literata":r.typeface;if(r.fontSize)e.dataset.font=r.fontSize;if(r.density)e.dataset.density=r.density;if(t)e.dataset.type=t;if(r.showImages===false)e.dataset.images="off";if(r.highlightUnread===false)e.dataset.unread="off";if(r.reduceMotion)e.dataset.motion="reduce";}catch(e){}})();`;

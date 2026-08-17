@@ -9,12 +9,11 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { HideHostChrome } from "@/components/news/hide-host-chrome";
 import { PwaRoot } from "@/components/news/pwa-install";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { CRITICAL_CSS } from "@/lib/news/critical.css";
 import { PHONE_VIEWPORT_GUARD, VIEWPORT_CONTENT } from "@/lib/news/phone-shell";
 import { THEME_BOOT_SCRIPT } from "@/lib/news/theme";
 import { SETTINGS_BOOT_SCRIPT } from "@/lib/news/settings";
-import appCssInline from "../styles.css?inline";
+import "../styles.css";
 
 const APP_NAME = "Agora";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
@@ -45,8 +44,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: VIEWPORT_CONTENT },
-      { title: "IA — NEWS" },
-      { name: "description", content: "Notícias das pastas de NEWS no Google Drive." },
+      { title: "Agora" },
+      {
+        name: "description",
+        content: "Notícias de inteligência artificial, tecnologia e Brasil em um feed direto.",
+      },
       { name: "application-name", content: APP_NAME },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "mobile-web-app-capable", content: "yes" },
@@ -54,7 +56,8 @@ export const Route = createRootRoute({
       { name: "color-scheme", content: "light dark" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "IA — NEWS" },
+      { property: "og:title", content: "Agora" },
+      { property: "og:description", content: "Notícias de inteligência artificial, tecnologia e Brasil em um feed direto." },
       ...(ogImage
         ? [
             { property: "og:image", content: ogImage },
@@ -90,7 +93,6 @@ function Root() {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SETTINGS_BOOT_SCRIPT }} />
         <HeadContent />
-        <style dangerouslySetInnerHTML={{ __html: appCssInline }} />
         <script dangerouslySetInnerHTML={{ __html: FONT_LOAD_SCRIPT }} />
         <noscript>
           <link rel="stylesheet" href={FONT_HREF} />
@@ -102,15 +104,19 @@ function Root() {
         />
       </head>
       <body>
+        <a
+          href="#conteudo-principal"
+          className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-md bg-ink px-3 py-2 text-sm font-semibold text-paper focus:translate-y-0"
+        >
+          Pular para o conteúdo
+        </a>
         <HideHostChrome />
         <PreviewHostBridge />
         <PwaRoot />
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider delayDuration={280} skipDelayDuration={120} disableHoverableContent>
-            <AuthProvider>
-              <Outlet />
-            </AuthProvider>
-          </TooltipProvider>
+          <AuthProvider>
+            <Outlet />
+          </AuthProvider>
         </QueryClientProvider>
         <Scripts />
       </body>

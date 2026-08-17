@@ -1,0 +1,47 @@
+story_id: e04s02
+title: "Isolate private user domains in dedicated persistence"
+status: passing
+bcps: 8
+tasks:
+  - id: 1
+    description: "RED: specify cross-user, cron-union, fail-closed and migration behavior"
+    verify: "node --experimental-strip-types --test scripts/private-persistence.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Authorization", "unit"] }
+  - id: 2
+    description: "Add idempotent schemas, indexes and grants for dedicated domain tables"
+    verify: "node --experimental-strip-types --test --test-name-pattern='schema' scripts/private-persistence.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Migration"] }
+  - id: 3
+    description: "Scope watch UI/API by owner and expose a separate deduplicated cron union"
+    verify: "node --experimental-strip-types --test --test-name-pattern='watch' scripts/private-persistence.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Authorization"] }
+  - id: 4
+    description: "Make preferences and push owner-scoped, failure-aware and owner-safe on deletion"
+    verify: "node --experimental-strip-types --test --test-name-pattern='prefs|push' scripts/private-persistence.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Persistence"] }
+  - id: 5
+    description: "Restrict global profile mutation and remove verified profile/post fallbacks"
+    verify: "node --experimental-strip-types --test --test-name-pattern='profile' scripts/private-persistence.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Profiles"] }
+  - id: 6
+    description: "Produce exact legacy export/count evidence and prove no private synthetic write remains"
+    verify: "node --experimental-strip-types --test scripts/private-persistence.behavior.test.mjs scripts/harden-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Data Integrity"] }
+  - id: 7
+    description: "Run full regression, dependency audit and affected-path security review"
+    verify: "npm test && npm run typecheck && npm audit --omit=dev"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Regression"] }

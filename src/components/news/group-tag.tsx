@@ -1,18 +1,9 @@
-import { groupOverrideOf } from "@/lib/news/fontes-prefs";
+import { useEffect, useState } from "react";
 import { groupStyle, hasGroupStyle } from "@/lib/news/group-style";
+import { groupOf } from "@/lib/news/fontes-prefs";
 import { groupLabel, groupStyle as customGroupStyle } from "@/lib/news/groups";
 import { profileByHandle } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
-
-export function groupOf(handle?: string | null, section?: string): string {
-  if (!handle) return "novos";
-  return groupOverrideOf(handle, section) ?? profileByHandle(handle)?.group ?? "novos";
-}
-
-export function groupLabelFor(handle?: string | null): string | null {
-  if (!handle) return null;
-  return groupLabel(groupOf(handle));
-}
 
 export function GroupTag({
   handle,
@@ -23,7 +14,18 @@ export function GroupTag({
   group?: string | null;
   className?: string;
 }) {
-  const id = group || groupOf(handle);
+  const initial = group || profileByHandle(handle || "")?.group || "novos";
+  const [id, setId] = useState(initial);
+  useEffect(() => {
+    const refresh = () => setId(group || groupOf(handle));
+    refresh();
+    window.addEventListener("agora-fontes-prefs", refresh);
+    window.addEventListener("agora-custom-groups", refresh);
+    return () => {
+      window.removeEventListener("agora-fontes-prefs", refresh);
+      window.removeEventListener("agora-custom-groups", refresh);
+    };
+  }, [group, handle]);
   const label = groupLabel(id);
   if (!label) return null;
   const st = hasGroupStyle(id) ? groupStyle(id) : null;

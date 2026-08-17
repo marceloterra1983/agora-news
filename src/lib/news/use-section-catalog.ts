@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { loadExtraFontes, type ExtraFonte } from "./extra-fontes";
 import { getGroupOverrides } from "./fontes-prefs";
-import { loadCustomGroups } from "./groups";
+import { loadCustomGroups, type CustomGroup } from "./groups";
 import { profilesFor } from "./profiles";
 import { catalogFor, type SectionCatalog } from "./section-catalog.mjs";
 import type { Category } from "./types";
@@ -9,12 +9,14 @@ import type { Category } from "./types";
 /** Catálogo vivo do tema: seed + extras + grupos deste recorte. */
 export function useSectionCatalog(section: Category): SectionCatalog {
   const [extras, setExtras] = useState<ExtraFonte[]>([]);
-  const [tick, setTick] = useState(0);
+  const [customGroups, setCustomGroups] = useState<CustomGroup[]>([]);
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const refresh = () => {
       setExtras(loadExtraFontes());
-      setTick((n) => n + 1);
+      setCustomGroups(loadCustomGroups(section));
+      setOverrides(getGroupOverrides(section));
     };
     refresh();
     window.addEventListener("agora-extra-fontes", refresh);
@@ -27,14 +29,10 @@ export function useSectionCatalog(section: Category): SectionCatalog {
     };
   }, [section]);
 
-  return useMemo(
-    () =>
-      catalogFor(section, {
-        profiles: profilesFor(section),
-        extras,
-        customGroups: loadCustomGroups(section),
-        overrides: getGroupOverrides(section),
-      }),
-    [section, extras, tick],
-  );
+  return catalogFor(section, {
+    profiles: profilesFor(section),
+    extras,
+    customGroups,
+    overrides,
+  });
 }

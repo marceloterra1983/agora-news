@@ -39,13 +39,11 @@ export const loadNews = createServerFn({ method: "GET" })
   .validator(
     (
       input:
-        | { category?: Category; q?: string; refresh?: boolean; fromX?: boolean; before?: string }
+        | { category?: Category; q?: string; before?: string }
         | undefined,
     ) => ({
       category: normalizeSection(input?.category || DEFAULT_SECTION),
       q: typeof input?.q === "string" ? input.q : undefined,
-      refresh: Boolean(input?.refresh),
-      fromX: Boolean(input?.fromX),
       before: typeof input?.before === "string" ? input.before : undefined,
     }),
   )
@@ -78,8 +76,8 @@ export const loadNews = createServerFn({ method: "GET" })
             },
           };
         }
-        const payload = await loadFeed(data.refresh, data.category, data.fromX, catalog);
-        const news = toNews(payload, data.category, data.q, catalog);
+        const payload = await loadFeed(data.category);
+        const news = toNews(payload, data.category, data.q);
         return {
           ...news,
           meta: { ...news.meta, hasMore: news.stories.length >= PAGE_SIZE },

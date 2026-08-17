@@ -25,7 +25,8 @@ export const lookupXProfile = createServerFn({ method: "GET" })
         }),
         fetchLastPost(handle),
       ]);
-      if (!res.ok) return { found: false as const };
+      if (res.status === 404) return { found: false as const };
+      if (!res.ok) throw new Error("profile_unavailable");
       const body = (await res.json()) as {
         user?: {
           screen_name?: string;
@@ -62,7 +63,7 @@ export const lookupXProfile = createServerFn({ method: "GET" })
         verified: Boolean(u.verification?.verified),
       };
     } catch {
-      return { found: false as const };
+      throw new Error("profile_unavailable");
     }
   });
 
@@ -118,13 +119,13 @@ export const searchXUsers = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }) => {
     const q = data.q;
-    if (q.length < 2) return { users: [] as XUserHit[] };
+    if (q.length < 2) return { users: [] as XUserHit[], unavailable: false };
     try {
       const res = await fetch(`https://api.fxtwitter.com/2/typeahead?q=${encodeURIComponent(q)}`, {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(8_000),
       });
-      if (!res.ok) return { users: [] as XUserHit[] };
+      if (!res.ok) return { users: [] as XUserHit[], unavailable: true };
       const body = (await res.json()) as {
         users?: Array<{
           screen_name?: string;
@@ -149,8 +150,8 @@ export const searchXUsers = createServerFn({ method: "GET" })
           inFeed: known.has(handle.toLowerCase()),
         });
       }
-      return { users };
+      return { users, unavailable: false };
     } catch {
-      return { users: [] as XUserHit[] };
+      return { users: [] as XUserHit[], unavailable: true };
     }
   });

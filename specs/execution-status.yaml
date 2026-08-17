@@ -1,0 +1,17 @@
+epic_id: e04
+status: active
+current_story: e04s07
+stories:
+  e04s01: passing
+  e04s02: passing
+  e04s03: passing
+  e04s04: passing
+  e04s05: passing
+  e04s06: passing
+  e04s07: passing
+last_verified_baseline:
+  commit: a73451c
+  tests: "270 passed, 0 failed, 0 skipped"
+  typecheck: passed
+  dependency_audit: "0 vulnerabilities"
+  security_review: "no open finding with confidence >= 8"

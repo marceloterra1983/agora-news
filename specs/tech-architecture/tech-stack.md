@@ -1,59 +1,70 @@
-# Project Context
+# Arquitetura técnica verificada
 
-**App:** Agora News (PWA de notícias de IA)  
-**Repo:** https://github.com/marceloterra1983/agora-news  
-**Posse:** Cursor agent a partir de 2026-08-16  
-**Baseline lida:** `main` @ `274794e`
+**Aplicação:** Agora News
+
+**Atualizado:** 2026-08-17
+**Produção:** Docker Compose, Nitro `node-server` e Nginx em
+`127.0.0.1:3080`
 
 ## Stack
 
-- Runtime: TanStack Start 1.16 + Vite 8 + Nitro 3 (preset node-server) + React 19; prod = PM2 `vite dev` :3080
-- Linguagem: TypeScript 5.7 (`strict`)
-- UI: Tailwind 4, Radix (quase todo morto), lucide-react
-- Data client: TanStack Query 5, Zustand 5
-- Auth: Better Auth 1.6 (Google/X via broker Grok) + Kysely
-- SQL de auth: Neon (`DATABASE_URL`) ou PGLite in-memory
-- Feed canônico: Supabase REST `public.posts` (projeto `uqcaodtgrkphuhdkchyh`)
-- Cache: Redis REST (Upstash) → memória → `posts` como KV
-- Ingest: fxtwitter + Google Translate gtx + cron local `scripts/ingest-cron.sh` `*/15` → `/api/ingest`
-- Push: web-push + VAPID
-- Testes: `node --test scripts/**/*.test.mjs` (gates de template Grok, não de domínio)
+- TanStack Start/Router/Query, React 19, Vite 8 e Nitro 3.
+- TypeScript estrito, Tailwind CSS 4 e ícones Lucide.
+- Better Auth + Kysely sobre Postgres persistente (`DATABASE_URL`) em produção.
+  PGLite efêmero existe somente em `local` e `preview` explícitos.
+- Feed canônico em Supabase REST `public.posts`.
+- Cache e lease opcionais em Redis REST, com fallback de caches não críticos
+  para memória; locks falham fechado quando Redis solicitado está inválido.
+- Ingestão por `scripts/ingest-cron.sh` a cada 15 minutos, protegida por
+  `CRON_SECRET`, com fxtwitter e Google Translate.
+- Web Push com VAPID configurado somente por ambiente.
 
-## Architecture
+## Fluxos
 
-PWA mobile-first. Chrome vivo: `AppChrome` (header de seção/grupos + tab bar) + `Feed` + `StoryCard`.
-
-```
-fxtwitter → runIngest → upsertPosts (service role) → public.posts
-                ↓
-         invalidate + push
-                ↓
-loadNews / downloadSupabase → Redis/memória → UI (Query + Zustand)
+```text
+fxtwitter → runIngest → public.posts → downloadSupabase → loadNews → React Query
+                         ├─ x_profiles
+                         ├─ push owner-scoped
+                         └─ invalidação de caches em memória
 ```
 
-Google Sheets / RSS / Apps Script / `agora_queue.py` são **legado**. O app não lê mais a planilha.
+O navegador refaz a consulta a cada 60 segundos. O servidor mantém uma única
+camada SWR/single-flight para a lista Supabase. Respostas válidas vazias são
+estado vazio; falhas preservam o último resultado somente com `live: false`.
 
-Auth existe (cookies `__Host-`, `authMiddleware`, Sec-Fetch-Site) mas **nenhuma server fn de news usa o middleware**. Prefs, watch, ingest, profile e push aceitam caller anônimo.
+## Persistência e confiança
 
-`public.posts` é god-table: notícia + `kv_*` + `push_*` + `watch_*` + `prfl_*` + prefs.
+- `public.posts`: notícias públicas.
+- `x_profiles`: catálogo global lido e escrito somente pelo servidor.
+- `user_watches`: fontes acompanhadas, sempre vinculadas ao usuário autenticado.
+- `user_prefs`: preferências owner-scoped.
+- `push_subscriptions`: endpoint único transferido atomicamente ao usuário atual
+  e removido somente pelo dono.
+- Better Auth: sessões persistentes no Postgres de `DATABASE_URL`.
 
-## Conventions (Observed)
+As quatro tabelas Supabase têm RLS forçada e negam acesso direto a
+`anon`/`authenticated`. Escritas de aplicativo exigem sessão e mesma origem;
+ingestão exige Bearer; erros de dependência não são convertidos em sucesso.
 
-- Fail-soft: `try/catch` devolve `[]` / `null`; ingest e push engolem erro.
-- Server fns TanStack (`createServerFn`) para leitura; rotas `/api/*` para cron e mutações.
-- Casts de JSON externo sem Zod (exceto preview-host-bridge).
-- Timing: `timed()` → `console.info("[agora] …")`.
-- Settings/tema/prefs no `localStorage` + CustomEvent; nuvem só se logado (`PrefsSync`).
-- SW só em prod; sem `fetch` handler (histórico: SW antigo serviu HTML como CSS).
-- Preview Grok: hide-host-chrome, dois manifests, plugin PWA, `startup.sh` com Redis local (o app recusa localhost).
+## Runtime e release
 
-## Signals / Active Considerations
+- `AGORA_RUNTIME_MODE=production` e todas as credenciais persistentes são
+  validadas antes de o Nitro aceitar tráfego.
+- `/api/health/live` mede somente o processo; `/api/health` exige dados frescos
+  em `ai`, `tech` e `brasil`.
+- O CI instala Chromium, rejeita warnings, constrói o Nitro e a imagem Docker,
+  inicia ambos e executa todos os smokes sem skips.
+- `npm run db:migrate` aplica apenas Better Auth/Postgres. Os scripts
+  `supabase-domain-tables.sql` e `supabase-private-persistence-migrate.sql` são
+  aplicados manualmente no Supabase, nessa ordem.
 
-- **Segredos:** service role JWT e VAPID private continuam como fallback no source (decisão 2026-08-16: não rotacionar neste ciclo).
-- **Escritas (e01):** mutações app exigem `Sec-Fetch-Site: same-origin`. Ingest: `CRON_SECRET` obrigatório (Bearer). Ops: same-origin. Prefs usam `authMiddleware` + `context.userId`.
-- **Schema drift:** migrations documentam Neon/PGLite; feed vive no Supabase. Health agora só sonda `posts`.
-- **Hotspots:** `server.ts` 604, `buscar.tsx` 568, `fontes.tsx` 490, `ingest.ts` 394, `p2p.ts` 570 (morto).
-- **Morto (e02):** removidos rss/catalog/multiplayer, chrome jornal (Masthead/Hero/Ticker), Radix/shadcn sem uso. Um manifesto: `/manifest.webmanifest`. Plugin Grok não injeta o segundo se o app já declara um.
-- **UX:** chips de grupo só filtram em `/`; `/buscar` é busca de perfis X; marca “Agora” vs “IA — NEWS”.
-- SQL de índice/Realtime do feed: `scripts/supabase-posts-indexes.sql` (manual no Supabase). `migrations/` só auth.
-- Stash local (não neste epic): `package-lock.json`, `src/routeTree.gen.ts`.
+Chaves Supabase e VAPID não possuem fallback literal no código. A rotação real
+no provedor só é considerada concluída após coexistência, smokes e verificação
+de uso; valores nunca são registrados na documentação.
+
+## Legado preservado
+
+`scripts/agora-feed-sync.gs` e `scripts/agora_queue.py` não têm consumidor no
+repositório, mas podem ter acionadores externos. Permanecem até essa ausência ser
+confirmada fora do código. Relatórios e épicos concluídos são evidência histórica
+e não representam o runtime atual.

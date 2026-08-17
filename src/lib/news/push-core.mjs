@@ -1,27 +1,28 @@
-/**
- * Regras puras de persistência de push — fonte única para TS e node:test.
- */
+const PUSH_HOSTS = [
+  "fcm.googleapis.com",
+  "push.services.mozilla.com",
+  "notify.windows.com",
+  "push.apple.com",
+];
 
-/** @param {boolean} tableOk @param {boolean} kvOk */
-export function pushPersisted(tableOk, kvOk) {
-  return Boolean(tableOk || kvOk);
-}
-
-/** @param {number} status @returns {"ok" | "absent" | "error"} */
-export function classifyPushTableHttp(status) {
-  const code = Number(status) || 0;
-  if (code === 404 || code === 400) return "absent";
-  if (code >= 200 && code < 300) return "ok";
-  return "error";
-}
-
-/**
- * @template T
- * @param {"ok" | "absent" | "error"} kind
- * @param {T[]} tableRows
- * @param {T[]} extras
- */
-export function pickPushList(kind, tableRows, extras) {
-  if (kind === "ok") return tableRows;
-  return extras;
+/** @param {unknown} value */
+export function validPushEndpoint(value) {
+  if (typeof value !== "string" || !value || value.length > 2048) return false;
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      (url.port && url.port !== "443")
+    ) {
+      return false;
+    }
+    const host = url.hostname.toLowerCase();
+    return PUSH_HOSTS.some(
+      (allowed) => host === allowed || host.endsWith(`.${allowed}`),
+    );
+  } catch {
+    return false;
+  }
 }

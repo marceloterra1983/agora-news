@@ -1,23 +1,36 @@
-/** Redis (se houver) → memória. Cloud KV em posts só como fallback lento. */
+/** Redis (se houver) → memória. */
 
 function env(name: string): string {
   if (typeof process === "undefined" || !process.env) return "";
   return process.env[name] ?? "";
 }
 
+const REDIS_ENV_PAIRS = [
+  ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
+  ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
+  ["REDIS_REST_URL", "REDIS_REST_TOKEN"],
+] as const;
+
+function redisRequested(): boolean {
+  return REDIS_ENV_PAIRS.some(([url, token]) => env(url) || env(token));
+}
+
 function configuredRest(): { url: string; token: string } | null {
-  const url = (
-    env("UPSTASH_REDIS_REST_URL") ||
-    env("KV_REST_API_URL") ||
-    env("REDIS_REST_URL") ||
-    ""
-  ).replace(/\/$/, "");
-  const token =
-    env("UPSTASH_REDIS_REST_TOKEN") || env("KV_REST_API_TOKEN") || env("REDIS_REST_TOKEN") || "";
-  // sem URL real (não usar 127.0.0.1 — só atrasa o probe)
-  if (!url || url.includes("127.0.0.1") || url.includes("localhost")) return null;
-  if (!token) return null;
-  return { url, token };
+  let configured: { url: string; token: string } | null = null;
+  for (const [urlName, tokenName] of REDIS_ENV_PAIRS) {
+    const url = env(urlName).replace(/\/$/, "");
+    const token = env(tokenName);
+    if (!url && !token) continue;
+    if (!url || !token) return null;
+    configured ??= { url, token };
+  }
+  if (
+    configured?.url.includes("127.0.0.1") ||
+    configured?.url.includes("localhost")
+  ) {
+    return null;
+  }
+  return configured;
 }
 
 type Mem = { value: string; exp: number };
@@ -82,7 +95,7 @@ async function rest(): Promise<{ url: string; token: string } | null> {
 
 export function redisConfigured(): boolean {
   if (liveRest) return true;
-  return Boolean(configuredRest());
+  return redisRequested();
 }
 
 export function cacheBackend(): "redis" | "memory" {
@@ -94,84 +107,37 @@ type RedisReply = { result?: unknown; error?: string };
 
 async function redisCmd(cmd: Array<string | number>): Promise<unknown> {
   const cfg = await rest();
-  if (!cfg) return null;
-  const res = await fetch(cfg.url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${cfg.token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(cmd),
-    signal: AbortSignal.timeout(2_000),
-  });
-  if (!res.ok) return null;
-  const body = (await res.json()) as RedisReply;
-  if (body.error) return null;
-  return body.result ?? null;
-}
-
-function kvId(key: string) {
-  return `kv_${key.replace(/[^a-zA-Z0-9_:-]/g, "_").slice(0, 80)}`;
-}
-
-/** Cloud KV em posts — só usado como último recurso (não no hot path). */
-async function cloudGet(key: string): Promise<string | null> {
+  if (!cfg) throw new Error("redis_unavailable");
+  let res: Response;
   try {
-    const url = "https://uqcaodtgrkphuhdkchyh.supabase.co";
-    const anon =
-      env("SUPABASE_ANON_KEY") ||
-      env("VITE_SUPABASE_ANON_KEY") ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxY2FvZHRncmtwaHVoZGtjaHloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MjQ2NjksImV4cCI6MjEwMjMwMDY2OX0.95RVq-3SbT8KpQn8u-cH7lr4LWJvSOTcn5IQxmLhFt8";
-    const id = kvId(key);
-    const res = await fetch(
-      `${url}/rest/v1/posts?post_id=eq.${encodeURIComponent(id)}&select=content,posted_at,media_label&limit=1`,
-      {
-        headers: { apikey: anon, Authorization: `Bearer ${anon}`, Accept: "application/json" },
-        signal: AbortSignal.timeout(2_500),
-      },
-    );
-    if (!res.ok) return null;
-    const rows = (await res.json()) as Array<
-      { content?: string; posted_at?: string; media_label?: string }
-    >;
-    const row = rows[0];
-    if (!row?.content) return null;
-    const ttl = Number(row.media_label) || 0;
-    const at = Date.parse(row.posted_at || "");
-    if (ttl && Number.isFinite(at) && Date.now() - at > ttl * 1000) return null;
-    return row.content;
-  } catch {
-    return null;
-  }
-}
-
-async function cloudDel(key: string): Promise<void> {
-  try {
-    const url = "https://uqcaodtgrkphuhdkchyh.supabase.co";
-    const service =
-      env("SUPABASE_SERVICE_ROLE_KEY") ||
-      env("SUPABASE_SERVICE_KEY") ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxY2FvZHRncmtwaHVoZGtjaHloIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjcyNDY2OSwiZXhwIjoyMTAyMzAwNjY5fQ.DbpfcPf3X0dFQ4UqaSmLVmw17b4nupGN8kGKYmyfhgg";
-    const id = kvId(key);
-    await fetch(`${url}/rest/v1/posts?post_id=eq.${encodeURIComponent(id)}`, {
-      method: "DELETE",
+    res = await fetch(cfg.url, {
+      method: "POST",
       headers: {
-        apikey: service,
-        Authorization: `Bearer ${service}`,
+        Authorization: `Bearer ${cfg.token}`,
+        "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(3_000),
+      body: JSON.stringify(cmd),
+      signal: AbortSignal.timeout(2_000),
     });
   } catch {
-    /* ignore */
+    throw new Error("redis_unavailable");
   }
+  if (!res.ok) throw new Error("redis_unavailable");
+  let body: RedisReply;
+  try {
+    body = (await res.json()) as RedisReply;
+  } catch {
+    throw new Error("redis_unavailable");
+  }
+  if (body.error || !("result" in body)) throw new Error("redis_unavailable");
+  return body.result ?? null;
 }
 
 /**
  * GET prioritiza memória (0 ms).
  * Redis só se configurado de verdade.
- * Cloud KV só se opts.cloud — evita 50–150 ms no hot path do feed.
  */
-export async function cacheGet(key: string, opts?: { cloud?: boolean }): Promise<string | null> {
+export async function cacheGet(key: string): Promise<string | null> {
   const mem = memGet(key);
   if (mem) return mem;
 
@@ -185,13 +151,6 @@ export async function cacheGet(key: string, opts?: { cloud?: boolean }): Promise
     /* next */
   }
 
-  if (opts?.cloud) {
-    const cloud = await cloudGet(key);
-    if (cloud) {
-      memSet(key, cloud, 45);
-      return cloud;
-    }
-  }
   return null;
 }
 
@@ -212,25 +171,70 @@ export async function cacheDel(...keys: string[]): Promise<void> {
   } catch {
     /* ignore */
   }
-  await Promise.all(keys.map((k) => cloudDel(k)));
 }
 
 export async function cacheSetNx(key: string, value: string, ttlSec: number): Promise<boolean> {
-  try {
-    if (await rest()) {
+  if (redisConfigured()) {
+    try {
       const out = await redisCmd(["SET", key, value, "EX", String(ttlSec), "NX"]);
-      return out === "OK";
+      if (out === "OK") return true;
+      if (out === null) return false;
+    } catch {
+      throw new Error("redis_lease_unavailable");
     }
-  } catch {
-    /* fall through */
+    throw new Error("redis_lease_unavailable");
   }
   if (memGet(key)) return false;
   memSet(key, value, ttlSec);
   return true;
 }
 
-export async function cacheGetJson<T>(key: string, opts?: { cloud?: boolean }): Promise<T | null> {
-  const raw = await cacheGet(key, opts);
+const RENEW_LEASE =
+  'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("EXPIRE", KEYS[1], ARGV[2]) end return 0';
+const RELEASE_LEASE =
+  'if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("DEL", KEYS[1]) end return 0';
+
+export async function renewCacheLease(
+  key: string,
+  token: string,
+  ttlSec: number,
+): Promise<boolean> {
+  if (redisConfigured()) {
+    try {
+      if (!(await rest())) return false;
+      return Number(
+        await redisCmd(["EVAL", RENEW_LEASE, "1", key, token, String(ttlSec)]),
+      ) === 1;
+    } catch {
+      return false;
+    }
+  }
+  if (memGet(key) !== token) return false;
+  memSet(key, token, ttlSec);
+  return true;
+}
+
+export async function releaseCacheLease(
+  key: string,
+  token: string,
+): Promise<boolean> {
+  if (redisConfigured()) {
+    try {
+      if (!(await rest())) return false;
+      return Number(
+        await redisCmd(["EVAL", RELEASE_LEASE, "1", key, token]),
+      ) === 1;
+    } catch {
+      return false;
+    }
+  }
+  if (memGet(key) !== token) return false;
+  memory.delete(key);
+  return true;
+}
+
+export async function cacheGetJson<T>(key: string): Promise<T | null> {
+  const raw = await cacheGet(key);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as T;
@@ -244,24 +248,10 @@ export async function cacheSetJson(key: string, value: unknown, ttlSec = 60): Pr
 }
 
 export const CACHE_KEYS = {
-  list: (category: string, limit: number) => `agora:v2:list:${category}:${limit}`,
   lock: "agora:v2:lock:ingest",
   newest: "agora:v2:newest",
   scanCursor: "agora:v2:scan",
 };
-
-export async function invalidateNewsCache() {
-  const keys = [
-    CACHE_KEYS.list("ai", 24),
-    CACHE_KEYS.list("ai", 40),
-    CACHE_KEYS.list("tech", 24),
-    CACHE_KEYS.list("tech", 40),
-    CACHE_KEYS.list("brasil", 24),
-    CACHE_KEYS.list("brasil", 40),
-    CACHE_KEYS.newest,
-  ];
-  await cacheDel(...keys);
-}
 
 export function resetCacheProbe() {
   liveRest = undefined;

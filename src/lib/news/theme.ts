@@ -46,6 +46,16 @@ export function setTheme(mode: ThemeMode): void {
   }
 }
 
+export function watchSystemTheme(): () => void {
+  if (typeof window === "undefined") return () => {};
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const onChange = () => {
+    if (getStoredTheme() === "system") applyTheme("system");
+  };
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
 export function cycleTheme(): ThemeMode {
   const cur = getStoredTheme();
   const next: ThemeMode =

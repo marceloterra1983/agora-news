@@ -38,11 +38,12 @@ export function ProfileRow({
   const followers = row.followers ? formatCount(row.followers) : "";
   const lastHref = row.lastPost ? safeHttpHref(row.lastPost.href) : "";
   return (
-    <li data-testid="fonte-row" className={cn("border-b border-line", pausedRow && "opacity-55")}>
+    <li data-testid="fonte-row" className="border-b border-line">
       <div className="flex items-start gap-1">
         <button
           type="button"
-          aria-expanded={open}
+          aria-expanded={picking ? undefined : open}
+          aria-pressed={picking ? Boolean(picked) : undefined}
           onClick={onToggle}
           className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2.5 py-2 text-left"
         >
@@ -53,6 +54,8 @@ export function ProfileRow({
             <img
               src={row.avatar}
               alt=""
+              width={28}
+              height={28}
               className="size-7 shrink-0 rounded-full bg-paper-2 object-cover"
             />
           ) : (
@@ -167,6 +170,7 @@ export function ProfileRow({
               starred={prefs.isStarred(row.handle)}
               disabled={pausedRow}
               notify={prefs.isNotify(row.handle)}
+              notifyBusy={prefs.notifyBusy === row.handle.toLowerCase()}
               group={row.group}
               onToggleStar={prefs.toggleStar}
               onToggleDisabled={prefs.toggleDisabled}

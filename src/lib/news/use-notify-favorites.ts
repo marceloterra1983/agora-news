@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   disableFavoriteNotify,
   enableFavoriteNotify,
@@ -14,6 +14,9 @@ export function useNotifyFavorites() {
   const [enabled, setEnabled] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const [supported, setSupported] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const pending = useRef(false);
 
   const refresh = useCallback(() => {
     setSupported(notifySupported());
@@ -27,24 +30,34 @@ export function useNotifyFavorites() {
     return subscribeNotify(refresh);
   }, [refresh]);
 
+  async function run(action: () => ReturnType<typeof toggleFavoriteNotify>) {
+    if (pending.current) return "error" as const;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const next = await action();
+      if (next === "error") setError("Não foi possível alterar os avisos. Tente novamente.");
+      refresh();
+      return next;
+    } catch {
+      setError("Não foi possível alterar os avisos. Tente novamente.");
+      return "error" as const;
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+
   return {
     ready,
     supported,
     enabled,
     permission,
-    enable: async () => {
-      const next = await enableFavoriteNotify();
-      refresh();
-      return next;
-    },
-    disable: () => {
-      disableFavoriteNotify();
-      refresh();
-    },
-    toggle: async () => {
-      const next = await toggleFavoriteNotify();
-      refresh();
-      return next;
-    },
+    busy,
+    error,
+    enable: () => run(enableFavoriteNotify),
+    disable: () => run(disableFavoriteNotify),
+    toggle: () => run(toggleFavoriteNotify),
   };
 }

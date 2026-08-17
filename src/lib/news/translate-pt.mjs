@@ -42,7 +42,9 @@ export async function translateToPt(text, opts = {}) {
         out.push(chunk);
         continue;
       }
-      out.push(parseGtx(await g.json()) || chunk);
+      const translated = parseGtx(await g.json());
+      if (!translated) opts.onFail?.();
+      out.push(translated || chunk);
     } catch {
       opts.onFail?.();
       out.push(chunk);

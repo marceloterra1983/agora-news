@@ -1,6 +1,4 @@
-import { upsertPosts, deletePost } from "./admin";
-import { parseWatchSection } from "./watch-section.mjs";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase";
+import { adminHeaders, SUPABASE_URL } from "./admin";
 
 export type WatchAccount = {
   handle: string;
@@ -11,85 +9,114 @@ export type WatchAccount = {
   section: string;
 };
 
-const AUTH = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  Accept: "application/json",
-};
-
-function norm(h: string): string {
-  return String(h || "")
+function norm(value: string): string {
+  return String(value || "")
     .replace(/^@+/, "")
-    .trim();
+    .trim()
+    .toLowerCase();
 }
 
-function watchId(handle: string) {
-  return `watch_${handle.toLowerCase()}`;
+function watchFromRow(row: Partial<WatchAccount>): WatchAccount | null {
+  const handle = norm(row.handle || "");
+  if (!handle) return null;
+  return {
+    handle,
+    name: String(row.name || handle),
+    avatar: row.avatar || null,
+    summary: String(row.summary || ""),
+    followers: Number(row.followers) || 0,
+    section: String(row.section || "ai"),
+  };
 }
 
-export async function listWatchAccounts(): Promise<WatchAccount[]> {
+async function listWatches(filter = ""): Promise<WatchAccount[]> {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/user_watches?${filter}select=handle,name,avatar,summary,followers,section&order=updated_at.desc&limit=500`,
+    { headers: adminHeaders(), signal: AbortSignal.timeout(6_000) },
+  );
+  if (!res.ok) throw new Error(`watch_read_${res.status}`);
+  const rows = (await res.json()) as Array<Partial<WatchAccount>>;
+  if (!Array.isArray(rows)) throw new Error("watch_read_invalid");
+  return rows
+    .map(watchFromRow)
+    .filter((row): row is WatchAccount => Boolean(row));
+}
+
+export async function listUserWatchAccounts(
+  userId: string,
+): Promise<WatchAccount[]> {
+  const uid = userId.trim();
+  if (!uid) return [];
+  return listWatches(`user_id=eq.${encodeURIComponent(uid)}&`);
+}
+
+/** Server-only union for cron/ingest. Ownership is never returned to clients. */
+export async function listAllWatchAccounts(): Promise<WatchAccount[]> {
+  const rows = await listWatches();
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = row.handle.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export async function registerWatch(
+  userId: string,
+  input: WatchAccount,
+): Promise<boolean> {
+  const uid = userId.trim();
+  const handle = norm(input.handle);
+  if (!uid || !/^[A-Za-z0-9_]{1,15}$/.test(handle)) return false;
+  const section = input.section.trim().toLowerCase() || "ai";
+  if (!["ai", "tech", "brasil"].includes(section)) return false;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/posts?category=eq.watch&select=account,content,summary_pt,image_url,media_label,batch_name,source&limit=80`,
-      { headers: AUTH, signal: AbortSignal.timeout(6_000) },
+      `${SUPABASE_URL}/rest/v1/user_watches?on_conflict=user_id,section,handle`,
+      {
+        method: "POST",
+        headers: {
+          ...adminHeaders(),
+          Prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({
+          user_id: uid,
+          section,
+          handle,
+          name: input.name || handle,
+          avatar: input.avatar || null,
+          summary: input.summary || "",
+          followers: Number(input.followers) || 0,
+          updated_at: new Date().toISOString(),
+        }),
+        signal: AbortSignal.timeout(6_000),
+      },
     );
-    if (!res.ok) return [];
-    const rows = (await res.json()) as Array<{
-      account?: string;
-      content?: string;
-      summary_pt?: string;
-      image_url?: string;
-      media_label?: string;
-      batch_name?: string;
-      source?: string;
-    }>;
-    const out: WatchAccount[] = [];
-    const seen = new Set<string>();
-    for (const row of rows) {
-      const handle = norm(row.account || "");
-      if (!handle || seen.has(handle.toLowerCase())) continue;
-      seen.add(handle.toLowerCase());
-      out.push({
-        handle,
-        name: row.content || handle,
-        avatar: row.image_url || null,
-        summary: row.summary_pt || "",
-        followers: Number(row.media_label) || 0,
-        section: parseWatchSection(row),
-      });
-    }
-    return out;
+    return res.ok;
   } catch {
-    return [];
+    return false;
   }
 }
 
-export async function registerWatch(input: WatchAccount): Promise<boolean> {
-  const handle = norm(input.handle);
-  if (!/^[A-Za-z0-9_]{1,15}$/.test(handle)) return false;
-  const posted = "2020-01-01T00:00:00.000Z";
-  const written = await upsertPosts([
-    {
-      post_id: watchId(handle),
-      account: handle,
-      posted_at: posted,
-      posted_at_sp: posted,
-      content: input.name || handle,
-      translation_pt: input.summary || "",
-      summary_pt: (input.summary || input.name || handle).slice(0, 220),
-      post_url: `https://x.com/${handle}`,
-      media_label: String(input.followers || 0),
-      image_url: input.avatar || "",
-      category: "watch",
-      batch_name: input.section ? `x-watch:${input.section}` : "x-watch",
-      source: input.section || "x-watch",
-    },
-  ]);
-  return written.ok;
-}
-
-export async function unregisterWatch(handle: string): Promise<boolean> {
+export async function unregisterWatch(
+  userId: string,
+  handle: string,
+): Promise<boolean> {
+  const uid = userId.trim();
   const key = norm(handle);
-  if (!key) return false;
-  return deletePost(watchId(key));
+  if (!uid || !key) return false;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/user_watches?user_id=eq.${encodeURIComponent(uid)}&handle=eq.${encodeURIComponent(key)}`,
+      {
+        method: "DELETE",
+        headers: adminHeaders(),
+        signal: AbortSignal.timeout(6_000),
+      },
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

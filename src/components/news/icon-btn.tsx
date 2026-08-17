@@ -1,7 +1,9 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactElement } from "react";
-import { cloneElement, isValidElement, useRef, useState } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  ReactElement,
+} from "react";
+import { cloneElement } from "react";
 
 export const tapIcon =
   "grid size-[44px] shrink-0 place-items-center rounded-full";
@@ -11,42 +13,15 @@ const BASE =
 
 export function Tip({
   label,
-  side = "top",
   children,
 }: {
   label: string;
-  side?: "top" | "bottom" | "left" | "right";
-  children: ReactElement;
+  children: ReactElement<{ title?: string; "aria-label"?: string }>;
 }) {
-  const [open, setOpen] = useState(false);
-  const hold = useRef(0);
-
-  function startHold() {
-    window.clearTimeout(hold.current);
-    hold.current = window.setTimeout(() => setOpen(true), 420);
-  }
-  function endHold() {
-    window.clearTimeout(hold.current);
-    if (open) hold.current = window.setTimeout(() => setOpen(false), 1100);
-  }
-
-  const child = isValidElement(children)
-    ? cloneElement(children, {
-        onTouchStart: startHold,
-        onTouchEnd: endHold,
-        onTouchCancel: () => {
-          window.clearTimeout(hold.current);
-          setOpen(false);
-        },
-      } as Record<string, unknown>)
-    : children;
-
-  return (
-    <Tooltip open={open} onOpenChange={setOpen} delayDuration={280}>
-      <TooltipTrigger asChild>{child}</TooltipTrigger>
-      <TooltipContent side={side}>{label}</TooltipContent>
-    </Tooltip>
-  );
+  return cloneElement(children, {
+    title: children.props.title ?? label,
+    "aria-label": children.props["aria-label"] ?? label,
+  });
 }
 
 export function IconBtn({
@@ -60,7 +35,7 @@ export function IconBtn({
       <button
         type="button"
         aria-label={label}
-        className={cn(BASE, className)}
+        className={`${BASE}${className ? ` ${className}` : ""}`}
         {...props}
       >
         {children}
@@ -77,11 +52,16 @@ export function IconLink({
 }: AnchorHTMLAttributes<HTMLAnchorElement> & { label: string }) {
   return (
     <Tip label={label}>
-      <a aria-label={label} className={cn(BASE, className)} {...props}>
+      <a
+        aria-label={label}
+        className={`${BASE}${className ? ` ${className}` : ""}`}
+        {...props}
+      >
         {children}
       </a>
     </Tip>
   );
 }
 
-export const iconBtnSolid = "border-ink bg-ink text-paper hover:bg-ink-soft hover:text-paper";
+export const iconBtnSolid =
+  "!border-ink !bg-ink !text-paper hover:!bg-ink-soft hover:!text-paper";

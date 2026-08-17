@@ -2,7 +2,6 @@ import { AppChrome } from "@/components/news/app-chrome";
 import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
 import { FontesChip } from "@/components/news/fontes-chip";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
-import { groupOf } from "@/components/news/group-tag";
 import { loadExtraFontes, syncExtraFontes } from "@/lib/news/extra-fontes";
 import {
   FONTES_SORT_KEY,
@@ -16,8 +15,8 @@ import {
   type SortKey,
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
-import { enableFavoriteNotify } from "@/lib/news/notify-favorites";
 import { loadFontes } from "@/lib/news/server";
+import { routeMeta } from "@/lib/news/route-meta";
 import { relativeTime } from "@/lib/news/format";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "@/lib/news/types";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
@@ -27,29 +26,31 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CheckSquare, ChevronDown, Square } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-type FontesSearch = { secao: Category };
-
+type FontesSearch = { secao: Category; q?: string; sort?: SortKey };
 export const Route = createFileRoute("/fontes")({
-  validateSearch: (raw: Record<string, unknown>): FontesSearch => ({
-    secao: normalizeSection(typeof raw.secao === "string" ? raw.secao : DEFAULT_SECTION),
-  }),
+  head: () => ({ meta: routeMeta("Fontes", "Organize os perfis que formam seu feed de notícias.") }),
+  validateSearch: (raw: Record<string, unknown>): FontesSearch => {
+    const sort = FONTES_SORTS.find(({ id }) => id === raw.sort)?.id;
+    const q = typeof raw.q === "string" && raw.q ? raw.q.slice(0, 80) : undefined;
+    return { secao: normalizeSection(typeof raw.secao === "string" ? raw.secao : DEFAULT_SECTION), q, sort };
+  },
   loaderDeps: ({ search }) => ({ secao: search.secao }),
   loader: async ({ deps }) => loadFontes({ data: { category: deps.secao } }),
   component: FontesPage,
 });
 
 function FontesPage() {
-  const { secao } = Route.useSearch();
+  const { secao, q = "", sort: sortParam } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const sort = sortParam ?? "recent";
   const initial = Route.useLoaderData();
   const prefs = useFontesPrefs(secao);
   const [openHandle, setOpenHandle] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortKey>(readStoredSort);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const [extras, setExtras] = useState<ReturnType<typeof loadExtraFontes>>([]);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
-  const [groupIds, setGroupIds] = useState<string[]>(() => allGroupIds(secao));
-  const [q, setQ] = useState("");
+  const [groupIds, setGroupIds] = useState<string[]>([]);
 
   useEffect(() => {
     const refresh = () => setExtras(loadExtraFontes());
@@ -67,9 +68,14 @@ function FontesPage() {
     return onCustomGroups(() => setGroupIds(allGroupIds(secao)));
   }, [secao]);
 
+  useEffect(() => {
+    if (sortParam) return;
+    const stored = readStoredSort();
+    if (stored !== "recent") void navigate({ search: (current) => ({ ...current, sort: stored }), replace: true, resetScroll: false });
+  }, [navigate, sortParam]);
   function changeSort(next: SortKey) {
-    setSort(next);
     setOpenGroups(new Set());
+    void navigate({ search: (current) => ({ ...current, sort: next === "recent" ? undefined : next }), replace: true, resetScroll: false });
     try {
       localStorage.setItem(FONTES_SORT_KEY, next);
     } catch {
@@ -78,7 +84,7 @@ function FontesPage() {
   }
 
   const seed = useMemo(() => seedFontes(secao), [secao]);
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ["fontes", secao],
     queryFn: () => loadFontes({ data: { category: secao } }),
     initialData: initial,
@@ -87,22 +93,12 @@ function FontesPage() {
 
   const base = data?.rows?.length ? data.rows : seed;
   const withExtras = useMemo(() => mergeExtraFontes(base, extras, secao), [base, extras, secao]);
-  const rows = useMemo(
-    () =>
-      sortFontesRows(withExtras, sort, prefs.starred).map((r) => ({
-        ...r,
-        group: prefs.groupOf(r.handle) ?? groupOf(r.handle, secao),
-      })),
-    [withExtras, prefs.starred, prefs.groups, sort, secao],
-  );
-  const visible = useMemo(() => filterFontesRows(rows, q, secao), [rows, q, secao]);
-  const grouped = useMemo(() => groupFontesRows(visible, groupIds), [visible, groupIds]);
-
-  async function onToggleNotify(handle: string) {
-    const turningOn = !prefs.isNotify(handle);
-    if (turningOn) await enableFavoriteNotify();
-    prefs.toggleNotify(handle);
-  }
+  const rows = sortFontesRows(withExtras, sort, prefs.starred).map((r) => ({
+    ...r,
+    group: prefs.groupOf(r.handle) ?? r.group ?? "novos",
+  }));
+  const visible = filterFontesRows(rows, q, secao);
+  const grouped = groupFontesRows(visible, groupIds);
 
   function toggleGroup(id: string) {
     setOpenGroups((prev) => {
@@ -169,13 +165,13 @@ function FontesPage() {
         </div>
       }
     >
-      <main className="mx-auto max-w-2xl px-4 pb-24 max-sm:max-w-none">
+      <div aria-busy={isFetching} className="mx-auto max-w-2xl px-4 pb-24 max-sm:max-w-none">
         <h1 className="sr-only">Fontes</h1>
         <label className="mt-3 block">
           <span className="sr-only">Filtrar no catálogo</span>
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => void navigate({ search: (current) => ({ ...current, q: e.target.value || undefined }), replace: true, resetScroll: false })}
             placeholder="Filtrar no catálogo"
             autoCapitalize="off"
             autoCorrect="off"
@@ -184,8 +180,14 @@ function FontesPage() {
           />
         </label>
         {picking ? <FontesBatchBar count={picked.size} groupIds={groupIds} onMove={movePicked} /> : null}
+        {prefs.notifyBusy ? <p role="status" className="py-2 text-sm text-mute">Atualizando aviso…</p> : null}
+        {prefs.notifyError ? <p role="alert" className="py-2 text-sm text-mark">{prefs.notifyError}</p> : null}
 
-        {sort === "groups" ? (
+        {visible.length === 0 ? (
+          <p role="status" className="py-10 text-center text-sm text-mute">
+            {sort === "starred" ? "Nenhum favorito ainda. Toque na estrela de um perfil." : "Nenhum perfil."}
+          </p>
+        ) : sort === "groups" ? (
           <ul>
             {grouped.map((g) => {
               const open = openGroups.has(g.id);
@@ -205,6 +207,8 @@ function FontesPage() {
                               key={f.handle}
                               src={f.avatar}
                               alt=""
+                              width={28}
+                              height={28}
                               className="size-7 rounded-full border border-paper bg-paper-2 object-cover"
                             />
                           ) : (
@@ -262,7 +266,7 @@ function FontesPage() {
                             picking={picking}
                             picked={picked.has(row.handle.toLowerCase())}
                             onToggle={() => rowToggle(row.handle)}
-                            onToggleNotify={onToggleNotify}
+                            onToggleNotify={prefs.toggleNotify}
                           />
                         ))}
                       </ol>
@@ -272,10 +276,6 @@ function FontesPage() {
               );
             })}
           </ul>
-        ) : visible.length === 0 ? (
-          <p className="py-10 text-center text-sm text-mute">
-            {sort === "starred" ? "Nenhum favorito ainda. Toque na estrela de um perfil." : "Nenhum perfil."}
-          </p>
         ) : (
           <ol data-testid="fontes-list">
             {visible.map((row, i) => (
@@ -288,12 +288,12 @@ function FontesPage() {
                 picking={picking}
                 picked={picked.has(row.handle.toLowerCase())}
                 onToggle={() => rowToggle(row.handle)}
-                onToggleNotify={onToggleNotify}
+                onToggleNotify={prefs.toggleNotify}
               />
             ))}
           </ol>
         )}
-      </main>
+      </div>
     </AppChrome>
   );
 }

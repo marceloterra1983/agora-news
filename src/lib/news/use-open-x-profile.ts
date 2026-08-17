@@ -1,5 +1,9 @@
 import { profileByHandle } from "@/lib/news/profiles";
-import { lookupXProfile, summarizeProfile, type FoundProfile } from "@/lib/news/server";
+import {
+  lookupXProfile,
+  summarizeProfile,
+  type FoundProfile,
+} from "@/lib/news/server";
 import { useCallback, useRef, useState } from "react";
 
 export type OpenFrom = "search" | "interest" | null;
@@ -68,18 +72,6 @@ export function useOpenXProfile() {
       if (id !== seq.current) return;
       if (extra.summary) {
         setSummary(extra.summary);
-        void fetch("/api/profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            handle: profile.handle,
-            name: profile.name,
-            bio: profile.bio,
-            summary_pt: extra.summary,
-            avatar: profile.avatar,
-            followers: profile.followers,
-          }),
-        }).catch(() => {});
       }
     } catch {
       if (id !== seq.current) return;

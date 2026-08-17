@@ -1,6 +1,8 @@
-import { getNotifyHandles, normHandle } from "./fontes-prefs";
-import { applyPushSubscribeResult } from "./notify-core.mjs";
-import { VAPID_PUBLIC_KEY } from "./vapid-public";
+import { getNotifyHandles, normHandle, setNotifyHandle } from "./fontes-prefs";
+import {
+  applyPushSubscribeResult,
+  ensureCurrentPushSubscription,
+} from "./notify-core.mjs";
 import type { Story } from "./types";
 
 const ENABLED_KEY = "agora-notify-fav-v1";
@@ -51,33 +53,39 @@ function seedSeen(stories: Story[]) {
   window.localStorage.setItem(READY_KEY, "1");
 }
 
-export async function enableFavoriteNotify(): Promise<NotificationPermission | "unsupported"> {
+export async function enableFavoriteNotify(handles = getNotifyHandles()): Promise<
+  NotificationPermission | "unsupported" | "error"
+> {
   if (!notifySupported()) return "unsupported";
-  const perm =
-    Notification.permission === "granted"
-      ? "granted"
-      : await Notification.requestPermission();
-  if (perm === "granted") {
-    const pushed = await subscribeWebPush();
-    if (!pushed) return perm;
+  try {
+    const perm =
+      Notification.permission === "granted"
+        ? "granted"
+        : await Notification.requestPermission();
+    if (perm !== "granted") return perm;
+    if (!(await subscribeWebPush(handles))) return "error";
     window.localStorage.setItem(ENABLED_KEY, "1");
     window.localStorage.removeItem(READY_KEY);
     emit();
+    return perm;
+  } catch {
+    return "error";
   }
-  return perm;
 }
 
-export function disableFavoriteNotify() {
-  if (typeof window === "undefined") return;
+export async function disableFavoriteNotify() {
+  if (typeof window === "undefined") return "error" as const;
+  if (!(await unsubscribeWebPush())) return "error" as const;
   window.localStorage.setItem(ENABLED_KEY, "0");
-  void unsubscribeWebPush();
   emit();
+  return "off" as const;
 }
 
-export async function toggleFavoriteNotify(): Promise<NotificationPermission | "unsupported" | "off"> {
+export async function toggleFavoriteNotify(): Promise<
+  NotificationPermission | "unsupported" | "off" | "error"
+> {
   if (isNotifyEnabled()) {
-    disableFavoriteNotify();
-    return "off";
+    return disableFavoriteNotify();
   }
   return enableFavoriteNotify();
 }
@@ -92,14 +100,18 @@ export function newFavoriteStories(stories: Story[]): Story[] {
   if (!isNotifyEnabled() || notifyPermission() !== "granted") return [];
   const watched = new Set(getNotifyHandles());
   if (!watched.size) return [];
-  const favs = stories.filter((s) => watched.has(normHandle(s.source || s.sourceLabel || "")));
+  const favs = stories.filter((s) =>
+    watched.has(normHandle(s.source || s.sourceLabel || "")),
+  );
   if (typeof window === "undefined") return [];
   if (window.localStorage.getItem(READY_KEY) !== "1") {
     seedSeen(favs);
     return [];
   }
   const seen = readSeen();
-  const fresh = favs.filter((s) => s.id && !seen.has(s.id) && isFresh(s.publishedAt));
+  const fresh = favs.filter(
+    (s) => s.id && !seen.has(s.id) && isFresh(s.publishedAt),
+  );
   for (const s of fresh) seen.add(s.id);
   if (fresh.length) writeSeen(seen);
   return fresh.slice(0, 3);
@@ -152,18 +164,26 @@ function urlBase64ToUint8Array(base64: string) {
   return out;
 }
 
-export async function subscribeWebPush() {
-  if (typeof navigator === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-    return true;
+export async function subscribeWebPush(handles = getNotifyHandles()) {
+  if (
+    typeof window === "undefined" ||
+    typeof navigator === "undefined" ||
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window)
+  ) {
+    return false;
   }
   try {
+    const keyResponse = await fetch("/api/push", { cache: "no-store" });
+    if (!keyResponse.ok) return false;
+    const { key } = (await keyResponse.json()) as { key?: string };
+    if (!key) return false;
     const reg = await navigator.serviceWorker.ready;
-    const sub =
-      (await reg.pushManager.getSubscription()) ||
-      (await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      }));
+    const { subscription: sub, replacedEndpoint } =
+      await ensureCurrentPushSubscription(
+        reg.pushManager,
+        urlBase64ToUint8Array(key),
+      );
     const json = sub.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) return false;
     const res = await fetch("/api/push", {
@@ -172,32 +192,69 @@ export async function subscribeWebPush() {
       body: JSON.stringify({
         endpoint: json.endpoint,
         keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
-        handles: getNotifyHandles(),
+        handles,
       }),
     });
-    return applyPushSubscribeResult(res.ok);
+    const saved = applyPushSubscribeResult(res.ok);
+    if (saved && replacedEndpoint && replacedEndpoint !== json.endpoint) {
+      await fetch("/api/push", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: replacedEndpoint }),
+      });
+    }
+    return saved;
   } catch {
     return false;
   }
 }
 
+export async function setFavoriteNotifyHandle(handle: string, on: boolean) {
+  const key = normHandle(handle);
+  if (!key) return "error" as const;
+  const current = getNotifyHandles();
+  const next = on
+    ? [...new Set([...current, key])]
+    : current.filter((item) => item !== key);
+  if (current.includes(key) === on) return "granted" as const;
+  if (on) {
+    const result = await enableFavoriteNotify(next);
+    if (result !== "granted") return result;
+  } else if (isNotifyEnabled() && !(await subscribeWebPush(next))) {
+    return "error" as const;
+  }
+  setNotifyHandle(key, on);
+  return "granted" as const;
+}
+
+export async function reconcileFavoritePush() {
+  if (!isNotifyEnabled() || notifyPermission() !== "granted") return;
+  if (await subscribeWebPush()) return;
+  window.localStorage.setItem(ENABLED_KEY, "0");
+  emit();
+}
+
 export async function unsubscribeWebPush() {
-  if (typeof navigator === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-    return;
+  if (
+    typeof navigator === "undefined" ||
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window)
+  ) {
+    return false;
   }
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
-    const endpoint = sub?.endpoint;
-    if (sub) await sub.unsubscribe();
-    if (endpoint) {
-      await fetch("/api/push", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint }),
-      });
-    }
+    if (!sub) return true;
+    if (!sub.endpoint) return false;
+    const response = await fetch("/api/push", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: sub.endpoint }),
+    });
+    if (!response.ok) return false;
+    return sub.unsubscribe();
   } catch {
-    /* local flag already off */
+    return false;
   }
 }

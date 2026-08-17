@@ -1,0 +1,47 @@
+story_id: e04s06
+title: "Shrink runtime cost and repair operational documentation"
+status: passing
+bcps: 5
+tasks:
+  - id: 1
+    description: "RED: specify CSS/bundle/network budgets and zero-consumer deletion contracts"
+    verify: "node --experimental-strip-types --test scripts/simplification-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Performance", "unit"] }
+  - id: 2
+    description: "Serve full CSS as a cacheable asset while retaining measured critical CSS"
+    verify: "node --experimental-strip-types --test --test-name-pattern='CSS' scripts/simplification-contract.test.mjs && npm run build"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Performance"] }
+  - id: 3
+    description: "Replace Tip/Button internals with native behavior and remove empty UI dependencies"
+    verify: "node --experimental-strip-types --test --test-name-pattern='Tip|Button|dependency' scripts/simplification-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Dependencies", "Accessibility"] }
+  - id: 4
+    description: "Remove direct browser polling and duplicate SWR/cloud-list cache paths"
+    verify: "node --experimental-strip-types --test --test-name-pattern='poll|cache' scripts/simplification-contract.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Cache", "Network"] }
+  - id: 5
+    description: "Delete only proven zero-consumer scripts/exports/dependencies and regenerate lockfile"
+    verify: "node --experimental-strip-types --test --test-name-pattern='dead|dependency' scripts/simplification-contract.test.mjs && npm run build"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Deletion", "Dependencies"] }
+  - id: 6
+    description: "Update environment, architecture, state and deployment documentation from verified evidence"
+    verify: "node --experimental-strip-types --test --test-name-pattern='documentation' scripts/simplification-contract.test.mjs && git diff --check"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Documentation", "Operations"] }
+  - id: 7
+    description: "Run clean install, full verification, dependency audit and affected-path security review"
+    verify: "npm ci && npm test && npm run typecheck && npm run lint && npm run build && npm audit --omit=dev"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Regression", "Build"] }

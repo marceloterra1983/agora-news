@@ -45,17 +45,23 @@ export function SettingsToggle({
   onClick,
   title,
   hint,
+  disabled,
+  busy,
 }: {
   on: boolean;
   onClick: () => void;
   title: string;
   hint: string;
+  disabled?: boolean;
+  busy?: boolean;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
+      aria-busy={busy || undefined}
+      disabled={disabled}
       onClick={onClick}
       className="flex w-full items-center gap-3 border-b border-line py-3.5 text-left last:border-0"
     >

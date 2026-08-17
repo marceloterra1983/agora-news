@@ -1,7 +1,14 @@
 import { Bell, BellOff, Layers, Power, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { isReservedGroup } from "@/lib/news/catalog-taxonomy.mjs";
-import { addCustomGroup, allGroupIds, groupLabel, groupPip, onCustomGroups, removeCustomGroup } from "@/lib/news/groups";
+import {
+  addCustomGroup,
+  allGroupIds,
+  groupLabel,
+  groupPip,
+  onCustomGroups,
+  removeCustomGroup,
+} from "@/lib/news/groups";
 import { readLastSection } from "@/lib/news/section-pref";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
@@ -11,6 +18,7 @@ export function FonteControls({
   starred,
   disabled,
   notify,
+  notifyBusy,
   group,
   onToggleStar,
   onToggleDisabled,
@@ -22,6 +30,7 @@ export function FonteControls({
   starred: boolean;
   disabled: boolean;
   notify: boolean;
+  notifyBusy?: boolean;
   group: string;
   onToggleStar: (handle: string) => void;
   onToggleDisabled: (handle: string) => void;
@@ -30,15 +39,22 @@ export function FonteControls({
   onResetGroup?: (handle: string) => void;
 }) {
   const starLabel = starred ? "Remover dos favoritos" : "Marcar como favorito";
-  const notifyLabel = notify ? "Desligar aviso deste perfil" : "Ativar aviso deste perfil";
+  const notifyLabel = notify
+    ? "Desligar aviso deste perfil"
+    : "Ativar aviso deste perfil";
   const powerLabel = disabled ? "Reativar no feed" : "Desabilitar no feed";
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
-  const [ids, setIds] = useState<string[]>(() => allGroupIds(readLastSection()));
+  const [ids, setIds] = useState<string[]>(() =>
+    allGroupIds(readLastSection()),
+  );
   const box = useRef<HTMLDivElement>(null);
 
-  useEffect(() => onCustomGroups(() => setIds(allGroupIds(readLastSection()))), []);
+  useEffect(
+    () => onCustomGroups(() => setIds(allGroupIds(readLastSection()))),
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -82,11 +98,17 @@ export function FonteControls({
           aria-pressed={starred}
           className={cn(
             "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-            starred ? "text-mark hover:bg-paper" : "text-mute hover:bg-paper hover:text-mark",
+            starred
+              ? "text-mark hover:bg-paper"
+              : "text-mute hover:bg-paper hover:text-mark",
           )}
           onClick={() => onToggleStar(handle)}
         >
-          <Star className="size-3.5" fill={starred ? "currentColor" : "none"} strokeWidth={starred ? 0 : 1.75} />
+          <Star
+            className="size-3.5"
+            fill={starred ? "currentColor" : "none"}
+            strokeWidth={starred ? 0 : 1.75}
+          />
         </button>
       </Tip>
       <Tip label={notifyLabel}>
@@ -94,13 +116,21 @@ export function FonteControls({
           type="button"
           aria-label={notifyLabel}
           aria-pressed={notify}
+          aria-busy={notifyBusy || undefined}
+          disabled={notifyBusy}
           className={cn(
             "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-            notify ? "text-mark hover:bg-paper" : "text-mute hover:bg-paper hover:text-ink",
+            notify
+              ? "text-mark hover:bg-paper"
+              : "text-mute hover:bg-paper hover:text-ink",
           )}
           onClick={() => onToggleNotify(handle)}
         >
-          {notify ? <Bell className="size-3.5" fill="currentColor" strokeWidth={0} /> : <BellOff className="size-3.5" strokeWidth={1.75} />}
+          {notify ? (
+            <Bell className="size-3.5" fill="currentColor" strokeWidth={0} />
+          ) : (
+            <BellOff className="size-3.5" strokeWidth={1.75} />
+          )}
         </button>
       </Tip>
       <Tip label={powerLabel}>
@@ -110,7 +140,9 @@ export function FonteControls({
           aria-pressed={!disabled}
           className={cn(
             "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-            disabled ? "text-mute hover:bg-paper hover:text-ink" : "text-ink hover:bg-paper",
+            disabled
+              ? "text-mute hover:bg-paper hover:text-ink"
+              : "text-ink hover:bg-paper",
           )}
           onClick={() => onToggleDisabled(handle)}
         >
@@ -123,7 +155,6 @@ export function FonteControls({
             type="button"
             aria-label="Editar grupo"
             aria-expanded={open}
-            aria-haspopup="listbox"
             className={cn(
               "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
               open ? "bg-paper text-ink" : "text-ink hover:bg-paper",
@@ -135,26 +166,31 @@ export function FonteControls({
         </Tip>
         {open ? (
           <ul
-            role="listbox"
             aria-label="Grupo do perfil"
             className="absolute bottom-[calc(100%+6px)] left-0 z-50 max-h-64 min-w-40 overflow-y-auto rounded-xl border border-line bg-paper shadow-card"
           >
             {ids.map((id) => {
               const on = id === group;
               return (
-                <li key={id} role="option" aria-selected={on}>
+                <li key={id}>
                   <button
                     type="button"
+                    aria-pressed={on}
                     onClick={() => {
                       onSetGroup(handle, id);
                       setOpen(false);
                     }}
                     className={cn(
                       "flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-medium",
-                      on ? "bg-paper-2 text-ink" : "text-ink-soft hover:bg-paper-2 hover:text-ink",
+                      on
+                        ? "bg-paper-2 text-ink"
+                        : "text-ink-soft hover:bg-paper-2 hover:text-ink",
                     )}
                   >
-                    <span className="size-2 shrink-0 rounded-full" style={{ background: groupPip(id) }} />
+                    <span
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ background: groupPip(id) }}
+                    />
                     {groupLabel(id)}
                   </button>
                 </li>
@@ -179,6 +215,7 @@ export function FonteControls({
                 <button
                   type="button"
                   onClick={() => {
+                    if (!window.confirm(`Apagar o grupo ${groupLabel(group)}?`)) return;
                     removeCustomGroup(group, readLastSection());
                     onResetGroup?.(handle);
                     setOpen(false);
@@ -195,6 +232,7 @@ export function FonteControls({
                 <form onSubmit={create} className="px-2 py-1.5">
                   <input
                     autoFocus
+                    aria-label="Nome do novo grupo"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Nome do grupo"

@@ -1,69 +1,96 @@
-import { SUPABASE_ANON_KEY, SUPABASE_POSTS_URL } from "./supabase";
+import { supabaseReadHeaders, SUPABASE_POSTS_URL } from "./supabase";
+import { statusesFromPayload, type Status } from "./ingest-boundary";
 
-const AUTH = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-};
-
-export type Status = {
-  id?: string;
-  text?: string;
-  url?: string;
-  created_timestamp?: number;
-  created_at?: string;
-  replying_to?: unknown;
-  quote?: { id?: string; text?: string; author?: { screen_name?: string } };
-  retweet?: { id?: string; text?: string; author?: { screen_name?: string } };
-  card?: { title?: string };
-  article?: { id?: string; title?: string };
-  media?: { photos?: Array<{ url?: string }>; videos?: Array<{ thumbnail_url?: string; url?: string }> };
-  author?: {
-    screen_name?: string;
-    name?: string;
-    description?: string;
-    avatar_url?: string;
-    followers?: number;
-  };
-};
+export type { Status } from "./ingest-boundary";
 
 export function postedIso(status: Status): string {
-  if (status.created_timestamp) return new Date(status.created_timestamp * 1000).toISOString();
-  if (status.created_at) return new Date(status.created_at).toISOString();
+  if (
+    typeof status.created_timestamp === "number" &&
+    Number.isFinite(status.created_timestamp)
+  ) {
+    const date = new Date(status.created_timestamp * 1000);
+    if (Number.isFinite(date.getTime())) return date.toISOString();
+  }
+  if (status.created_at && Number.isFinite(Date.parse(status.created_at)))
+    return new Date(status.created_at).toISOString();
   return "";
 }
 
 export function needsEmbed(status: Status): boolean {
-  if (status.quote || status.retweet || status.card || status.article) return true;
+  if (status.quote || status.retweet || status.card || status.article)
+    return true;
   if (status.media?.videos?.length) return true;
   if (status.media?.photos?.[0]?.url) return false;
   return /https?:\/\/t\.co\/|\/i\/article|quoted/i.test(status.text || "");
 }
 
 export async function statusesFor(handle: string): Promise<Status[]> {
-  const res = await fetch(
-    `https://api.fxtwitter.com/2/profile/${encodeURIComponent(handle)}/statuses?count=3`,
-    { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(5_000) },
-  );
-  if (!res.ok) return [];
-  const body = (await res.json()) as { results?: Status[] };
-  return body.results ?? [];
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://api.fxtwitter.com/2/profile/${encodeURIComponent(handle)}/statuses?count=3`,
+      {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(5_000),
+      },
+    );
+  } catch {
+    throw new Error("fxtwitter_request_failed");
+  }
+  if (!res.ok) throw new Error(`fxtwitter_http_${res.status}`);
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    throw new Error("fxtwitter_invalid_json");
+  }
+  const statuses = statusesFromPayload(body);
+  if (!statuses) throw new Error("fxtwitter_invalid_payload");
+  return statuses;
 }
 
 export async function existingIds(ids: string[]): Promise<Set<string>> {
   const out = new Set<string>();
   const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.some((id) => !/^\d{1,30}$/.test(id))) {
+    throw new Error("existing_ids_invalid_input");
+  }
   for (let i = 0; i < unique.length; i += 80) {
     const chunk = unique.slice(i, i + 80);
     const params = new URLSearchParams();
     params.set("select", "post_id");
     params.set("post_id", `in.(${chunk.join(",")})`);
-    const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
-      headers: AUTH,
-      signal: AbortSignal.timeout(6_000),
-    });
-    if (!res.ok) continue;
-    const rows = (await res.json()) as Array<{ post_id?: string }>;
-    for (const row of rows) if (row.post_id) out.add(row.post_id);
+    let res: Response;
+    try {
+      res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
+        headers: supabaseReadHeaders(),
+        signal: AbortSignal.timeout(6_000),
+      });
+    } catch {
+      throw new Error("existing_ids_request_failed");
+    }
+    if (!res.ok) throw new Error(`existing_ids_http_${res.status}`);
+    let rows: unknown;
+    try {
+      rows = await res.json();
+    } catch {
+      throw new Error("existing_ids_invalid_json");
+    }
+    const requested = new Set(chunk);
+    if (
+      !Array.isArray(rows) ||
+      !rows.every(
+        (row) =>
+          Boolean(row) &&
+          typeof row === "object" &&
+          !Array.isArray(row) &&
+          typeof row.post_id === "string" &&
+          requested.has(row.post_id),
+      )
+    ) {
+      throw new Error("existing_ids_invalid_payload");
+    }
+    for (const row of rows) out.add(row.post_id);
   }
   return out;
 }
@@ -84,7 +111,9 @@ export function saoPauloStamp(d = new Date()) {
 
 export function saoPauloIso(iso: string) {
   try {
-    return new Date(iso).toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" }).replace(" ", "T");
+    return new Date(iso)
+      .toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" })
+      .replace(" ", "T");
   } catch {
     return iso;
   }

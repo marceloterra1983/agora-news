@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getDisabled,
   getGroupOverrides,
@@ -8,13 +8,11 @@ import {
   setDisabled as persistDisabled,
   clearGroupOverride as persistClearGroup,
   setGroupOverride as persistGroup,
-  setNotifyHandle as persistNotify,
   setStarred as persistStarred,
   toggleDisabled as persistToggleDisabled,
-  toggleNotifyHandle as persistToggleNotify,
   toggleStar as persistToggleStar,
 } from "./fontes-prefs";
-import { isNotifyEnabled, subscribeWebPush } from "./notify-favorites";
+import { setFavoriteNotifyHandle } from "./notify-favorites";
 import type { Category } from "./types";
 
 export function useFontesPrefs(section?: Category) {
@@ -22,6 +20,9 @@ export function useFontesPrefs(section?: Category) {
   const [disabled, setDisabledState] = useState<string[]>([]);
   const [notify, setNotifyState] = useState<string[]>([]);
   const [groups, setGroupsState] = useState<Record<string, string>>({});
+  const [notifyBusy, setNotifyBusy] = useState<string | null>(null);
+  const [notifyError, setNotifyError] = useState("");
+  const notifyPending = useRef(false);
 
   const refresh = useCallback(() => {
     setStarredState(getStarred());
@@ -43,6 +44,29 @@ export function useFontesPrefs(section?: Category) {
       window.removeEventListener("agora-fontes-prefs", onCustom as EventListener);
     };
   }, [refresh]);
+
+  async function setNotify(h: string, on: boolean) {
+    const key = normHandle(h);
+    if (!key || notifyPending.current) return false;
+    notifyPending.current = true;
+    setNotifyBusy(key);
+    setNotifyError("");
+    try {
+      const result = await setFavoriteNotifyHandle(key, on);
+      if (result !== "granted") {
+        setNotifyError("Não foi possível alterar o aviso. Tente novamente.");
+        return false;
+      }
+      refresh();
+      return true;
+    } catch {
+      setNotifyError("Não foi possível alterar o aviso. Tente novamente.");
+      return false;
+    } finally {
+      notifyPending.current = false;
+      setNotifyBusy(null);
+    }
+  }
 
   return {
     starred,
@@ -71,12 +95,7 @@ export function useFontesPrefs(section?: Category) {
       refresh();
       return next;
     },
-    toggleNotify: (h: string) => {
-      const next = persistToggleNotify(h);
-      refresh();
-      if (isNotifyEnabled()) void subscribeWebPush();
-      return next;
-    },
+    toggleNotify: (h: string) => setNotify(h, !notify.includes(normHandle(h))),
     setStarred: (h: string, on: boolean) => {
       persistStarred(h, on);
       refresh();
@@ -85,11 +104,9 @@ export function useFontesPrefs(section?: Category) {
       persistDisabled(h, on);
       refresh();
     },
-    setNotify: (h: string, on: boolean) => {
-      persistNotify(h, on);
-      refresh();
-      if (isNotifyEnabled()) void subscribeWebPush();
-    },
+    setNotify,
+    notifyBusy,
+    notifyError,
     refresh,
   };
 }

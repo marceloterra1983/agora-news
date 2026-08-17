@@ -1,0 +1,47 @@
+story_id: e04s01
+title: "Boot production with persistent auth and rotated credentials"
+status: passing
+bcps: 8
+tasks:
+  - id: 1
+    description: "RED: specify configuration, auth, Supabase header and VAPID rotation behavior"
+    verify: "node --experimental-strip-types --test scripts/production-config.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Configuration", "unit"] }
+  - id: 2
+    description: "Add one runtime-only production configuration contract with explicit local/preview mode"
+    verify: "node --experimental-strip-types --test --test-name-pattern='configuration' scripts/production-config.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Configuration"] }
+  - id: 3
+    description: "Configure persistent Better Auth, canonical callbacks/origin and trusted Nginx client IP"
+    verify: "node --experimental-strip-types --test --test-name-pattern='auth' scripts/production-config.behavior.test.mjs && npm run typecheck"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Auth"] }
+  - id: 4
+    description: "Replace literal Supabase credentials with env-only secret/publishable key header semantics"
+    verify: "node --experimental-strip-types --test --test-name-pattern='Supabase' scripts/production-config.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Secrets"] }
+  - id: 5
+    description: "Replace literal VAPID identity and resubscribe clients whose public key differs"
+    verify: "node --experimental-strip-types --test --test-name-pattern='VAPID' scripts/production-config.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Push"] }
+  - id: 6
+    description: "Separate hermetic build from explicit migration and document variables/callbacks"
+    verify: "npm run build && git diff --check"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Build", "Operations"] }
+  - id: 7
+    description: "Run full regression, dependency audit and affected-path security review"
+    verify: "npm test && npm run typecheck && npm audit --omit=dev"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Regression"] }

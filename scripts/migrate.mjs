@@ -2,8 +2,8 @@
 /**
  * Deploy-time database migrator (node-postgres, `pg`).
  *
- * Runs during `npm run build`, applying pending files
- * in ../migrations to DATABASE_URL. Each file is applied in one transaction and
+ * Runs only when `npm run db:migrate` is called, applying pending files in
+ * ../migrations to DATABASE_URL. Each file is applied in one transaction and
  * recorded in a `_migrations` table, so it runs once and is safe to re-run.
  *
  * No DATABASE_URL (local / preview builds) -> skip; the PGLite fallback applies
@@ -22,7 +22,11 @@ if (!databaseUrl) {
   process.exit(0);
 }
 
-const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
+const migrationsDir = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "migrations",
+);
 
 async function main() {
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 1 });
@@ -32,12 +36,16 @@ async function main() {
       "CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())",
     );
     const applied = new Set(
-      (await client.query("SELECT name FROM _migrations")).rows.map((r) => r.name),
+      (await client.query("SELECT name FROM _migrations")).rows.map(
+        (r) => r.name,
+      ),
     );
 
     let files;
     try {
-      files = (await readdir(migrationsDir)).filter((f) => f.endsWith(".sql")).sort();
+      files = (await readdir(migrationsDir))
+        .filter((f) => f.endsWith(".sql"))
+        .sort();
     } catch {
       console.log("[migrate] no migrations/ directory — nothing to do.");
       return;
@@ -51,7 +59,9 @@ async function main() {
         await client.query("BEGIN");
         // pg's simple-query protocol runs a whole multi-statement file at once.
         await client.query(text);
-        await client.query("INSERT INTO _migrations (name) VALUES ($1)", [name]);
+        await client.query("INSERT INTO _migrations (name) VALUES ($1)", [
+          name,
+        ]);
         await client.query("COMMIT");
       } catch (err) {
         console.error(`[migrate] error applying ${name}`);
@@ -65,7 +75,11 @@ async function main() {
       console.log(`[migrate] applied ${name}`);
       count += 1;
     }
-    console.log(count ? `[migrate] done — ${count} migration(s) applied.` : "[migrate] up to date.");
+    console.log(
+      count
+        ? `[migrate] done — ${count} migration(s) applied.`
+        : "[migrate] up to date.",
+    );
   } finally {
     client.release();
     await pool.end();

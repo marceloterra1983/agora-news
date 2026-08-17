@@ -11,7 +11,7 @@ import { loadTweetEmbed } from "@/lib/news/server";
 import { displayTitle, relativeTime } from "@/lib/news/format";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
-import { StoryAssetBlock, StoryMedia } from "./story-media";
+import { StoryAssetBlock } from "./story-media";
 import { GroupTag } from "./group-tag";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
 import { IconBtn, IconLink, Tip } from "./icon-btn";
@@ -22,31 +22,32 @@ export function ArticleView({ story }: { story: Story }) {
   const toggleSave = useNewsStore((s) => s.toggleSave);
   const { data: embed } = useQuery({
     queryKey: ["tweet-embed", story.id, story.source],
-    queryFn: () => loadTweetEmbed({ data: { id: story.id, source: story.source } }),
-    initialData: story.quoted || story.replyTo || story.card || story.xArticle
-      ? {
-          quoted: story.quoted ?? null,
-          replyTo: story.replyTo ?? null,
-          card: story.card ?? null,
-          article: story.xArticle ?? null,
-          assets: story.assets ?? [],
-          text: story.original,
-        }
-      : undefined,
+    queryFn: () =>
+      loadTweetEmbed({ data: { id: story.id, source: story.source } }),
+    initialData:
+      story.quoted || story.replyTo || story.card || story.xArticle
+        ? {
+            quoted: story.quoted ?? null,
+            replyTo: story.replyTo ?? null,
+            card: story.card ?? null,
+            article: story.xArticle ?? null,
+            assets: story.assets ?? [],
+            text: story.original,
+          }
+        : undefined,
     staleTime: 30 * 60_000,
   });
   const quoted = embed?.quoted ?? story.quoted ?? null;
   const replyTo = embed?.replyTo ?? story.replyTo ?? null;
   const card = embed?.card ?? story.card ?? null;
   const article = embed?.article ?? story.xArticle ?? null;
-  const assets =
-    embed?.assets?.length
-      ? embed.assets
-      : story.assets?.length
-        ? story.assets
-        : story.image
-          ? [{ type: "photo" as const, url: story.image }]
-          : [];
+  const assets = embed?.assets?.length
+    ? embed.assets
+    : story.assets?.length
+      ? story.assets
+      : story.image
+        ? [{ type: "photo" as const, url: story.image }]
+        : [];
   const whoCatalog = blurbFor(story.source, story.sourceLabel);
   const [who, setWho] = useState(whoCatalog);
   const [face, setFace] = useState(story.avatar || "");
@@ -76,6 +77,8 @@ export function ArticleView({ story }: { story: Story }) {
           <img
             src={face}
             alt=""
+            width={44}
+            height={44}
             referrerPolicy="no-referrer"
             className="size-[44px] shrink-0 rounded-full bg-paper-2 object-cover"
           />
@@ -88,7 +91,9 @@ export function ArticleView({ story }: { story: Story }) {
           </span>
         )}
         <span className="flex min-w-0 flex-wrap items-center gap-1.5 pt-1.5">
-          <span className="break-all lowercase">@{story.source.replace(/^@/, "")}</span>
+          <span className="break-all lowercase">
+            @{story.source.replace(/^@/, "")}
+          </span>
           <GroupTag handle={story.source} />
           <span aria-hidden> · </span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>
@@ -97,21 +102,26 @@ export function ArticleView({ story }: { story: Story }) {
         </span>
       </p>
       <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{who}</p>
-      {showTitle ? (
-        <h1 className="mt-3 text-left font-display text-[1.4rem] font-medium leading-snug tracking-tight text-pretty sm:text-2xl">
-          {title}
-        </h1>
-      ) : null}
+      <h1
+        className={
+          showTitle
+            ? "mt-3 text-left font-display text-[1.4rem] font-medium leading-snug tracking-tight text-pretty sm:text-2xl"
+            : "sr-only"
+        }
+      >
+        {title}
+      </h1>
       {replyTo ? <QuoteCard quote={replyTo} /> : null}
       {assets.length ? (
         <div data-media="">
-          {assets.map((asset) => (
-            <StoryAssetBlock key={asset.url} asset={asset} alt={title} />
+          {assets.map((asset, index) => (
+            <StoryAssetBlock
+              key={asset.url}
+              asset={asset}
+              alt={title}
+              priority={index === 0}
+            />
           ))}
-        </div>
-      ) : story.image ? (
-        <div data-media="" className="mt-6 overflow-hidden rounded-lg bg-hero">
-          <StoryMedia src={story.image} alt={title} className="aspect-[16/9] w-full" />
         </div>
       ) : null}
       <p className="mt-6 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed text-ink-soft">
@@ -146,7 +156,11 @@ export function ArticleView({ story }: { story: Story }) {
           label={saved ? "Remover dos salvos" : "Salvar para depois"}
           onClick={() => toggleSave(story)}
         >
-          {saved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+          {saved ? (
+            <BookmarkCheck className="size-4" />
+          ) : (
+            <Bookmark className="size-4" />
+          )}
         </IconBtn>
       </div>
     </article>

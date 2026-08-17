@@ -40,9 +40,8 @@ export function spendKeyAllowed(headers, env = {}) {
 
 /**
  * @param {WriteKind} kind
- * @param {{ cronSecret?: string }} [env]
  */
-export function writeDenialStatus(kind, env = {}) {
+export function writeDenialStatus(kind) {
   if (kind === "ingest") return 401;
   return 403;
 }

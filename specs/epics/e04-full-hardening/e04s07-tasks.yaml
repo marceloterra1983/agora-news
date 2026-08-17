@@ -1,0 +1,47 @@
+story_id: e04s07
+title: "Replace unavailable broker with single-user email auth"
+status: passing
+bcps: 8
+tasks:
+  - id: 1
+    description: "RED: specify runtime, allowlist, bootstrap, login and broker-removal behavior"
+    verify: "node --experimental-strip-types --test scripts/single-user-auth.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Auth", "unit"] }
+  - id: 2
+    description: "Replace broker variables with normalized single-user runtime and bootstrap policy"
+    verify: "node --experimental-strip-types --test --test-name-pattern='runtime|allowed email|bootstrap' scripts/single-user-auth.behavior.test.mjs scripts/production-config.behavior.test.mjs"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Configuration"] }
+  - id: 3
+    description: "Enable Better Auth email/password and enforce server-side sign-up/sign-in allowlist"
+    verify: "node --experimental-strip-types --test --test-name-pattern='server|sign-up|sign-in' scripts/single-user-auth.behavior.test.mjs && npm run typecheck"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Auth"] }
+  - id: 4
+    description: "Replace OAuth controls with accessible sign-in and temporary bootstrap forms"
+    verify: "node --experimental-strip-types --test --test-name-pattern='login|accessib' scripts/single-user-auth.behavior.test.mjs scripts/accessibility-contract.test.mjs scripts/agora-next.test.mjs"
+    risk: P1
+    status: passing
+    allure: { severity: high, categories: ["Auth", "Accessibility", "UI"] }
+  - id: 5
+    description: "Delete broker, provider and popup runtime after zero-consumer proof"
+    verify: "node --experimental-strip-types --test --test-name-pattern='broker|popup|zero consumer' scripts/single-user-auth.behavior.test.mjs scripts/mobile-viewport.test.mjs && npm run build"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Simplification", "Build"] }
+  - id: 6
+    description: "Align environment example, CI release smoke and production runbook"
+    verify: "node --experimental-strip-types --test scripts/production-config.behavior.test.mjs scripts/release-gates.behavior.test.mjs && git diff --check"
+    risk: P1
+    status: passing
+    allure: { severity: high, categories: ["Release", "Configuration", "Documentation"] }
+  - id: 7
+    description: "Run full regression, artifact smokes and affected-path security review"
+    verify: "npm test && npm run typecheck && npm run lint && npm run build && npm audit --omit=dev && test -f specs/security/e04s07-single-user-auth.md"
+    risk: P0
+    status: passing
+    allure: { severity: critical, categories: ["Security Review", "Regression", "Release"] }

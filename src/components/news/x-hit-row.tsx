@@ -21,12 +21,14 @@ export function HitRow({
         onClick={onToggle}
         className={`flex w-full items-center gap-3 px-3 py-2.5 text-left ${
           active ? "bg-paper-2" : ""
-        } ${hit.inFeed ? "opacity-60" : ""}`}
+        }`}
       >
         {hit.avatar ? (
           <img
             src={hit.avatar}
             alt=""
+            width={36}
+            height={36}
             className="size-9 shrink-0 rounded-full bg-paper-2 object-cover"
             referrerPolicy="no-referrer"
           />

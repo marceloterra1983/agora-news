@@ -134,7 +134,7 @@ async function createPgliteSql(): Promise<Sql> {
   // serialized on a global chain so concurrent callers never double-apply.
   const migrate = async (): Promise<void> => {
     // Lazy glob: an eager load pins deleted files in the Vite module graph and
-    // 500s every SSR request (news.automatizems.com / vite dev via PM2).
+    // 500s every SSR request in the Nitro production server.
     const loaders = import.meta.glob("/migrations/*.sql", {
       query: "?raw",
       import: "default",

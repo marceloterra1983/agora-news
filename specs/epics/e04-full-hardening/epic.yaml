@@ -1,0 +1,37 @@
+id: e04
+slug: full-hardening
+title: "Secure, persistent and operable production"
+status: active
+design: "docs/superpowers/specs/2026-08-16-full-hardening-design.md"
+impact: "specs/IMPACT_LATEST.md"
+decisions:
+  - "Keep one TanStack Start/Nitro runtime, one Docker service and the existing cron."
+  - "Production never falls back to preview OAuth, PGLite or literal credentials."
+  - "Private domains are owner-scoped; the profile catalog is cron/admin managed."
+  - "Use expand-verify-contract for schemas and Supabase credential migration."
+  - "Prefer native accessibility and delete unsupported offline copy instead of adding a cache platform."
+  - "Do not mass-convert unrelated .mjs/.d.mts pairs."
+stories:
+  - e04s01
+  - e04s02
+  - e04s03
+  - e04s04
+  - e04s05
+  - e04s06
+  - e04s07
+bcps:
+  e04s01: 8
+  e04s02: 8
+  e04s03: 8
+  e04s04: 5
+  e04s05: 8
+  e04s06: 5
+  e04s07: 8
+deltas:
+  e04s01: MODIFIED
+  e04s02: MODIFIED
+  e04s03: MODIFIED
+  e04s04: MODIFIED
+  e04s05: MODIFIED
+  e04s06: MODIFIED
+  e04s07: MODIFIED

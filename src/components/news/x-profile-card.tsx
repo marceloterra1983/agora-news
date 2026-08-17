@@ -43,6 +43,8 @@ export function ProfileCard({
             <img
               src={result.avatar}
               alt=""
+              width={56}
+              height={56}
               className="size-14 shrink-0 rounded-full bg-paper-2 object-cover"
               referrerPolicy="no-referrer"
             />

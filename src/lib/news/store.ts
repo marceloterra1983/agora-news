@@ -37,6 +37,7 @@ export const useNewsStore = create<NewsState>()(
     }),
     {
       name: "agora-news",
+      skipHydration: true,
       partialize: (s) => ({
         savedIds: s.savedIds,
         stories: Object.fromEntries(

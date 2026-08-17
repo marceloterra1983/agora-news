@@ -1,12 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogIn, RotateCcw, Smartphone } from "lucide-react";
 import { AppChrome } from "@/components/news/app-chrome";
-import { SettingsChoice, SettingsRow, SettingsSection, SettingsToggle } from "@/components/news/settings-ui";
+import {
+  SettingsChoice,
+  SettingsRow,
+  SettingsSection,
+  SettingsToggle,
+} from "@/components/news/settings-ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useNewsStore } from "@/lib/news/store";
+import { routeMeta } from "@/lib/news/route-meta";
 import { FONT_STEPS } from "@/lib/news/font-scale";
-import { TYPEFACES, type Density, type FontSize, type Typeface } from "@/lib/news/settings";
-import { TypefaceLoader, typefaceFamily } from "@/lib/news/typeface-loader";
+import {
+  TYPEFACES,
+  type Density,
+  type FontSize,
+  type Typeface,
+  typefaceFamily,
+} from "@/lib/news/settings";
+import { TypefaceLoader } from "@/lib/news/typeface-loader";
 import { useSettings } from "@/lib/news/use-settings";
 import { resetUnread } from "@/lib/news/unread";
 import { useNotifyFavorites } from "@/lib/news/use-notify-favorites";
@@ -21,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/configuracoes")({
+  head: () => ({ meta: routeMeta("Configurações", "Ajuste leitura, aparência, avisos e dados deste aparelho.") }),
   component: SettingsPage,
 });
 
@@ -48,12 +61,14 @@ function SettingsPage() {
 
   return (
     <AppChrome category={DEFAULT_SECTION}>
-      <main className="mx-auto max-w-2xl px-4 pb-28 pt-6 max-sm:max-w-none">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mark">App</p>
-        <h1 className="mt-1 font-display text-3xl tracking-tight">Configurações</h1>
-        <p className="mt-2 text-sm text-ink-soft">
-          Neste aparelho agora. Se você entrar, favoritos e letra sobem para a nuvem.
+      <div className="mx-auto max-w-2xl px-4 pb-28 pt-6 max-sm:max-w-none">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mark">
+          App
         </p>
+        <h1 className="mt-1 font-display text-3xl tracking-tight">
+          Configurações
+        </h1>
+        <p className="mt-2 text-sm text-ink-soft">Neste aparelho agora. Se você entrar, favoritos e letra sobem para a nuvem.</p>
 
         <SettingsSection title="Leitura">
           <p className="mb-3 text-xs text-mute">Tamanho do texto</p>
@@ -61,13 +76,19 @@ function SettingsPage() {
             {FONT_STEPS.map((step, i) => (
               <SettingsChoice
                 key={step.id}
-                active={settings.fontSize === step.id || (step.id === "lg" && settings.fontSize === "xl")}
+                active={
+                  settings.fontSize === step.id ||
+                  (step.id === "lg" && settings.fontSize === "xl")
+                }
                 onClick={() => set({ fontSize: step.id as FontSize })}
                 label={step.label}
                 className="flex-1"
               >
                 <span className="flex flex-col items-center gap-1">
-                  <span style={{ fontSize: 14 + i * 4 }} className="font-display leading-none">
+                  <span
+                    style={{ fontSize: 14 + i * 4 }}
+                    className="font-display leading-none"
+                  >
                     A
                   </span>
                   <span className="text-[11px]">{step.label}</span>
@@ -174,6 +195,8 @@ function SettingsPage() {
           <SettingsToggle
             on={notify.enabled}
             onClick={() => void notify.toggle()}
+            disabled={notify.busy}
+            busy={notify.busy}
             title="Avisar favoritos"
             hint={
               !notify.supported
@@ -183,6 +206,7 @@ function SettingsPage() {
                   : "Contas com o sino ligado em Fontes."
             }
           />
+          {notify.error ? <p className="mt-2 text-sm text-mark" role="alert">{notify.error}</p> : null}
         </SettingsSection>
 
         <SettingsSection title="Neste aparelho">
@@ -190,6 +214,7 @@ function SettingsPage() {
             title={`Limpar ${savedCount} salvo${savedCount === 1 ? "" : "s"}`}
             hint="Tira as matérias da lista Salvos."
             action={() => {
+              if (!window.confirm("Limpar todas as matérias salvas?")) return;
               clearSaved();
               flash("Salvos limpos");
             }}
@@ -199,6 +224,7 @@ function SettingsPage() {
             title="Esquecer o que já li"
             hint="Os destaques de novos posts recomeçam daqui."
             action={() => {
+              if (!window.confirm("Esquecer todo o histórico de leitura?")) return;
               resetUnread();
               flash("Leitura reiniciada");
             }}
@@ -207,6 +233,7 @@ function SettingsPage() {
             title="Restaurar padrão"
             hint="Volta letra, tema de leitura e fotos ao original."
             action={() => {
+              if (!window.confirm("Restaurar todas as configurações?")) return;
               reset();
               flash("Configurações restauradas");
             }}
@@ -223,10 +250,11 @@ function SettingsPage() {
           </Link>
           <Link
             to="/login"
+            search={{ cadastro: false }}
             className="flex items-center gap-3 border-b border-line py-3.5 text-sm text-ink"
           >
             <LogIn className="size-4 shrink-0 text-mute" />
-            {user ? user.displayName ?? "Conta" : "Entrar"}
+            {user ? (user.displayName ?? "Conta") : "Entrar"}
           </Link>
           <Link
             to="/referencias"
@@ -242,7 +270,7 @@ function SettingsPage() {
             {note}
           </p>
         ) : null}
-      </main>
+      </div>
     </AppChrome>
   );
 }

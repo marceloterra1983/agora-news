@@ -26,6 +26,7 @@ import { Route as ApiPushRouteImport } from './routes/api/push'
 import { Route as ApiWatchRouteImport } from './routes/api/watch'
 import { Route as MateriaIdRouteImport } from './routes/materia.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiHealthLiveRouteImport } from './routes/api/health.live'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthLiveRoute = ApiHealthLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => ApiHealthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,13 +130,14 @@ export interface FileRoutesByFullPath {
   '/salvos': typeof SalvosRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
-  '/api/health': typeof ApiHealthRoute
+  '/api/health': typeof ApiHealthRouteWithChildren
   '/api/ingest': typeof ApiIngestRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/push': typeof ApiPushRoute
   '/api/watch': typeof ApiWatchRoute
   '/materia/$id': typeof MateriaIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/health/live': typeof ApiHealthLiveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -143,13 +150,14 @@ export interface FileRoutesByTo {
   '/salvos': typeof SalvosRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
-  '/api/health': typeof ApiHealthRoute
+  '/api/health': typeof ApiHealthRouteWithChildren
   '/api/ingest': typeof ApiIngestRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/push': typeof ApiPushRoute
   '/api/watch': typeof ApiWatchRoute
   '/materia/$id': typeof MateriaIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/health/live': typeof ApiHealthLiveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -163,13 +171,14 @@ export interface FileRoutesById {
   '/salvos': typeof SalvosRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
-  '/api/health': typeof ApiHealthRoute
+  '/api/health': typeof ApiHealthRouteWithChildren
   '/api/ingest': typeof ApiIngestRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/push': typeof ApiPushRoute
   '/api/watch': typeof ApiWatchRoute
   '/materia/$id': typeof MateriaIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/health/live': typeof ApiHealthLiveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/api/watch'
     | '/materia/$id'
     | '/api/auth/$'
+    | '/api/health/live'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/api/watch'
     | '/materia/$id'
     | '/api/auth/$'
+    | '/api/health/live'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/api/watch'
     | '/materia/$id'
     | '/api/auth/$'
+    | '/api/health/live'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -242,7 +254,7 @@ export interface RootRouteChildren {
   SalvosRoute: typeof SalvosRoute
   ApiCacheRoute: typeof ApiCacheRoute
   ApiFeedRoute: typeof ApiFeedRoute
-  ApiHealthRoute: typeof ApiHealthRoute
+  ApiHealthRoute: typeof ApiHealthRouteWithChildren
   ApiIngestRoute: typeof ApiIngestRoute
   ApiProfileRoute: typeof ApiProfileRoute
   ApiPushRoute: typeof ApiPushRoute
@@ -372,8 +384,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health/live': {
+      id: '/api/health/live'
+      path: '/live'
+      fullPath: '/api/health/live'
+      preLoaderRoute: typeof ApiHealthLiveRouteImport
+      parentRoute: typeof ApiHealthRoute
+    }
   }
 }
+
+interface ApiHealthRouteChildren {
+  ApiHealthLiveRoute: typeof ApiHealthLiveRoute
+}
+
+const ApiHealthRouteChildren: ApiHealthRouteChildren = {
+  ApiHealthLiveRoute: ApiHealthLiveRoute,
+}
+
+const ApiHealthRouteWithChildren = ApiHealthRoute._addFileChildren(
+  ApiHealthRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -386,7 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalvosRoute: SalvosRoute,
   ApiCacheRoute: ApiCacheRoute,
   ApiFeedRoute: ApiFeedRoute,
-  ApiHealthRoute: ApiHealthRoute,
+  ApiHealthRoute: ApiHealthRouteWithChildren,
   ApiIngestRoute: ApiIngestRoute,
   ApiProfileRoute: ApiProfileRoute,
   ApiPushRoute: ApiPushRoute,

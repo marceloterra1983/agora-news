@@ -1,5 +1,3 @@
-import phoneLayoutCss from "./phone-layout.css?raw";
-
 /** CSS no <head> — o publicado não pode depender só de /assets/*.css.
  * Viewport (phone-shell): width=device-width, initial-scale=1, viewport-fit=cover
  * — pinch-zoom livre, sem trava de escala. */
@@ -21,10 +19,10 @@ a[data-cta=open-x]{display:grid;place-items:center;width:44px;height:44px;paddin
 html.dark a[data-cta=open-x]{border-color:#3d3832;color:#f0e9e0}
 [data-story]{border-bottom:1px solid #d5cfbf;padding:24px 16px;max-width:min(42rem,100%);margin:0 auto;overflow-wrap:anywhere}
 html.dark [data-story]{border-bottom-color:#2c2824}
-[data-story] h3,[data-story] h3 a{font-family:var(--font-display),Georgia,serif;font-size:1.25rem;line-height:1.35;font-weight:500;margin:0;text-align:left;overflow-wrap:anywhere}
+[data-story] h2,[data-story] h2 a{font-family:var(--font-display,Georgia),serif;font-size:1.25rem;line-height:1.35;font-weight:500;margin:0;text-align:left;overflow-wrap:anywhere}
 [data-story] p{color:#6e695d;font-size:14px;margin:0 0 8px}
 html.dark [data-story] p{color:#9a9286}
 [data-post]{max-width:min(48rem,100%);margin:0 auto;overflow-wrap:anywhere}
-[data-post] h1{font-family:var(--font-display),Georgia,serif;font-size:1.4rem;line-height:1.35;font-weight:500;letter-spacing:-0.01em;margin:12px 0 0;text-align:left;text-wrap:pretty}
+[data-post] h1{font-family:var(--font-display,Georgia),serif;font-size:1.4rem;line-height:1.35;font-weight:500;letter-spacing:-0.01em;margin:12px 0 0;text-align:left;text-wrap:pretty}
 [data-post] p{font-size:1.05rem;line-height:1.6;margin:16px 0 0}
-` + phoneLayoutCss;
+`;

@@ -16,7 +16,6 @@ export function logTiming(op: string, ms: number, extra?: Record<string, string 
     .map(([k, v]) => `${k}=${v}`)
     .join(" ");
   const line = bits ? `[agora] ${op} ${ms}ms ${bits}` : `[agora] ${op} ${ms}ms`;
-  // eslint-disable-next-line no-console
   console.info(line);
 }
 

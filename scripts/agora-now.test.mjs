@@ -38,7 +38,11 @@ test("watch extras without a matching section stay out of IA", () => {
   );
   assert.equal(parseWatchSection({ batch_name: "x-watch:brasil", source: "x-watch" }), "brasil");
   assert.equal(parseWatchSection({ batch_name: "x-watch", source: "x-watch" }), "");
-  assert.match(read("src/lib/news/influence.ts"), /catalogFor|extrasForSection|w\.section/);
+  assert.match(read("src/lib/news/extra-fontes.ts"), /extrasForSection/);
+  assert.doesNotMatch(
+    read("src/lib/news/influence.ts"),
+    /list(All|User)WatchAccounts/,
+  );
   assert.match(read("src/lib/news/server-profile.ts"), /allProfiles\(\)/);
   assert.doesNotMatch(read("src/lib/news/server-profile.ts"), /profilesFor\(\)\.map/);
 });
@@ -50,12 +54,12 @@ test("inApp is true only when the last tweet id is in the section feed map", () 
   assert.match(src, /feedMap|feed:/);
 });
 
-test("ingest translates the full post, keeps QT out of content, caches Story[]", () => {
+test("ingest translates the full post and keeps QT out of content", () => {
   const src = read("src/lib/news/ingest.ts");
   assert.match(src, /translateToPt\(content/);
   assert.doesNotMatch(src, /content: `\$\{content\}\$\{quoteBit\}`/);
   assert.doesNotMatch(src, /translateToPt\(`\$\{content\}/);
-  assert.match(src, /storiesFromDbPosts|dbPostToStory/);
+  assert.match(src, /persistedRows/);
   assert.match(src, /written\.ok/);
   const route = read("src/routes/api/ingest.ts");
   assert.match(route, /result\.ok \? 200 : 502/);
@@ -98,6 +102,7 @@ test("reader card has avatar, word ellipsis and no-referrer on the header face",
 test("unread mark is the left stripe only, without a Novo chip", () => {
   const card = read("src/components/news/story-card.tsx");
   assert.match(card, /data-unread-mark=""/);
+  assert.match(card, /Não lida/);
   assert.match(card, /absolute bottom-6 left-0 top-6 w-0\.5 rounded-full bg-mark/);
   assert.doesNotMatch(card, />\s*Novo\s*</);
   assert.doesNotMatch(card, /text-mark-fg/);

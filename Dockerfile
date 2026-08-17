@@ -35,6 +35,8 @@ COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build --chown=node:node /app/.output ./.output
+COPY --from=build --chown=node:node /app/scripts/migrate.mjs ./scripts/migrate.mjs
+COPY --from=build --chown=node:node /app/migrations ./migrations
 
 # Nitro empacota o JS do PGLite mas não os sidecars wasm/data (ENOENT em runtime).
 RUN cp node_modules/@electric-sql/pglite/dist/pglite.data \
