@@ -249,7 +249,7 @@ test("prefs are owner-scoped and dedicated-table failures stay failures", async 
   });
   t.after(() => server.close());
   const prefs = await server.ssrLoadModule(
-    `/src/lib/news/prefs-server.ts?prefs-test=${Date.now()}`,
+    `/src/lib/news/prefs-store.server.ts?prefs-test=${Date.now()}`,
   );
 
   const calls = [];
@@ -286,7 +286,7 @@ test("prefs are owner-scoped and dedicated-table failures stay failures", async 
     /prefs_write_503/,
   );
   assert.equal(calls.some((call) => call.url.includes("/rest/v1/posts")), false);
-  assert.doesNotMatch(read("src/lib/news/prefs-server.ts"), /cloudKv|rest\/v1\/posts/);
+  assert.doesNotMatch(read("src/lib/news/prefs-store.server.ts"), /cloudKv|rest\/v1\/posts/);
 });
 
 test("push ownership and endpoint validation fail closed", async (t) => {
@@ -409,6 +409,7 @@ test("private stores have no synthetic-post write or read path", () => {
     "src/lib/news/watch.ts",
     "src/lib/news/profile-store.ts",
     "src/lib/news/prefs-server.ts",
+    "src/lib/news/prefs-store.server.ts",
     "src/lib/news/push-server.ts",
   ]) {
     const source = read(path);

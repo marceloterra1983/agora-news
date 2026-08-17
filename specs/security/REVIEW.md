@@ -53,7 +53,9 @@ Proof is the artifact, not the source import: `CI_ARTIFACT_GATES=1` scans
 `.output/public/assets` and forbids `adminHeaders`,
 `missing_supabase_secret_key`, `SUPABASE_SECRET_KEY`, and `sb_secret`.
 `prefs-sync.ts` may import only the server-fn stubs, never `./admin` or
-`readUserPrefs` / `writeUserPrefs`.
+`readUserPrefs` / `writeUserPrefs`. Owner I/O lives in
+`prefs-store.server.ts`; the client-imported `prefs-server.ts` has types
+and `createServerFn` only.
 
 ## Release note
 
