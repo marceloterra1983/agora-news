@@ -1,3 +1,4 @@
+import { categoryForCsvRow } from "./csv-category.mjs";
 import type { Story } from "./types";
 
 export function parseCsv(text: string): string[][] {
@@ -158,9 +159,11 @@ export function storiesFromCsv(text: string): Story[] {
           : "";
     const media = col(header, row, "Mídia", "Midia", "media");
     const image = extractImage(media, col(header, row, "Imagem", "image", "foto"));
-    const category = (col(header, row, "Categoria", "category", "secao") || "ai")
-      .toLowerCase()
-      .replace(/\s+/g, "-");
+    const category = categoryForCsvRow(
+      source,
+      col(header, row, "Categoria", "category", "secao"),
+    );
+    if (!category) continue;
     const story: Story = {
       id: id || `${source}-${publishedAt}`,
       title: title || body.slice(0, 140) || original.slice(0, 140) || "Sem título",
@@ -172,7 +175,7 @@ export function storiesFromCsv(text: string): Story[] {
       publishedAt: publishedAt || new Date().toISOString(),
       source,
       sourceLabel,
-      category: category || "ai",
+      category,
       media: media || (image ? "Foto" : "Nenhuma"),
       batch: col(header, row, "batch", "planilha") || "AGORA_FEED",
     };

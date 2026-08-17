@@ -2,7 +2,7 @@ import { keepLastPost } from "./last-post";
 import { persistLastPost } from "./last-post-store";
 import { fillCatalogGaps } from "./last-post-store";
 import { allProfiles, blurbFor, profileByHandle } from "./profiles";
-import { sectionOfHandle } from "./section-catalog.mjs";
+import { catalogFor, filterStoriesForCatalog, sectionOfHandle } from "./section-catalog.mjs";
 import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
 import { invalidateFeedCache } from "./feed";
@@ -167,7 +167,7 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
     invalidateFeedCache();
     invalidateFontesLastCache();
     try {
-      const stories = storiesFromDbPosts(rows, "ai");
+      const stories = storiesFromDbPosts(rows);
       const byCat = new Map<string, typeof stories>();
       for (const story of stories) {
         const list = byCat.get(story.category) ?? [];
@@ -175,7 +175,9 @@ export async function runIngest(opts?: { limitHandles?: number; withProfiles?: b
         byCat.set(story.category, list);
       }
       for (const [cat, list] of byCat) {
-        await cloudKvSet(CACHE_KEYS.list(cat, PAGE_SIZE), JSON.stringify(list.slice(0, PAGE_SIZE)), 60);
+        const scoped = filterStoriesForCatalog(list, catalogFor(cat, catalogInput));
+        if (!scoped.length) continue;
+        await cloudKvSet(CACHE_KEYS.list(cat, PAGE_SIZE), JSON.stringify(scoped.slice(0, PAGE_SIZE)), 60);
       }
     } catch {
       /* cache is optional */

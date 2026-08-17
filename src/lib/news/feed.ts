@@ -99,6 +99,16 @@ export function invalidateFeedCache() {
   void invalidateNewsCache();
 }
 
+async function payloadFromCache(
+  payload: FeedPayload,
+  slug: Category,
+  catalog?: SectionCatalog,
+): Promise<FeedPayload> {
+  const live = catalog ?? (await serverCatalogFor(slug));
+  const stories = filterStories(payload.stories, slug, undefined, live);
+  return { ...payload, stories, count: stories.length };
+}
+
 export function peekStory(id: string): Story | null {
   for (const entry of cache.values()) {
     const hit = entry.payload.stories.find((s) => s.id === id);
@@ -115,36 +125,48 @@ export async function loadFeed(
   refresh = false,
   category: Category = DEFAULT_SECTION,
   fromX = false,
+  catalog?: SectionCatalog,
 ): Promise<FeedPayload> {
   const section = getSection(category);
   const key = section.slug;
   const hit = cache.get(key);
   const age = hit ? Date.now() - hit.at : Number.POSITIVE_INFINITY;
 
-  if (!fromX && !refresh && hit && age < SOFT_MS) return hit.payload;
+  if (!fromX && !refresh && hit && age < SOFT_MS) {
+    return payloadFromCache(hit.payload, key, catalog);
+  }
 
   const jobKey = `${key}:${fromX ? "x" : "s"}`;
   const pending = inflight.get(jobKey);
 
   if (!fromX && !refresh && hit && age < HARD_MS) {
-    if (!pending) void startJob(section.slug, fromX, jobKey);
-    return hit.payload;
+    if (!pending) void startJob(section.slug, fromX, jobKey, catalog);
+    return payloadFromCache(hit.payload, key, catalog);
   }
 
   if (pending) return pending;
-  return startJob(section.slug, fromX, jobKey);
+  return startJob(section.slug, fromX, jobKey, catalog);
 }
 
-function startJob(slug: Category, fromX: boolean, jobKey: string): Promise<FeedPayload> {
-  const job = loadFeedJob(slug, fromX);
+function startJob(
+  slug: Category,
+  fromX: boolean,
+  jobKey: string,
+  catalog?: SectionCatalog,
+): Promise<FeedPayload> {
+  const job = loadFeedJob(slug, fromX, catalog);
   inflight.set(jobKey, job);
   void job.finally(() => inflight.delete(jobKey));
   return job;
 }
 
-async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayload> {
+async function loadFeedJob(
+  category: Category,
+  fromX: boolean,
+  catalog?: SectionCatalog,
+): Promise<FeedPayload> {
   const section = getSection(category);
-  const catalog = await serverCatalogFor(section.slug);
+  const live = catalog ?? (await serverCatalogFor(section.slug));
   const previous = lastGood.get(section.slug);
   let remote: Story[] = [];
   let x: Awaited<ReturnType<typeof loadXStories>> = {
@@ -153,7 +175,7 @@ async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayl
     available: false,
   };
   try {
-    const remoteJob = downloadSupabase(section.slug, { limit: FIRST_LIMIT, accounts: catalog.handles });
+    const remoteJob = downloadSupabase(section.slug, { limit: FIRST_LIMIT, accounts: live.handles });
     const xJob = fromX
       ? loadXStories(section.slug, true)
       : Promise.resolve<Awaited<ReturnType<typeof loadXStories>>>({
@@ -183,15 +205,16 @@ async function loadFeedJob(category: Category, fromX: boolean): Promise<FeedPayl
 
   if (!remote.length) {
     if (previous) {
-      cache.set(section.slug, { at: Date.now(), payload: previous });
-      return previous;
+      const scoped = await payloadFromCache(previous, section.slug, live);
+      cache.set(section.slug, { at: Date.now(), payload: scoped });
+      return scoped;
     }
     const fallback = fallbackPayload(section.slug);
     cache.set(section.slug, { at: Date.now(), payload: fallback });
     return fallback;
   }
 
-  const stories = filterStories(mergeStories(remote, x.stories), section.slug, undefined, catalog);
+  const stories = filterStories(mergeStories(remote, x.stories), section.slug, undefined, live);
   const payload = wrap(
     stories,
     true,

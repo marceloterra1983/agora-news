@@ -6,10 +6,13 @@ import test from "node:test";
 import { AI_PROFILES } from "../src/lib/news/catalog-ai.mjs";
 import { BRASIL_PROFILES } from "../src/lib/news/catalog-brasil.mjs";
 import { TECH_PROFILES } from "../src/lib/news/catalog-tech.mjs";
+import { categoryForCsvRow } from "../src/lib/news/csv-category.mjs";
+import { storiesFromCsv } from "../src/lib/news/csv.ts";
 import {
   catalogFor,
   filterStoriesForCatalog,
   handleInCatalog,
+  scopeCachedStories,
   sectionOfHandle,
 } from "../src/lib/news/section-catalog.mjs";
 
@@ -38,12 +41,31 @@ function story(account, category) {
     excerpt: "e",
     body: "b",
     original: "o",
+    url: `https://x.com/${account}/status/1`,
+    image: null,
+    publishedAt: "2026-08-17T12:00:00.000Z",
     source: account,
     sourceLabel: `@${account}`,
     account,
     category,
+    media: "Nenhuma",
+    batch: "cache-leak",
   };
 }
+
+function csvText(rows) {
+  const header =
+    "ID do Post,Conta de origem,Síntese (1 linha),Categoria,Tradução (PT-BR),Conteúdo";
+  const body = rows
+    .map(
+      ([id, account, title, category]) =>
+        `${id},${account},${title},${category},corpo,original`,
+    )
+    .join("\n");
+  return `${header}\n${body}\n`;
+}
+
+const SILENT_AI = /\|\|\s*["']ai["']|category:\s*["']ai["']|section\s*\|\|\s*["']ai["']/;
 
 test("IA feed drops a leaked category=ai post whose handle is not in catalogFor(ai)", () => {
   const catalog = catalogFor("ai", { profiles: FIXTURES, extras: EXTRAS });
@@ -111,5 +133,98 @@ test("real IA seed does not include Renan; feed/ingest/supabase share catalogFor
     "src/lib/news/server-news.ts",
   ]) {
     assert.doesNotMatch(read(rel), /renansantosmbl/i, `${rel} must not special-case one handle`);
+  }
+});
+
+test("cached Story[] with a Renan-like leak is filtered before return", () => {
+  const catalog = catalogFor("ai", { profiles: FIXTURES, extras: EXTRAS });
+  const leaked = [story("RenanSantosMBL", "ai"), story("OpenAI", "ai")];
+  const listed = scopeCachedStories(leaked, catalog);
+  assert.equal(
+    listed.some((s) => /renan/i.test(s.source)),
+    false,
+    "cached snapshot must not be returned as-is",
+  );
+  assert.deepEqual(
+    listed.map((s) => s.source),
+    ["OpenAI"],
+  );
+
+  const supabase = read("src/lib/news/supabase.ts");
+  assert.match(supabase, /scopeCachedStories|filterStoriesForCatalog/);
+  assert.doesNotMatch(supabase, /age < WARM_MS\) \{\s*return hit\.stories/);
+  assert.doesNotMatch(supabase, /return storeList\(key,\s*remote/);
+  const afterKv = supabase.slice(supabase.indexOf("cacheGetJson<Story[]>"));
+  assert.match(
+    afterKv.slice(0, 900),
+    /scopedCachedList|scopeCachedStories|filterStoriesForCatalog/,
+    "Redis/KV snapshot must be filtered after cacheGetJson",
+  );
+
+  const feed = read("src/lib/news/feed.ts");
+  assert.doesNotMatch(feed, /age < SOFT_MS\) return hit\.payload/);
+  assert.doesNotMatch(feed, /return previous;/);
+  assert.match(feed, /filterStories\(|scopeCachedStories|filterStoriesForCatalog/);
+
+  const xSearch = read("src/lib/news/x-search.ts");
+  assert.match(xSearch, /filterStoriesForCatalog|scopeCachedStories|catalogFor/);
+});
+
+test("csv parser never assigns ai to a handle outside the IA catalog", () => {
+  const ai = catalogFor("ai", { profiles: ALL_PROFILES });
+  assert.notEqual(categoryForCsvRow("RenanSantosMBL", ""), "ai");
+  assert.notEqual(categoryForCsvRow("RenanSantosMBL", "ai"), "ai");
+  assert.notEqual(categoryForCsvRow("nobody", ""), "ai");
+  assert.equal(categoryForCsvRow("OpenAI", ""), "ai");
+  assert.equal(categoryForCsvRow("OpenAI", "ai"), "ai");
+  const parsed = storiesFromCsv(
+    csvText([
+      ["1", "RenanSantosMBL", "titulo vazado", ""],
+      ["2", "RenanSantosMBL", "titulo marcado ai", "ai"],
+      ["3", "nobody", "desconhecido", ""],
+      ["4", "OpenAI", "ok vazio", ""],
+      ["5", "OpenAI", "ok ai", "ai"],
+    ]),
+  );
+  for (const row of parsed) {
+    if (row.category === "ai") {
+      assert.equal(handleInCatalog(row.source, ai), true, `${row.source} must not inherit ai`);
+    }
+  }
+  assert.equal(
+    parsed.some((s) => /renan/i.test(s.source) && s.category === "ai"),
+    false,
+  );
+  assert.ok(parsed.some((s) => s.source.toLowerCase() === "openai" && s.category === "ai"));
+
+  const fallback = storiesFromCsv(read("src/lib/news/agora-feed.csv"));
+  for (const row of fallback) {
+    if (row.category === "ai") {
+      assert.equal(handleInCatalog(row.source, ai), true, `fallback ${row.source}`);
+    }
+  }
+});
+
+test("ingest/csv/feed/supabase/x-search/cloud-kv do not silently default to ai", () => {
+  const ingest = read("src/lib/news/ingest.ts");
+  assert.doesNotMatch(ingest, /storiesFromDbPosts\([^)]*["']ai["']/);
+  assert.doesNotMatch(ingest, SILENT_AI);
+
+  const csv = read("src/lib/news/csv.ts");
+  assert.doesNotMatch(csv, SILENT_AI);
+  assert.doesNotMatch(csv, /\|\|\s*["']ai["']/);
+
+  assert.doesNotMatch(read("src/lib/news/csv-category.mjs"), SILENT_AI);
+
+  for (const rel of [
+    "src/lib/news/feed.ts",
+    "src/lib/news/supabase.ts",
+    "src/lib/news/x-search.ts",
+    "src/lib/news/cloud-kv.ts",
+    "src/lib/news/csv-category.mjs",
+  ]) {
+    assert.doesNotMatch(read(rel), /\|\|\s*["']ai["']/, `${rel} silent || "ai"`);
+    assert.doesNotMatch(read(rel), /category:\s*["']ai["']/, `${rel} category: "ai"`);
+    assert.doesNotMatch(read(rel), /section\s*\|\|\s*["']ai["']/, `${rel} section || "ai"`);
   }
 });
