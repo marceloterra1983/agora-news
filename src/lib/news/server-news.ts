@@ -92,11 +92,11 @@ export const loadNews = createServerFn({ method: "GET" })
 export const loadStory = createServerFn({ method: "GET" })
   .validator((id: string) => String(id || ""))
   .handler(async ({ data: id }) => {
-    const full = await downloadPostById(id);
-    if (!full) return null;
-    const hydrated = await hydrateStory(full);
-    if (hydrated.body && hydrated.body !== (full.body || "").trim()) {
-      void persistHydratedBody(full, hydrated.body);
+    const base = await downloadPostById(id);
+    if (!base) return null;
+    const hydrated = await hydrateStory(base);
+    if (hydrated.body && hydrated.body !== (base.body || "").trim()) {
+      void persistHydratedBody(base, hydrated.body);
     }
     return hydrated;
   });

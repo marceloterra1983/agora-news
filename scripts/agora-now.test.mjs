@@ -38,7 +38,7 @@ test("watch extras without a matching section stay out of IA", () => {
   );
   assert.equal(parseWatchSection({ batch_name: "x-watch:brasil", source: "x-watch" }), "brasil");
   assert.equal(parseWatchSection({ batch_name: "x-watch", source: "x-watch" }), "");
-  assert.match(read("src/lib/news/extra-fontes.ts"), /extrasForSection/);
+  assert.match(read("src/lib/news/fontes-sort.ts"), /extrasForSection/);
   assert.doesNotMatch(
     read("src/lib/news/influence.ts"),
     /list(All|User)WatchAccounts/,
