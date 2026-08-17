@@ -143,10 +143,18 @@ test("watch reads and deletes are owner-scoped while cron union is deduplicated"
   assert.equal(posted.handle, "alice");
   assert.equal(posted.section, "tech");
 
-  await watch.unregisterWatch("user-a", "ALICE");
+  const wiped = await watch.unregisterWatch("user-a", "ALICE");
+  assert.equal(wiped, false);
+  assert.equal(
+    calls.filter((call) => call.init.method === "DELETE").length,
+    0,
+  );
+
+  await watch.unregisterWatch("user-a", "ALICE", "tech");
   const deletion = calls.find((call) => call.init.method === "DELETE").url;
   assert.match(deletion, /user_id=eq\.user-a/);
   assert.match(deletion, /handle=eq\.alice/);
+  assert.match(deletion, /section=eq\.tech/);
   assert.doesNotMatch(deletion, /user-b/);
 
   const route = read("src/routes/api/watch.ts");

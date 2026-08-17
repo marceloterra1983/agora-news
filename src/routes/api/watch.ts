@@ -57,7 +57,8 @@ export const Route = createFileRoute("/api/watch")({
           /^@+/,
           "",
         );
-        const ok = await unregisterWatch(userId, handle);
+        const section = String(url.searchParams.get("section") || "");
+        const ok = await unregisterWatch(userId, handle, section);
         return Response.json({ ok }, { status: ok ? 200 : 502 });
       },
     },

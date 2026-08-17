@@ -81,9 +81,12 @@ function pushWatch(row: ExtraFonte) {
   }).catch(() => {});
 }
 
-function dropWatch(handle: string) {
+function dropWatch(handle: string, section?: string) {
   if (typeof window === "undefined") return;
-  void fetch(`/api/watch?handle=${encodeURIComponent(norm(handle))}`, {
+  const theme = String(section || "").trim();
+  const qs = new URLSearchParams({ handle: norm(handle) });
+  if (theme) qs.set("section", theme);
+  void fetch(`/api/watch?${qs}`, {
     method: "DELETE",
   }).catch(() => {});
 }
@@ -144,8 +147,10 @@ export function addExtraFonte(row: ExtraFonte): ExtraFonte[] {
 
 export function removeExtraFonte(handle: string): ExtraFonte[] {
   const key = norm(handle).toLowerCase();
-  dropWatch(handle);
-  return write(loadExtraFontes().filter((x) => x.handle.toLowerCase() !== key));
+  const current = loadExtraFontes();
+  const hit = current.find((x) => x.handle.toLowerCase() === key);
+  dropWatch(handle, hit?.section);
+  return write(current.filter((x) => x.handle.toLowerCase() !== key));
 }
 
 export function syncExtraFontes() {
