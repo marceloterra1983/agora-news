@@ -24,4 +24,5 @@ Better Auth em `DATABASE_URL`; as tabelas Supabase são aplicadas manualmente
 pelos scripts documentados no runbook.
 
 Consulte [docs/production-runbook.md](docs/production-runbook.md) para variáveis,
-callbacks OAuth e ordem segura de implantação/rotação.
+autenticação email/senha com allowlist, implantação, rollback e backup
+criptografado no Google Drive.

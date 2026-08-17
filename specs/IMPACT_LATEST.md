@@ -1,4 +1,11 @@
-## Target
+## Status
+
+Concluído no commit `07c2e256`: Better Auth email/senha para uma conta
+allowlisted, sem o broker Grok OAuth. Os testes de contrato, typecheck e lint
+passam; resta apenas a verificação operacional de build/rollback e a manutenção
+de índices/documentação.
+
+## Target (histórico)
 
 Replace the unavailable Grok OAuth broker with Better Auth email/password for
 one allowlisted production account, following
@@ -15,15 +22,16 @@ one allowlisted production account, following
 3. **Browser auth** — `src/lib/auth/client.ts` supplies session/sign-out to
    `login.tsx`, `app-menu.tsx`, `use-current-user.ts` and auth middleware.
 4. **Login UI** — `src/routes/login.tsx` owns signed-out, pending and signed-in
-   states. It currently renders only Google/X actions.
-5. **Preview popup** — `vite.config.ts`, `popup.server.ts`, `providers.ts` and
-   `preview.ts` form a broker-only path and have no purpose after replacement.
+   email/password states, including the temporary allowlisted signup flow.
+5. **Removed broker path** — the former popup/provider modules are historical;
+   no production caller should depend on them.
 6. **Release configuration** — `.env.example`, `compose.yml`,
    `scripts/ci-release-smoke.sh` and `docs/production-runbook.md` describe and
    inject the production auth contract.
 7. **Regression gates** — `production-config.behavior.test.mjs`,
    `agora-next.test.mjs`, `accessibility-contract.test.mjs` and
-   `mobile-viewport.test.mjs` encode current startup, login and popup behavior.
+   `mobile-viewport.test.mjs` encode current startup, login and responsive
+   behavior.
 
 ## Purpose, callers and contracts
 
@@ -47,23 +55,20 @@ one allowlisted production account, following
 
 ## Test coverage
 
-- Existing configuration tests prove fail-closed startup but require
-  `GROK_AUTH_*` and do not cover an email allowlist.
-- Existing login tests cover heading, signed-in state and logout only.
-- Existing mobile test references `popup.server.ts` as a source-size fixture.
-- Gap: no behavior test covers normalized allowlist, bootstrap default-closed,
-  12–128 character passwords, unauthorized sign-in/sign-up, safe errors or zero
-  remaining broker consumers.
+- Configuration and single-user auth tests cover fail-closed startup, the
+  normalized allowlist, bootstrap default-closed behavior, password bounds,
+  unauthorized sign-in/sign-up and safe errors.
+- Accessibility and release tests cover the login state, responsive behavior
+  and absence of broker consumers.
 
-## Risk: High (8/10)
+## Residual risk: operational
 
-This modifies a shared authentication API and production startup. An incorrect
-`authConfigured` blocks every private API; an incorrect hook permits another
-account; an incomplete popup deletion can break preview/build gates.
+The implementation risk is closed by the current behavior gates. Remaining
+risk is operational: verify a fresh production build/rollback and keep the
+allowlisted-account policy explicit.
 
-## Recommended action
+## Recommended action (closeout)
 
-Proceed as `e04s07` via TDD: pure runtime/allowlist contract first, Better Auth
-server hook second, client/login third, broker deletion fourth, infra/docs and
-real bootstrap last. Preserve `/api/auth/*`, persistent Postgres, cookie/CSRF
-settings, session consumers and owner-scoped APIs. Add no package.
+Preserve `/api/auth/*`, persistent Postgres, cookie/CSRF settings, session
+consumers and owner-scoped APIs. Do not add a new auth broker or infrastructure
+layer without a measured requirement.

@@ -6,10 +6,10 @@ update public.posts
   where category is null
     and coalesce(batch_name, '') <> 'x-profile';
 
-drop index if exists public.posts_posted_at_desc;
-drop index if exists public.posts_category_posted;
-drop index if exists public.posts_post_id;
-drop index if exists public.posts_account;
+-- Keep existing indexes: this script is safe to re-run on production.
+-- One category/date index serves ai, tech and brasil without redundant copies.
+create index if not exists posts_category_posted_at_idx
+  on public.posts (category, posted_at desc);
 
 create index if not exists posts_feed_ai_posted
   on public.posts (posted_at desc)

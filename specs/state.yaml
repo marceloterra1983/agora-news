@@ -1,4 +1,4 @@
-active_flow: plan_work
+active_flow: verify
 active_epic_id: e04
 active_story_id: e04s07
 active_bug_id: null
@@ -7,7 +7,7 @@ release:
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: plan
+  current_step: verify
   next_skill: develop-tdd
   completed_steps:
     - brainstorming
@@ -27,11 +27,11 @@ project_cycle:
     - deepen-architecture
     - security-review
 git:
-  branch: codex/full-hardening
+  branch: main
   baseline: 2cf09fe
-  hash: 74ca104
+  hash: 07c2e256
 handoff:
-  last_step_completed: "e04s07 single-user email authentication design and implementation plan approved"
+  last_step_completed: "e04s07 single-user email authentication implemented and deployed"
   open_decisions: []
   required_reading:
     - docs/superpowers/specs/2026-08-16-full-hardening-design.md
@@ -45,10 +45,10 @@ learned_preferences:
 workspace_facts:
   - "Production is Docker Nitro behind Nginx on 127.0.0.1:3080"
   - "Canonical public feed is Supabase public.posts"
-  - "Production auth requires persistent Postgres and canonical OAuth callbacks"
+  - "Production auth requires persistent Postgres, canonical origin and one allowlisted email"
   - "Private Better Auth user domains require server-enforced ownership"
   - "CI installs Chromium and makes every browser/live smoke mandatory"
 human_gates:
   - "Create/install/disable/revoke Supabase API and signing keys"
-  - "Provide persistent DATABASE_URL and production OAuth credentials/callback registration"
+  - "Keep production DATABASE_URL and allowlisted email available on the host"
   - "Approve exact-ID legacy cleanup and final signing-secret revocation"
