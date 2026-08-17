@@ -128,22 +128,6 @@ export function groupStyle(id?: string | null): { background: string; color: str
   return { background: t.bg, color: t.fg };
 }
 
-export function groupChipStyle(id?: string | null, on = false): {
-  background: string;
-  color: string;
-  boxShadow?: string;
-} {
-  const t = groupTone(id);
-  if (on) {
-    return {
-      background: t.pip,
-      color: "#f4efe4",
-      boxShadow: `inset 0 0 0 1px color-mix(in oklab, #000 22%, ${t.pip})`,
-    };
-  }
-  return { background: t.bg, color: t.fg };
-}
-
 export function groupPip(id?: string | null): string {
   return groupTone(id).pip;
 }

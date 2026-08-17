@@ -1,7 +1,5 @@
 export const DEFAULT_SECTION = "ai";
 
-export const FALLBACK_CATEGORIES = ["ai"] as const;
-
 export type Category = string;
 
 export type StoryQuoteCard = {

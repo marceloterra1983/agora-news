@@ -1,7 +1,6 @@
 import { AI_PROFILES } from "./catalog-ai.mjs";
 import { BRASIL_PROFILES } from "./catalog-brasil.mjs";
 import { TECH_PROFILES } from "./catalog-tech.mjs";
-import { taxonomyFor } from "./catalog-taxonomy.mjs";
 import { DEFAULT_SECTION, type Category } from "./types";
 
 export type ProfileGroup = string;
@@ -21,15 +20,6 @@ export const GROUP_LABELS: Record<string, string> = {
   imprensa: "Imprensa",
   builders: "Devs",
   novos: "Outros",
-};
-
-export const GROUP_HINTS: Record<string, string> = {
-  labs: "Contas oficiais das empresas e dos produtos",
-  lideres: "Quem comanda as empresas de IA",
-  pesquisa: "Pesquisadores e autores de papers",
-  imprensa: "Newsletters e quem seleciona o que importa",
-  builders: "Engenheiros e makers que constroem com IA",
-  novos: "Sem grupo definido ou adicionados por você.",
 };
 
 export const GROUP_ORDER: ProfileGroup[] = [
@@ -63,19 +53,6 @@ export function blurbFor(handle: string, fallbackName?: string): string {
   return fallbackName
     ? `${fallbackName} é uma fonte acompanhada no feed de IA.`
     : "Fonte acompanhada no feed de IA.";
-}
-
-export function profileGroups(section?: Category | null) {
-  const list = profilesFor(section);
-  const tax = taxonomyFor(section);
-  return tax.order
-    .map((group) => ({
-      group,
-      label: tax.labels[group],
-      hint: tax.hints[group],
-      profiles: list.filter((p) => p.group === group),
-    }))
-    .filter((g) => g.profiles.length > 0);
 }
 
 function fold(s: string): string {

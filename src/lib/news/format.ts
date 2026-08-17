@@ -36,10 +36,6 @@ export function readerDate(now = new Date()): string {
   return `${week}, ${d.getDate()} de ${monthLabel}`;
 }
 
-export function mastheadDate(now = new Date()): string {
-  return readerDate(now);
-}
-
 export function relativeTime(iso: string, now = Date.now()): string {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return "";
@@ -55,19 +51,6 @@ export function relativeTime(iso: string, now = Date.now()): string {
   return new Date(t).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
-  });
-}
-
-export function longDate(iso: string): string {
-  const t = new Date(iso);
-  if (Number.isNaN(t.getTime())) return "";
-  return t.toLocaleString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 

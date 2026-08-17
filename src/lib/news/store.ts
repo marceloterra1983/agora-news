@@ -49,8 +49,3 @@ export const useNewsStore = create<NewsState>()(
     },
   ),
 );
-
-export function savedStories(): Story[] {
-  const { savedIds, stories } = useNewsStore.getState();
-  return savedIds.map((id) => stories[id]).filter(Boolean) as Story[];
-}

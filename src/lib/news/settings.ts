@@ -133,10 +133,6 @@ export function resetSettings(): AppSettings {
   return { ...DEFAULT_SETTINGS };
 }
 
-export function typefaceHref(id: Typeface): string | null {
-  return TYPEFACES.find((t) => t.id === id)?.href ?? null;
-}
-
 export function typefaceFamily(id: Typeface): string {
   switch (id) {
     case "literata":

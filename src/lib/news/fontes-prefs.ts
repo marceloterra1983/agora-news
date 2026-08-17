@@ -82,10 +82,6 @@ export function isDisabled(handle: string): boolean {
   return getDisabled().includes(normHandle(handle));
 }
 
-export function isNotifyHandle(handle: string): boolean {
-  return getNotifyHandles().includes(normHandle(handle));
-}
-
 export function toggleStar(handle: string): boolean {
   return toggleIn(STAR_KEY, handle);
 }
@@ -100,10 +96,6 @@ export function toggleDisabled(handle: string): boolean {
 
 export function setDisabled(handle: string, on: boolean): void {
   setIn(DISABLED_KEY, handle, on);
-}
-
-export function toggleNotifyHandle(handle: string): boolean {
-  return toggleIn(NOTIFY_KEY, handle);
 }
 
 export function setNotifyHandle(handle: string, on: boolean): void {
