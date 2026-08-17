@@ -49,12 +49,15 @@ Rollback: restaure a imagem anterior sem desfazer migrations aditivas. Preserve
 ## Backup periódico
 
 O host executa `/home/marce/news/scripts/backup-production.sh` diariamente às
-03:30 (horário local), pelo crontab do usuário `marce`. Cada snapshot contém o
-dump custom do Postgres, bundle Git, imagem Docker, manifesto e hashes; o `.env`
-é criptografado com age. O script evita concorrência, valida o dump e conserva
-os 30 snapshots completos mais recentes.
+03:30 (horário local), pelo crontab do usuário `marce`. Em seguida,
+`/home/marce/news/scripts/backup-to-drive.sh` copia o snapshot para o remote
+privado `gdrive:` e conserva os 30 snapshots remotos mais recentes. Cada
+snapshot contém o dump custom do Postgres, bundle Git, imagem Docker, manifesto
+e hashes; o `.env` é criptografado com age. Os scripts evitam concorrência,
+validam o dump e verificam os hashes locais e remotos.
 
 A identidade privada age fica fora do repositório em
-`/home/marce/.config/age/news-backup-key.txt`, com modo `600`. Copie o snapshot
-e essa identidade para um destino externo seguro; sem a identidade o `.env`
-criptografado não pode ser restaurado.
+`/home/marce/.config/age/news-backup-key.txt`, com modo `600`. O remote do
+`rclone` fica em `/home/marce/.config/rclone/rclone.conf`, também com modo `600`.
+Copie o snapshot e essa identidade para um destino externo seguro; sem a
+identidade o `.env` criptografado não pode ser restaurado.
