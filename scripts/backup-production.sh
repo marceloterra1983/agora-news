@@ -105,6 +105,10 @@ test -s "$staging/news-image.tar.gz"
 cp --preserve=mode "$APP_ROOT/compose.yml" "$staging/compose.yml"
 cp --preserve=mode "$APP_ROOT/Dockerfile" "$staging/Dockerfile"
 cp --preserve=mode "$APP_ROOT/docs/production-runbook.md" "$staging/production-runbook.md"
+CRON_WRAPPER="/home/marce/ops/scripts/cron-alert-wrap.sh"
+test -r "$CRON_WRAPPER"
+cp --preserve=mode "$CRON_WRAPPER" "$staging/cron-alert-wrap.sh"
+crontab -l > "$staging/crontab.txt"
 
 original_env_hash="$(sha256sum "$APP_ROOT/.env" | awk '{print $1}')"
 restored_env_hash="$(age -d -i "$AGE_IDENTITY" "$staging/.env.age" | sha256sum | awk '{print $1}')"
@@ -117,6 +121,8 @@ printf 'env_restore_check=ok\n' > "$staging/env-restore-check.txt"
   printf '%s\n' 'docker_image=ok'
   printf '%s\n' 'env_encryption=ok'
   printf '%s\n' 'restore_hash_check=ok'
+  printf '%s\n' 'cron_schedule=ok'
+  printf '%s\n' 'cron_alert_wrapper=ok'
 } > "$staging/backup-summary.txt"
 
 find "$staging" -maxdepth 1 -type f ! -name SHA256SUMS -printf '%p\n' | sort | xargs sha256sum > "$staging/SHA256SUMS"
