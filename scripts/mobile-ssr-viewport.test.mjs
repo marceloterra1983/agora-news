@@ -183,6 +183,6 @@ test("phone media query contract is 640px", () => {
   assert.equal(PHONE_MEDIA, "(max-width: 640px)");
   assert.equal(
     VIEWPORT_CONTENT,
-    "width=device-width, initial-scale=1, viewport-fit=cover",
+    "width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no",
   );
 });

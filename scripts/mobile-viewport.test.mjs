@@ -50,7 +50,7 @@ test("phone layout is driven by max-width 640px media query", () => {
   const critical = readFileSync(join(root, "src/lib/news/critical.css.ts"), "utf8");
   assert.match(css, /@media \(max-width: 640px\)/);
   assert.match(css, /html\[data-shell="phone"\]/);
-  assert.match(css, /100dvw/);
+  assert.doesNotMatch(css, /100vw|100dvw/);
   assert.doesNotMatch(css, /--agora-type: 22px/);
   assert.doesNotMatch(css, /font-size: 22px !important/);
   assert.match(styles, /phone-layout\.css/);
