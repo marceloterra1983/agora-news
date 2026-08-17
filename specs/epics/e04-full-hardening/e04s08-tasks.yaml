@@ -45,7 +45,7 @@ tasks:
     verify: "node --experimental-strip-types --test --test-name-pattern='log|cron|backup|restore' scripts/release-gates.behavior.test.mjs scripts/backup-contract.test.mjs && logrotate -d ops/logrotate/agora-news >/dev/null"
     risk: P1
     security: low
-    status: failing
+    status: passing
     allure: { severity: high, categories: ["Operations", "Backup", "Recovery"] }
   - id: 6
     description: "Align live release documentation and preserve the no-rotation key decision"
