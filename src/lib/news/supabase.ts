@@ -1,7 +1,10 @@
 import { PAGE_SIZE } from "./page-size.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
-import { normalizeSection, type Category, type Story } from "./types";
+import { isNewsRow } from "./news-row.mjs";
 import { supabaseApiKeyHeaders } from "./supabase-rest";
+import { normalizeSection, type Category, type Story } from "./types";
+
+export { isNewsRow };
 
 function env(name: string): string {
   if (typeof process === "undefined" || !process.env) return "";
@@ -78,27 +81,6 @@ export function invalidateSupabaseList() {
 function handle(raw: string): { source: string; sourceLabel: string } {
   const cleaned = raw.replace(/^@+/, "").trim() || "fonte";
   return { source: cleaned, sourceLabel: `@${cleaned}` };
-}
-
-function isNewsRow(p: DbPost): boolean {
-  if (!p.post_id) return false;
-  if (
-    p.category === "profile" ||
-    p.category === "watch" ||
-    p.category === "lock"
-  )
-    return false;
-  if (p.category === "cache" || p.category === "push" || p.category === "prefs")
-    return false;
-  if (
-    p.batch_name === "x-profile" ||
-    p.batch_name === "x-watch" ||
-    p.batch_name === "cache"
-  )
-    return false;
-  if (/^(prfl_|watch_|lock_|kv_|push_)/i.test(p.post_id)) return false;
-  if (p.account === "cache") return false;
-  return true;
 }
 
 export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {

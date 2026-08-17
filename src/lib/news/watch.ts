@@ -102,13 +102,17 @@ export async function registerWatch(
 export async function unregisterWatch(
   userId: string,
   handle: string,
+  section?: string,
 ): Promise<boolean> {
   const uid = userId.trim();
   const key = norm(handle);
-  if (!uid || !key) return false;
+  const theme = String(section || "")
+    .trim()
+    .toLowerCase();
+  if (!uid || !key || !["ai", "tech", "brasil"].includes(theme)) return false;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_watches?user_id=eq.${encodeURIComponent(uid)}&handle=eq.${encodeURIComponent(key)}`,
+      `${SUPABASE_URL}/rest/v1/user_watches?user_id=eq.${encodeURIComponent(uid)}&handle=eq.${encodeURIComponent(key)}&section=eq.${encodeURIComponent(theme)}`,
       {
         method: "DELETE",
         headers: adminHeaders(),
