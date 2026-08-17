@@ -3,9 +3,9 @@ active_epic_id: e04
 active_story_id: e04s08
 active_bug_id: null
 release:
-  target_version: "3bfa24f"
-  last_tag: "news-news:3bfa24f"
-  last_publish: "2026-08-17T17:06:20-03:00"
+  target_version: "2ab7717"
+  last_tag: "news-news:2ab7717"
+  last_publish: "2026-08-17T17:31:14-03:00"
 epic_cycle:
   current_step: verify
   next_skill: verification-before-completion
@@ -29,10 +29,10 @@ project_cycle:
     - security-review
 git:
   branch: main
-  baseline: 3bfa24fecdfd0ef2fdf5f07b98c27f0b9abae0c0
-  hash: 3bfa24fecdfd0ef2fdf5f07b98c27f0b9abae0c0
+  baseline: 2ab7717b18efea14e6666e0f15d74f48f4fd2378
+  hash: 2ab7717b18efea14e6666e0f15d74f48f4fd2378
 handoff:
-  last_step_completed: "S2 deployed news-news:3bfa24f; S3–S5 close remaining audit UI/docs/dead code"
+  last_step_completed: "Deployed news-news:2ab7717 with S3 UI; rollback is 3bfa24f"
   open_decisions: []
   required_reading:
     - docs/superpowers/specs/2026-08-16-full-hardening-design.md
