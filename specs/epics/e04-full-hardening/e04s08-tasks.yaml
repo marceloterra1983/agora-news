@@ -38,7 +38,7 @@ tasks:
     verify: "node --experimental-strip-types --test scripts/accessibility-contract.test.mjs scripts/mobile-viewport.test.mjs"
     risk: P2
     security: none
-    status: failing
+    status: passing
     allure: { severity: normal, categories: ["Accessibility", "PWA", "UI"] }
   - id: 5
     description: "Bound host cron logs and include schedule/wrapper in production snapshots"
