@@ -23,6 +23,21 @@ test("prefs-sync imports only server-fn stubs, never admin or owner I/O", () => 
   assert.doesNotMatch(sync, /readUserPrefs|writeUserPrefs|adminHeaders/);
 });
 
+test("prefs I/O lives in a .server module, not the client-imported file", () => {
+  const surface = read("src/lib/news/prefs-server.ts");
+  assert.doesNotMatch(surface, /from ["']\.\/admin["']/);
+  assert.doesNotMatch(surface, /export async function readUserPrefs/);
+  assert.doesNotMatch(surface, /export async function writeUserPrefs/);
+  assert.doesNotMatch(surface, /adminHeaders/);
+  assert.match(surface, /prefs-store\.server/);
+
+  const store = read("src/lib/news/prefs-store.server.ts");
+  assert.match(store, /from ["']\.\/admin["']/);
+  assert.match(store, /export async function readUserPrefs/);
+  assert.match(store, /export async function writeUserPrefs/);
+  assert.match(store, /adminHeaders/);
+});
+
 test("browser assets never ship adminHeaders or the Supabase secret env name", () => {
   if (process.env.CI_ARTIFACT_GATES !== "1") return;
   const assets = join(root, ".output/public/assets");
