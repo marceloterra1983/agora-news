@@ -1,7 +1,7 @@
-active_flow: verify
+active_flow: fix_bug
 active_epic_id: e04
 active_story_id: e04s08
-active_bug_id: null
+active_bug_id: BUG-2026-08-19T000500
 release:
   target_version: "60261c8"
   last_tag: "news-news:60261c8"
@@ -18,8 +18,13 @@ epic_cycle:
     - plan-work
     - execute-plan
 bug_cycle:
-  current_step: null
-  completed_steps: []
+  current_step: 5
+  completed_steps:
+    - investigate-bug
+    - diagnose-root
+    - develop-tdd
+    - validate-fix
+  next_skill: release-branch
 project_cycle:
   current_phase: verify
   completed_steps:
@@ -32,14 +37,11 @@ git:
   baseline: 60261c8b66a2d84c9711d086370905659947003e
   hash: 60261c8b66a2d84c9711d086370905659947003e
 handoff:
-  last_step_completed: "PWA phone scale fix live on news-news:60261c8; rollback is 94270b0"
+  last_step_completed: "video player muted autoplay + no-referrer; awaiting land"
   open_decisions: []
   required_reading:
-    - docs/superpowers/specs/2026-08-16-full-hardening-design.md
-    - specs/IMPACT_LATEST.md
-    - specs/product/SCOPE_LATEST.yaml
-    - specs/epics/e04-full-hardening/epic.yaml
-  next_skill: verification-before-completion
+    - specs/bugs/BUG-2026-08-19-video-autoplay.md
+  next_skill: release-branch
 learned_preferences:
   - "PT-BR, concise status, complete implementation requested and design approved"
   - "Keep the currently active keys; do not rotate or revoke without a new incident-driven decision"

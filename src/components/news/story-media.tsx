@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { StoryAsset } from "@/lib/news/types";
 
@@ -54,14 +54,29 @@ export function StoryAssetBlock({
   priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const node = videoRef.current;
+    if (!node || asset.type !== "video") return;
+    node.muted = true;
+    const play = node.play();
+    if (play) void play.catch(() => {});
+  }, [asset.type, asset.url]);
   if (asset.type === "video") {
     return (
       <video
+        ref={videoRef}
         controls
+        autoPlay
+        muted
+        loop
+        playsInline
+        // video.twimg.com devolve 403 se o browser mandar Referer do site.
+        // @ts-expect-error React omite referrerPolicy em VideoHTMLAttributes.
+        referrerPolicy="no-referrer"
         aria-label={`Vídeo: ${alt}`}
         width={asset.width ?? 16}
         height={asset.height ?? 9}
-        playsInline
         preload={priority ? "auto" : "metadata"}
         poster={asset.poster}
         className="mt-6 w-full rounded-lg bg-hero"
