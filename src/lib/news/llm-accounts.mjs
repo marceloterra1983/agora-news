@@ -180,6 +180,10 @@ function withActive(store) {
   return { ...store, activeAccountId: store.accounts[0]?.id || null };
 }
 
+export function persistLlmAccountThenList(store, command, env = {}) {
+  return publicLlmPrefs(applyLlmCommand(store, command), env);
+}
+
 export function applyLlmCommand(store, command) {
   const current = parseLlmStore(store);
   if (command.type === "upsert") {

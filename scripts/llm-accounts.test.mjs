@@ -11,6 +11,7 @@ import {
   LLM_PROVIDERS,
   llmWarningFor,
   maskKey,
+  emptyLlmStore,
   mergePrefsPreservingLlm,
   persistValidatedStatus,
   publicLlmPrefs,
@@ -227,12 +228,23 @@ test("write-guard: LLM account mutations are owner-authenticated server fns", ()
   assert.doesNotMatch(src, /localStorage/);
 });
 
-test("settings expose the IA accounts section without echoing the key", () => {
+test("settings split cadastro and modelo em uso without an email-like label", () => {
   const page = read("src/routes/configuracoes.tsx");
   const ui = read("src/components/news/llm-accounts-settings.tsx");
   assert.match(page, /LlmAccountsSettings/);
-  assert.match(ui, /Contas de IA/);
-  assert.match(ui, /Usar esta/);
+  assert.match(ui, /Modelo em uso/);
+  assert.match(ui, /Contas cadastradas/);
+  assert.match(ui, /id=["']modelo-em-uso["']/);
+  assert.match(ui, /id=["']contas-cadastradas["']/);
+  assert.match(ui, /type=["']text["']/);
+  assert.doesNotMatch(ui, /type=["']email["']/);
+  assert.doesNotMatch(ui, /placeholder=["'][^"']*@[^"']*["']/);
+  assert.match(ui, /placeholder=["']Pessoal["']/);
+  assert.match(ui, /Trabalho/);
+  assert.match(ui, /name=["']llm-account-label["']/);
+  assert.match(ui, /autoComplete=["']off["']/);
+  assert.match(ui, /Modelo em uso[\s\S]*selectLlmAccount[\s\S]*Contas cadastradas/);
+  assert.doesNotMatch(ui, /Contas cadastradas[\s\S]*selectLlmAccount/);
   assert.match(ui, /type=["']password["']/);
   assert.doesNotMatch(ui, /account\.key\b/);
   assert.match(ui, /keyHint/);
@@ -244,6 +256,25 @@ test("settings expose the IA accounts section without echoing the key", () => {
   assert.match(ui, /modelOptionsFor/);
   assert.doesNotMatch(ui, /placeholder=\{defaultModelFor\(provider\)\}/);
   assert.doesNotMatch(ui, /Gemini|Mistral|DeepSeek|Cohere|Groq\b/i);
+});
+
+test("upsert then list returns the saved account without live fetch", async () => {
+  const { persistLlmAccountThenList } = await import("../src/lib/news/llm-accounts.mjs");
+  const listed = persistLlmAccountThenList(emptyLlmStore(), {
+    type: "upsert",
+    label: "Pessoal",
+    key: "sk-test-abcd",
+    provider: "openai",
+    model: "gpt-4.1-mini",
+    status: "ok",
+  });
+  assert.ok(listed.accounts.length > 0);
+  assert.equal(listed.accounts[0].label, "Pessoal");
+  assert.equal(listed.accounts[0].provider, "openai");
+  assert.equal(listed.accounts[0].model, "gpt-4.1-mini");
+  assert.equal(listed.accounts[0].keyHint, "…abcd");
+  assert.equal(listed.activeAccountId, listed.accounts[0].id);
+  assert.equal(listed.accounts[0].key, undefined);
 });
 
 test("askGrok resolves owner/env via resolver, not process.env alone", () => {

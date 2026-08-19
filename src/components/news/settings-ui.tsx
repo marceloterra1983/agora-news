@@ -68,9 +68,17 @@ export function ThemeSwitch({
   );
 }
 
-export function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
+export function SettingsSection({
+  title,
+  children,
+  id,
+}: {
+  title: string;
+  children: ReactNode;
+  id?: string;
+}) {
   return (
-    <section className="mt-8">
+    <section id={id} className="mt-8">
       <h2 className="text-xs font-semibold uppercase tracking-widest text-mute">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
