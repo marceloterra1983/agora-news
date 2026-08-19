@@ -1,7 +1,10 @@
 export const LLM_PREFS_KEY: "_llm";
+export const LLM_PROVIDERS: readonly ["openai", "anthropic", "xai"];
+export const LLM_PROVIDER_LABELS: { openai: "OpenAI"; anthropic: "Claude"; xai: "Grok" };
+export const DEFAULT_MODELS: { openai: "gpt-4.1-mini"; anthropic: "claude-sonnet-4-5"; xai: "grok-4.5" };
 export const DEFAULT_XAI_MODEL: "grok-4.5";
 
-export type LlmProvider = "xai";
+export type LlmProvider = "openai" | "anthropic" | "xai";
 export type LlmStatus = "ok" | "auth" | "quota" | "error";
 export type LlmSource = "account" | "env" | "none";
 
@@ -32,15 +35,30 @@ export type LlmPrefsPublic = {
   envCheckedAt: string | null;
 };
 
+export type LlmUpsertResult = LlmPrefsPublic & {
+  saved: boolean;
+  validateStatus: LlmStatus;
+  validateWarning: string | null;
+};
+
 export type LlmRuntime = {
   source: LlmSource;
+  provider: LlmProvider;
   key: string;
   model: string;
   accountId: string | null;
 };
 
 export type LlmCommand =
-  | { type: "upsert"; id?: string; label: string; key?: string; model?: string }
+  | {
+      type: "upsert";
+      id?: string;
+      label: string;
+      key?: string;
+      model?: string;
+      provider?: LlmProvider | string;
+      status?: LlmStatus;
+    }
   | { type: "delete"; id: string }
   | { type: "select"; id: string | null }
   | {
@@ -51,6 +69,10 @@ export type LlmCommand =
       checkedAt?: string;
     };
 
+export function isLlmProvider(value: unknown): value is LlmProvider;
+export function defaultModelFor(provider: string): string;
+export function providerLabel(provider: string): string;
+export function persistValidatedStatus(status: LlmStatus | string): boolean;
 export function maskKey(key: string): string;
 export function envLlmKey(env?: Record<string, string | undefined>): string;
 export function emptyLlmStore(): LlmStore;
