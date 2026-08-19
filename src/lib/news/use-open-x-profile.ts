@@ -13,6 +13,7 @@ export function useOpenXProfile() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<FoundProfile | null>(null);
   const [summary, setSummary] = useState("");
+  const [llmWarning, setLlmWarning] = useState<string | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   const [openFrom, setOpenFrom] = useState<OpenFrom>(null);
   const [openingHandle, setOpeningHandle] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export function useOpenXProfile() {
     setOpeningHandle(null);
     setLoading(false);
     setSummarizing(false);
+    setLlmWarning(null);
     setError(null);
   }, []);
 
@@ -32,6 +34,7 @@ export function useOpenXProfile() {
     seq.current += 1;
     setResult(null);
     setSummary("");
+    setLlmWarning(null);
     setError(null);
     setOpenFrom(null);
     setOpeningHandle(null);
@@ -48,6 +51,7 @@ export function useOpenXProfile() {
     setSummarizing(false);
     setError(null);
     setSummary("");
+    setLlmWarning(null);
     try {
       const profile = await lookupXProfile({ data: { handle: q } });
       if (id !== seq.current) return;
@@ -73,6 +77,7 @@ export function useOpenXProfile() {
       if (extra.summary) {
         setSummary(extra.summary);
       }
+      if (extra.llmWarning) setLlmWarning(extra.llmWarning);
     } catch {
       if (id !== seq.current) return;
       setResult(null);
@@ -105,6 +110,7 @@ export function useOpenXProfile() {
     error,
     result,
     summary,
+    llmWarning,
     summarizing,
     openFrom,
     openingHandle,

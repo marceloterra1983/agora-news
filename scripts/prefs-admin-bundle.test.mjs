@@ -36,6 +36,12 @@ test("prefs I/O lives in a .server module, not the client-imported file", () => 
   assert.match(store, /export async function readUserPrefs/);
   assert.match(store, /export async function writeUserPrefs/);
   assert.match(store, /adminHeaders/);
+  assert.match(store, /stripLlmFromPrefs|mergePrefsPreservingLlm/);
+
+  const llm = read("src/lib/news/llm-server.ts");
+  assert.doesNotMatch(llm, /from ["']\.\/admin["']/);
+  assert.doesNotMatch(llm, /adminHeaders/);
+  assert.match(llm, /llm-store\.server/);
 });
 
 test("browser assets never ship adminHeaders or the Supabase secret env name", () => {

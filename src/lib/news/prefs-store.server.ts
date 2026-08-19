@@ -1,10 +1,11 @@
 /** Server-only. Vite must not ship this to the browser — keep the `.server` suffix. */
 import { adminHeaders, SUPABASE_URL } from "./admin";
+import { mergePrefsPreservingLlm, stripLlmFromPrefs } from "./llm-accounts.mjs";
 import type { CloudPrefs } from "./prefs-server";
 
-export async function readUserPrefs(
+export async function readUserPrefsRaw(
   userId: string,
-): Promise<CloudPrefs | null> {
+): Promise<Record<string, unknown> | null> {
   const uid = userId.trim();
   if (!uid) throw new Error("prefs_owner_required");
   const res = await fetch(
@@ -19,12 +20,12 @@ export async function readUserPrefs(
   if (!prefs || typeof prefs !== "object" || Array.isArray(prefs)) {
     throw new Error("prefs_read_invalid");
   }
-  return prefs as CloudPrefs;
+  return prefs as Record<string, unknown>;
 }
 
-export async function writeUserPrefs(
+export async function writeUserPrefsRaw(
   userId: string,
-  prefs: CloudPrefs,
+  prefs: Record<string, unknown>,
 ): Promise<void> {
   const uid = userId.trim();
   if (!uid) throw new Error("prefs_owner_required");
@@ -51,4 +52,26 @@ export async function writeUserPrefs(
     },
   );
   if (!res.ok) throw new Error(`prefs_write_${res.status}`);
+}
+
+export async function readUserPrefs(
+  userId: string,
+): Promise<CloudPrefs | null> {
+  const raw = await readUserPrefsRaw(userId);
+  if (!raw) return null;
+  return stripLlmFromPrefs(raw) as CloudPrefs;
+}
+
+export async function writeUserPrefs(
+  userId: string,
+  prefs: CloudPrefs,
+): Promise<void> {
+  if (!prefs || typeof prefs !== "object" || Array.isArray(prefs)) {
+    throw new Error("prefs_write_invalid");
+  }
+  const existing = await readUserPrefsRaw(userId);
+  await writeUserPrefsRaw(
+    userId,
+    mergePrefsPreservingLlm(prefs as Record<string, unknown>, existing),
+  );
 }

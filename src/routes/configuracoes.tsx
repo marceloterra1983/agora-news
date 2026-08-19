@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogIn, RotateCcw, Smartphone } from "lucide-react";
 import { AppChrome } from "@/components/news/app-chrome";
+import { LlmAccountsSettings } from "@/components/news/llm-accounts-settings";
 import {
   SettingsChoice,
   SettingsRow,
@@ -208,6 +209,8 @@ function SettingsPage() {
           />
           {notify.error ? <p className="mt-2 text-sm text-mark" role="alert">{notify.error}</p> : null}
         </SettingsSection>
+
+        <LlmAccountsSettings />
 
         <SettingsSection title="Neste aparelho">
           <SettingsRow
