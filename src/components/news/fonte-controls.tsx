@@ -128,7 +128,10 @@ export function FonteControls({
             starred ? "text-mark" : "text-mute active:text-mark",
           )}
           data-fonte-action="star"
-          onClick={() => onToggleStar(handle)}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleStar(handle);
+          }}
         >
           <Star
             className="size-3.5"
@@ -149,7 +152,10 @@ export function FonteControls({
             notify ? "text-mark" : "text-mute active:text-ink",
           )}
           data-fonte-action="notify"
-          onClick={() => onToggleNotify(handle)}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleNotify(handle);
+          }}
         >
           {notify ? (
             <Bell className="size-3.5" fill="currentColor" strokeWidth={0} />
@@ -165,7 +171,10 @@ export function FonteControls({
           aria-pressed={!disabled}
           className={cn(ACTION, disabled ? "text-mute" : "text-ink")}
           data-fonte-action="power"
-          onClick={() => onToggleDisabled(handle)}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleDisabled(handle);
+          }}
         >
           <Power className="size-3.5" strokeWidth={1.75} />
         </button>

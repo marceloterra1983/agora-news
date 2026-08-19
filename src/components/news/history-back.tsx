@@ -1,6 +1,7 @@
 import { useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import type { Category } from "@/lib/news/types";
+import { peekLeavePage } from "@/lib/news/feed-scroll";
+import { normalizeSection, type Category } from "@/lib/news/types";
 import { IconBtn } from "./icon-btn";
 
 export function HistoryBackButton({
@@ -17,6 +18,15 @@ export function HistoryBackButton({
       onClick={() => {
         if (router.history.canGoBack()) {
           router.history.back();
+          return;
+        }
+        const leave = peekLeavePage();
+        if (leave?.path === "/fontes") {
+          void router.navigate({
+            to: "/fontes",
+            search: { secao: normalizeSection(leave.secao || fallbackSecao) },
+            resetScroll: false,
+          });
           return;
         }
         void router.navigate({

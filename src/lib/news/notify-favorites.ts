@@ -226,12 +226,9 @@ export async function setFavoriteNotifyHandle(handle: string, on: boolean) {
     ? [...new Set([...current, key])]
     : current.filter((item) => item !== key);
   if (current.includes(key) === on) return "granted" as const;
-  if (on) {
-    const result = await enableFavoriteNotify(next);
-    if (result !== "granted") return result;
-  }
   setNotifyHandle(key, on);
-  if (isNotifyEnabled()) void subscribeWebPush(next);
+  if (on) await enableFavoriteNotify(next);
+  else if (isNotifyEnabled()) void subscribeWebPush(next);
   return "granted" as const;
 }
 

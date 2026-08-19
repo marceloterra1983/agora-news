@@ -108,6 +108,61 @@ test("notify persists locally when permission is granted even if push fails", as
   assert.match(String(values.get("agora-fontes-notify-v1")), /theo/);
 });
 
+test("notify persists the handle when permission is denied", async (t) => {
+  const descriptors = new Map(
+    ["window", "navigator", "Notification"].map((key) => [
+      key,
+      Object.getOwnPropertyDescriptor(globalThis, key),
+    ]),
+  );
+  const previousFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+    for (const [key, descriptor] of descriptors) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else delete globalThis[key];
+    }
+  });
+
+  const values = new Map();
+  const localStorage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+  };
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { Notification: {}, localStorage, dispatchEvent() {} },
+  });
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { serviceWorker: { ready: new Promise(() => {}) } },
+  });
+  Object.defineProperty(globalThis, "Notification", {
+    configurable: true,
+    value: {
+      permission: "denied",
+      requestPermission: async () => "denied",
+    },
+  });
+  globalThis.fetch = async () => new Response("nope", { status: 503 });
+
+  const { createServer } = await import("vite");
+  const server = await createServer({
+    configFile: false,
+    logLevel: "silent",
+    resolve: { alias: { "@": join(root, "src") } },
+    server: { middlewareMode: true },
+  });
+  t.after(() => server.close());
+  const notify = await server.ssrLoadModule(
+    `/src/lib/news/notify-favorites.ts?denied=${Date.now()}`,
+  );
+
+  assert.equal(await notify.setFavoriteNotifyHandle("elonmusk", true), "granted");
+  assert.match(String(values.get("agora-fontes-notify-v1")), /elonmusk/);
+});
+
 test("Playwright: all five profile actions stay above the tab bar and respond", async (t) => {
   if (!(await live())) {
     unavailable(t, `smoke precisa de ${base} no ar`);

@@ -2,7 +2,8 @@ import { AppChrome } from "@/components/news/app-chrome";
 import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
 import { FontesChip } from "@/components/news/fontes-chip";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
-import { loadExtraFontes, syncExtraFontes } from "@/lib/news/extra-fontes";
+import { useExtraFontes } from "@/lib/news/use-extra-fontes";
+import { useFontesLeave } from "@/lib/news/use-fontes-leave";
 import {
   FONTES_SORT_KEY,
   FONTES_SORTS,
@@ -47,22 +48,14 @@ function FontesPage() {
   const prefs = useFontesPrefs(secao);
   const [openHandle, setOpenHandle] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
-  const [extras, setExtras] = useState<ReturnType<typeof loadExtraFontes>>([]);
+  const extras = useExtraFontes();
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
   const [groupIds, setGroupIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    const refresh = () => setExtras(loadExtraFontes());
-    refresh();
-    syncExtraFontes();
-    window.addEventListener("agora-extra-fontes", refresh);
-    return () => window.removeEventListener("agora-extra-fontes", refresh);
-  }, []);
+  useFontesLeave(secao, openHandle, setOpenHandle);
 
   useEffect(() => {
     setGroupIds(allGroupIds(secao));
-    setOpenHandle(null);
     setPicked(new Set());
     setPicking(false);
     return onCustomGroups(() => setGroupIds(allGroupIds(secao)));
