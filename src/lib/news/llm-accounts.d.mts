@@ -97,4 +97,9 @@ export function stripLlmFromPrefs<T>(prefs: T): T;
 export function mergePrefsPreservingLlm<T extends object>(incoming: T, existing: unknown): T & {
   [LLM_PREFS_KEY]?: unknown;
 };
+export function persistLlmAccountThenList(
+  store: unknown,
+  command: LlmCommand,
+  env?: Record<string, string | undefined>,
+): LlmPrefsPublic;
 export function applyLlmCommand(store: unknown, command: LlmCommand): LlmStore;

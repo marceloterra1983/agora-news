@@ -182,9 +182,11 @@ function withTimeout(init) {
   return { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) };
 }
 
-export async function validateLlmKey({ provider, key, model, fetchImpl = fetch }) {
+export async function validateLlmKey({ provider, key, model: _model, fetchImpl = fetch }) {
   try {
-    const { url, init } = validationRequest(provider, key, model);
+    // Chat ping fails on model/body mismatches and looks like "nada cadastrado".
+    // GET /models only checks whether the key is accepted.
+    const { url, init } = modelsListRequest(provider, key);
     const res = await fetchImpl(url, withTimeout(init));
     const status = classifyLlmHttpStatus(res.status);
     return { status, persist: persistValidatedStatus(status), warning: validateWarningFor(status) };
