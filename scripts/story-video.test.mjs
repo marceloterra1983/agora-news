@@ -20,3 +20,12 @@ test("article video autoplays muted without sending a page referrer", () => {
   assert.match(block, /\.play\(/);
   assert.match(block, /\.muted\s*=\s*true/);
 });
+
+test("document referrer is same-origin so Chromium media can fetch X MP4s", () => {
+  const src = read("src/routes/__root.tsx");
+  assert.match(src, /["']Referrer-Policy["']\s*:\s*["']same-origin["']/);
+  assert.match(
+    src,
+    /name:\s*["']referrer["'][\s\S]{0,80}content:\s*["']same-origin["']/,
+  );
+});
