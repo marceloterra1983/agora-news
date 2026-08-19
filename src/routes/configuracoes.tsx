@@ -190,7 +190,7 @@ function SettingsPage() {
             on={settings.highlightUnread}
             onClick={() => set({ highlightUnread: !settings.highlightUnread })}
             title="Marcar posts novos"
-            hint="Destaque até você abrir o app e ler."
+            hint="Destaque some ao passar no feed ou após 12 horas."
           />
           <SettingsToggle
             on={notify.enabled}

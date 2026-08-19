@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
@@ -8,6 +8,8 @@ import { type Category } from "@/lib/news/types";
 import { normHandle } from "@/lib/news/fontes-prefs";
 import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
+import { noteFirstUnread } from "@/lib/news/unread";
+import { observeUnreadImpressions } from "@/lib/news/unread-impression";
 import { useUnread } from "@/lib/news/use-unread";
 import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,8 @@ export function Feed({
   const prefs = useFontesPrefs(category);
   const unread = useUnread();
   const seedBaseline = unread.seedBaseline;
+  const markRead = unread.markRead;
+  const feedRef = useRef<HTMLDivElement>(null);
   const seed = initial ?? newsFromFallback(category, query);
   const [older, setOlder] = useState<NewsPayload["stories"]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -96,6 +100,22 @@ export function Feed({
     seedBaseline(stories.map((s) => s.id));
   }, [data?.meta.live, stories, seedBaseline, unread.hasBaseline]);
 
+  useEffect(() => {
+    if (!unread.ready || !unread.hasBaseline) return;
+    noteFirstUnread(stories.map((s) => s.id));
+  }, [stories, unread.ready, unread.hasBaseline]);
+
+  const unreadKey = stories
+    .filter((s) => unread.isUnread(s.id))
+    .map((s) => s.id)
+    .join("\0");
+
+  useEffect(() => {
+    const node = feedRef.current;
+    if (!node) return;
+    return observeUnreadImpressions(node, markRead);
+  }, [unreadKey, markRead]);
+
   async function loadMore() {
     const last = rawStories.at(-1);
     if (!last || loadingMore) return;
@@ -132,7 +152,7 @@ export function Feed({
   }
 
   return (
-    <div data-feed="" aria-busy={isFetching || loadingMore} className="mx-auto max-w-2xl pt-3 max-sm:max-w-none">
+    <div ref={feedRef} data-feed="" aria-busy={isFetching || loadingMore} className="mx-auto max-w-2xl pt-3 max-sm:max-w-none">
       {isError ? <p className="mb-3 text-sm text-mark" role="alert">Feed ao vivo indisponível. Exibindo o conteúdo disponível.</p> : null}
       {updatedLabel ? (
         <p className="mb-4 text-[12px] text-mute" role="status">Atualizado {updatedLabel}</p>

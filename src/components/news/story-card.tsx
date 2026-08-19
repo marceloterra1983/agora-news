@@ -26,6 +26,7 @@ export function StoryCard({
     return (
       <article
         data-story=""
+        data-story-id={story.id}
         data-unread={unread ? "1" : "0"}
         className="relative border-b border-line py-6 first:pt-5"
       >

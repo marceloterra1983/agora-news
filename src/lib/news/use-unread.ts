@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getBaselineIds,
   getReadIds,
+  getUnreadSince,
   hasBaseline,
+  isUnreadNow,
   markRead as persistRead,
   seedBaseline as persistBaseline,
   subscribeUnread,
@@ -12,10 +14,12 @@ export function useUnread() {
   const [ready, setReady] = useState(false);
   const [read, setRead] = useState<Set<string>>(new Set());
   const [baseline, setBaseline] = useState<Set<string>>(new Set());
+  const [since, setSince] = useState<Map<string, number>>(new Map());
 
   const refresh = useCallback(() => {
     setRead(getReadIds());
     setBaseline(getBaselineIds());
+    setSince(getUnreadSince());
     setReady(true);
   }, []);
 
@@ -27,12 +31,15 @@ export function useUnread() {
   const isUnread = useCallback(
     (id: string) => {
       if (!ready || !id) return false;
-      if (!baseline.size) return false;
-      if (read.has(id)) return false;
-      if (baseline.has(id)) return false;
-      return true;
+      return isUnreadNow({
+        hasBaseline: baseline.size > 0,
+        inRead: read.has(id),
+        inBaseline: baseline.has(id),
+        firstUnreadAt: since.get(id) ?? null,
+        now: Date.now(),
+      });
     },
-    [ready, read, baseline],
+    [ready, read, baseline, since],
   );
 
   const markRead = useCallback(
