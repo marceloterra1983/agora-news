@@ -1,6 +1,7 @@
 import type { LlmAuthKind, LlmProvider, LlmStatus } from "./llm-accounts.mjs";
 
 export const LLM_SYSTEM: string;
+export const CLAUDE_CODE_IDENTITY: string;
 
 export type LlmValidateResult = {
   status: LlmStatus;

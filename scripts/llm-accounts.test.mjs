@@ -144,11 +144,13 @@ test("envLlmKey reads XAI then GROK and public prefs hide the key", () => {
 test("delete active account promotes another or clears", () => {
   const two = applyLlmCommand(store, {
     type: "upsert",
-    label: "xAI trabalho",
+    label: "OpenAI",
     key: "other-key-wxyz",
     id: "acc-2",
+    provider: "openai",
   });
   assert.equal(two.activeAccountId, "acc-1");
+  assert.equal(two.accounts.length, 2);
   const afterDeleteActive = applyLlmCommand(two, { type: "delete", id: "acc-1" });
   assert.equal(afterDeleteActive.activeAccountId, "acc-2");
   assert.equal(afterDeleteActive.accounts.length, 1);
@@ -188,6 +190,8 @@ test("prefs merge keeps _llm secrets and strip removes them from the client blob
   assert.deepEqual(merged._llm, store);
   assert.deepEqual(stripLlmFromPrefs(merged), { theme: "light", starred: ["a"] });
   assert.equal(Object.hasOwn(stripLlmFromPrefs(merged), "_llm"), false);
+  const wipeAttempt = mergePrefsPreservingLlm({ theme: "light", _llm: { accounts: [] } }, existing);
+  assert.deepEqual(wipeAttempt._llm, store);
 });
 
 test("allowed providers are only OpenAI, Claude and Grok with defaults", () => {
@@ -228,30 +232,26 @@ test("write-guard: LLM account mutations are owner-authenticated server fns", ()
   assert.doesNotMatch(src, /localStorage/);
 });
 
-test("settings split cadastro and modelo em uso without an email-like label", () => {
+test("settings slots pick the active account without an email-like label", () => {
   const page = read("src/routes/configuracoes.tsx");
   const ui = readdirSync(join(root, "src/components/news"))
     .filter((name) => name.startsWith("llm-"))
     .map((name) => read(`src/components/news/${name}`))
     .join("\n");
   assert.match(page, /LlmAccountsSettings/);
-  assert.match(ui, /Modelo em uso/);
-  assert.match(ui, /Contas cadastradas/);
-  assert.match(ui, /id=["']modelo-em-uso["']/);
-  assert.match(ui, /id=["']contas-cadastradas["']/);
+  assert.match(ui, /Agora usando/);
+  assert.match(ui, /Conectar com API/);
+  assert.match(ui, /id=["']ia["']/);
   assert.match(ui, /type=["']text["']/);
   assert.doesNotMatch(ui, /type=["']email["']/);
   assert.doesNotMatch(ui, /placeholder=["'][^"']*@[^"']*["']/);
   assert.match(ui, /placeholder=["']Pessoal["']/);
-  assert.match(ui, /Trabalho/);
-  assert.match(ui, /name=["']llm-account-label["']/);
+  assert.match(ui, /name=["']agora-llm-label["']/);
+  assert.match(ui, /name=["']agora-llm-key["']/);
   assert.match(ui, /autoComplete=["']off["']/);
-  assert.match(ui, /Modelo em uso[\s\S]*selectLlmAccount[\s\S]*Contas cadastradas/);
-  assert.doesNotMatch(ui, /Contas cadastradas[\s\S]*selectLlmAccount/);
-  assert.match(ui, /type=["']password["']/);
+  assert.doesNotMatch(ui, /new-password/);
   assert.doesNotMatch(ui, /account\.key\b/);
   assert.match(ui, /keyHint/);
-  assert.match(ui, /Cadastrar e validar/);
   assert.match(ui, /OpenAI/);
   assert.match(ui, /Claude/);
   assert.match(ui, /Grok/);
