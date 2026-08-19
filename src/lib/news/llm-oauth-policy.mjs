@@ -1,0 +1,22 @@
+/** Política estática: o que cada provedor autoriza de verdade na API deste app. */
+
+export function subscriptionAuthFor(provider) {
+  if (provider === "anthropic") {
+    return {
+      available: true,
+      reason: null,
+      hint: "Abre o login oficial da Anthropic (Claude Pro/Max). Depois cole o código ou a URL.",
+    };
+  }
+  if (provider === "openai") {
+    return {
+      available: false,
+      reason:
+        "ChatGPT Plus não autoriza a API de chat deste app. Use uma chave de platform.openai.com.",
+    };
+  }
+  return {
+    available: false,
+    reason: "A API do Grok aceita só chave. SuperGrok não substitui a API.",
+  };
+}

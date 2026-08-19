@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -79,7 +79,10 @@ test("saved model outside the catalog still appears as an extra option", () => {
 });
 
 test("settings model field is a native select of existing models, not free text", () => {
-  const ui = read("src/components/news/llm-accounts-settings.tsx");
+  const ui = readdirSync(join(root, "src/components/news"))
+    .filter((name) => name.startsWith("llm-"))
+    .map((name) => read(`src/components/news/${name}`))
+    .join("\n");
   assert.match(ui, /aria-label=["']Modelo["']/);
   assert.match(ui, /<select[\s\S]*aria-label=["']Modelo["']|aria-label=["']Modelo["'][\s\S]*<select/);
   assert.match(ui, /modelOptionsFor/);

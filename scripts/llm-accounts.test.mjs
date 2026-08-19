@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -230,7 +230,10 @@ test("write-guard: LLM account mutations are owner-authenticated server fns", ()
 
 test("settings split cadastro and modelo em uso without an email-like label", () => {
   const page = read("src/routes/configuracoes.tsx");
-  const ui = read("src/components/news/llm-accounts-settings.tsx");
+  const ui = readdirSync(join(root, "src/components/news"))
+    .filter((name) => name.startsWith("llm-"))
+    .map((name) => read(`src/components/news/${name}`))
+    .join("\n");
   assert.match(page, /LlmAccountsSettings/);
   assert.match(ui, /Modelo em uso/);
   assert.match(ui, /Contas cadastradas/);
