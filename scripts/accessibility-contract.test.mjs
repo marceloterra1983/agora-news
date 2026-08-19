@@ -596,6 +596,20 @@ test("Playwright unread pressed confirm and search error expose truthful state",
     assert.equal(await unreadText.count(), 1);
     assert.notEqual(await unreadText.getAttribute("aria-hidden"), "true");
 
+    const expiredId = await unread.getAttribute("data-story-id");
+    if (expiredId) {
+      await page.evaluate((id) => {
+        localStorage.setItem(
+          "agora-unread-since-v1",
+          JSON.stringify({ [id]: Date.now() - 13 * 60 * 60 * 1000 }),
+        );
+      }, expiredId);
+      await page.reload({ waitUntil: "networkidle" });
+      const expiredCard = page.locator(`[data-story-id="${expiredId}"]`);
+      await expiredCard.waitFor({ timeout: 15_000 });
+      assert.notEqual(await expiredCard.getAttribute("data-unread"), "1");
+    }
+
     await page.goto(`${base}/fontes?secao=ai`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Mover em lote" }).click();
     const pick = page.locator('[data-testid="fonte-row"] > div button').first();

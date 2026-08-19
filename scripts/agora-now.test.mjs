@@ -115,7 +115,19 @@ test("unread mark is the left stripe only, without a Novo chip", () => {
   const card = read("src/components/news/story-card.tsx");
   assert.match(card, /data-unread-mark=""/);
   assert.match(card, /Não lida/);
+  assert.match(card, /data-story-id=\{story\.id\}/);
   assert.match(card, /absolute bottom-6 left-0 top-6 w-0\.5 rounded-full bg-mark/);
   assert.doesNotMatch(card, />\s*Novo\s*</);
   assert.doesNotMatch(card, /text-mark-fg/);
+});
+
+test("feed observes unread impressions and settings hint expires after 12h", () => {
+  const feed = read("src/components/news/feed.tsx");
+  assert.match(feed, /observeUnreadImpressions/);
+  assert.match(feed, /noteFirstUnread/);
+  assert.match(read("src/lib/news/unread-impression.ts"), /IntersectionObserver/);
+  assert.match(
+    read("src/routes/configuracoes.tsx"),
+    /Destaque some ao passar no feed ou após 12 horas/,
+  );
 });
