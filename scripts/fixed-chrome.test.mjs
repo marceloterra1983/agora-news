@@ -37,6 +37,7 @@ test("chrome pins top+bottom and reserves feed space with bar tokens", () => {
   assert.match(css, /\[data-chrome-main\][\s\S]{0,240}padding-top:/);
   assert.match(css, /--agora-nav-tap:\s*44px/);
   assert.match(css, /--agora-tap:\s*44px/);
+  assert.match(css, /\[data-chrome="groups"\][\s\S]{0,220}bottom:/);
 });
 
 test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () => {
@@ -69,6 +70,7 @@ test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () =>
   );
   assert.match(chrome, /h-\[var\(--agora-tap\)\]|h-\[44px\]/);
   assert.match(chrome, /data-group-chip/);
+  assert.match(chrome, /data-chrome="groups"/);
   assert.match(chrome, /h-\[32px\]/);
   assert.match(styles, /\[data-h-scroll\][\s\S]{0,280}scrollbar-width:\s*none/);
   assert.match(
@@ -107,6 +109,11 @@ const FIXTURE = `<!doctype html>
     <div data-chrome-main>
       <div data-feed style="height: 2000px">feed</div>
     </div>
+    <div data-chrome="groups">
+      <div data-h-scroll style="display:flex">
+        <button type="button" data-group-chip>Todos</button>
+      </div>
+    </div>
     <nav data-chrome="tabs">
       <div>
         <a aria-label="Feed"><svg viewBox="0 0 24 24"></svg></a>
@@ -144,7 +151,8 @@ async function chromeBox(page) {
     const header = document.querySelector("[data-chrome=compact]");
     const tabs = document.querySelector("[data-chrome=tabs]");
     const main = document.querySelector("[data-chrome-main]");
-    const chip = document.querySelector("[data-h-scroll] button");
+    const chip = document.querySelector("[data-group-chip], [data-h-scroll] button");
+    const groups = document.querySelector("[data-chrome=groups]");
     const ia = document.querySelector("[data-section-select]");
     const menu = document.querySelector("[aria-haspopup=menu]");
     const nav = document.querySelector("[data-chrome=tabs] a");
@@ -164,6 +172,7 @@ async function chromeBox(page) {
         ? parseFloat(getComputedStyle(main).paddingBottom)
         : 0,
       chipH: box(chip).h,
+      groups: box(groups),
       iaH: box(ia).h,
       menuH: box(menu).h,
       navH: box(nav).h,
@@ -212,6 +221,12 @@ test("Playwright 390px: chrome is fixed and tap heights match 44px", async (t) =
       before.mainPadBottom >= before.tabs.h - 1,
       `pad-bottom ${before.mainPadBottom} tabs ${before.tabs.h}`,
     );
+    if (before.groups.h) {
+      assert.ok(
+        before.groups.b <= before.tabs.t + 2,
+        `groups above tabs ${before.groups.b} ${before.tabs.t}`,
+      );
+    }
 
     await page.evaluate(() => window.scrollTo(0, 600));
     const after = await chromeBox(page);

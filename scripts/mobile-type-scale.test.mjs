@@ -40,9 +40,11 @@ function fixture(font = "") {
   <header data-chrome="compact">
     <div>
       <select data-section-select aria-label="Assunto"><option>IA</option></select>
-      <div data-h-scroll>
-        <button type="button">Todos</button>
-        <button type="button">Instituições</button>
+      <div data-chrome="groups">
+        <div data-h-scroll>
+          <button type="button" data-group-chip>Todos</button>
+          <button type="button" data-group-chip>Instituições</button>
+        </div>
       </div>
       <button type="button" aria-haspopup="menu" aria-label="Menu">☰</button>
     </div>

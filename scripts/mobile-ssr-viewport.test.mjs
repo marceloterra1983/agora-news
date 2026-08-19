@@ -135,7 +135,7 @@ test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) 
     );
     const scale = await page.evaluate(() => {
       const chip = document.querySelector(
-        "[data-chrome=compact] [data-h-scroll] button",
+        "[data-group-chip], [data-chrome=groups] button, [data-h-scroll] button",
       );
       const nav = document.querySelector("[data-chrome=tabs] a");
       const h2 = document.querySelector("[data-story] h2");
