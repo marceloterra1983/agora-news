@@ -1,13 +1,22 @@
 import { hydrateBuzzCache } from "./fonte-buzz-store";
 import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
-import { lastPostHref, preferNewerLast, storedToLastHit } from "./last-post";
+import { preferNewerLast } from "./last-post";
 import { lastPostsByAccount, type LastHit } from "./fontes-last";
+import {
+  hitsToLastPosts,
+  lastWithBuzz,
+  storedLastMap,
+  storedPostsMap,
+  type FonteLastPost,
+} from "./influence-last";
 import { mapPool } from "./map-pool";
 import { displayBlurb } from "./profile-blurb.mjs";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listKnownSections } from "./sections";
 import type { Category } from "./types";
+
+export type { FonteLastPost };
 
 export type InfluenceRow = {
   handle: string;
@@ -17,19 +26,8 @@ export type InfluenceRow = {
   verified: boolean;
   avatar: string | null;
   bio: string | null;
-  lastPost: {
-    id: string;
-    href: string;
-    title: string;
-    publishedAt: string;
-    likes?: number;
-    views?: number;
-    replies?: number;
-    reposts?: number;
-    quotes?: number;
-    bookmarks?: number;
-    er?: number;
-  } | null;
+  lastPost: FonteLastPost | null;
+  lastPosts: FonteLastPost[];
   inFeed: number;
   articles: number;
   longform: number;
@@ -123,21 +121,6 @@ async function fetchOne(handle: string): Promise<LiveStats> {
   }
 }
 
-function lastWithBuzz(
-  last: LastHit | null,
-  handle: string,
-  inApp: boolean,
-): InfluenceRow["lastPost"] {
-  if (!last) return null;
-  return {
-    id: last.id,
-    href: lastPostHref(handle, last.id, inApp),
-    title: last.title,
-    publishedAt: last.publishedAt,
-    ...(buzzFor(handle, last.id) ?? buzzFor(handle) ?? {}),
-  };
-}
-
 function recencySort(a: InfluenceRow, b: InfluenceRow): number {
   const ta = a.lastPost ? Date.parse(a.lastPost.publishedAt) : 0;
   const tb = b.lastPost ? Date.parse(b.lastPost.publishedAt) : 0;
@@ -155,23 +138,16 @@ async function hydrateStore() {
   return stored;
 }
 
-function storedLastMap(stored: StoredProfile[]): Map<string, LastHit> {
-  const map = new Map<string, LastHit>();
-  for (const row of stored) {
-    const hit = storedToLastHit(row.last_post);
-    if (hit) map.set(norm(row.handle).toLowerCase(), hit);
-  }
-  return map;
-}
-
 function buildRows(
   section: Category,
   feedMap: Map<string, LastHit>,
   lastMap: Map<string, LastHit>,
+  recentMap: Map<string, LastHit[]>,
   stored: StoredProfile[],
 ): InfluenceRow[] {
   const since = Date.now() - 48 * 60 * 60_000;
   const fromStore = storedLastMap(stored);
+  const fromStorePosts = storedPostsMap(stored);
   const summaries = new Map(
     stored.map((row) => [norm(row.handle).toLowerCase(), row.summary_pt || ""]),
   );
@@ -182,6 +158,11 @@ function buildRows(
     const last = preferNewerLast(
       lastMap.get(key) ?? fromFeed,
       fromStore.get(key) ?? null,
+    );
+    const lastPosts = hitsToLastPosts(
+      p.handle,
+      fromStorePosts.get(key) ?? [],
+      recentMap.get(key) ?? [],
     );
     const inApp = Boolean(fromFeed && last && fromFeed.id === last.id);
     const recentCount =
@@ -199,6 +180,11 @@ function buildRows(
       avatar: stats.avatar,
       bio: displayBlurb(p.handle, p.name, summaries.get(key) || stats.bio),
       lastPost: lastWithBuzz(last, p.handle, inApp),
+      lastPosts: lastPosts.length
+        ? lastPosts
+        : lastWithBuzz(last, p.handle, inApp)
+          ? [lastWithBuzz(last, p.handle, inApp)!]
+          : [],
       inFeed: recentCount,
       articles: last?.count ?? 0,
       longform: 0,
@@ -216,11 +202,11 @@ function buildRows(
 export async function loadFontesFast(
   section: Category,
 ): Promise<InfluenceRow[]> {
-  const [{ feed, last }, stored] = await Promise.all([
+  const [{ feed, last, recent }, stored] = await Promise.all([
     lastPostsByAccount(section),
     hydrateStore(),
   ]);
-  return buildRows(section, feed, last, stored);
+  return buildRows(section, feed, last, recent, stored);
 }
 
 /** Um passe de fxtwitter no cron: avatares + buzz de todo o catálogo. */

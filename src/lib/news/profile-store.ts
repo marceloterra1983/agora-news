@@ -14,6 +14,12 @@ export type StoredProfile = {
     url: string;
     publishedAt: string;
   } | null;
+  last_posts: Array<{
+    id: string;
+    text: string;
+    url: string;
+    publishedAt: string;
+  }>;
   updated_at: string;
 };
 

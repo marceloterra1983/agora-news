@@ -2,6 +2,7 @@
  * Regras puras de perfil persistido — fonte única para TS e node:test.
  */
 import { parseLastPost } from "./last-post-core.mjs";
+import { unpackLastPosts } from "./profile-last.mjs";
 
 /**
  * Foto original do X no círculo: troca o thumb (_normal/_bigger/_mini) por 400x400.
@@ -132,6 +133,7 @@ export function storedProfileFromRow(raw, fallbackHandle = "") {
     avatar,
     followers: Number(o.followers ?? o.media_label) || 0,
     last_post: parseLastPost(o.last_post),
+    last_posts: unpackLastPosts(o.last_post),
     updated_at: String(o.updated_at || o.posted_at || ""),
   };
 }

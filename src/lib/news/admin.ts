@@ -116,6 +116,12 @@ export type UpsertProfile = {
     text: string;
     url: string;
     publishedAt: string;
+    recent?: Array<{
+      id: string;
+      text: string;
+      url: string;
+      publishedAt: string;
+    }>;
   } | null;
 };
 

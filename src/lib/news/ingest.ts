@@ -1,5 +1,6 @@
-import { keepLastPost } from "./last-post";
-import { fillCatalogGaps, persistLastPost } from "./last-post-store";
+import { fillCatalogGaps } from "./last-post-store";
+import { persistPackedLastPosts } from "./profile-last-store";
+import { keepLastPosts, packLastPosts } from "./profile-last.mjs";
 import { allProfiles, profileByHandle } from "./profiles";
 import { displayBlurb } from "./profile-blurb.mjs";
 import { oneLineAbout } from "./summary-line";
@@ -33,6 +34,18 @@ import { sendPushForStories } from "./push-server";
 const MAX_AGE_MS = 36 * 60 * 60_000;
 const MAX_INSERT = 40;
 const SKIP_IF_FRESH_MS = 10 * 60_000;
+
+function lastPostsFromStatuses(handle: string, list: Status[]) {
+  return list
+    .filter((t) => t.id && t.text && !t.replying_to)
+    .map((t) => ({
+      id: String(t.id),
+      text: String(t.text).replace(/\s+/g, " ").trim(),
+      url: t.url || `https://x.com/${handle}/status/${t.id}`,
+      publishedAt: postedIso(t) || "",
+    }))
+    .filter((p) => p.publishedAt);
+}
 
 export async function runIngest(opts?: { limitHandles?: number; withProfiles?: boolean }) {
   const t0 = nowMs();
@@ -186,6 +199,12 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
     }
   }
 
+  await mapPool(collected, 4, async ({ handle, list }) => {
+    const incoming = lastPostsFromStatuses(handle, list);
+    if (!incoming.length) return;
+    await persistPackedLastPosts(handle, incoming, assertOwned);
+  });
+
   let profiles = 0;
   await assertOwned();
   if (opts?.withProfiles !== false) {
@@ -210,17 +229,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
       const summary =
         (await oneLineAbout(handle, name, bio)) || prev?.summary_pt || "";
       if (!summary) return;
-      const lastPost = keepLastPost(
-        prev?.last_post,
-        last?.id
-          ? {
-              id: String(last.id),
-              text: String(last.text),
-              url: last.url || `https://x.com/${handle}/status/${last.id}`,
-              publishedAt: postedIso(last) || "",
-            }
-          : null,
-      );
+      const lastPosts = keepLastPosts(prev?.last_posts, lastPostsFromStatuses(handle, list));
       await assertOwned();
       const ok = await upsertProfile({
         handle,
@@ -229,9 +238,8 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
         summary_pt: summary.slice(0, 220),
         avatar: author?.avatar_url?.replace("_normal.", "_400x400.") || prev?.avatar || null,
         followers: Number(author?.followers) || prev?.followers || 0,
-        last_post: lastPost,
+        last_post: packLastPosts(lastPosts) ?? prev?.last_post ?? null,
       });
-      if (lastPost) await persistLastPost(handle, lastPost, assertOwned);
       if (ok) profiles += 1;
     });
   }
@@ -259,7 +267,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
       summary_pt: prev?.summary_pt || displayBlurb(r.handle, r.name),
       avatar: r.avatar,
       followers: r.followers || prev?.followers || 0,
-      last_post: prev?.last_post ?? null,
+      last_post: packLastPosts(prev?.last_posts ?? []) ?? prev?.last_post ?? null,
     });
     if (ok) enriched += 1;
   });

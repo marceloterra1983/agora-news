@@ -46,6 +46,7 @@ export function emptyFonteRow(p: ReturnType<typeof profilesFor>[number]): Influe
     avatar: null,
     bio: null,
     lastPost: null,
+    lastPosts: [],
     inFeed: 0,
     articles: 0,
     longform: 0,

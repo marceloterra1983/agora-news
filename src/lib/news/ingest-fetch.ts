@@ -28,7 +28,7 @@ export async function statusesFor(handle: string): Promise<Status[]> {
   let res: Response;
   try {
     res = await fetch(
-      `https://api.fxtwitter.com/2/profile/${encodeURIComponent(handle)}/statuses?count=3`,
+      `https://api.fxtwitter.com/2/profile/${encodeURIComponent(handle)}/statuses?count=10`,
       {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(5_000),

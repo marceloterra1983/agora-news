@@ -5,7 +5,8 @@ import { ProfileEr } from "@/components/news/fontes-profile-er";
 import { GroupTag } from "@/components/news/group-tag";
 import { Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
-import { displayTitle, formatCount, relativeTime } from "@/lib/news/format";
+import { FonteLastPosts } from "@/components/news/fontes-last-posts";
+import { displayTitle, formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { groupLabel } from "@/lib/news/groups";
 import { safeHttpHref } from "@/lib/news/last-post";
@@ -129,31 +130,15 @@ export function ProfileRow({
             {row.followers ? <span>{formatCount(row.followers)} seguidores</span> : null}
             <ProfileEr handle={row.handle} fallback={row.er} />
           </p>
-          <div className="mt-3 border-t border-line pt-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-mute">
-              Último post
-              {row.lastPost ? (
-                <>
-                  {" "}
-                  <time dateTime={row.lastPost.publishedAt} suppressHydrationWarning>
-                    · {relativeTime(row.lastPost.publishedAt)}
-                  </time>
-                </>
-              ) : null}
-            </p>
-            {row.lastPost && lastHref ? (
-              <a
-                href={lastHref}
-                target={lastHref.startsWith("http") ? "_blank" : undefined}
-                rel={lastHref.startsWith("http") ? "noreferrer" : undefined}
-                className="mt-1 block text-sm font-medium leading-snug text-ink"
-              >
-                {row.lastPost.title}
-              </a>
-            ) : (
-              <p className="mt-1 text-sm text-mute">Nenhum post encontrado.</p>
-            )}
-          </div>
+          <FonteLastPosts
+            posts={
+              row.lastPosts?.length
+                ? row.lastPosts
+                : row.lastPost
+                  ? [row.lastPost]
+                  : []
+            }
+          />
           <div className="mt-3 flex flex-wrap items-center gap-1">
             <Tip label={`Abrir @${row.handle} no X`}>
               <a
