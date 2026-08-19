@@ -262,7 +262,9 @@ test("prefs are owner-scoped and dedicated-table failures stay failures", async 
     calls.push({ url, init });
     if (init.method === "POST") return new Response(null, { status: 201 });
     if (url.includes("user_id=eq.user-a")) {
-      return Response.json([{ prefs: { theme: "dark" } }]);
+      return Response.json([
+        { prefs: { theme: "dark", _llm: { accounts: [{ key: "xai-secret-abcd" }] } } },
+      ]);
     }
     return Response.json([]);
   };
@@ -272,7 +274,10 @@ test("prefs are owner-scoped and dedicated-table failures stay failures", async 
   await prefs.writeUserPrefs("user-a", { theme: "light" });
   const write = calls.find((call) => call.init.method === "POST");
   assert.match(write.url, /\/rest\/v1\/user_prefs\?on_conflict=user_id/);
-  assert.equal(JSON.parse(write.init.body).user_id, "user-a");
+  const written = JSON.parse(write.init.body);
+  assert.equal(written.user_id, "user-a");
+  assert.deepEqual(written.prefs._llm, { accounts: [{ key: "xai-secret-abcd" }] });
+  assert.equal(written.prefs.theme, "light");
   assert.equal(Object.hasOwn(write.init.headers, "Authorization"), false);
 
   calls.length = 0;
@@ -283,7 +288,7 @@ test("prefs are owner-scoped and dedicated-table failures stay failures", async 
   await assert.rejects(() => prefs.readUserPrefs("user-a"), /prefs_read_503/);
   await assert.rejects(
     () => prefs.writeUserPrefs("user-a", { theme: "dark" }),
-    /prefs_write_503/,
+    /prefs_read_503|prefs_write_503/,
   );
   assert.equal(calls.some((call) => call.url.includes("/rest/v1/posts")), false);
   assert.doesNotMatch(read("src/lib/news/prefs-store.server.ts"), /cloudKv|rest\/v1\/posts/);

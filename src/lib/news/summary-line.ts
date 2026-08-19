@@ -1,70 +1,26 @@
+import { envLlmKey } from "./llm-accounts.mjs";
+import { askGrokLine } from "./llm-ask";
 import { blurbFor, profileByHandle } from "./profiles";
 import {
   clipOneLine,
-  extractLlmText,
   extractMatchesPerson,
   looksPortuguese,
   plausibleSummary,
 } from "./summary-core.mjs";
 
-const summaryCache = new Map<string, { at: number; line: string }>();
+const summaryCache = new Map<string, { at: number; line: string; warning: string | null }>();
 const SUMMARY_TTL = 6 * 60 * 60_000;
 
+/** Fallback do servidor (cron). Com sessão, askGrokLine resolve a conta ativa. */
 export function aiKey(): string {
-  return process.env.XAI_API_KEY || process.env.GROK_API_KEY || "";
+  return envLlmKey(process.env);
 }
 
-async function askGrokLine(prompt: string): Promise<string> {
-  const key = aiKey();
-  if (!key) return "";
-  const headers = {
-    Authorization: `Bearer ${key}`,
-    "Content-Type": "application/json",
-  };
-  const system =
-    "Você resume quem é uma conta do X. Use SOMENTE os dados do usuário. Não invente cargo, empresa, país ou formação. Se a bio for vaga, reformule só o que ela diz. Uma frase em português do Brasil, no máximo 160 caracteres. Sem aspas, emoji, hashtag ou @.";
-  try {
-    const chat = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers,
-      signal: AbortSignal.timeout(14_000),
-      body: JSON.stringify({
-        model: "grok-4.5",
-        max_tokens: 90,
-        temperature: 0,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-    if (chat.ok) {
-      const line = clipOneLine(extractLlmText((await chat.json()) as Record<string, unknown>));
-      if (line) return line;
-    }
-  } catch {
-    /* try responses */
-  }
-  try {
-    const res = await fetch("https://api.x.ai/v1/responses", {
-      method: "POST",
-      headers,
-      signal: AbortSignal.timeout(14_000),
-      body: JSON.stringify({
-        model: "grok-4.5",
-        max_output_tokens: 90,
-        input: [
-          { role: "system", content: system },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-    if (!res.ok) return "";
-    return clipOneLine(extractLlmText((await res.json()) as Record<string, unknown>));
-  } catch {
-    return "";
-  }
-}
+export type AboutLine = {
+  line: string;
+  usedLlm: boolean;
+  llmWarning: string | null;
+};
 
 async function translateLine(text: string): Promise<string> {
   const src = clipOneLine(text);
@@ -154,20 +110,42 @@ async function wikiLine(name: string, handle: string): Promise<string> {
   }
 }
 
-export async function oneLineAbout(handle: string, name: string, bio: string): Promise<string> {
-  if (profileByHandle(handle)) return blurbFor(handle, name);
+export async function oneLineAboutResult(
+  handle: string,
+  name: string,
+  bio: string,
+  opts?: { userId?: string },
+): Promise<AboutLine> {
+  if (profileByHandle(handle)) {
+    return { line: blurbFor(handle, name), usedLlm: false, llmWarning: null };
+  }
   const key = `v3:${handle.toLowerCase()}`;
   const cached = summaryCache.get(key);
-  if (cached && Date.now() - cached.at < SUMMARY_TTL) return cached.line;
+  if (cached && Date.now() - cached.at < SUMMARY_TTL) {
+    return { line: cached.line, usedLlm: !cached.warning, llmWarning: cached.warning };
+  }
 
   const prompt =
     `Nome: ${name}\nConta: @${handle}\nBio no X: ${bio.slice(0, 320) || "(vazia)"}\n` +
     `Escreva quem é essa pessoa/conta com base só nisso.`;
-  const llm = await askGrokLine(prompt);
-  const fromLlm = plausibleSummary(llm, name, handle, bio) ? llm : "";
+  const llm = await askGrokLine(prompt, opts);
+  const fromLlm = plausibleSummary(llm.line, name, handle, bio) ? llm.line : "";
   const fromBio = bio ? await translateLine(bio) : "";
   const fromWiki = fromBio ? "" : await wikiLine(name, handle);
   const line = fromLlm || fromBio || fromWiki;
-  if (line) summaryCache.set(key, { at: Date.now(), line });
-  return line;
+  const result = { line, usedLlm: Boolean(fromLlm), llmWarning: llm.warning };
+  if (line && !result.llmWarning) {
+    summaryCache.set(key, { at: Date.now(), line, warning: null });
+  }
+  return result;
+}
+
+/** Cron sem userId usa só XAI_API_KEY/GROK_API_KEY do env. */
+export async function oneLineAbout(
+  handle: string,
+  name: string,
+  bio: string,
+  opts?: { userId?: string },
+): Promise<string> {
+  return (await oneLineAboutResult(handle, name, bio, opts)).line;
 }

@@ -3,7 +3,7 @@ import { fetchLastPost } from "./last-post";
 import { allProfiles, blurbFor, profileByHandle } from "./profiles";
 import { readStoredProfile } from "./profile-store";
 import { clipOneLine } from "./summary-core.mjs";
-import { aiKey, oneLineAbout } from "./summary-line";
+import { oneLineAboutResult } from "./summary-line";
 
 export const lookupXProfile = createServerFn({ method: "GET" })
   .validator((input: { handle: string }) => ({
@@ -78,13 +78,13 @@ export const summarizeProfile = createServerFn({ method: "POST" })
     last: String(input.last || "").slice(0, 220),
   }))
   .handler(async ({ data }) => {
-    if (!data.handle) return { summary: "" };
+    if (!data.handle) return { summary: "", usedLlm: false, llmWarning: null };
     const stored = await readStoredProfile(data.handle);
     const fresh =
       stored?.summary_pt &&
       stored.updated_at &&
       Date.now() - Date.parse(stored.updated_at) < 7 * 24 * 60 * 60_000;
-    if (fresh) return { summary: stored.summary_pt, usedLlm: false };
+    if (fresh) return { summary: stored.summary_pt, usedLlm: false, llmWarning: null };
     const { getRequest } = await import("@tanstack/react-start/server");
     const { userIdFromHeaders } = await import("@/lib/auth/verify.server");
     const { cronSecret, spendKeyAllowed } = await import("./write-guard");
@@ -94,10 +94,12 @@ export const summarizeProfile = createServerFn({ method: "POST" })
     const site = headers?.get("sec-fetch-site") || "";
     const authorization = headers?.get("authorization") || "";
     if (!spendKeyAllowed({ site, userId, authorization }, { cronSecret: cronSecret() })) {
-      return { summary: stored?.summary_pt || "", usedLlm: false };
+      return { summary: stored?.summary_pt || "", usedLlm: false, llmWarning: null };
     }
-    const summary = await oneLineAbout(data.handle, data.name || data.handle, data.bio);
-    return { summary, usedLlm: Boolean(summary && aiKey()) };
+    const about = await oneLineAboutResult(data.handle, data.name || data.handle, data.bio, {
+      userId,
+    });
+    return { summary: about.line, usedLlm: about.usedLlm, llmWarning: about.llmWarning };
   });
 
 export type FoundProfile = Extract<Awaited<ReturnType<typeof lookupXProfile>>, { found: true }>;

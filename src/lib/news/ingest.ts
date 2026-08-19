@@ -206,6 +206,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
       const prev = storedAt.get(handle.toLowerCase());
       const name = knownProfile?.name || author?.name || handle;
       const bio = author?.description?.trim() || prev?.bio || "";
+      // Cron não tem sessão: oneLineAbout cai no env (XAI_API_KEY/GROK_API_KEY).
       const summary =
         (await oneLineAbout(handle, name, bio)) || prev?.summary_pt || "";
       if (!summary) return;

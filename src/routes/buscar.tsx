@@ -175,6 +175,11 @@ function BuscarPage() {
             {profile.error}
           </p>
         ) : null}
+        {profile.llmWarning ? (
+          <p className="mt-4 text-sm text-mark" role="alert">
+            {profile.llmWarning}
+          </p>
+        ) : null}
 
         <BuscarInterests
           secao={secao}
