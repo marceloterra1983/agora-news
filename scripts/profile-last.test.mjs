@@ -78,3 +78,13 @@ test("ingest packs last_posts and Fontes opens them two at a time", () => {
   assert.match(chip, /Mais/);
   assert.match(read("src/lib/news/ingest-fetch.ts"), /count=10/);
 });
+
+test("open card shows each post age and divides the action buttons", () => {
+  const chip = read("src/components/news/fontes-last-posts.tsx");
+  const row = read("src/components/news/fontes-profile-row.tsx");
+  assert.match(chip, /relativeTime\(post\.publishedAt\)/);
+  assert.match(chip, /<time\b[^>]*dateTime=\{post\.publishedAt\}/);
+  assert.doesNotMatch(chip, /relativeTime\(visible\[0\]\.publishedAt\)/);
+  const actions = row.slice(row.indexOf("data-fonte-actions"));
+  assert.match(actions, /border-t/);
+});

@@ -148,7 +148,7 @@ export function ProfileRow({
           <div
             ref={actionsRef}
             data-fonte-actions
-            className="mt-3 flex flex-wrap items-center gap-1"
+            className="mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3"
           >
             <Tip label={`Abrir @${row.handle} no X`}>
               <a

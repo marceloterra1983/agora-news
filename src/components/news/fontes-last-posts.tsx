@@ -22,14 +22,6 @@ export function FonteLastPosts({ posts }: { posts: FontePost[] }) {
     <div className="mt-3 border-t border-line pt-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-mute">
         {posts.length === 1 ? "Último post" : "Últimos posts"}
-        {visible[0] ? (
-          <>
-            {" "}
-            <time dateTime={visible[0].publishedAt} suppressHydrationWarning>
-              · {relativeTime(visible[0].publishedAt)}
-            </time>
-          </>
-        ) : null}
       </p>
       {visible.length ? (
         <ul className="mt-1 space-y-2">
@@ -50,6 +42,13 @@ export function FonteLastPosts({ posts }: { posts: FontePost[] }) {
                 ) : (
                   <p className="text-sm font-medium leading-snug text-ink">{title}</p>
                 )}
+                <time
+                  dateTime={post.publishedAt}
+                  suppressHydrationWarning
+                  className="mt-0.5 block text-[11px] tabular-nums text-mute"
+                >
+                  {relativeTime(post.publishedAt)}
+                </time>
               </li>
             );
           })}
