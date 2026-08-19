@@ -53,7 +53,7 @@ test("publishedLinksFrom keeps a single published Link when t.co and utm copies 
   assert.doesNotMatch(hrefs[0], /\/\/t\.co\//i);
 });
 
-test("feed and article hide the url behind a Link label", () => {
+test("feed and article hide the url behind a host chip with an external icon", () => {
   const card = read("src/components/news/story-card.tsx");
   const article = read("src/components/news/article-view.tsx");
   const chip = read("src/components/news/written-link.tsx");
@@ -61,8 +61,11 @@ test("feed and article hide the url behind a Link label", () => {
   assert.match(article, /WrittenLinks/);
   assert.match(article, /displayBody\(/);
   assert.doesNotMatch(article, /\{story\.body \|\| story\.excerpt\}/);
-  assert.match(chip, />Link</);
-  assert.match(chip, /Link publicado/);
+  assert.match(chip, /ExternalLink/);
+  assert.match(chip, /\{host\}/);
+  assert.match(chip, /Abrir em/);
+  assert.doesNotMatch(chip, />Link</);
+  assert.doesNotMatch(chip, /Link publicado/);
   assert.match(chip, /safeHttpHref/);
   assert.match(chip, /target=["']_blank["']/);
   assert.doesNotMatch(chip, />\{href\}/);
