@@ -54,7 +54,7 @@ test("ingest cron script sends Bearer to the loopback Nitro service", () => {
 
 test("ingest keeps the previous last_post when the current batch has no tweet", () => {
   const src = read("src/lib/news/ingest.ts");
-  assert.match(src, /keepLastPost/);
+  assert.match(src, /keepLastPosts/);
   assert.doesNotMatch(src, /last_post:\s*last\?\.id\s*\?/);
 });
 
@@ -87,6 +87,8 @@ test("Fontes feed last-map merges x-last and does not stop at 120 rows", () => {
 
 test("empty Fontes card does not claim the gap is 48 hours", () => {
   const src = read("src/components/news/fontes-profile-row.tsx");
+  const last = read("src/components/news/fontes-last-posts.tsx");
   assert.doesNotMatch(src, /últimas 48 horas/);
-  assert.match(src, /Nenhum post encontrado/);
+  assert.doesNotMatch(last, /últimas 48 horas/);
+  assert.match(last, /Nenhum post encontrado/);
 });

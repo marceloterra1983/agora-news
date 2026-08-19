@@ -144,15 +144,24 @@ export function lastPostFromXLastRow(row, handle = "") {
  * @param {Array<Record<string, unknown>>} rows
  * @param {string} handle
  */
-export function pickLatestFromPostRows(rows, handle) {
-  if (!Array.isArray(rows)) return null;
+export function pickRecentFromPostRows(rows, handle, max = 10) {
+  if (!Array.isArray(rows)) return [];
+  const out = [];
+  const seen = new Set();
   for (const row of rows) {
     const rawId = String(row?.post_id || "");
     if (!rawId || isSyntheticPostId(rawId)) continue;
     const post = lastPostFromXLastRow(row, handle);
-    if (post) return post;
+    if (!post || seen.has(post.id)) continue;
+    seen.add(post.id);
+    out.push(post);
+    if (out.length >= max) break;
   }
-  return null;
+  return out;
+}
+
+export function pickLatestFromPostRows(rows, handle) {
+  return pickRecentFromPostRows(rows, handle, 1)[0] ?? null;
 }
 
 /** @param {string} [category] */

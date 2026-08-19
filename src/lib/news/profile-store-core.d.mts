@@ -8,6 +8,7 @@ export type StoredProfileRow = {
   avatar: string | null;
   followers: number;
   last_post: StoredLastPost | null;
+  last_posts: StoredLastPost[];
   updated_at: string;
 };
 

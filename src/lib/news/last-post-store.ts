@@ -1,9 +1,7 @@
 import {
   LAST_POST_CATEGORY,
-  fetchLastPost,
   lastPostFromXLastRow,
   lastPostIsStale,
-  latestFromPosts,
   xLastListParams,
   type StoredLastPost,
 } from "./last-post";
@@ -80,12 +78,22 @@ export async function fillCatalogGaps(
   handles: string[],
   beforeWrite?: () => Promise<void>,
 ): Promise<number> {
+  const { listStoredProfiles } = await import("./profile-store");
+  const { unpackLastPosts, PROFILE_LAST_KEEP } = await import("./profile-last.mjs");
   const have = await listXLastPosts();
+  const stored = await listStoredProfiles().catch(() => []);
+  const packedAt = new Map(
+    stored.map((row) => [
+      row.handle.toLowerCase(),
+      row.last_posts?.length ? row.last_posts : unpackLastPosts(row.last_post),
+    ]),
+  );
   const missing = handles.filter((h) => {
     const key = h.replace(/^@+/, "").trim().toLowerCase();
     if (!key) return false;
     const post = have.get(key);
-    return !post || lastPostIsStale(post);
+    const packed = packedAt.get(key) ?? [];
+    return !post || lastPostIsStale(post) || packed.length < PROFILE_LAST_KEEP;
   });
   return fillMissingLastPosts(missing, beforeWrite);
 }
@@ -94,6 +102,7 @@ export async function fillMissingLastPosts(
   handles: string[],
   beforeWrite?: () => Promise<void>,
 ): Promise<number> {
+  const { persistPackedLastPosts } = await import("./profile-last-store");
   const unique = [
     ...new Set(handles.map((h) => h.replace(/^@+/, "").trim()).filter(Boolean)),
   ].slice(0, 80);
@@ -102,9 +111,8 @@ export async function fillMissingLastPosts(
     const chunk = unique.slice(i, i + 6);
     await Promise.all(
       chunk.map(async (h) => {
-        const post = (await latestFromPosts(h)) ?? (await fetchLastPost(h));
-        if (!post) return;
-        if (await persistLastPost(h, post, beforeWrite)) n += 1;
+        const result = await persistPackedLastPosts(h, null, beforeWrite);
+        if (result.ok) n += 1;
       }),
     );
   }

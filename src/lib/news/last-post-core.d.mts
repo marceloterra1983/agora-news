@@ -30,6 +30,11 @@ export function lastPostFromXLastRow(
   row: Record<string, unknown> | null | undefined,
   handle?: string,
 ): StoredLastPost | null;
+export function pickRecentFromPostRows(
+  rows: Array<Record<string, unknown>>,
+  handle: string,
+  max?: number,
+): StoredLastPost[];
 export function pickLatestFromPostRows(
   rows: Array<Record<string, unknown>>,
   handle: string,

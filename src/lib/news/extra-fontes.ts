@@ -179,6 +179,9 @@ export function extraFonteToRow(e: ExtraFonte): InfluenceRow {
     lastPost: e.lastPost
       ? { ...e.lastPost, href: lastPostHref(e.handle, e.lastPost.id, false) }
       : null,
+    lastPosts: e.lastPost
+      ? [{ ...e.lastPost, href: lastPostHref(e.handle, e.lastPost.id, false) }]
+      : [],
     inFeed: 0,
     articles: 0,
     longform: 0,
