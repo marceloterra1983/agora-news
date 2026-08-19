@@ -7,15 +7,28 @@ export const DEFAULT_XAI_MODEL: "grok-4.5";
 export type LlmProvider = "openai" | "anthropic" | "xai";
 export type LlmStatus = "ok" | "auth" | "quota" | "error";
 export type LlmSource = "account" | "env" | "none";
+export type LlmAuthKind = "api" | "oauth";
 
 export type LlmAccount = {
   id: string;
   label: string;
   provider: LlmProvider;
   model: string;
+  authKind: LlmAuthKind;
   key: string;
+  refreshToken: string;
+  expiresAt: string | null;
   status: LlmStatus;
   checkedAt: string | null;
+};
+
+export type LlmPendingOauth = {
+  provider: LlmProvider;
+  state: string;
+  codeVerifier: string;
+  label: string;
+  model: string;
+  createdAt: string | null;
 };
 
 export type LlmStore = {
@@ -23,9 +36,10 @@ export type LlmStore = {
   accounts: LlmAccount[];
   envStatus: LlmStatus | null;
   envCheckedAt: string | null;
+  pendingOauth: LlmPendingOauth | null;
 };
 
-export type LlmAccountPublic = Omit<LlmAccount, "key"> & { keyHint: string };
+export type LlmAccountPublic = Omit<LlmAccount, "key" | "refreshToken"> & { keyHint: string };
 
 export type LlmPrefsPublic = {
   activeAccountId: string | null;
@@ -47,6 +61,9 @@ export type LlmRuntime = {
   key: string;
   model: string;
   accountId: string | null;
+  authKind: LlmAuthKind;
+  refreshToken: string;
+  expiresAt: string | null;
 };
 
 export type LlmCommand =
@@ -57,6 +74,9 @@ export type LlmCommand =
       key?: string;
       model?: string;
       provider?: LlmProvider | string;
+      authKind?: LlmAuthKind;
+      refreshToken?: string;
+      expiresAt?: string | null;
       status?: LlmStatus;
     }
   | { type: "delete"; id: string }
@@ -67,6 +87,23 @@ export type LlmCommand =
       accountId?: string;
       status: LlmStatus | "none";
       checkedAt?: string;
+    }
+  | {
+      type: "oauth-pending";
+      provider: LlmProvider | string;
+      state: string;
+      codeVerifier: string;
+      label?: string;
+      model?: string;
+      createdAt?: string;
+    }
+  | { type: "oauth-clear-pending" }
+  | {
+      type: "tokens";
+      accountId: string;
+      key?: string;
+      refreshToken?: string;
+      expiresAt?: string | null;
     };
 
 export type LlmModelOption = { id: string; label: string };
@@ -91,7 +128,7 @@ export function resolveLlmRuntime(input?: {
 export function classifyLlmHttpStatus(status: number): LlmStatus;
 export function llmWarningFor(
   status: LlmStatus | "none",
-  opts?: { hasAccount?: boolean; hasEnv?: boolean },
+  opts?: { hasAccount?: boolean; hasEnv?: boolean; authKind?: LlmAuthKind },
 ): string;
 export function stripLlmFromPrefs<T>(prefs: T): T;
 export function mergePrefsPreservingLlm<T extends object>(incoming: T, existing: unknown): T & {

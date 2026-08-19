@@ -6,7 +6,7 @@ import {
   type LlmSource,
   type LlmStatus,
 } from "./llm-accounts.mjs";
-import { askProviderLine } from "./llm-client.mjs";
+import { askProviderLineWithRefresh } from "./llm-client.mjs";
 
 export type GrokLineResult = {
   line: string;
@@ -51,12 +51,12 @@ export async function askGrokLine(
     userId: opts?.userId || "",
   });
   const hasEnv = Boolean(envLlmKey(process.env));
-  if (!runtime.key) {
+  if (!runtime.key && !(runtime.authKind === "oauth" && runtime.refreshToken)) {
     return {
       line: "",
       status: "none",
       source: "none",
-      warning: llmWarningFor("none", { hasAccount: false, hasEnv }),
+      warning: llmWarningFor("none", { hasAccount: false, hasEnv, authKind: runtime.authKind }),
     };
   }
 
@@ -67,16 +67,33 @@ export async function askGrokLine(
       line: "",
       status,
       source: runtime.source,
-      warning: llmWarningFor(status, { hasAccount: runtime.source === "account", hasEnv }),
+      warning: llmWarningFor(status, {
+        hasAccount: runtime.source === "account",
+        hasEnv,
+        authKind: runtime.authKind,
+      }),
     };
   };
 
   try {
-    const asked = await askProviderLine({
+    const asked = await askProviderLineWithRefresh({
       provider: runtime.provider,
       model: runtime.model,
       key: runtime.key,
       prompt,
+      authKind: runtime.authKind || "api",
+      refreshToken: runtime.refreshToken || "",
+      persistTokens: async (tokens) => {
+        if (!opts?.userId || !runtime.accountId) return;
+        const { applyOwnerLlmCommand } = await import("./llm-store.server");
+        await applyOwnerLlmCommand(opts.userId, {
+          type: "tokens",
+          accountId: runtime.accountId,
+          key: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresAt: tokens.expiresAt,
+        });
+      },
     });
     if (asked.line) {
       await persistStatus(opts?.userId, runtime, "ok");
@@ -91,7 +108,11 @@ export async function askGrokLine(
       line: "",
       status: "error",
       source: runtime.source,
-      warning: llmWarningFor("error", { hasAccount: runtime.source === "account", hasEnv }),
+      warning: llmWarningFor("error", {
+        hasAccount: runtime.source === "account",
+        hasEnv,
+        authKind: runtime.authKind,
+      }),
     };
   }
 
@@ -100,6 +121,10 @@ export async function askGrokLine(
     line: "",
     status: "error",
     source: runtime.source,
-    warning: llmWarningFor("error", { hasAccount: runtime.source === "account", hasEnv }),
+    warning: llmWarningFor("error", {
+      hasAccount: runtime.source === "account",
+      hasEnv,
+      authKind: runtime.authKind,
+    }),
   };
 }

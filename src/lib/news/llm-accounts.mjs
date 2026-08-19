@@ -7,27 +7,28 @@ export {
   modelOptionsFor,
 } from "./llm-models.mjs";
 
-export const LLM_PREFS_KEY = "_llm";
-export const LLM_PROVIDERS = ["openai", "anthropic", "xai"];
-export const LLM_PROVIDER_LABELS = { openai: "OpenAI", anthropic: "Claude", xai: "Grok" };
-export const DEFAULT_MODELS = {
-  openai: "gpt-4.1-mini",
-  anthropic: "claude-sonnet-4-5",
-  xai: "grok-4.5",
-};
-export const DEFAULT_XAI_MODEL = DEFAULT_MODELS.xai;
+export {
+  DEFAULT_MODELS,
+  DEFAULT_XAI_MODEL,
+  defaultModelFor,
+  emptyLlmStore,
+  isLlmProvider,
+  LLM_PREFS_KEY,
+  LLM_PROVIDER_LABELS,
+  LLM_PROVIDERS,
+  parseLlmStore,
+  providerLabel,
+} from "./llm-accounts-parse.mjs";
 
-export function isLlmProvider(value) {
-  return LLM_PROVIDERS.includes(value);
-}
-
-export function defaultModelFor(provider) {
-  return DEFAULT_MODELS[provider] || DEFAULT_XAI_MODEL;
-}
-
-export function providerLabel(provider) {
-  return LLM_PROVIDER_LABELS[provider] || LLM_PROVIDER_LABELS.xai;
-}
+import {
+  asStatus,
+  clip,
+  defaultModelFor,
+  DEFAULT_XAI_MODEL,
+  isLlmProvider,
+  LLM_PREFS_KEY,
+  parseLlmStore,
+} from "./llm-accounts-parse.mjs";
 
 export function persistValidatedStatus(status) {
   return status === "ok" || status === "quota";
@@ -43,62 +44,13 @@ export function envLlmKey(env = {}) {
   return String(env.XAI_API_KEY || env.GROK_API_KEY || "").trim();
 }
 
-export function emptyLlmStore() {
-  return { activeAccountId: null, accounts: [], envStatus: null, envCheckedAt: null };
-}
-
-function clip(value, max) {
-  return String(value || "").trim().slice(0, max);
-}
-
-function asStatus(status) {
-  return status === "auth" || status === "quota" || status === "error" || status === "ok" ? status : "ok";
-}
-
-function asAccount(raw) {
-  if (!raw || typeof raw !== "object") return null;
-  const id = clip(raw.id, 64);
-  const key = String(raw.key || "").trim();
-  if (!id || !key) return null;
-  if (raw.provider && !isLlmProvider(raw.provider)) return null;
-  const provider = isLlmProvider(raw.provider) ? raw.provider : "xai";
-  return {
-    id,
-    label: clip(raw.label, 48) || providerLabel(provider),
-    provider,
-    model: clip(raw.model, 64) || defaultModelFor(provider),
-    key,
-    status: asStatus(raw.status),
-    checkedAt: typeof raw.checkedAt === "string" ? raw.checkedAt : null,
-  };
-}
-
-export function parseLlmStore(raw) {
-  const empty = emptyLlmStore();
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return empty;
-  const accounts = Array.isArray(raw.accounts)
-    ? raw.accounts.map(asAccount).filter(Boolean)
-    : [];
-  const active = clip(raw.activeAccountId, 64);
-  const envStatus = raw.envStatus;
-  return {
-    activeAccountId: accounts.some((a) => a.id === active) ? active : accounts[0]?.id || null,
-    accounts,
-    envStatus:
-      envStatus === "auth" || envStatus === "quota" || envStatus === "error" || envStatus === "ok"
-        ? envStatus
-        : null,
-    envCheckedAt: typeof raw.envCheckedAt === "string" ? raw.envCheckedAt : null,
-  };
-}
-
 export function publicLlmPrefs(store, env = {}) {
   const parsed = parseLlmStore(store);
   return {
     activeAccountId: parsed.activeAccountId,
-    accounts: parsed.accounts.map(({ key: _key, ...row }) => ({
+    accounts: parsed.accounts.map(({ key: _key, refreshToken: _refresh, ...row }) => ({
       ...row,
-      keyHint: maskKey(_key),
+      keyHint: maskKey(_key || _refresh),
     })),
     envFallback: Boolean(envLlmKey(env)),
     envStatus: parsed.envStatus,
@@ -114,19 +66,42 @@ export function resolveLlmRuntime({ store, env = {}, userId = "" } = {}) {
   const parsed = parseLlmStore(store);
   if (userId) {
     const active = parsed.accounts.find((a) => a.id === parsed.activeAccountId);
-    if (active?.key) {
+    if (active && (active.key || (active.authKind === "oauth" && active.refreshToken))) {
       return {
         source: "account",
         provider: active.provider,
         key: active.key,
         model: active.model,
         accountId: active.id,
+        authKind: active.authKind,
+        refreshToken: active.refreshToken,
+        expiresAt: active.expiresAt,
       };
     }
   }
   const key = envLlmKey(env);
-  if (key) return { source: "env", provider: "xai", key, model: DEFAULT_XAI_MODEL, accountId: null };
-  return { source: "none", provider: "xai", key: "", model: DEFAULT_XAI_MODEL, accountId: null };
+  if (key) {
+    return {
+      source: "env",
+      provider: "xai",
+      key,
+      model: DEFAULT_XAI_MODEL,
+      accountId: null,
+      authKind: "api",
+      refreshToken: "",
+      expiresAt: null,
+    };
+  }
+  return {
+    source: "none",
+    provider: "xai",
+    key: "",
+    model: DEFAULT_XAI_MODEL,
+    accountId: null,
+    authKind: "api",
+    refreshToken: "",
+    expiresAt: null,
+  };
 }
 
 export function classifyLlmHttpStatus(status) {
@@ -137,8 +112,11 @@ export function classifyLlmHttpStatus(status) {
   return "ok";
 }
 
-export function llmWarningFor(status, { hasAccount = false, hasEnv = false } = {}) {
+export function llmWarningFor(status, { hasAccount = false, hasEnv = false, authKind = "api" } = {}) {
   if (status === "auth") {
+    if (authKind === "oauth") {
+      return "A assinatura de IA foi recusada ou expirou. Reconecte em Configurações.";
+    }
     return "A conta de IA foi recusada (chave inválida ou sem permissão). Troque a chave em Configurações.";
   }
   if (status === "quota") {
@@ -197,12 +175,25 @@ export function applyLlmCommand(store, command) {
       throw new Error("llm_provider_invalid");
     }
     const provider = isLlmProvider(command.provider) ? command.provider : prev?.provider || "xai";
+    const authKind =
+      command.authKind === "oauth" || command.authKind === "api"
+        ? command.authKind
+        : prev?.authKind === "oauth"
+          ? "oauth"
+          : "api";
+    const refreshToken =
+      command.refreshToken != null && String(command.refreshToken).trim()
+        ? String(command.refreshToken).trim()
+        : prev?.refreshToken || "";
     const nextAccount = {
       id,
       label,
       provider,
+      authKind,
       model: clip(command.model, 64) || prev?.model || defaultModelFor(provider),
       key: key || prev.key,
+      refreshToken,
+      expiresAt: command.expiresAt !== undefined ? command.expiresAt : prev?.expiresAt || null,
       status: command.status ? asStatus(command.status) : key && key !== prev?.key ? "ok" : prev?.status || "ok",
       checkedAt: key && key !== prev?.key ? new Date().toISOString() : prev?.checkedAt || null,
     };
@@ -232,6 +223,41 @@ export function applyLlmCommand(store, command) {
       ...current,
       accounts: current.accounts.map((a) =>
         a.id === command.accountId ? { ...a, status: command.status, checkedAt } : a,
+      ),
+    };
+  }
+  if (command.type === "oauth-pending") {
+    if (!isLlmProvider(command.provider)) throw new Error("llm_provider_invalid");
+    const state = clip(command.state, 128);
+    const codeVerifier = String(command.codeVerifier || "").trim();
+    if (!state || !codeVerifier) throw new Error("llm_oauth_pending");
+    return {
+      ...current,
+      pendingOauth: {
+        provider: command.provider,
+        state,
+        codeVerifier,
+        label: clip(command.label, 48),
+        model: clip(command.model, 64) || defaultModelFor(command.provider),
+        createdAt: command.createdAt || new Date().toISOString(),
+      },
+    };
+  }
+  if (command.type === "oauth-clear-pending") {
+    return { ...current, pendingOauth: null };
+  }
+  if (command.type === "tokens") {
+    return {
+      ...current,
+      accounts: current.accounts.map((a) =>
+        a.id === command.accountId
+          ? {
+              ...a,
+              key: String(command.key || a.key).trim() || a.key,
+              refreshToken: String(command.refreshToken || a.refreshToken || "").trim() || a.refreshToken,
+              expiresAt: command.expiresAt !== undefined ? command.expiresAt : a.expiresAt,
+            }
+          : a,
       ),
     };
   }
