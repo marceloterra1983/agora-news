@@ -54,4 +54,8 @@ test("extractLlmText reads chat and responses payloads", () => {
     "pt1\npt2",
   );
   assert.equal(extractLlmText({}), "");
+  assert.equal(
+    extractLlmText({ content: [{ type: "text", text: "frase anthropic" }] }),
+    "frase anthropic",
+  );
 });

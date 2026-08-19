@@ -83,6 +83,10 @@ export function extractLlmText(body) {
     if (typeof msg === "string") return msg;
   }
   if (typeof body.output_text === "string") return body.output_text;
+  const blocks = Array.isArray(body.content) ? body.content : [];
+  if (blocks.some((part) => typeof part?.text === "string")) {
+    return blocks.map((part) => (typeof part?.text === "string" ? part.text : "")).join("\n");
+  }
   const output = Array.isArray(body.output) ? body.output : [];
   const chunks = [];
   for (const item of output) {

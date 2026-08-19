@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-19T000500
+    date: 2026-08-19
+    severity: high
+    priority: p0
+    scope: ui-media
+    summary: Vídeos do X não tocam — CDN 403 com Referer e player sem autoplay mudo
+    file: specs/bugs/BUG-2026-08-19-video-autoplay.md
   - bug_id: BUG-2026-08-16T094800
     date: 2026-08-16
     severity: high

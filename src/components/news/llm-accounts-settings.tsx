@@ -7,7 +7,15 @@ import {
   selectLlmAccount,
   upsertLlmAccount,
 } from "@/lib/news/llm-server";
-import { DEFAULT_XAI_MODEL, llmWarningFor, type LlmPrefsPublic } from "@/lib/news/llm-accounts.mjs";
+import {
+  defaultModelFor,
+  LLM_PROVIDERS,
+  llmWarningFor,
+  providerLabel,
+  type LlmPrefsPublic,
+  type LlmProvider,
+} from "@/lib/news/llm-accounts.mjs";
+import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 
@@ -40,8 +48,9 @@ export function LlmAccountsSettings() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [label, setLabel] = useState("");
+  const [provider, setProvider] = useState<LlmProvider>("openai");
   const [key, setKey] = useState("");
-  const [model, setModel] = useState<string>(DEFAULT_XAI_MODEL);
+  const [model, setModel] = useState<string>(defaultModelFor("openai"));
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -74,7 +83,8 @@ export function LlmAccountsSettings() {
   return (
     <SettingsSection title="Contas de IA">
       <p className="mb-3 text-xs text-mute">
-        Grok via xAI, para resumir contas fora do catálogo. A chave fica no servidor e não aparece de novo.
+        OpenAI, Claude ou Grok para resumir contas fora do catálogo. A chave fica no servidor e não
+        aparece de novo. Cadastre e valide antes de usar.
       </p>
       {isPending ? <p className="text-sm text-mute">Carregando conta…</p> : null}
       {!isPending && !user ? (
@@ -94,7 +104,7 @@ export function LlmAccountsSettings() {
           ) : null}
           {!notice && prefs?.envFallback && prefs.accounts.length === 0 ? (
             <p className="mb-3 text-xs text-mute">
-              Enquanto não houver conta cadastrada, o app usa a chave do servidor.
+              Enquanto não houver conta cadastrada, o app usa a chave Grok do servidor.
             </p>
           ) : null}
           <ul className="mb-3 divide-y divide-line border-y border-line">
@@ -103,7 +113,8 @@ export function LlmAccountsSettings() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-ink">{account.label}</p>
                   <p className="mt-0.5 text-xs text-mute">
-                    xAI · {account.model} · {account.keyHint} · {statusLabel(account.status)}
+                    {providerLabel(account.provider)} · {account.model} · {account.keyHint} ·{" "}
+                    {statusLabel(account.status)}
                   </p>
                 </div>
                 <button
@@ -132,13 +143,25 @@ export function LlmAccountsSettings() {
             className="grid gap-2"
             onSubmit={(event) => {
               event.preventDefault();
-              void run(async () => {
-                const next = await upsertLlmAccount({ data: { label, key, model } });
-                setLabel("");
-                setKey("");
-                setModel(DEFAULT_XAI_MODEL);
-                return next;
-              });
+              setBusy(true);
+              void (async () => {
+                try {
+                  const next = await upsertLlmAccount({
+                    data: { label, key, model, provider },
+                  });
+                  setPrefs(next);
+                  if (next.saved) {
+                    setLabel("");
+                    setKey("");
+                    setModel(defaultModelFor(provider));
+                  }
+                  setError(next.validateWarning || "");
+                } catch {
+                  setError("Não deu para validar a conta de IA. Tente de novo.");
+                } finally {
+                  setBusy(false);
+                }
+              })();
             }}
           >
             <Input
@@ -147,29 +170,49 @@ export function LlmAccountsSettings() {
               value={label}
               onChange={(event) => setLabel(event.target.value)}
               aria-label="Nome da conta"
-              placeholder="Nome da conta (ex.: xAI pessoal)"
+              placeholder="Nome da conta (ex.: OpenAI pessoal)"
             />
+            <select
+              required
+              aria-label="Provedor"
+              value={provider}
+              onChange={(event) => {
+                const next = event.target.value as LlmProvider;
+                setProvider(next);
+                setModel(defaultModelFor(next));
+              }}
+              className={cn(
+                "flex h-10 w-full rounded-sm border border-line bg-card px-3 text-sm text-ink shadow-none outline-none",
+                "focus-visible:border-ink/40 focus-visible:ring-2 focus-visible:ring-ink/15",
+              )}
+            >
+              {LLM_PROVIDERS.map((id) => (
+                <option key={id} value={id}>
+                  {providerLabel(id)}
+                </option>
+              ))}
+            </select>
             <Input
               required
               type="password"
               autoComplete="off"
               value={key}
               onChange={(event) => setKey(event.target.value)}
-              aria-label="Chave da API xAI"
-              placeholder="Chave da API xAI"
+              aria-label="Chave da API"
+              placeholder="Chave da API"
             />
             <Input
               value={model}
               onChange={(event) => setModel(event.target.value)}
               aria-label="Modelo"
-              placeholder={DEFAULT_XAI_MODEL}
+              placeholder={defaultModelFor(provider)}
             />
             <button
               type="submit"
               disabled={busy}
               className="h-10 rounded-md border border-ink bg-ink text-sm font-semibold text-paper disabled:opacity-40"
             >
-              Cadastrar conta
+              {busy ? "Validando…" : "Cadastrar e validar"}
             </button>
           </form>
         </>

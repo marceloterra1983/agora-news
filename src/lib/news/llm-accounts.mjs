@@ -1,7 +1,30 @@
-/** Contas xAI/Grok do owner. Cron sem sessão usa só o env — sem multi-tenant. */
+/** Contas OpenAI / Claude / Grok do owner. Cron sem sessão usa só o env Grok. */
 
 export const LLM_PREFS_KEY = "_llm";
-export const DEFAULT_XAI_MODEL = "grok-4.5";
+export const LLM_PROVIDERS = ["openai", "anthropic", "xai"];
+export const LLM_PROVIDER_LABELS = { openai: "OpenAI", anthropic: "Claude", xai: "Grok" };
+export const DEFAULT_MODELS = {
+  openai: "gpt-4.1-mini",
+  anthropic: "claude-sonnet-4-5",
+  xai: "grok-4.5",
+};
+export const DEFAULT_XAI_MODEL = DEFAULT_MODELS.xai;
+
+export function isLlmProvider(value) {
+  return LLM_PROVIDERS.includes(value);
+}
+
+export function defaultModelFor(provider) {
+  return DEFAULT_MODELS[provider] || DEFAULT_XAI_MODEL;
+}
+
+export function providerLabel(provider) {
+  return LLM_PROVIDER_LABELS[provider] || LLM_PROVIDER_LABELS.xai;
+}
+
+export function persistValidatedStatus(status) {
+  return status === "ok" || status === "quota";
+}
 
 export function maskKey(key) {
   const k = String(key || "").trim();
@@ -21,19 +44,24 @@ function clip(value, max) {
   return String(value || "").trim().slice(0, max);
 }
 
+function asStatus(status) {
+  return status === "auth" || status === "quota" || status === "error" || status === "ok" ? status : "ok";
+}
+
 function asAccount(raw) {
   if (!raw || typeof raw !== "object") return null;
   const id = clip(raw.id, 64);
   const key = String(raw.key || "").trim();
   if (!id || !key) return null;
-  const status = raw.status;
+  if (raw.provider && !isLlmProvider(raw.provider)) return null;
+  const provider = isLlmProvider(raw.provider) ? raw.provider : "xai";
   return {
     id,
-    label: clip(raw.label, 48) || "xAI",
-    provider: "xai",
-    model: clip(raw.model, 64) || DEFAULT_XAI_MODEL,
+    label: clip(raw.label, 48) || providerLabel(provider),
+    provider,
+    model: clip(raw.model, 64) || defaultModelFor(provider),
     key,
-    status: status === "auth" || status === "quota" || status === "error" || status === "ok" ? status : "ok",
+    status: asStatus(raw.status),
     checkedAt: typeof raw.checkedAt === "string" ? raw.checkedAt : null,
   };
 }
@@ -72,7 +100,7 @@ export function publicLlmPrefs(store, env = {}) {
 }
 
 /**
- * Com userId: conta ativa do owner, senão env.
+ * Com userId: conta ativa do owner (qualquer um dos 3), senão env Grok.
  * Sem userId (cron/ingest): só env. Não inventar multi-tenant no cron.
  */
 export function resolveLlmRuntime({ store, env = {}, userId = "" } = {}) {
@@ -80,12 +108,18 @@ export function resolveLlmRuntime({ store, env = {}, userId = "" } = {}) {
   if (userId) {
     const active = parsed.accounts.find((a) => a.id === parsed.activeAccountId);
     if (active?.key) {
-      return { source: "account", key: active.key, model: active.model, accountId: active.id };
+      return {
+        source: "account",
+        provider: active.provider,
+        key: active.key,
+        model: active.model,
+        accountId: active.id,
+      };
     }
   }
   const key = envLlmKey(env);
-  if (key) return { source: "env", key, model: DEFAULT_XAI_MODEL, accountId: null };
-  return { source: "none", key: "", model: DEFAULT_XAI_MODEL, accountId: null };
+  if (key) return { source: "env", provider: "xai", key, model: DEFAULT_XAI_MODEL, accountId: null };
+  return { source: "none", provider: "xai", key: "", model: DEFAULT_XAI_MODEL, accountId: null };
 }
 
 export function classifyLlmHttpStatus(status) {
@@ -105,7 +139,7 @@ export function llmWarningFor(status, { hasAccount = false, hasEnv = false } = {
   }
   if (status === "none") {
     if (!hasAccount && !hasEnv) {
-      return "Nenhuma conta de IA cadastrada e o servidor não tem chave. Cadastre uma conta xAI em Configurações.";
+      return "Nenhuma conta de IA cadastrada e o servidor não tem chave. Cadastre OpenAI, Claude ou Grok em Configurações.";
     }
     return "Nenhuma chave de IA disponível agora. Cadastre ou selecione uma conta em Configurações.";
   }
@@ -148,14 +182,18 @@ export function applyLlmCommand(store, command) {
     if (!prev && !key) throw new Error("llm_key_required");
     const label = clip(command.label, 48);
     if (!label) throw new Error("llm_label_required");
+    if (command.provider != null && command.provider !== "" && !isLlmProvider(command.provider)) {
+      throw new Error("llm_provider_invalid");
+    }
+    const provider = isLlmProvider(command.provider) ? command.provider : prev?.provider || "xai";
     const nextAccount = {
       id,
       label,
-      provider: "xai",
-      model: clip(command.model, 64) || prev?.model || DEFAULT_XAI_MODEL,
+      provider,
+      model: clip(command.model, 64) || prev?.model || defaultModelFor(provider),
       key: key || prev.key,
-      status: key && key !== prev?.key ? "ok" : prev?.status || "ok",
-      checkedAt: key && key !== prev?.key ? null : prev?.checkedAt || null,
+      status: command.status ? asStatus(command.status) : key && key !== prev?.key ? "ok" : prev?.status || "ok",
+      checkedAt: key && key !== prev?.key ? new Date().toISOString() : prev?.checkedAt || null,
     };
     const accounts = prev
       ? current.accounts.map((a) => (a.id === id ? nextAccount : a))
