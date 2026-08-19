@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import type { Story } from "@/lib/news/types";
+import { extraAvatarFor } from "@/lib/news/extra-fontes";
 import { relativeTime, displayTitle } from "@/lib/news/format";
+import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
 import { StoryMedia } from "./story-media";
@@ -21,6 +24,10 @@ export function StoryCard({
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
+  const [face, setFace] = useState(() => resolveFace(story.avatar));
+  useEffect(() => {
+    setFace(resolveFace(story.avatar, extraAvatarFor(story.source)));
+  }, [story.avatar, story.source]);
 
   if (variant === "reader") {
     return (
@@ -40,9 +47,9 @@ export function StoryCard({
           </>
         ) : null}
         <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-mute">
-          {story.avatar ? (
+          {face ? (
             <img
-              src={story.avatar}
+              src={face}
               alt=""
               width={24}
               height={24}

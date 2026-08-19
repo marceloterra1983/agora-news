@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { fallbackPayload, filterStories, loadFeed } from "./feed";
 import { serverCatalogFor } from "./server-catalog";
 import { downloadPostById } from "./supabase";
-import { hydrateStory } from "./story-hydrate";
+import { attachStoryAvatars, hydrateStory } from "./story-hydrate";
 import { persistHydratedBody } from "./story-persist";
 import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
@@ -61,11 +61,13 @@ export const loadNews = createServerFn({ method: "GET" })
             limit: PAGE_SIZE,
             accounts: catalog.handles,
           });
-          const stories = filterStories(older, data.category, data.q, catalog).map((s) => ({
-            ...s,
-            body: s.excerpt || s.title,
-            original: s.original || "",
-          }));
+          const stories = await attachStoryAvatars(
+            filterStories(older, data.category, data.q, catalog).map((s) => ({
+              ...s,
+              body: s.excerpt || s.title,
+              original: s.original || "",
+            })),
+          );
           return {
             stories,
             meta: {
@@ -80,9 +82,11 @@ export const loadNews = createServerFn({ method: "GET" })
         }
         const payload = await loadFeed(data.category, catalog);
         const news = toNews(payload, data.category, data.q, catalog);
+        const stories = await attachStoryAvatars(news.stories);
         return {
           ...news,
-          meta: { ...news.meta, hasMore: news.stories.length >= PAGE_SIZE },
+          stories,
+          meta: { ...news.meta, hasMore: stories.length >= PAGE_SIZE },
         };
       },
       (r) => ({ count: r.stories?.length ?? 0, live: Boolean(r.meta?.live) }),

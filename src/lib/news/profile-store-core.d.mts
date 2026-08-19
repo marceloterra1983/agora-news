@@ -15,3 +15,18 @@ export function storedProfileFromRow(
   raw: unknown,
   fallbackHandle?: string,
 ): StoredProfileRow | null;
+
+export function displayAvatarUrl(url: unknown): string | null;
+
+export function withAvatars<T extends { source?: string; avatar?: string | null }>(
+  stories: T[],
+  avatars: Map<string, string | null> | Record<string, string | null>,
+): T[];
+
+export function resolveFace(avatar: unknown, extra?: unknown): string;
+
+export function avatarInFilter(handles: unknown[]): string;
+
+export function mergeAvatarsIntoStories<
+  T extends { id?: string; source?: string; avatar?: string | null },
+>(incoming: T[], existing?: Record<string, { source?: string; avatar?: string | null }>): T[];

@@ -1,4 +1,4 @@
-import { storedProfileFromRow } from "./profile-store-core.mjs";
+import { avatarInFilter, storedProfileFromRow } from "./profile-store-core.mjs";
 import { adminHeaders, SUPABASE_URL } from "./admin";
 
 export type StoredProfile = {
@@ -30,6 +30,27 @@ export async function readStoredProfile(
   const rows = (await res.json()) as unknown[];
   if (!Array.isArray(rows)) throw new Error("profile_read_invalid");
   return (storedProfileFromRow(rows[0], key) as StoredProfile | null) ?? null;
+}
+
+/** Mesma coluna que a matéria (`x_profiles.avatar`), só os handles da página. */
+export async function readAvatarsByHandles(
+  handles: string[],
+): Promise<Map<string, string>> {
+  const filter = avatarInFilter(handles);
+  const out = new Map<string, string>();
+  if (!filter) return out;
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/x_profiles?handle=in.(${filter})&select=handle,avatar`,
+    { headers: adminHeaders(), signal: AbortSignal.timeout(4_000) },
+  );
+  if (!res.ok) throw new Error(`avatar_read_${res.status}`);
+  const rows = (await res.json()) as unknown[];
+  if (!Array.isArray(rows)) throw new Error("avatar_read_invalid");
+  for (const row of rows) {
+    const parsed = storedProfileFromRow(row);
+    if (parsed?.avatar) out.set(parsed.handle.toLowerCase(), parsed.avatar);
+  }
+  return out;
 }
 
 export async function listStoredProfiles(): Promise<StoredProfile[]> {

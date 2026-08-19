@@ -24,6 +24,15 @@ function norm(h: string): string {
     .trim();
 }
 
+export function extraAvatarFor(handle: string): string | null {
+  const key = String(handle || "")
+    .replace(/^@+/, "")
+    .trim()
+    .toLowerCase();
+  if (!key) return null;
+  return loadExtraFontes().find((e) => e.handle.toLowerCase() === key)?.avatar || null;
+}
+
 export function loadExtraFontes(): ExtraFonte[] {
   if (typeof window === "undefined") return [];
   try {
