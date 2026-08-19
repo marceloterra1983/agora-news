@@ -5,7 +5,6 @@ import { supabaseReadHeaders, SUPABASE_POSTS_URL } from "./supabase";
 export const LAST_POST_CATEGORY = "x-last";
 
 import {
-  pickLatestFromPostRows,
   pickRecentFromPostRows,
   type StoredLastPost,
 } from "./last-post-core.mjs";
