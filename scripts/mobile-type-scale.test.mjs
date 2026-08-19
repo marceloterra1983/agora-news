@@ -13,7 +13,7 @@ const phoneCss = readFileSync(
 
 const DESKTOP_BASE = `
   [data-chrome="compact"] [data-h-scroll] button,
-  [data-chrome="compact"] [data-section-select] {
+  [data-chrome="compact"] [data-section-switch] {
     height: 32px; font-size: 11px; border: 0;
   }
   [data-chrome="compact"] [aria-haspopup="menu"] {
@@ -39,6 +39,11 @@ function fixture(font = "") {
 <body>
   <header data-chrome="compact">
     <div>
+      <div data-section-switch>
+        <button type="button" data-section-chip>IA</button>
+        <button type="button" data-section-chip>Tech</button>
+        <button type="button" data-section-chip>Brasil</button>
+      </div>
       <select data-section-select aria-label="Assunto"><option>IA</option></select>
       <div data-chrome="groups">
         <div data-h-scroll>
@@ -87,7 +92,7 @@ async function measure(page) {
   return page.evaluate(() => {
     const chip = document.querySelector("[data-h-scroll] button");
     const scroller = document.querySelector("[data-h-scroll]");
-    const ia = document.querySelector("[data-section-select]");
+    const ia = document.querySelector("[data-section-switch]");
     const menu = document.querySelector("[aria-haspopup=menu]");
     const nav = document.querySelector("[data-chrome=tabs] a");
     const icon = document.querySelector("[data-chrome=tabs] svg");

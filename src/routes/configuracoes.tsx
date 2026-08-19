@@ -7,6 +7,7 @@ import {
   SettingsRow,
   SettingsSection,
   SettingsToggle,
+  ThemeSwitch,
 } from "@/components/news/settings-ui";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useNewsStore } from "@/lib/news/store";
@@ -150,27 +151,14 @@ function SettingsPage() {
         </SettingsSection>
 
         <SettingsSection title="Aparência">
-          <p className="mb-3 text-xs text-mute">Tema</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {(
-              [
-                ["system", "Sistema"],
-                ["light", "Claro"],
-                ["dark", "Escuro"],
-              ] as const
-            ).map(([id, label]) => (
-              <SettingsChoice
-                key={id}
-                active={theme === id}
-                onClick={() => {
-                  setTheme(id);
-                  setThemeMode(id);
-                }}
-                label={label}
-              >
-                {label}
-              </SettingsChoice>
-            ))}
+          <div className="mb-3">
+            <ThemeSwitch
+              value={theme}
+              onChange={(id) => {
+                setTheme(id);
+                setThemeMode(id);
+              }}
+            />
           </div>
           <SettingsToggle
             on={settings.showImages}

@@ -1,5 +1,72 @@
+import { Monitor, Moon, Sun } from "lucide-react";
 import type { ReactNode } from "react";
+import type { ThemeMode } from "@/lib/news/theme";
 import { cn } from "@/lib/utils";
+
+const THEME_OPTIONS: { id: ThemeMode; label: string; icon: ReactNode }[] = [
+  { id: "system", label: "Sistema", icon: <Monitor className="size-3.5" aria-hidden /> },
+  { id: "light", label: "Claro", icon: <Sun className="size-3.5" aria-hidden /> },
+  { id: "dark", label: "Escuro", icon: <Moon className="size-3.5" aria-hidden /> },
+];
+
+function SegmentedSwitch<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (id: T) => void;
+  options: { id: T; label: string; icon?: ReactNode }[];
+}) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[11px] text-mute">{label}</p>
+      <div
+        data-theme-switch=""
+        className="grid grid-cols-3 gap-0.5 rounded-full bg-paper-2 p-0.5"
+      >
+        {options.map((opt) => {
+          const on = value === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              aria-pressed={on}
+              aria-label={opt.label}
+              onClick={() => onChange(opt.id)}
+              className={cn(
+                "inline-flex h-10 items-center justify-center gap-1 rounded-full text-[11px] font-semibold",
+                on ? "bg-ink text-paper" : "text-mute",
+              )}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function ThemeSwitch({
+  value,
+  onChange,
+}: {
+  value: ThemeMode;
+  onChange: (id: ThemeMode) => void;
+}) {
+  return (
+    <SegmentedSwitch
+      label="Tema"
+      value={value}
+      onChange={onChange}
+      options={THEME_OPTIONS}
+    />
+  );
+}
 
 export function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
   return (
