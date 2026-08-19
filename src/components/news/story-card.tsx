@@ -3,13 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import type { Story } from "@/lib/news/types";
 import { extraAvatarFor } from "@/lib/news/extra-fontes";
-import { relativeTime, displayTitle } from "@/lib/news/format";
+import { relativeTime, displayBody, displayTitle } from "@/lib/news/format";
 import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
 import { StoryMedia } from "./story-media";
 import { GroupTag } from "./group-tag";
 import { Tip } from "./icon-btn";
+import { WrittenLinks } from "./written-link";
 
 export function StoryCard({
   story,
@@ -77,6 +78,10 @@ export function StoryCard({
             {displayTitle(story.title)}
           </Link>
         </h2>
+        <WrittenLinks
+          text={`${story.title}\n${story.body}\n${story.excerpt}`}
+          skipHref={story.url}
+        />
         {story.image ? (
           <Link
             to="/materia/$id"
@@ -155,9 +160,13 @@ export function StoryCard({
         </h2>
         {variant !== "compact" && story.excerpt && (
           <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">
-            {story.excerpt}
+            {displayBody(story.excerpt)}
           </p>
         )}
+        <WrittenLinks
+          text={`${story.title}\n${story.body}\n${story.excerpt}`}
+          skipHref={story.url}
+        />
         <Tip label={saved ? "Remover dos salvos" : "Salvar matéria"}>
           <button
             type="button"
