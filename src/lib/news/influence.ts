@@ -3,6 +3,7 @@ import { buzzFor, buzzIsFresh, fetchLastBuzz } from "./fonte-metrics";
 import { lastPostHref, preferNewerLast, storedToLastHit } from "./last-post";
 import { lastPostsByAccount, type LastHit } from "./fontes-last";
 import { mapPool } from "./map-pool";
+import { displayBlurb } from "./profile-blurb.mjs";
 import { profilesFor, type XProfile } from "./profiles";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listKnownSections } from "./sections";
@@ -75,7 +76,7 @@ function seedFromStore(
       followers: Number(row.followers) || 0,
       verified: false,
       avatar: row.avatar || null,
-      bio: row.bio || row.summary_pt || null,
+      bio: row.summary_pt || null,
     },
   });
 }
@@ -171,6 +172,9 @@ function buildRows(
 ): InfluenceRow[] {
   const since = Date.now() - 48 * 60 * 60_000;
   const fromStore = storedLastMap(stored);
+  const summaries = new Map(
+    stored.map((row) => [norm(row.handle).toLowerCase(), row.summary_pt || ""]),
+  );
   const base = profilesFor(section).map((p) => {
     const key = norm(p.handle).toLowerCase();
     const stats = cachedStats(key);
@@ -193,7 +197,7 @@ function buildRows(
       followers: stats.followers,
       verified: stats.verified,
       avatar: stats.avatar,
-      bio: stats.bio,
+      bio: displayBlurb(p.handle, p.name, summaries.get(key) || stats.bio),
       lastPost: lastWithBuzz(last, p.handle, inApp),
       inFeed: recentCount,
       articles: last?.count ?? 0,

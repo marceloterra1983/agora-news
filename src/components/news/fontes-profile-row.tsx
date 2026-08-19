@@ -9,7 +9,7 @@ import { displayTitle, formatCount, relativeTime } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { groupLabel } from "@/lib/news/groups";
 import { safeHttpHref } from "@/lib/news/last-post";
-import { blurbFor } from "@/lib/news/profiles";
+import { displayBlurb } from "@/lib/news/profiles";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
 
@@ -123,7 +123,7 @@ export function ProfileRow({
             <p className="text-[12px] font-medium text-mute">{groupLabel(row.group)}</p>
           )}
           <p className={cn("text-[13px] leading-relaxed text-ink-soft", !hideGroup && row.group !== "novos" && "mt-1")}>
-            {row.bio || blurbFor(row.handle, row.name)}
+            {displayBlurb(row.handle, row.name, row.bio)}
           </p>
           <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
             {row.followers ? <span>{formatCount(row.followers)} seguidores</span> : null}

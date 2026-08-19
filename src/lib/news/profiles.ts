@@ -1,7 +1,10 @@
 import { AI_PROFILES } from "./catalog-ai.mjs";
 import { BRASIL_PROFILES } from "./catalog-brasil.mjs";
 import { TECH_PROFILES } from "./catalog-tech.mjs";
+import { displayBlurb } from "./profile-blurb.mjs";
 import { DEFAULT_SECTION, type Category } from "./types";
+
+export { displayBlurb };
 
 export type ProfileGroup = string;
 
@@ -30,11 +33,7 @@ export function profileByHandle(handle: string): XProfile | undefined {
 }
 
 export function blurbFor(handle: string, fallbackName?: string): string {
-  const hit = profileByHandle(handle);
-  if (hit) return hit.blurb;
-  return fallbackName
-    ? `${fallbackName} é uma fonte acompanhada no feed de IA.`
-    : "Fonte acompanhada no feed de IA.";
+  return displayBlurb(handle, fallbackName);
 }
 
 function fold(s: string): string {

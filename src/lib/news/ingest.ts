@@ -1,6 +1,8 @@
 import { keepLastPost } from "./last-post";
 import { fillCatalogGaps, persistLastPost } from "./last-post-store";
-import { allProfiles, blurbFor, profileByHandle } from "./profiles";
+import { allProfiles, profileByHandle } from "./profiles";
+import { displayBlurb } from "./profile-blurb.mjs";
+import { oneLineAbout } from "./summary-line";
 import { sectionOfHandle } from "./section-catalog.mjs";
 import { upsertPosts, upsertProfile, type UpsertPost } from "./admin";
 import { listStoredProfiles } from "./profile-store";
@@ -31,12 +33,6 @@ import { sendPushForStories } from "./push-server";
 const MAX_AGE_MS = 36 * 60 * 60_000;
 const MAX_INSERT = 40;
 const SKIP_IF_FRESH_MS = 10 * 60_000;
-
-async function translateLine(text: string): Promise<string> {
-  const src = text.replace(/\s+/g, " ").trim();
-  if (!src) return "";
-  return (await translateToPt(src, { chunk: 280 })).slice(0, 280);
-}
 
 export async function runIngest(opts?: { limitHandles?: number; withProfiles?: boolean }) {
   const t0 = nowMs();
@@ -210,11 +206,8 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
       const prev = storedAt.get(handle.toLowerCase());
       const name = knownProfile?.name || author?.name || handle;
       const bio = author?.description?.trim() || prev?.bio || "";
-      const summary = knownProfile
-        ? blurbFor(handle, name)
-        : bio
-          ? await translateLine(bio)
-          : prev?.summary_pt || "";
+      const summary =
+        (await oneLineAbout(handle, name, bio)) || prev?.summary_pt || "";
       if (!summary) return;
       const lastPost = keepLastPost(
         prev?.last_post,
@@ -262,7 +255,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
       handle: r.handle,
       name: r.name,
       bio: r.bio || prev?.bio || "",
-      summary_pt: prev?.summary_pt || r.bio || r.handle,
+      summary_pt: prev?.summary_pt || displayBlurb(r.handle, r.name),
       avatar: r.avatar,
       followers: r.followers || prev?.followers || 0,
       last_post: prev?.last_post ?? null,
