@@ -328,9 +328,10 @@ test("notification busy: failed capability never becomes a successful preference
     `/src/lib/news/notify-favorites.ts?accessibility=${Date.now()}`,
   );
 
-  assert.equal(await notify.setFavoriteNotifyHandle("OpenAI", true), "denied");
+  // Handle persiste sem push; ENABLED_KEY só liga com permission granted.
+  assert.equal(await notify.setFavoriteNotifyHandle("OpenAI", true), "granted");
   assert.equal(values.get("agora-notify-fav-v1"), undefined);
-  assert.equal(values.get("agora-fontes-notify-v1"), undefined);
+  assert.match(String(values.get("agora-fontes-notify-v1")), /openai/i);
 
   const page = read("src/routes/fontes.tsx");
   const hook = read("src/lib/news/use-notify-favorites.ts");

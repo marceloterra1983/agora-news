@@ -55,12 +55,16 @@ test("Playwright Fontes: star notify power persist and back stays on /fontes", a
     assert.ok(res && res.status() < 400, `GET /fontes ${res?.status()}`);
     await page.locator('[data-testid="fonte-row"]').first().waitFor({ timeout: 15_000 });
     const n = await page.locator('[data-testid="fonte-row"]').count();
-    let row = null;
-    for (let i = 0; i < Math.min(n, 16); i++) {
-      row = await openCard(page, i);
-      if (row) break;
+    const idx = Math.min(8, Math.max(0, n - 1));
+    let row = await openCard(page, idx);
+    if (!row) {
+      for (let i = 0; i < Math.min(n, 16); i++) {
+        row = await openCard(page, i);
+        if (row) break;
+      }
     }
     assert.ok(row, "nenhum card aberto com data-fonte-actions");
+    await row.locator("[data-fonte-actions]").scrollIntoViewIfNeeded();
 
     const handle = String(await row.locator('[data-fonte-action="x"]').getAttribute("href"))
       .replace(/^https:\/\/x\.com\//i, "")
@@ -68,33 +72,36 @@ test("Playwright Fontes: star notify power persist and back stays on /fontes", a
       .toLowerCase();
     assert.ok(handle, "handle do perfil");
 
+    async function storageHas(key) {
+      const raw = String(
+        await page.evaluate((k) => localStorage.getItem(k), key),
+      );
+      return new RegExp(handle, "i").test(raw);
+    }
+
     const star = row.locator('[data-fonte-action="star"]');
-    const starBefore = await star.getAttribute("aria-pressed");
+    if ((await star.getAttribute("aria-pressed")) === "true") await star.click();
     await star.click();
-    assert.notEqual(await star.getAttribute("aria-pressed"), starBefore);
-    assert.match(
-      String(await page.evaluate(() => localStorage.getItem("agora-fontes-starred-v1"))),
-      new RegExp(handle, "i"),
-    );
+    assert.equal(await star.getAttribute("aria-pressed"), "true");
+    assert.equal(await storageHas("agora-fontes-starred-v1"), true);
 
     const power = row.locator('[data-fonte-action="power"]');
-    const powerBefore = await power.getAttribute("aria-pressed");
+    if ((await power.getAttribute("aria-pressed")) !== "true") await power.click();
     await power.click();
-    assert.notEqual(await power.getAttribute("aria-pressed"), powerBefore);
-    assert.match(
-      String(await page.evaluate(() => localStorage.getItem("agora-fontes-disabled-v1"))),
-      new RegExp(handle, "i"),
-    );
+    assert.equal(await power.getAttribute("aria-pressed"), "false");
+    assert.equal(await storageHas("agora-fontes-disabled-v1"), true);
     assert.ok(await row.getByText(/pausada/i).count());
 
     const notifyBtn = row.locator('[data-fonte-action="notify"]');
+    if ((await notifyBtn.getAttribute("aria-pressed")) === "true") {
+      await notifyBtn.click();
+      await page.waitForTimeout(400);
+    }
     await notifyBtn.click();
     await page.waitForTimeout(500);
     assert.notEqual(await notifyBtn.getAttribute("aria-busy"), "true");
-    assert.match(
-      String(await page.evaluate(() => localStorage.getItem("agora-fontes-notify-v1"))),
-      new RegExp(handle, "i"),
-    );
+    assert.equal(await notifyBtn.getAttribute("aria-pressed"), "true");
+    assert.equal(await storageHas("agora-fontes-notify-v1"), true);
     assert.equal(await row.locator("button[aria-expanded=true]").count(), 1);
 
     let materia = row.locator('a[href^="/materia/"]');

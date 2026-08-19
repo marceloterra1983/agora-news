@@ -231,19 +231,34 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
       );
     }
 
+    const href = await row.locator('[data-fonte-action="x"]').getAttribute("href");
+    assert.match(String(href), /^https:\/\/x\.com\//);
+    const handle = String(href)
+      .replace(/^https:\/\/x\.com\//i, "")
+      .split(/[/?#]/)[0]
+      .toLowerCase();
+    assert.ok(handle, "handle do perfil");
+
+    async function storageHas(key) {
+      const raw = String(
+        await page.evaluate((k) => localStorage.getItem(k), key),
+      );
+      return new RegExp(handle, "i").test(raw);
+    }
+
     const star = row.locator('[data-fonte-action="star"]');
-    const before = await star.getAttribute("aria-pressed");
+    if ((await star.getAttribute("aria-pressed")) === "true") await star.click();
     await star.click();
-    assert.notEqual(await star.getAttribute("aria-pressed"), before);
+    assert.equal(await star.getAttribute("aria-pressed"), "true");
+    assert.equal(await storageHas("agora-fontes-starred-v1"), true);
     assert.equal(await row.locator("button[aria-expanded=true]").count(), 1);
 
     const power = row.locator('[data-fonte-action="power"]');
-    const powerBefore = await power.getAttribute("aria-pressed");
+    if ((await power.getAttribute("aria-pressed")) !== "true") await power.click();
     await power.click();
-    assert.notEqual(await power.getAttribute("aria-pressed"), powerBefore);
-
-    const href = await row.locator('[data-fonte-action="x"]').getAttribute("href");
-    assert.match(String(href), /^https:\/\/x\.com\//);
+    assert.equal(await power.getAttribute("aria-pressed"), "false");
+    assert.equal(await storageHas("agora-fontes-disabled-v1"), true);
+    assert.ok(await row.getByText(/pausada/i).count());
 
     await row.locator('[data-fonte-action="group"]').click();
     const menu = row.getByRole("list", { name: "Grupo do perfil" });
@@ -251,11 +266,33 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
     const menuBox = await menu.boundingBox();
     assert.ok(menuBox && menuBox.y >= 0);
     assert.ok(menuBox.y + menuBox.height <= 844);
+    await page.keyboard.press("Escape");
 
     const notifyBtn = row.locator('[data-fonte-action="notify"]');
+    if ((await notifyBtn.getAttribute("aria-pressed")) === "true") {
+      await notifyBtn.click();
+      await page.waitForTimeout(400);
+    }
     await notifyBtn.click();
     await page.waitForTimeout(400);
     assert.notEqual(await notifyBtn.getAttribute("aria-busy"), "true");
+    assert.equal(await notifyBtn.getAttribute("aria-pressed"), "true");
+    assert.equal(await storageHas("agora-fontes-notify-v1"), true);
+
+    const materia = row.locator('a[href^="/materia/"]');
+    if (!(await materia.count())) {
+      unavailable(t, "nenhum post /materia neste card — voltar não exercitado");
+      return;
+    }
+    await materia.first().click();
+    await page.waitForURL(/\/materia\//, { timeout: 15_000 });
+    await page.getByRole("button", { name: /Voltar/i }).click();
+    await page.waitForURL(/\/fontes/, { timeout: 15_000 });
+    assert.equal(new URL(page.url()).pathname, "/fontes");
+    assert.ok(
+      await page.locator("[data-fonte-actions]").count(),
+      "card aberto após voltar",
+    );
   } finally {
     await browser.close();
   }
