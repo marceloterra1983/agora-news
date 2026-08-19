@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { mergeAvatarsIntoStories } from "./profile-store-core.mjs";
 import type { Story } from "./types";
 
 type NewsState = {
@@ -18,8 +19,9 @@ export const useNewsStore = create<NewsState>()(
       savedIds: [],
       ingest: (list) =>
         set((s) => {
+          const painted = mergeAvatarsIntoStories(list, s.stories);
           const next = { ...s.stories };
-          for (const item of list) next[item.id] = item;
+          for (const item of painted) next[item.id] = item;
           return { stories: next };
         }),
       toggleSave: (story) =>

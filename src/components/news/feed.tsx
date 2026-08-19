@@ -12,6 +12,7 @@ import { useUnread } from "@/lib/news/use-unread";
 import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
 import { profileByHandle } from "@/lib/news/profiles";
+import { mergeAvatarsIntoStories } from "@/lib/news/profile-store-core.mjs";
 import { StoryCard } from "./story-card";
 
 const PAGE = PAGE_SIZE;
@@ -32,6 +33,7 @@ export function Feed({
   group?: string;
 }) {
   const ingest = useNewsStore((s) => s.ingest);
+  const storedStories = useNewsStore((s) => s.stories);
   const prefs = useFontesPrefs(category);
   const unread = useUnread();
   const seedBaseline = unread.seedBaseline;
@@ -77,14 +79,15 @@ export function Feed({
 
   const stories = useMemo(() => {
     const disabled = new Set(prefs.disabled);
-    return rawStories.filter((s) => {
+    const scoped = rawStories.filter((s) => {
       const h = normHandle(s.source || s.sourceLabel || "");
       if (h && disabled.has(h)) return false;
       const storyGroup = prefs.groups[h] ?? profileByHandle(h)?.group ?? "novos";
       if (group !== "all" && storyGroup !== group) return false;
       return true;
     });
-  }, [rawStories, prefs.disabled, prefs.groups, group]);
+    return mergeAvatarsIntoStories(scoped, storedStories);
+  }, [rawStories, prefs.disabled, prefs.groups, group, storedStories]);
 
   useEffect(() => {
     if (!rawStories.length) return;

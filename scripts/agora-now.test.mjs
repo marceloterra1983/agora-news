@@ -99,6 +99,18 @@ test("reader card has avatar, word ellipsis and no-referrer on the header face",
   assert.match(read("src/lib/news/format.ts"), /clipAtWord/);
 });
 
+test("feed list paints x_profiles avatars onto each story before render", () => {
+  const news = read("src/lib/news/server-news.ts");
+  assert.match(news, /attachStoryAvatars/);
+  const hydrate = read("src/lib/news/story-hydrate.ts");
+  assert.match(hydrate, /export async function attachStoryAvatars/);
+  assert.match(hydrate, /readAvatarsByHandles/);
+  assert.doesNotMatch(hydrate, /listStoredProfiles/);
+  assert.match(read("src/lib/news/profile-store.ts"), /handle=in\.\(/);
+  assert.match(read("src/components/news/story-card.tsx"), /resolveFace/);
+  assert.match(read("src/components/news/article-view.tsx"), /resolveFace/);
+});
+
 test("unread mark is the left stripe only, without a Novo chip", () => {
   const card = read("src/components/news/story-card.tsx");
   assert.match(card, /data-unread-mark=""/);

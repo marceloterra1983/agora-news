@@ -6,7 +6,8 @@ import type { Story } from "@/lib/news/types";
 import { labelFor } from "@/lib/news/types";
 import { useNewsStore } from "@/lib/news/store";
 import { blurbFor } from "@/lib/news/profiles";
-import { loadExtraFontes } from "@/lib/news/extra-fontes";
+import { extraAvatarFor, loadExtraFontes } from "@/lib/news/extra-fontes";
+import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { loadTweetEmbed } from "@/lib/news/server";
 import { displayTitle, relativeTime } from "@/lib/news/format";
 import { safeHttpHref } from "@/lib/news/last-post";
@@ -50,12 +51,12 @@ export function ArticleView({ story }: { story: Story }) {
         : [];
   const whoCatalog = blurbFor(story.source, story.sourceLabel);
   const [who, setWho] = useState(whoCatalog);
-  const [face, setFace] = useState(story.avatar || "");
+  const [face, setFace] = useState(() => resolveFace(story.avatar));
   useEffect(() => {
     const key = story.source.replace(/^@+/, "").toLowerCase();
     const extra = loadExtraFontes().find((e) => e.handle.toLowerCase() === key);
     setWho(extra?.summary || whoCatalog);
-    setFace(story.avatar || extra?.avatar || "");
+    setFace(resolveFace(story.avatar, extra?.avatar || extraAvatarFor(story.source)));
   }, [story.avatar, story.source, whoCatalog]);
   const title = displayTitle(story.title);
   const showTitle = isDistinctTitle(title, story.body || story.excerpt);
