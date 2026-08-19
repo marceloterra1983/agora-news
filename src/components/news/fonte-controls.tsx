@@ -1,6 +1,7 @@
 import { Bell, BellOff, Layers, Power, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { isReservedGroup } from "@/lib/news/catalog-taxonomy.mjs";
+import { groupMenuOpensUp } from "@/lib/news/fonte-menu-place.mjs";
 import {
   addCustomGroup,
   allGroupIds,
@@ -12,6 +13,9 @@ import {
 import { readLastSection } from "@/lib/news/section-pref";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
+
+const ACTION =
+  "grid size-[44px] place-items-center rounded-full border border-line bg-paper transition-colors active:bg-paper-2";
 
 export function FonteControls({
   handle,
@@ -44,6 +48,7 @@ export function FonteControls({
     : "Ativar aviso deste perfil";
   const powerLabel = disabled ? "Reativar no feed" : "Desabilitar no feed";
   const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(true);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [ids, setIds] = useState<string[]>(() =>
@@ -78,6 +83,28 @@ export function FonteControls({
     };
   }, [open]);
 
+  function toggleMenu() {
+    if (open) {
+      setOpen(false);
+      setCreating(false);
+      return;
+    }
+    const r = box.current?.getBoundingClientRect();
+    const header = document.querySelector("[data-chrome=compact]");
+    const nav = document.querySelector("[data-chrome=tabs]");
+    const top = header?.getBoundingClientRect().bottom ?? 0;
+    const bottom = nav?.getBoundingClientRect().top ?? window.innerHeight;
+    if (r) {
+      setUp(
+        groupMenuOpensUp({
+          spaceAbove: r.top - top,
+          spaceBelow: bottom - r.bottom,
+        }),
+      );
+    }
+    setOpen(true);
+  }
+
   function create(e: React.FormEvent) {
     e.preventDefault();
     const g = addCustomGroup(name, readLastSection());
@@ -97,11 +124,10 @@ export function FonteControls({
           aria-label={starLabel}
           aria-pressed={starred}
           className={cn(
-            "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-            starred
-              ? "text-mark hover:bg-paper"
-              : "text-mute hover:bg-paper hover:text-mark",
+            ACTION,
+            starred ? "text-mark" : "text-mute active:text-mark",
           )}
+          data-fonte-action="star"
           onClick={() => onToggleStar(handle)}
         >
           <Star
@@ -119,11 +145,10 @@ export function FonteControls({
           aria-busy={notifyBusy || undefined}
           disabled={notifyBusy}
           className={cn(
-            "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-            notify
-              ? "text-mark hover:bg-paper"
-              : "text-mute hover:bg-paper hover:text-ink",
+            ACTION,
+            notify ? "text-mark" : "text-mute active:text-ink",
           )}
+          data-fonte-action="notify"
           onClick={() => onToggleNotify(handle)}
         >
           {notify ? (
@@ -138,12 +163,8 @@ export function FonteControls({
           type="button"
           aria-label={powerLabel}
           aria-pressed={!disabled}
-          className={cn(
-            "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-            disabled
-              ? "text-mute hover:bg-paper hover:text-ink"
-              : "text-ink hover:bg-paper",
-          )}
+          className={cn(ACTION, disabled ? "text-mute" : "text-ink")}
+          data-fonte-action="power"
           onClick={() => onToggleDisabled(handle)}
         >
           <Power className="size-3.5" strokeWidth={1.75} />
@@ -155,11 +176,9 @@ export function FonteControls({
             type="button"
             aria-label="Editar grupo"
             aria-expanded={open}
-            className={cn(
-              "grid size-[44px] place-items-center rounded-full border border-line transition-colors",
-              open ? "bg-paper text-ink" : "text-ink hover:bg-paper",
-            )}
-            onClick={() => setOpen((v) => !v)}
+            className={cn(ACTION, open && "text-ink")}
+            data-fonte-action="group"
+            onClick={toggleMenu}
           >
             <Layers className="size-3.5" strokeWidth={1.75} />
           </button>
@@ -167,7 +186,10 @@ export function FonteControls({
         {open ? (
           <ul
             aria-label="Grupo do perfil"
-            className="absolute bottom-[calc(100%+6px)] left-0 z-50 max-h-64 min-w-40 overflow-y-auto rounded-xl border border-line bg-paper shadow-card"
+            className={cn(
+              "absolute left-0 z-50 max-h-64 min-w-40 overflow-y-auto rounded-xl border border-line bg-paper shadow-card",
+              up ? "bottom-[calc(100%+6px)]" : "top-[calc(100%+6px)]",
+            )}
           >
             {ids.map((id) => {
               const on = id === group;

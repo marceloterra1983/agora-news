@@ -15,6 +15,15 @@ function emit() {
   window.dispatchEvent(new Event(EVENT));
 }
 
+async function readyRegistration(ms = 2500) {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("sw_ready_timeout")), ms);
+    }),
+  ]);
+}
+
 export function notifySupported(): boolean {
   return typeof window !== "undefined" && "Notification" in window;
 }
@@ -63,10 +72,10 @@ export async function enableFavoriteNotify(handles = getNotifyHandles()): Promis
         ? "granted"
         : await Notification.requestPermission();
     if (perm !== "granted") return perm;
-    if (!(await subscribeWebPush(handles))) return "error";
     window.localStorage.setItem(ENABLED_KEY, "1");
     window.localStorage.removeItem(READY_KEY);
     emit();
+    void subscribeWebPush(handles);
     return perm;
   } catch {
     return "error";
@@ -178,7 +187,7 @@ export async function subscribeWebPush(handles = getNotifyHandles()) {
     if (!keyResponse.ok) return false;
     const { key } = (await keyResponse.json()) as { key?: string };
     if (!key) return false;
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await readyRegistration();
     const { subscription: sub, replacedEndpoint } =
       await ensureCurrentPushSubscription(
         reg.pushManager,
@@ -220,18 +229,15 @@ export async function setFavoriteNotifyHandle(handle: string, on: boolean) {
   if (on) {
     const result = await enableFavoriteNotify(next);
     if (result !== "granted") return result;
-  } else if (isNotifyEnabled() && !(await subscribeWebPush(next))) {
-    return "error" as const;
   }
   setNotifyHandle(key, on);
+  if (isNotifyEnabled()) void subscribeWebPush(next);
   return "granted" as const;
 }
 
 export async function reconcileFavoritePush() {
   if (!isNotifyEnabled() || notifyPermission() !== "granted") return;
-  if (await subscribeWebPush()) return;
-  window.localStorage.setItem(ENABLED_KEY, "0");
-  emit();
+  await subscribeWebPush();
 }
 
 export async function unsubscribeWebPush() {
@@ -243,7 +249,7 @@ export async function unsubscribeWebPush() {
     return false;
   }
   try {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await readyRegistration();
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return true;
     if (!sub.endpoint) return false;

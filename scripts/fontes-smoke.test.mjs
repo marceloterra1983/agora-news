@@ -86,7 +86,7 @@ test("Playwright opens /fontes and sees the catalog list", async (t) => {
     }
     await expand.click();
     assert.equal(await expand.getAttribute("aria-expanded"), "true");
-    assert.ok(await first.getByText("Último post").count());
+    assert.ok(await first.getByText(/Últimos? posts?/i).count());
   } finally {
     await browser.close();
   }

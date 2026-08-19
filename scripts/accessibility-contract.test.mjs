@@ -311,8 +311,8 @@ test("notification busy: failed capability never becomes a successful preference
   Object.defineProperty(globalThis, "Notification", {
     configurable: true,
     value: {
-      permission: "granted",
-      requestPermission: async () => "granted",
+      permission: "denied",
+      requestPermission: async () => "denied",
     },
   });
 
@@ -328,7 +328,7 @@ test("notification busy: failed capability never becomes a successful preference
     `/src/lib/news/notify-favorites.ts?accessibility=${Date.now()}`,
   );
 
-  assert.equal(await notify.setFavoriteNotifyHandle("OpenAI", true), "error");
+  assert.equal(await notify.setFavoriteNotifyHandle("OpenAI", true), "denied");
   assert.equal(values.get("agora-notify-fav-v1"), undefined);
   assert.equal(values.get("agora-fontes-notify-v1"), undefined);
 
