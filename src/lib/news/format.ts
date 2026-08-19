@@ -1,4 +1,5 @@
 import { clipAtWord } from "./summary-core.mjs";
+import { stripWrittenLinks } from "./written-links.mjs";
 
 export function relativeTime(iso: string, now = Date.now()): string {
   const t = new Date(iso).getTime();
@@ -25,9 +26,14 @@ export function formatCount(n: number): string {
 }
 
 export function displayTitle(title: string): string {
-  const clean = title
-    .replace(/\s*\((?:com\s+)?imagem\s+diferente\)\.?\s*$/i, "")
-    .replace(/\s*com imagem diferente\.?\s*$/i, "")
-    .trim();
-  return clipAtWord(clean || title, 180);
+  const clean = stripWrittenLinks(
+    title
+      .replace(/\s*\((?:com\s+)?imagem\s+diferente\)\.?\s*$/i, "")
+      .replace(/\s*com imagem diferente\.?\s*$/i, ""),
+  );
+  return clipAtWord(clean, 180);
+}
+
+export function displayBody(text: string): string {
+  return stripWrittenLinks(text);
 }

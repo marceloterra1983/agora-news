@@ -9,12 +9,13 @@ import { blurbFor } from "@/lib/news/profiles";
 import { extraAvatarFor, loadExtraFontes } from "@/lib/news/extra-fontes";
 import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { loadTweetEmbed } from "@/lib/news/server";
-import { displayTitle, relativeTime } from "@/lib/news/format";
+import { displayBody, displayTitle, relativeTime } from "@/lib/news/format";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
 import { StoryAssetBlock } from "./story-media";
 import { GroupTag } from "./group-tag";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
+import { WrittenLinks } from "./written-link";
 import { IconBtn, IconLink } from "./icon-btn";
 import { XLogo } from "./x-logo";
 
@@ -59,7 +60,8 @@ export function ArticleView({ story }: { story: Story }) {
     setFace(resolveFace(story.avatar, extra?.avatar || extraAvatarFor(story.source)));
   }, [story.avatar, story.source, whoCatalog]);
   const title = displayTitle(story.title);
-  const showTitle = isDistinctTitle(title, story.body || story.excerpt);
+  const body = displayBody(story.body || story.excerpt);
+  const showTitle = isDistinctTitle(title, body);
 
   return (
     <article data-post="" className="mx-auto max-w-3xl max-sm:max-w-none">
@@ -119,9 +121,15 @@ export function ArticleView({ story }: { story: Story }) {
           ))}
         </div>
       ) : null}
-      <p className="mt-6 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed text-ink-soft">
-        {story.body || story.excerpt}
-      </p>
+      {body ? (
+        <p className="mt-6 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed text-ink-soft">
+          {body}
+        </p>
+      ) : null}
+      <WrittenLinks
+        text={`${story.title}\n${story.body}\n${story.excerpt}`}
+        skipHref={[story.url, card?.url || ""]}
+      />
       {quoted ? <QuoteCard quote={quoted} /> : null}
       {card && card.url !== quoted?.card?.url ? <LinkCard card={card} /> : null}
       {article ? <XArticleBlock article={article} /> : null}

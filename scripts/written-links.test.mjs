@@ -54,5 +54,5 @@ test("feed and article hide the url behind a Link label", () => {
   assert.match(chip, /Link publicado/);
   assert.match(chip, /safeHttpHref/);
   assert.match(chip, /target=["']_blank["']/);
-  assert.doesNotMatch(chip, /\{href\}/);
+  assert.doesNotMatch(chip, />\{href\}/);
 });
