@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FontePostLink } from "@/components/news/fonte-post-link";
 import { displayTitle, relativeTime } from "@/lib/news/format";
 import { safeHttpHref } from "@/lib/news/last-post";
 import {
@@ -31,14 +32,12 @@ export function FonteLastPosts({ posts }: { posts: FontePost[] }) {
             return (
               <li key={post.id}>
                 {href ? (
-                  <a
+                  <FontePostLink
                     href={href}
-                    target={href.startsWith("http") ? "_blank" : undefined}
-                    rel={href.startsWith("http") ? "noreferrer" : undefined}
                     className="block text-sm font-medium leading-snug text-ink"
                   >
                     {title}
-                  </a>
+                  </FontePostLink>
                 ) : (
                   <p className="text-sm font-medium leading-snug text-ink">{title}</p>
                 )}

@@ -33,7 +33,7 @@ test("closed last post is a link outside the leftover expand button", () => {
   assert.doesNotMatch(button, /displayTitle\(row\.lastPost/);
   assert.doesNotMatch(button, /lastPost\?\.title/);
   const after = header.slice(btnEnd);
-  assert.match(after, /<a\b/);
+  assert.match(after, /FontePostLink|<a\b/);
   assert.match(after, /lastHref/);
   assert.match(after, /data-testid=["']fonte-last-post["']/);
   assert.match(button, /min-h-\[44px\]/);

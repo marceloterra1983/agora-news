@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   consumeFeedScroll,
+  consumeLeavePage,
   markLeaveFeed,
+  markLeavePage,
+  peekLeavePage,
   scrollToRestore,
 } from "../src/lib/news/feed-scroll.ts";
 
@@ -50,4 +53,39 @@ test("article back uses history and the feed remembers /materia clicks", () => {
   const feed = read("src/components/news/feed.tsx");
   assert.match(feed, /markLeaveFeed/);
   assert.match(feed, /consumeFeedScroll/);
+});
+
+test("Fontes leave mark restores the open profile and does not leak into the feed", () => {
+  const store = new Map();
+  globalThis.sessionStorage = {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => {
+      store.set(key, String(value));
+    },
+    removeItem: (key) => {
+      store.delete(key);
+    },
+  };
+  markLeavePage({ secao: "ai", y: 920, path: "/fontes", open: "elonmusk" });
+  assert.equal(consumeFeedScroll("ai"), null);
+  const leave = peekLeavePage();
+  assert.equal(leave?.path, "/fontes");
+  assert.equal(leave?.open, "elonmusk");
+  const consumed = consumeLeavePage("/fontes", "ai");
+  assert.equal(consumed?.y, 920);
+  assert.equal(consumed?.open, "elonmusk");
+  assert.equal(consumeLeavePage("/fontes", "ai"), null);
+});
+
+test("materia back falls back to Fontes and last posts use the in-app Link", () => {
+  const back = read("src/components/news/history-back.tsx");
+  const last = read("src/components/news/fontes-last-posts.tsx");
+  const row = read("src/components/news/fontes-profile-row.tsx");
+  const page = read("src/routes/fontes.tsx");
+  assert.match(back, /peekLeavePage/);
+  assert.match(back, /to:\s*["']\/fontes["']/);
+  assert.match(last, /FontePostLink/);
+  assert.match(read("src/components/news/fonte-post-link.tsx"), /to=["']\/materia\/\$id["']/);
+  assert.match(row, /FontePostLink/);
+  assert.match(page, /useFontesLeave/);
 });

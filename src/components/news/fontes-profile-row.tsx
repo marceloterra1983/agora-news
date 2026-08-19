@@ -6,6 +6,7 @@ import { GroupTag } from "@/components/news/group-tag";
 import { Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
 import { FonteLastPosts } from "@/components/news/fontes-last-posts";
+import { FontePostLink } from "@/components/news/fonte-post-link";
 import { displayTitle, formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { groupLabel } from "@/lib/news/groups";
@@ -102,18 +103,16 @@ export function ProfileRow({
       </div>
       {!open && row.lastPost ? (
         lastHref ? (
-          <a
-            data-testid="fonte-last-post"
+          <FontePostLink
+            testId="fonte-last-post"
             href={lastHref}
-            target={lastHref.startsWith("http") ? "_blank" : undefined}
-            rel={lastHref.startsWith("http") ? "noreferrer" : undefined}
             className="-mt-0.5 mb-2 ml-7 mr-0.5 block min-h-[44px] text-mute hover:text-ink"
           >
             <span className="block truncate text-[11px] leading-snug">
               {displayTitle(row.lastPost.title)}
             </span>
             <ClosedPostMeta row={row} />
-          </a>
+          </FontePostLink>
         ) : (
           <div data-testid="fonte-last-post" className="-mt-0.5 mb-2 ml-7 mr-0.5 min-h-[44px] text-mute">
             <span className="block truncate text-[11px] leading-snug">
@@ -148,7 +147,7 @@ export function ProfileRow({
           <div
             ref={actionsRef}
             data-fonte-actions
-            className="mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3"
+            className="relative z-50 mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3"
           >
             <Tip label={`Abrir @${row.handle} no X`}>
               <a

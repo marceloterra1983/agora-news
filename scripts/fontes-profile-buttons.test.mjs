@@ -108,6 +108,61 @@ test("notify persists locally when permission is granted even if push fails", as
   assert.match(String(values.get("agora-fontes-notify-v1")), /theo/);
 });
 
+test("notify persists the handle when permission is denied", async (t) => {
+  const descriptors = new Map(
+    ["window", "navigator", "Notification"].map((key) => [
+      key,
+      Object.getOwnPropertyDescriptor(globalThis, key),
+    ]),
+  );
+  const previousFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+    for (const [key, descriptor] of descriptors) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else delete globalThis[key];
+    }
+  });
+
+  const values = new Map();
+  const localStorage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+  };
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { Notification: {}, localStorage, dispatchEvent() {} },
+  });
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { serviceWorker: { ready: new Promise(() => {}) } },
+  });
+  Object.defineProperty(globalThis, "Notification", {
+    configurable: true,
+    value: {
+      permission: "denied",
+      requestPermission: async () => "denied",
+    },
+  });
+  globalThis.fetch = async () => new Response("nope", { status: 503 });
+
+  const { createServer } = await import("vite");
+  const server = await createServer({
+    configFile: false,
+    logLevel: "silent",
+    resolve: { alias: { "@": join(root, "src") } },
+    server: { middlewareMode: true },
+  });
+  t.after(() => server.close());
+  const notify = await server.ssrLoadModule(
+    `/src/lib/news/notify-favorites.ts?denied=${Date.now()}`,
+  );
+
+  assert.equal(await notify.setFavoriteNotifyHandle("elonmusk", true), "granted");
+  assert.match(String(values.get("agora-fontes-notify-v1")), /elonmusk/);
+});
+
 test("Playwright: all five profile actions stay above the tab bar and respond", async (t) => {
   if (!(await live())) {
     unavailable(t, `smoke precisa de ${base} no ar`);
@@ -176,19 +231,34 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
       );
     }
 
+    const href = await row.locator('[data-fonte-action="x"]').getAttribute("href");
+    assert.match(String(href), /^https:\/\/x\.com\//);
+    const handle = String(href)
+      .replace(/^https:\/\/x\.com\//i, "")
+      .split(/[/?#]/)[0]
+      .toLowerCase();
+    assert.ok(handle, "handle do perfil");
+
+    async function storageHas(key) {
+      const raw = String(
+        await page.evaluate((k) => localStorage.getItem(k), key),
+      );
+      return new RegExp(handle, "i").test(raw);
+    }
+
     const star = row.locator('[data-fonte-action="star"]');
-    const before = await star.getAttribute("aria-pressed");
+    if ((await star.getAttribute("aria-pressed")) === "true") await star.click();
     await star.click();
-    assert.notEqual(await star.getAttribute("aria-pressed"), before);
+    assert.equal(await star.getAttribute("aria-pressed"), "true");
+    assert.equal(await storageHas("agora-fontes-starred-v1"), true);
     assert.equal(await row.locator("button[aria-expanded=true]").count(), 1);
 
     const power = row.locator('[data-fonte-action="power"]');
-    const powerBefore = await power.getAttribute("aria-pressed");
+    if ((await power.getAttribute("aria-pressed")) !== "true") await power.click();
     await power.click();
-    assert.notEqual(await power.getAttribute("aria-pressed"), powerBefore);
-
-    const href = await row.locator('[data-fonte-action="x"]').getAttribute("href");
-    assert.match(String(href), /^https:\/\/x\.com\//);
+    assert.equal(await power.getAttribute("aria-pressed"), "false");
+    assert.equal(await storageHas("agora-fontes-disabled-v1"), true);
+    assert.ok(await row.getByText(/pausada/i).count());
 
     await row.locator('[data-fonte-action="group"]').click();
     const menu = row.getByRole("list", { name: "Grupo do perfil" });
@@ -196,11 +266,42 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
     const menuBox = await menu.boundingBox();
     assert.ok(menuBox && menuBox.y >= 0);
     assert.ok(menuBox.y + menuBox.height <= 844);
+    await page.keyboard.press("Escape");
 
     const notifyBtn = row.locator('[data-fonte-action="notify"]');
+    if ((await notifyBtn.getAttribute("aria-pressed")) === "true") {
+      await notifyBtn.click();
+      await page.waitForTimeout(400);
+    }
     await notifyBtn.click();
     await page.waitForTimeout(400);
     assert.notEqual(await notifyBtn.getAttribute("aria-busy"), "true");
+    assert.equal(await notifyBtn.getAttribute("aria-pressed"), "true");
+    assert.equal(await storageHas("agora-fontes-notify-v1"), true);
+
+    const materia = row.locator('a[href^="/materia/"]');
+    if (await materia.count()) {
+      await materia.first().click();
+    } else {
+      await page.evaluate(({ secao, open, y }) => {
+        sessionStorage.setItem(
+          "agora-feed-scroll-v1",
+          JSON.stringify({ secao, y, path: "/fontes", open }),
+        );
+      }, { secao: "ai", open: handle, y: await page.evaluate(() => window.scrollY) });
+      await page.goto(`${base}/materia/ci-fontes-back`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15_000,
+      });
+    }
+    await page.waitForURL(/\/materia\//, { timeout: 15_000 });
+    await page.getByRole("button", { name: /Voltar/i }).click();
+    await page.waitForURL(/\/fontes/, { timeout: 15_000 });
+    assert.equal(new URL(page.url()).pathname, "/fontes");
+    assert.ok(
+      await page.locator("[data-fonte-actions]").count(),
+      "card aberto após voltar",
+    );
   } finally {
     await browser.close();
   }
