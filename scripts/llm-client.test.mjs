@@ -41,6 +41,27 @@ test("validateLlmKey maps 401 to auth and 429 to quota without live fetch", asyn
   assert.equal(ok.persist, true);
 });
 
+test("validateLlmKey checks the key via models list, not a chat ping", async () => {
+  const urls = [];
+  const ok = await validateLlmKey({
+    provider: "openai",
+    key: "sk-ok",
+    model: "gpt-4.1-mini",
+    fetchImpl: async (url) => {
+      urls.push(String(url));
+      return jsonResponse(200, { data: [] });
+    },
+  });
+  assert.equal(ok.status, "ok");
+  assert.equal(ok.persist, true);
+  assert.ok(urls.length > 0);
+  assert.ok(urls.every((url) => url.includes("/v1/models")));
+  assert.equal(
+    urls.some((url) => url.includes("chat/completions") || url.includes("/messages")),
+    false,
+  );
+});
+
 test("askProviderLine hits the three provider endpoints with mock fetch", async () => {
   const calls = [];
   const fetchImpl = async (url, init) => {
