@@ -77,6 +77,10 @@ test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () =>
     /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*56px/,
   );
   assert.match(chrome, /h-\[var\(--agora-tap\)\]|h-\[44px\]/);
+  assert.match(chrome, /appearance-none/);
+  assert.match(chrome, /ChevronDown/);
+  assert.match(css, /\[data-section-select\][\s\S]{0,280}-webkit-appearance:\s*none/);
+  assert.match(css, /\[data-section-select\][\s\S]{0,280}padding-right:\s*32px/);
   assert.match(chrome, /data-group-chip/);
   assert.match(chrome, /data-chrome="groups"/);
   assert.match(chrome, /h-\[32px\]/);

@@ -9,6 +9,7 @@ a{color:inherit;text-decoration:none}
 html.dark [data-chrome=compact]{border-bottom-color:#2c2824;background:#12100e}
 [data-chrome=compact] .row{display:flex;align-items:center;gap:12px;padding:12px 16px;max-width:42rem;margin:0 auto}
 [data-chrome=compact] .pill{display:inline-flex;height:44px;align-items:center;border-radius:999px;background:#161411;color:#f2eee4;padding:0 16px;font-size:14px;font-weight:600}
+[data-section-select]{-webkit-appearance:none;appearance:none;background-image:none}
 html.dark [data-chrome=compact] .pill{background:#f0e9e0;color:#12100e}
 [data-theme-toggle]{display:inline-flex;height:44px;align-items:center;gap:6px;border-radius:999px;border:1px solid #d5cfbf;background:#faf7f0;color:#161411;padding:0 12px;font-size:14px;font-weight:600;flex-shrink:0}
 html.dark [data-theme-toggle]{border-color:#3d3832;background:#1a1714;color:#f0e9e0}
