@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
@@ -8,6 +8,12 @@ import { type Category } from "@/lib/news/types";
 import { normHandle } from "@/lib/news/fontes-prefs";
 import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
+import {
+  consumeFeedScroll,
+  currentScrollY,
+  markLeaveFeed,
+  restoreScrollY,
+} from "@/lib/news/feed-scroll";
 import { noteFirstUnread } from "@/lib/news/unread";
 import { observeUnreadImpressions } from "@/lib/news/unread-impression";
 import { useUnread } from "@/lib/news/use-unread";
@@ -118,6 +124,30 @@ export function Feed({
     if (!node) return;
     return observeUnreadImpressions(node, markRead);
   }, [unreadKey, markRead]);
+
+  useLayoutEffect(() => {
+    if (!stories.length) return;
+    const y = consumeFeedScroll(category);
+    if (y == null) return;
+    restoreScrollY(y);
+    const later = window.setTimeout(() => restoreScrollY(y), 200);
+    return () => window.clearTimeout(later);
+  }, [category, stories.length]);
+
+  useEffect(() => {
+    const root = feedRef.current;
+    if (!root) return;
+    const onClick = (event: MouseEvent) => {
+      const href = (event.target as Element | null)
+        ?.closest("a")
+        ?.getAttribute("href");
+      if (href && /\/materia\//.test(href)) {
+        markLeaveFeed(category, currentScrollY());
+      }
+    };
+    root.addEventListener("click", onClick, true);
+    return () => root.removeEventListener("click", onClick, true);
+  }, [category]);
 
   async function loadMore() {
     const last = rawStories.at(-1);

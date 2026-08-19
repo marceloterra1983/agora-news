@@ -1,10 +1,9 @@
 import { useEffect } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppChrome } from "@/components/news/app-chrome";
 import { ArticleView } from "@/components/news/article-view";
-import { Tip } from "@/components/news/icon-btn";
+import { HistoryBackButton } from "@/components/news/history-back";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadStory } from "@/lib/news/server";
 import { useNewsStore } from "@/lib/news/store";
@@ -90,16 +89,12 @@ function ArticlePage() {
             <p className="mt-2 text-sm text-ink-soft">
               Ela pode ter saído do ar ou expirado no feed.
             </p>
-            <Tip label={`Voltar para ${labelFor(DEFAULT_SECTION)}`}>
-              <Link
-                to="/"
-                search={{ secao: DEFAULT_SECTION }}
-                aria-label={`Voltar para ${labelFor(DEFAULT_SECTION)}`}
-                className="mx-auto mt-6 grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
-              >
-                <ArrowLeft className="size-4" />
-              </Link>
-            </Tip>
+            <div className="mx-auto mt-6 w-min">
+              <HistoryBackButton
+                fallbackSecao={DEFAULT_SECTION}
+                label={`Voltar para ${labelFor(DEFAULT_SECTION)}`}
+              />
+            </div>
           </div>
         )}
       </div>
