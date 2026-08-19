@@ -243,8 +243,9 @@ test("settings UI offers API and Assinatura without web password or chatgpt logi
   const all = `${ui}\n${lib}`;
   assert.match(ui, /Assinatura/);
   assert.match(ui, /API/);
-  assert.match(ui, /Conectar/);
-  assert.match(ui, /Já autorizei|ja autorizei|já autorizei/i);
+  assert.match(ui, /Conectar com API/);
+  assert.match(ui, /Conectar assinatura/);
+  assert.match(ui, /Cole o código|Já autorizei|Concluir autorização/i);
   assert.match(read("src/lib/news/llm-server.ts"), /startLlmOauth|completeLlmOauth/);
   assert.doesNotMatch(all, /chatgpt\.com\/login/);
   assert.doesNotMatch(all, /claude\.ai\/login/);

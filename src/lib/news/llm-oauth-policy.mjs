@@ -5,7 +5,7 @@ export function subscriptionAuthFor(provider) {
     return {
       available: true,
       reason: null,
-      hint: "Abre o login oficial da Anthropic (Claude Pro/Max). Depois cole o código ou a URL.",
+      hint: "Abre o login oficial da Anthropic (Claude Pro/Max). Cole só o código — vale por poucos minutos.",
     };
   }
   if (provider === "openai") {

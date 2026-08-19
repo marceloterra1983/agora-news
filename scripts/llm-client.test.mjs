@@ -41,6 +41,35 @@ test("validateLlmKey maps 401 to auth and 429 to quota without live fetch", asyn
   assert.equal(ok.persist, true);
 });
 
+test("oauth validate persists without probing GET /models", async () => {
+  const { validateLlmKey } = await import("../src/lib/news/llm-client.mjs");
+  let called = 0;
+  const ok = await validateLlmKey({
+    provider: "anthropic",
+    key: "sk-ant-oat01-x",
+    model: "claude-sonnet-4-5",
+    authKind: "oauth",
+    fetchImpl: async () => {
+      called += 1;
+      return jsonResponse(401, {});
+    },
+  });
+  assert.equal(ok.status, "ok");
+  assert.equal(ok.persist, true);
+  assert.equal(called, 0);
+});
+
+test("oauth anthropic chat sends Claude Code identity and CLI headers", async () => {
+  const { CLAUDE_CODE_IDENTITY, chatRequests } = await import("../src/lib/news/llm-client.mjs");
+  const [req] = chatRequests("anthropic", "claude-sonnet-4-5", "oat-token", "hi", "resumo", "oauth");
+  const body = JSON.parse(String(req.init.body));
+  assert.equal(body.system[0].text, CLAUDE_CODE_IDENTITY);
+  assert.equal(req.init.headers.Authorization, "Bearer oat-token");
+  assert.equal(req.init.headers["x-api-key"], undefined);
+  assert.equal(req.init.headers["x-app"], "cli");
+  assert.match(String(req.init.headers["user-agent"] || ""), /claude-cli/);
+});
+
 test("validateLlmKey checks the key via models list, not a chat ping", async () => {
   const urls = [];
   const ok = await validateLlmKey({

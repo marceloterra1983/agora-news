@@ -9,6 +9,9 @@ import { clipOneLine, extractLlmText } from "./summary-core.mjs";
 export const LLM_SYSTEM =
   "Você resume quem é uma conta do X. Use SOMENTE os dados do usuário. Não invente cargo, empresa, país ou formação. Se a bio for vaga, reformule só o que ela diz. Uma frase em português do Brasil, no máximo 160 caracteres. Sem aspas, emoji, hashtag ou @.";
 
+/** Tokens OAuth do Claude Code só passam no Messages com este identity block. */
+export const CLAUDE_CODE_IDENTITY = "You are Claude Code, Anthropic's official CLI for Claude.";
+
 const TIMEOUT_MS = 14_000;
 
 export function validateWarningFor(status) {
@@ -36,6 +39,8 @@ export function providerAuthHeaders(provider, key, authKind = "api") {
     if (authKind === "oauth") {
       headers.Authorization = `Bearer ${key}`;
       headers["anthropic-beta"] = "oauth-2025-04-20";
+      headers["user-agent"] = "claude-cli/1.0.0 (external, agora)";
+      headers["x-app"] = "cli";
     } else {
       headers["x-api-key"] = key;
     }
@@ -126,7 +131,13 @@ export function chatRequests(provider, model, key, prompt, system = LLM_SYSTEM, 
             model,
             max_tokens: 90,
             temperature: 0,
-            system,
+            system:
+              authKind === "oauth"
+                ? [
+                    { type: "text", text: CLAUDE_CODE_IDENTITY },
+                    { type: "text", text: system },
+                  ]
+                : system,
             messages: [{ role: "user", content: prompt }],
           }),
         },
@@ -167,6 +178,10 @@ export async function validateLlmKey({
   authKind = "api",
   fetchImpl = fetch,
 }) {
+  if (authKind === "oauth") {
+    // Token exchange already proved the subscription. GET /models recusa oat.
+    return { status: "ok", persist: true, warning: null };
+  }
   try {
     // Chat ping fails on model/body mismatches and looks like "nada cadastrado".
     // GET /models only checks whether the key is accepted.

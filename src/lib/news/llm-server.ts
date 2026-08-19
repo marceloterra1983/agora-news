@@ -9,6 +9,7 @@ import {
   type LlmUpsertResult,
 } from "./llm-accounts.mjs";
 import type { LlmModelListResult } from "./llm-client.mjs";
+import { defaultAccountLabel } from "./llm-slots.mjs";
 import { subscriptionAuthFor } from "./llm-oauth-policy.mjs";
 
 function envSnapshot() {
@@ -71,7 +72,7 @@ export const listLlmAccounts = createServerFn({ method: "GET" })
 
 export const upsertLlmAccount = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator((input: { id?: string; label: string; key?: string; model?: string; provider?: string }) => {
+  .validator((input: { id?: string; label?: string; key?: string; model?: string; provider?: string }) => {
     const providerRaw = String(input.provider || "").trim();
     if (providerRaw && !isLlmProvider(providerRaw)) {
       throw new Error("llm_provider_invalid");
@@ -86,12 +87,24 @@ export const upsertLlmAccount = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data, context }): Promise<LlmUpsertResult> => {
-    await assertSpendAllowed(context.userId);
     const { applyOwnerLlmCommand, readLlmStore } = await import("./llm-store.server");
-    const { validateLlmKey } = await import("./llm-client.mjs");
     if (!data.key) {
-      throw new Error("llm_key_required");
+      const current = await readLlmStore(context.userId);
+      const prev = current.accounts.find((row) => row.id === data.id || row.provider === data.provider);
+      if (!prev) throw new Error("llm_key_required");
+      const store = await applyOwnerLlmCommand(context.userId, {
+        type: "upsert",
+        id: prev.id,
+        label: data.label || prev.label,
+        provider: prev.provider,
+        model: data.model || prev.model,
+        authKind: prev.authKind,
+        status: prev.status,
+      });
+      return withValidate(publicLlmPrefs(store, envSnapshot()), true, prev.status, "Modelo atualizado.");
     }
+    await assertSpendAllowed(context.userId);
+    const { validateLlmKey } = await import("./llm-client.mjs");
     const checked = await validateLlmKey({
       provider: data.provider,
       key: data.key,
@@ -160,7 +173,7 @@ export const startLlmOauth = createServerFn({ method: "POST" })
     if (!cap.available) {
       return { available: false as const, reason: cap.reason, authorizeUrl: null };
     }
-    if (!data.label) throw new Error("llm_label_required");
+    const label = data.label || defaultAccountLabel(data.provider, "oauth");
     await assertSpendAllowed(context.userId);
     const { startClaudeOauth } = await import("./llm-oauth.mjs");
     const { applyOwnerLlmCommand } = await import("./llm-store.server");
@@ -170,7 +183,7 @@ export const startLlmOauth = createServerFn({ method: "POST" })
       provider: data.provider,
       state: started.pending.state,
       codeVerifier: started.pending.codeVerifier,
-      label: data.label,
+      label,
       model: data.model,
     });
     return { available: true as const, reason: null, authorizeUrl: started.authorizeUrl };
@@ -221,7 +234,7 @@ export const completeLlmOauth = createServerFn({ method: "POST" })
         publicLlmPrefs(store, envSnapshot()),
         false,
         "auth",
-        "A autorização foi recusada. Nada foi cadastrado.",
+        "A Anthropic recusou o código (expirou ou é inválido). Abra a autorização de novo.",
       );
     }
     const checked = await validateLlmKey({

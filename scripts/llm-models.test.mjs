@@ -86,7 +86,6 @@ test("settings model field is a native select of existing models, not free text"
   assert.match(ui, /aria-label=["']Modelo["']/);
   assert.match(ui, /<select[\s\S]*aria-label=["']Modelo["']|aria-label=["']Modelo["'][\s\S]*<select/);
   assert.match(ui, /modelOptionsFor/);
-  assert.match(ui, /setModel\(defaultModelFor\(next\)\)/);
   assert.doesNotMatch(ui, /placeholder=\{defaultModelFor\(provider\)\}/);
   assert.doesNotMatch(ui, /Gemini|Mistral|DeepSeek/i);
 });

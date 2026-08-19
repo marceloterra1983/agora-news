@@ -140,12 +140,9 @@ export function stripLlmFromPrefs(prefs) {
 
 export function mergePrefsPreservingLlm(incoming, existing) {
   const next = { ...incoming };
-  if (
-    existing &&
-    typeof existing === "object" &&
-    Object.hasOwn(existing, LLM_PREFS_KEY) &&
-    !Object.hasOwn(incoming, LLM_PREFS_KEY)
-  ) {
+  // Cliente nunca manda segredo. _llm vazio no incoming não pode apagar a conta.
+  delete next[LLM_PREFS_KEY];
+  if (existing && typeof existing === "object" && Object.hasOwn(existing, LLM_PREFS_KEY)) {
     next[LLM_PREFS_KEY] = existing[LLM_PREFS_KEY];
   }
   return next;
@@ -166,15 +163,17 @@ export function applyLlmCommand(store, command) {
   const current = parseLlmStore(store);
   if (command.type === "upsert") {
     const key = String(command.key || "").trim();
-    const id = clip(command.id, 64) || globalThis.crypto.randomUUID();
-    const prev = current.accounts.find((a) => a.id === id);
-    if (!prev && !key) throw new Error("llm_key_required");
-    const label = clip(command.label, 48);
-    if (!label) throw new Error("llm_label_required");
+    const requestedId = clip(command.id, 64);
     if (command.provider != null && command.provider !== "" && !isLlmProvider(command.provider)) {
       throw new Error("llm_provider_invalid");
     }
-    const provider = isLlmProvider(command.provider) ? command.provider : prev?.provider || "xai";
+    const prevById = requestedId ? current.accounts.find((a) => a.id === requestedId) : null;
+    const provider = isLlmProvider(command.provider) ? command.provider : prevById?.provider || "xai";
+    const prev = prevById || current.accounts.find((a) => a.provider === provider);
+    const id = prev?.id || requestedId || globalThis.crypto.randomUUID();
+    if (!prev && !key) throw new Error("llm_key_required");
+    const label = clip(command.label, 48) || prev?.label;
+    if (!label) throw new Error("llm_label_required");
     const authKind =
       command.authKind === "oauth" || command.authKind === "api"
         ? command.authKind
@@ -197,9 +196,10 @@ export function applyLlmCommand(store, command) {
       status: command.status ? asStatus(command.status) : key && key !== prev?.key ? "ok" : prev?.status || "ok",
       checkedAt: key && key !== prev?.key ? new Date().toISOString() : prev?.checkedAt || null,
     };
-    const accounts = prev
-      ? current.accounts.map((a) => (a.id === id ? nextAccount : a))
-      : [...current.accounts, nextAccount];
+    const accounts = [
+      ...current.accounts.filter((a) => a.id !== id && a.provider !== provider),
+      nextAccount,
+    ];
     return withActive({ ...current, accounts, activeAccountId: current.activeAccountId || id });
   }
   if (command.type === "delete") {
