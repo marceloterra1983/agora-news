@@ -79,6 +79,7 @@ export function StoryAssetBlock({
         height={asset.height ?? 9}
         preload={priority ? "auto" : "metadata"}
         poster={asset.poster}
+        src={asset.url}
         className="mt-6 w-full rounded-lg bg-hero"
         style={
           asset.width && asset.height

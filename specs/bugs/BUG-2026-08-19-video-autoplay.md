@@ -35,4 +35,4 @@ Risk level: Low
 
 ## Resolution
 
-O player da matéria agora manda `referrerPolicy=no-referrer`, inicia mudo em loop e chama `play()` no mount. Evidência: `video.twimg.com` 200 sem Referer e 403 com Referer do site.
+O atributo no `<video>` não basta: o pipeline de mídia do Chromium ignora `referrerpolicy` e o MP4 segue com Referer → 403. O documento agora declara `Referrer-Policy: same-origin` (header + meta). Evidência no browser: elemento-only = error 4; `same-origin` no documento = `loadeddata` / `readyState` 4.
