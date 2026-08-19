@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck } from "lucide-react";
+import { HistoryBackButton } from "./history-back";
 import type { Story } from "@/lib/news/types";
 import { labelFor } from "@/lib/news/types";
 import { useNewsStore } from "@/lib/news/store";
@@ -15,7 +15,7 @@ import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
 import { StoryAssetBlock } from "./story-media";
 import { GroupTag } from "./group-tag";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
-import { IconBtn, IconLink, Tip } from "./icon-btn";
+import { IconBtn, IconLink } from "./icon-btn";
 import { XLogo } from "./x-logo";
 
 export function ArticleView({ story }: { story: Story }) {
@@ -63,16 +63,10 @@ export function ArticleView({ story }: { story: Story }) {
 
   return (
     <article data-post="" className="mx-auto max-w-3xl max-sm:max-w-none">
-      <Tip label={`Voltar para ${labelFor(story.category)}`}>
-        <Link
-          to="/"
-          search={{ secao: story.category }}
-          aria-label={`Voltar para ${labelFor(story.category)}`}
-          className="grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper-2"
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-      </Tip>
+      <HistoryBackButton
+        fallbackSecao={story.category}
+        label={`Voltar para ${labelFor(story.category)}`}
+      />
       <p className="mt-6 flex items-start gap-2.5 text-[13px] text-mute">
         {face ? (
           <img
