@@ -28,11 +28,50 @@ export function extractWrittenLinks(text) {
   return out;
 }
 
+const SHORTENER = /^(t\.co|bit\.ly|tinyurl\.com|ow\.ly|buff\.ly|trib\.al|dlvr\.it)$/i;
+
+function linkKey(href) {
+  try {
+    const url = new URL(href);
+    const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = url.pathname.replace(/\/+$/, "") || "/";
+    return `${host}${path}`;
+  } catch {
+    return href;
+  }
+}
+
+function isShortener(href) {
+  try {
+    return SHORTENER.test(new URL(href).hostname.replace(/^www\./i, ""));
+  } catch {
+    return false;
+  }
+}
+
+function scorePublished(href) {
+  let score = isShortener(href) ? 0 : 100;
+  try {
+    score += Math.min(new URL(href).pathname.length, 80);
+  } catch {
+    /* href already validated */
+  }
+  return score;
+}
+
 export function publishedLinksFrom(text, skipHref = "") {
-  const skips = new Set(
-    (Array.isArray(skipHref) ? skipHref : [skipHref]).map(normalizeWrittenHref).filter(Boolean),
-  );
-  return extractWrittenLinks(text).filter((href) => !skips.has(href));
+  const skips = (Array.isArray(skipHref) ? skipHref : [skipHref])
+    .map(normalizeWrittenHref)
+    .filter(Boolean);
+  const skipKeys = new Set(skips.map(linkKey));
+  const byKey = new Map();
+  for (const href of extractWrittenLinks(text)) {
+    const key = linkKey(href);
+    if (skipKeys.has(key)) continue;
+    const prev = byKey.get(key);
+    if (!prev || scorePublished(href) > scorePublished(prev)) byKey.set(key, href);
+  }
+  return [...byKey.values()].sort((a, b) => scorePublished(b) - scorePublished(a)).slice(0, 1);
 }
 
 export function stripWrittenLinks(text) {

@@ -50,7 +50,7 @@ test("publishedLinksFrom keeps a single published Link when t.co and utm copies 
   );
   assert.equal(hrefs.length, 1);
   assert.match(hrefs[0], /engadget\.com\/2239713\//);
-  assert.doesNotMatch(hrefs[0], /t\.co/i);
+  assert.doesNotMatch(hrefs[0], /\/\/t\.co\//i);
 });
 
 test("feed and article hide the url behind a Link label", () => {
