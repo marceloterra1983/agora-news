@@ -12,6 +12,16 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
+
+/* Rodapé do card aberto: estrela/sino/power não podem ficar sob a tab bar. */
+[data-fonte-actions] {
+  scroll-margin-top: calc(
+    var(--agora-header, 64px) + env(safe-area-inset-top, 0px) + 8px
+  );
+  scroll-margin-bottom: calc(
+    var(--agora-nav-tap, 44px) + env(safe-area-inset-bottom, 0px) + 12px
+  );
+}
 html[data-font="sm"] {
   font-size: 14px;
 }

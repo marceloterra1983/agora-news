@@ -13,6 +13,7 @@ import { safeHttpHref } from "@/lib/news/last-post";
 import { displayBlurb } from "@/lib/news/profiles";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef } from "react";
 
 export function ProfileRow({
   row,
@@ -38,6 +39,11 @@ export function ProfileRow({
   const pausedRow = prefs.isDisabled(row.handle);
   const followers = row.followers ? formatCount(row.followers) : "";
   const lastHref = row.lastPost ? safeHttpHref(row.lastPost.href) : "";
+  const actionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    actionsRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [open]);
   return (
     <li data-testid="fonte-row" className="border-b border-line">
       <div className="flex items-start gap-1">
@@ -139,16 +145,21 @@ export function ProfileRow({
                   : []
             }
           />
-          <div className="mt-3 flex flex-wrap items-center gap-1">
+          <div
+            ref={actionsRef}
+            data-fonte-actions
+            className="mt-3 flex flex-wrap items-center gap-1"
+          >
             <Tip label={`Abrir @${row.handle} no X`}>
               <a
                 href={`https://x.com/${row.handle}`}
                 target="_blank"
                 rel="noreferrer"
+                data-fonte-action="x"
                 aria-label={`Abrir @${row.handle} no X`}
-                className="grid size-[44px] place-items-center rounded-full border border-line text-ink hover:bg-paper"
+                className="grid size-[44px] place-items-center rounded-full border border-line bg-paper text-ink active:bg-paper-2"
               >
-                <XLogo className="size-3.5" />
+                <XLogo className="size-3.5 translate-x-px" />
               </a>
             </Tip>
             <FonteControls
