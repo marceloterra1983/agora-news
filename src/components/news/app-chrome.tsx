@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bookmark, ChevronDown, Newspaper, Search, UserRound } from "lucide-react";
+import { Bookmark, Newspaper, Search, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
@@ -107,6 +107,30 @@ function GrokHeader({
     >
       <div className="mx-auto flex h-[var(--agora-header)] w-full min-w-0 max-w-2xl items-center gap-1.5 pr-3 pl-2 max-sm:max-w-none">
         <div className="relative shrink-0">
+          <div
+            data-section-switch=""
+            className="flex h-[44px] min-w-[44px] items-center rounded-full bg-paper-2 p-0.5"
+          >
+            {SECTIONS.map((section) => {
+              const on = section.slug === current.slug;
+              return (
+                <button
+                  key={section.slug}
+                  type="button"
+                  data-section-chip=""
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  onClick={() => onPickSec(section.slug)}
+                  className={cn(
+                    "h-10 rounded-full px-3 text-[13px] font-semibold tracking-wide",
+                    on ? "bg-ink text-paper" : "text-mute",
+                  )}
+                >
+                  {section.label}
+                </button>
+              );
+            })}
+          </div>
           <label htmlFor="agora-section" className="sr-only">
             Assunto
           </label>
@@ -115,7 +139,7 @@ function GrokHeader({
             data-section-select=""
             value={current.slug}
             onChange={(event) => onPickSec(event.target.value as Category)}
-            className="h-[44px] min-w-[5.5rem] appearance-none rounded-full border-0 bg-ink py-0 pl-3.5 pr-9 text-[13px] font-semibold tracking-wide text-paper outline-none focus-visible:ring-2 focus-visible:ring-ink/25"
+            className="sr-only"
           >
             {SECTIONS.map((section) => (
               <option key={section.slug} value={section.slug}>
@@ -123,11 +147,6 @@ function GrokHeader({
               </option>
             ))}
           </select>
-          <ChevronDown
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-paper"
-            strokeWidth={2.2}
-          />
         </div>
 
         <div

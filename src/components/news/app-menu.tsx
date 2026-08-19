@@ -3,34 +3,20 @@ import {
   LogIn,
   LogOut,
   Menu,
-  Monitor,
-  Moon,
   Settings,
   Smartphone,
-  Sun,
   UserRound,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { authEnabled, signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import {
-  applyTheme,
-  cycleTheme,
-  getStoredTheme,
-  resolveDark,
-  type ThemeMode,
-} from "@/lib/news/theme";
+import { applyTheme, getStoredTheme, setTheme, type ThemeMode } from "@/lib/news/theme";
 import { FONT_STEPS } from "@/lib/news/font-scale";
 import { useSettings } from "@/lib/news/use-settings";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
-
-const THEME_LABEL: Record<ThemeMode, string> = {
-  system: "Tema do sistema",
-  light: "Tema claro",
-  dark: "Tema escuro",
-};
+import { ThemeSwitch } from "./settings-ui";
 
 export function AppMenu() {
   const [open, setOpen] = useState(false);
@@ -70,8 +56,6 @@ export function AppMenu() {
       root?.removeEventListener("focusout", onFocusOut);
     };
   }, [open]);
-
-  const ThemeIcon = mode === "system" ? Monitor : resolveDark(mode) ? Moon : Sun;
 
   return (
     <div ref={box} className="relative">
@@ -137,14 +121,15 @@ export function AppMenu() {
             </Link>
           )}
           <div className="h-px bg-line" />
-          <button
-            type="button"
-            onClick={() => setMode(cycleTheme())}
-            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-ink hover:bg-paper-2"
-          >
-            <ThemeIcon className="size-4 shrink-0" />
-            {THEME_LABEL[mode]}
-          </button>
+          <div className="px-3 py-2.5">
+            <ThemeSwitch
+              value={mode}
+              onChange={(id) => {
+                setTheme(id);
+                setMode(id);
+              }}
+            />
+          </div>
           <div className="px-3 py-2.5">
             <p className="mb-1.5 text-[11px] text-mute">Tamanho do texto</p>
             <div className="grid grid-cols-3 gap-1">

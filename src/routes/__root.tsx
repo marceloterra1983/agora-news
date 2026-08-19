@@ -104,7 +104,7 @@ function Root() {
         </noscript>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var k="agora-cache-bust-v21";if(sessionStorage.getItem(k)==="1")return;var jobs=[];if("caches"in window)jobs.push(caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}));if(navigator.serviceWorker)jobs.push(navigator.serviceWorker.getRegistrations().then(function(regs){return Promise.all(regs.map(function(r){return r.unregister()}))}));Promise.all(jobs).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
+            __html: `(function(){try{var k="agora-cache-bust-v22";if(sessionStorage.getItem(k)==="1")return;var jobs=[];if("caches"in window)jobs.push(caches.keys().then(function(keys){return Promise.all(keys.map(function(c){return caches.delete(c)}))}));if(navigator.serviceWorker)jobs.push(navigator.serviceWorker.getRegistrations().then(function(regs){return Promise.all(regs.map(function(r){return r.unregister()}))}));Promise.all(jobs).then(function(){sessionStorage.setItem(k,"1")}).catch(function(){})}catch(e){}})();`,
           }}
         />
       </head>

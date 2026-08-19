@@ -65,7 +65,7 @@ test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () =>
   );
   assert.match(
     css,
-    /\[data-chrome="compact"\] \[data-section-select\][\s\S]{0,200}height:\s*44px/,
+    /\[data-chrome="compact"\] \[data-section-switch\][\s\S]{0,200}height:\s*44px/,
   );
   assert.match(
     css,
@@ -77,10 +77,9 @@ test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () =>
     /\[data-chrome="tabs"\] a[\s\S]{0,160}height:\s*56px/,
   );
   assert.match(chrome, /h-\[var\(--agora-tap\)\]|h-\[44px\]/);
-  assert.match(chrome, /appearance-none/);
-  assert.match(chrome, /ChevronDown/);
-  assert.match(css, /\[data-section-select\][\s\S]{0,280}-webkit-appearance:\s*none/);
-  assert.match(css, /\[data-section-select\][\s\S]{0,280}padding-right:\s*32px/);
+  assert.match(chrome, /data-section-switch/);
+  assert.match(chrome, /data-section-chip/);
+  assert.match(css, /\[data-section-switch\][\s\S]{0,280}height:\s*44px/);
   assert.match(chrome, /data-group-chip/);
   assert.match(chrome, /data-chrome="groups"/);
   assert.match(chrome, /h-\[32px\]/);
@@ -101,8 +100,8 @@ const FIXTURE = `<!doctype html>
     :root { --agora-nav-tap: 44px; --agora-header: 64px; --agora-groups: 5.5rem; }
     [data-chrome="compact"] { position: sticky; top: 0; z-index: 30; }
     [data-chrome="tabs"] { position: relative; }
-    [data-chrome="compact"] [data-h-scroll] button,
-    [data-chrome="compact"] [data-section-select] { height: 32px; }
+    [data-chrome="compact"] [data-h-scroll] button { height: 32px; }
+    [data-chrome="compact"] [data-section-switch] { height: 32px; }
     [data-chrome="compact"] [aria-haspopup="menu"] { width: 32px; height: 32px; }
     [data-chrome="tabs"] a { display: flex; min-height: 40px; min-width: 40px; }
   </style>
@@ -112,6 +111,11 @@ const FIXTURE = `<!doctype html>
   <div data-chrome-root>
     <header data-chrome="compact">
       <div style="display:flex;align-items:center;height:64px;gap:6px">
+        <div data-section-switch>
+          <button type="button" data-section-chip>IA</button>
+          <button type="button" data-section-chip>Tech</button>
+          <button type="button" data-section-chip>Brasil</button>
+        </div>
         <select data-section-select aria-label="Assunto"><option>IA</option></select>
         <div data-h-scroll style="display:flex;min-width:0;flex:1">
           <button type="button">Todos</button>
@@ -172,7 +176,7 @@ async function chromeBox(page) {
     const main = document.querySelector("[data-chrome-main]");
     const chip = document.querySelector("[data-group-chip], [data-h-scroll] button");
     const groups = document.querySelector("[data-chrome=groups]");
-    const ia = document.querySelector("[data-section-select]");
+    const ia = document.querySelector("[data-section-switch]");
     const menu = document.querySelector("[aria-haspopup=menu]");
     const nav = document.querySelector("[data-chrome=tabs] a");
     const box = (el) => {
