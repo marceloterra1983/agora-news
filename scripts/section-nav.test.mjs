@@ -58,5 +58,5 @@ test("Todos selected chip is not paper-on-paper", () => {
   const chrome = readFileSync(join(root, "src/components/news/app-chrome.tsx"), "utf8");
   assert.doesNotMatch(chrome, /group === "all" \? "bg-paper text-ink"/);
   assert.doesNotMatch(chrome, /group === "all" \? "bg-paper-2 text-ink/);
-  assert.match(chrome, /group === "all" \? "bg-ink text-paper ring-1 ring-ink\/40"/);
+  assert.match(chrome, /bg-ink text-paper ring-1 ring-ink\/40/);
 });

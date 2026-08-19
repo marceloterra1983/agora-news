@@ -17,7 +17,7 @@ import { Tip } from "./icon-btn";
 import { PrefsSync } from "./prefs-sync";
 
 const GROUP_CHIP =
-  "inline-flex h-[32px] shrink-0 items-center rounded-full px-3 text-[12px] font-semibold";
+  "inline-flex h-[32px] shrink-0 items-center rounded-full px-3 text-[12px] font-semibold shadow-sm";
 
 export function AppChrome({
   category,
@@ -60,24 +60,30 @@ export function AppChrome({
   return (
     <div
       data-chrome-root=""
+      data-groups-dock={onGroup ? "" : undefined}
       className="min-h-dvh w-full min-w-0 overflow-x-clip bg-paper text-ink"
     >
       <PrefsSync />
-      <GrokHeader
-        category={shown}
-        group={group}
-        onGroup={onGroup}
-        onPickSec={pickSec}
-        toolbar={toolbar}
-      />
+      <GrokHeader category={shown} onPickSec={pickSec} toolbar={toolbar} />
       <main
         id="conteudo-principal"
         tabIndex={-1}
         data-chrome-main=""
-        className="pb-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px))] max-sm:pt-[calc(var(--agora-header)+env(safe-area-inset-top,0px))]"
+        className={cn(
+          "pb-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px))] max-sm:pt-[calc(var(--agora-header)+env(safe-area-inset-top,0px))]",
+          onGroup &&
+            "pb-[calc(var(--agora-nav-tap)+var(--agora-groups)+env(safe-area-inset-bottom,0px))]",
+        )}
       >
         {children}
       </main>
+      {onGroup ? (
+        <GroupDock
+          category={shown}
+          group={group ?? "all"}
+          onPick={onGroup}
+        />
+      ) : null}
       <TabBar category={shown} />
     </div>
   );
@@ -85,23 +91,14 @@ export function AppChrome({
 
 function GrokHeader({
   category,
-  group = "all",
-  onGroup,
   onPickSec,
   toolbar,
 }: {
   category: Category;
-  group?: string;
-  onGroup?: (g: string) => void;
   onPickSec: (slug: Category) => void;
   toolbar?: React.ReactNode;
 }) {
   const current = SECTIONS.find((s) => s.slug === category) ?? SECTIONS[0];
-  const catalog = useSectionCatalog(category);
-
-  function pickGroup(next: string) {
-    onGroup?.(next);
-  }
 
   return (
     <header
@@ -132,45 +129,67 @@ function GrokHeader({
           data-h-scroll
           className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto"
         >
-          {toolbar ??
-            (onGroup ? (
-              <>
-                <button
-                  type="button"
-                  data-group-chip=""
-                  aria-pressed={group === "all"}
-                  onClick={() => pickGroup("all")}
-                  className={cn(
-                    GROUP_CHIP,
-                    group === "all" ? "bg-ink text-paper ring-1 ring-ink/40"
-                      : "bg-paper-2 text-mute",
-                  )}
-                >
-                  Todos
-                </button>
-                {catalog.groups.map((g) => {
-                  const st = groupStyle(g.id);
-                  const on = group === g.id;
-                  return (
-                    <button
-                      key={g.id}
-                      type="button"
-                      data-group-chip=""
-                      aria-pressed={on}
-                      onClick={() => pickGroup(g.id)}
-                      className={cn(GROUP_CHIP, on ? st.chipOn : st.chip)}
-                    >
-                      {g.label}
-                    </button>
-                  );
-                })}
-              </>
-            ) : null)}
+          {toolbar}
         </div>
 
         <AppMenu />
       </div>
     </header>
+  );
+}
+
+function GroupDock({
+  category,
+  group,
+  onPick,
+}: {
+  category: Category;
+  group: string;
+  onPick: (g: string) => void;
+}) {
+  const catalog = useSectionCatalog(category);
+  return (
+    <div data-chrome="groups" className="pointer-events-none fixed inset-x-0 z-[35] px-3">
+      <div
+        data-h-scroll=""
+        className="pointer-events-auto mx-auto flex w-max max-w-full items-center justify-center gap-1.5 overflow-x-auto"
+      >
+        <button
+          type="button"
+          data-group-chip=""
+          aria-pressed={group === "all"}
+          onClick={() => onPick("all")}
+          className={cn(
+            GROUP_CHIP,
+            group === "all"
+              ? "bg-ink text-paper ring-1 ring-ink/40 opacity-80"
+              : "bg-paper-2 text-mute opacity-40",
+          )}
+        >
+          Todos
+        </button>
+        {catalog.groups.map((g) => {
+          const st = groupStyle(g.id);
+          const on = group === g.id;
+          return (
+            <button
+              key={g.id}
+              type="button"
+              data-group-chip=""
+              aria-pressed={on}
+              onClick={() => onPick(g.id)}
+              className={cn(
+                GROUP_CHIP,
+                on ? st.chipOn : st.chip,
+                on ? "opacity-80" : "opacity-40",
+              )}
+            >
+              {g.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

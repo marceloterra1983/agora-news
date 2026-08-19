@@ -42,7 +42,8 @@ test("Fontes sort chips live in the AppChrome header toolbar, not a second stick
   const chrome = read("src/components/news/app-chrome.tsx");
   const fontes = read("src/routes/fontes.tsx");
   assert.match(chrome, /toolbar\?:/);
-  assert.match(chrome, /toolbar \?\?/);
+  assert.match(chrome, /\{toolbar\}/);
+  assert.match(chrome, /data-chrome="groups"/);
   assert.match(fontes, /toolbar=\{/);
   assert.match(fontes, /aria-label="Ordenar fontes"/);
   assert.doesNotMatch(fontes, /sticky top-\[57px\]/);
