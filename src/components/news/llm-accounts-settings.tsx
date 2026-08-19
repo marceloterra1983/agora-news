@@ -4,6 +4,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import {
   deleteLlmAccount,
   listLlmAccounts,
+  listLlmModels,
   selectLlmAccount,
   upsertLlmAccount,
 } from "@/lib/news/llm-server";
@@ -11,7 +12,9 @@ import {
   defaultModelFor,
   LLM_PROVIDERS,
   llmWarningFor,
+  modelOptionsFor,
   providerLabel,
+  type LlmModelOption,
   type LlmPrefsPublic,
   type LlmProvider,
 } from "@/lib/news/llm-accounts.mjs";
@@ -42,6 +45,11 @@ function banner(prefs: LlmPrefsPublic | null) {
   return "";
 }
 
+const fieldClass = cn(
+  "flex min-h-11 w-full rounded-sm border border-line bg-card px-3 text-sm text-ink shadow-none outline-none",
+  "focus-visible:border-ink/40 focus-visible:ring-2 focus-visible:ring-ink/15",
+);
+
 export function LlmAccountsSettings() {
   const { user, isPending } = useCurrentUserState();
   const [prefs, setPrefs] = useState<LlmPrefsPublic | null>(null);
@@ -51,6 +59,9 @@ export function LlmAccountsSettings() {
   const [provider, setProvider] = useState<LlmProvider>("openai");
   const [key, setKey] = useState("");
   const [model, setModel] = useState<string>(defaultModelFor("openai"));
+  const [modelChoices, setModelChoices] = useState<LlmModelOption[]>(() =>
+    modelOptionsFor("openai", defaultModelFor("openai")),
+  );
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -75,6 +86,21 @@ export function LlmAccountsSettings() {
       setError("Não deu para salvar a conta de IA. Tente de novo.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function refreshModels(nextProvider: LlmProvider, nextKey: string, selected: string) {
+    if (!nextKey.trim()) {
+      setModelChoices(modelOptionsFor(nextProvider, selected));
+      return;
+    }
+    try {
+      const listed = await listLlmModels({
+        data: { provider: nextProvider, key: nextKey, selectedId: selected },
+      });
+      setModelChoices(listed.models);
+    } catch {
+      setModelChoices(modelOptionsFor(nextProvider, selected));
     }
   }
 
@@ -153,7 +179,9 @@ export function LlmAccountsSettings() {
                   if (next.saved) {
                     setLabel("");
                     setKey("");
-                    setModel(defaultModelFor(provider));
+                    const reset = defaultModelFor(provider);
+                    setModel(reset);
+                    setModelChoices(modelOptionsFor(provider, reset));
                   }
                   setError(next.validateWarning || "");
                 } catch {
@@ -180,11 +208,10 @@ export function LlmAccountsSettings() {
                 const next = event.target.value as LlmProvider;
                 setProvider(next);
                 setModel(defaultModelFor(next));
+                setModelChoices(modelOptionsFor(next, defaultModelFor(next)));
+                if (key.trim()) void refreshModels(next, key, defaultModelFor(next));
               }}
-              className={cn(
-                "flex h-10 w-full rounded-sm border border-line bg-card px-3 text-sm text-ink shadow-none outline-none",
-                "focus-visible:border-ink/40 focus-visible:ring-2 focus-visible:ring-ink/15",
-              )}
+              className={fieldClass}
             >
               {LLM_PROVIDERS.map((id) => (
                 <option key={id} value={id}>
@@ -198,15 +225,24 @@ export function LlmAccountsSettings() {
               autoComplete="off"
               value={key}
               onChange={(event) => setKey(event.target.value)}
+              onBlur={() => void refreshModels(provider, key, model)}
               aria-label="Chave da API"
               placeholder="Chave da API"
+              className="min-h-11"
             />
-            <Input
+            <select
+              required
+              aria-label="Modelo"
               value={model}
               onChange={(event) => setModel(event.target.value)}
-              aria-label="Modelo"
-              placeholder={defaultModelFor(provider)}
-            />
+              className={fieldClass}
+            >
+              {modelChoices.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.label}
+                </option>
+              ))}
+            </select>
             <button
               type="submit"
               disabled={busy}

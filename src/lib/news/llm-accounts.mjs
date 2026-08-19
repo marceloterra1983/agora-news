@@ -1,5 +1,12 @@
 /** Contas OpenAI / Claude / Grok do owner. Cron sem sessão usa só o env Grok. */
 
+export {
+  catalogModelsFor,
+  LLM_MODEL_CATALOG,
+  mergeModelOptions,
+  modelOptionsFor,
+} from "./llm-models.mjs";
+
 export const LLM_PREFS_KEY = "_llm";
 export const LLM_PROVIDERS = ["openai", "anthropic", "xai"];
 export const LLM_PROVIDER_LABELS = { openai: "OpenAI", anthropic: "Claude", xai: "Grok" };

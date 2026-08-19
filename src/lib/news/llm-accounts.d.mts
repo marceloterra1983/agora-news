@@ -69,6 +69,11 @@ export type LlmCommand =
       checkedAt?: string;
     };
 
+export type LlmModelOption = { id: string; label: string };
+export const LLM_MODEL_CATALOG: Record<LlmProvider, readonly LlmModelOption[]>;
+export function catalogModelsFor(provider: string): LlmModelOption[];
+export function mergeModelOptions(provider: string, remoteIds?: string[], selectedId?: string): LlmModelOption[];
+export function modelOptionsFor(provider: string, selectedId?: string): LlmModelOption[];
 export function isLlmProvider(value: unknown): value is LlmProvider;
 export function defaultModelFor(provider: string): string;
 export function providerLabel(provider: string): string;
