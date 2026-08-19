@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bookmark, Newspaper, Search, UserRound } from "lucide-react";
+import { Bookmark, ChevronDown, Newspaper, Search, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type Category } from "@/lib/news/types";
 import { SECTIONS } from "@/lib/news/sections";
@@ -115,7 +115,7 @@ function GrokHeader({
             data-section-select=""
             value={current.slug}
             onChange={(event) => onPickSec(event.target.value as Category)}
-            className="h-[44px] min-w-[44px] rounded-full border-0 bg-ink px-3 text-[13px] font-semibold tracking-wide text-paper"
+            className="h-[44px] min-w-[5.5rem] appearance-none rounded-full border-0 bg-ink py-0 pl-3.5 pr-9 text-[13px] font-semibold tracking-wide text-paper outline-none focus-visible:ring-2 focus-visible:ring-ink/25"
           >
             {SECTIONS.map((section) => (
               <option key={section.slug} value={section.slug}>
@@ -123,6 +123,11 @@ function GrokHeader({
               </option>
             ))}
           </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-paper"
+            strokeWidth={2.2}
+          />
         </div>
 
         <div
