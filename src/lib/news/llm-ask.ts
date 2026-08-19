@@ -6,7 +6,7 @@ import {
   type LlmSource,
   type LlmStatus,
 } from "./llm-accounts.mjs";
-import { clipOneLine, extractLlmText } from "./summary-core.mjs";
+import { askProviderLine } from "./llm-client.mjs";
 
 export type GrokLineResult = {
   line: string;
@@ -14,9 +14,6 @@ export type GrokLineResult = {
   source: LlmSource;
   warning: string | null;
 };
-
-const SYSTEM =
-  "Você resume quem é uma conta do X. Use SOMENTE os dados do usuário. Não invente cargo, empresa, país ou formação. Se a bio for vaga, reformule só o que ela diz. Uma frase em português do Brasil, no máximo 160 caracteres. Sem aspas, emoji, hashtag ou @.";
 
 async function persistStatus(
   userId: string | undefined,
@@ -37,22 +34,6 @@ async function persistStatus(
   if (runtime.source === "env") {
     await applyOwnerLlmCommand(userId, { type: "status", target: "env", status });
   }
-}
-
-async function callXai(
-  url: string,
-  body: unknown,
-  key: string,
-): Promise<{ status: number; line: string }> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(14_000),
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) return { status: res.status, line: "" };
-  const line = clipOneLine(extractLlmText((await res.json()) as Record<string, unknown>));
-  return { status: res.status, line };
 }
 
 export async function askGrokLine(
@@ -91,49 +72,19 @@ export async function askGrokLine(
   };
 
   try {
-    const chat = await callXai(
-      "https://api.x.ai/v1/chat/completions",
-      {
-        model: runtime.model,
-        max_tokens: 90,
-        temperature: 0,
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: prompt },
-        ],
-      },
-      runtime.key,
-    );
-    if (chat.line) {
+    const asked = await askProviderLine({
+      provider: runtime.provider,
+      model: runtime.model,
+      key: runtime.key,
+      prompt,
+    });
+    if (asked.line) {
       await persistStatus(opts?.userId, runtime, "ok");
-      return { line: chat.line, status: "ok", source: runtime.source, warning: null };
+      return { line: asked.line, status: "ok", source: runtime.source, warning: null };
     }
-    if (chat.status >= 400) {
-      const kind = classifyLlmHttpStatus(chat.status);
-      if (kind === "auth" || kind === "quota") return fail(chat.status);
+    if (asked.status === "auth" || asked.status === "quota") {
+      return fail(asked.httpStatus || (asked.status === "auth" ? 401 : 429));
     }
-  } catch {
-    /* tentar /responses */
-  }
-
-  try {
-    const res = await callXai(
-      "https://api.x.ai/v1/responses",
-      {
-        model: runtime.model,
-        max_output_tokens: 90,
-        input: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: prompt },
-        ],
-      },
-      runtime.key,
-    );
-    if (res.line) {
-      await persistStatus(opts?.userId, runtime, "ok");
-      return { line: res.line, status: "ok", source: runtime.source, warning: null };
-    }
-    if (res.status >= 400) return fail(res.status);
   } catch {
     await persistStatus(opts?.userId, runtime, "error");
     return {

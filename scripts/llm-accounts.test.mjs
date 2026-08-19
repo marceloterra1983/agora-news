@@ -6,10 +6,13 @@ import test from "node:test";
 import {
   applyLlmCommand,
   classifyLlmHttpStatus,
+  defaultModelFor,
   envLlmKey,
+  LLM_PROVIDERS,
   llmWarningFor,
   maskKey,
   mergePrefsPreservingLlm,
+  persistValidatedStatus,
   publicLlmPrefs,
   resolveLlmRuntime,
   stripLlmFromPrefs,
@@ -42,12 +45,67 @@ test("maskKey never returns the full secret", () => {
   assert.ok(!maskKey(secret).includes("secret"));
 });
 
+test("resolveLlmRuntime returns provider, model and key of the active account", () => {
+  const openaiStore = {
+    activeAccountId: "o1",
+    accounts: [
+      {
+        id: "o1",
+        label: "OpenAI barata",
+        provider: "openai",
+        model: "gpt-4.1-mini",
+        key: "sk-live-zzzz",
+        status: "ok",
+        checkedAt: null,
+      },
+    ],
+  };
+  const fromOpenAi = resolveLlmRuntime({
+    store: openaiStore,
+    env: { XAI_API_KEY: "env-key-zzzz" },
+    userId: "owner-1",
+  });
+  assert.equal(fromOpenAi.source, "account");
+  assert.equal(fromOpenAi.provider, "openai");
+  assert.equal(fromOpenAi.model, "gpt-4.1-mini");
+  assert.equal(fromOpenAi.key, "sk-live-zzzz");
+  assert.equal(fromOpenAi.accountId, "o1");
+
+  const claude = applyLlmCommand(openaiStore, {
+    type: "upsert",
+    id: "c1",
+    label: "Claude",
+    key: "ant-key-yyyy",
+    provider: "anthropic",
+  });
+  const selected = applyLlmCommand(claude, { type: "select", id: "c1" });
+  const fromClaude = resolveLlmRuntime({
+    store: selected,
+    env: { XAI_API_KEY: "env-key-zzzz" },
+    userId: "owner-1",
+  });
+  assert.equal(fromClaude.provider, "anthropic");
+  assert.equal(fromClaude.model, "claude-sonnet-4-5");
+  assert.equal(fromClaude.key, "ant-key-yyyy");
+
+  const cronEnv = resolveLlmRuntime({
+    store: selected,
+    env: { XAI_API_KEY: "env-key-zzzz" },
+    userId: "",
+  });
+  assert.equal(cronEnv.source, "env");
+  assert.equal(cronEnv.provider, "xai");
+  assert.equal(cronEnv.key, "env-key-zzzz");
+  assert.equal(cronEnv.model, "grok-4.5");
+});
+
 test("resolveLlmRuntime prefers the owner active account over env", () => {
   const env = { XAI_API_KEY: "env-key-zzzz", GROK_API_KEY: "" };
   const fromAccount = resolveLlmRuntime({ store, env, userId: "owner-1" });
   assert.equal(fromAccount.source, "account");
   assert.equal(fromAccount.key, secret);
   assert.equal(fromAccount.model, "grok-4.5");
+  assert.equal(fromAccount.provider, "xai");
   assert.equal(fromAccount.accountId, "acc-1");
 
   const fromEnv = resolveLlmRuntime({ store, env, userId: "" });
@@ -131,6 +189,33 @@ test("prefs merge keeps _llm secrets and strip removes them from the client blob
   assert.equal(Object.hasOwn(stripLlmFromPrefs(merged), "_llm"), false);
 });
 
+test("allowed providers are only OpenAI, Claude and Grok with defaults", () => {
+  assert.deepEqual(LLM_PROVIDERS, ["openai", "anthropic", "xai"]);
+  assert.equal(defaultModelFor("openai"), "gpt-4.1-mini");
+  assert.equal(defaultModelFor("anthropic"), "claude-sonnet-4-5");
+  assert.equal(defaultModelFor("xai"), "grok-4.5");
+  assert.throws(
+    () =>
+      applyLlmCommand(store, {
+        type: "upsert",
+        label: "Gemini",
+        key: "gem-key",
+        provider: "gemini",
+      }),
+    /llm_provider/,
+  );
+});
+
+test("validation persist policy: 401 does not save, 429 saves as quota", () => {
+  assert.equal(classifyLlmHttpStatus(401), "auth");
+  assert.equal(classifyLlmHttpStatus(403), "auth");
+  assert.equal(classifyLlmHttpStatus(429), "quota");
+  assert.equal(persistValidatedStatus("auth"), false);
+  assert.equal(persistValidatedStatus("error"), false);
+  assert.equal(persistValidatedStatus("quota"), true);
+  assert.equal(persistValidatedStatus("ok"), true);
+});
+
 test("write-guard: LLM account mutations are owner-authenticated server fns", () => {
   const src = read("src/lib/news/llm-server.ts");
   assert.match(src, /authMiddleware/);
@@ -151,14 +236,31 @@ test("settings expose the IA accounts section without echoing the key", () => {
   assert.match(ui, /type=["']password["']/);
   assert.doesNotMatch(ui, /account\.key\b/);
   assert.match(ui, /keyHint/);
+  assert.match(ui, /Cadastrar e validar/);
+  assert.match(ui, /OpenAI/);
+  assert.match(ui, /Claude/);
+  assert.match(ui, /Grok/);
+  assert.doesNotMatch(ui, /Gemini|Mistral|DeepSeek|Cohere|Groq\b/i);
 });
 
 test("askGrok resolves owner/env via resolver, not process.env alone", () => {
   const ask = read("src/lib/news/llm-ask.ts");
+  const client = read("src/lib/news/llm-client.mjs");
   const summary = read("src/lib/news/summary-line.ts");
+  const server = read("src/lib/news/llm-server.ts");
   assert.match(ask, /resolveLlmRuntime/);
+  assert.match(ask, /askProviderLine|llm-client/);
   assert.match(summary, /askGrokLine/);
   assert.match(summary, /from ["']\.\/llm-ask["']/);
   assert.doesNotMatch(summary, /process\.env\.XAI_API_KEY/);
   assert.doesNotMatch(ask, /console\.(log|info|debug).*key/i);
+  assert.match(client, /https:\/\/api\.openai\.com\/v1\/chat\/completions/);
+  assert.match(client, /https:\/\/api\.anthropic\.com\/v1\/messages/);
+  assert.match(client, /https:\/\/api\.x\.ai/);
+  assert.match(client, /x-api-key/);
+  assert.match(client, /anthropic-version/);
+  assert.doesNotMatch(client, /generativelanguage\.googleapis|mistral|deepseek|OPENAI_API_KEY|ANTHROPIC_API_KEY/i);
+  assert.match(server, /spendKeyAllowed/);
+  assert.match(server, /validateLlmKey/);
+  assert.doesNotMatch(server, /OPENAI_API_KEY|ANTHROPIC_API_KEY/);
 });
