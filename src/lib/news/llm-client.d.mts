@@ -14,12 +14,29 @@ export type LlmAskResult = {
   httpStatus: number;
 };
 
+export type LlmModelOption = { id: string; label: string };
+
+export type LlmModelListResult = {
+  source: "catalog" | "live";
+  models: LlmModelOption[];
+};
+
 export function validateWarningFor(status: LlmStatus | string): string | null;
+export function modelsListRequest(
+  provider: LlmProvider | string,
+  key: string,
+): { url: string; init: RequestInit };
 export function validationRequest(
   provider: LlmProvider | string,
   key: string,
   model?: string,
 ): { url: string; init: RequestInit };
+export function listProviderModels(input: {
+  provider: LlmProvider | string;
+  key?: string;
+  selectedId?: string;
+  fetchImpl?: typeof fetch;
+}): Promise<LlmModelListResult>;
 export function chatRequests(
   provider: LlmProvider | string,
   model: string,

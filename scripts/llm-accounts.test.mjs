@@ -240,6 +240,9 @@ test("settings expose the IA accounts section without echoing the key", () => {
   assert.match(ui, /OpenAI/);
   assert.match(ui, /Claude/);
   assert.match(ui, /Grok/);
+  assert.match(ui, /aria-label=["']Modelo["']/);
+  assert.match(ui, /modelOptionsFor/);
+  assert.doesNotMatch(ui, /placeholder=\{defaultModelFor\(provider\)\}/);
   assert.doesNotMatch(ui, /Gemini|Mistral|DeepSeek|Cohere|Groq\b/i);
 });
 

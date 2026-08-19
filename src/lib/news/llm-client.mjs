@@ -3,6 +3,7 @@ import {
   defaultModelFor,
   persistValidatedStatus,
 } from "./llm-accounts.mjs";
+import { mergeModelOptions, parseRemoteModelIds } from "./llm-models.mjs";
 import { clipOneLine, extractLlmText } from "./summary-core.mjs";
 
 export const LLM_SYSTEM =
@@ -21,13 +22,37 @@ export function validateWarningFor(status) {
   return "Não deu para validar a chave agora (rede ou o provedor falhou). Nada foi cadastrado.";
 }
 
-export function validationRequest(provider, key, model) {
+function pingBody(provider, model) {
+  return JSON.stringify({
+    model: model || defaultModelFor(provider),
+    max_tokens: 1,
+    messages: [{ role: "user", content: "ok" }],
+  });
+}
+
+export function modelsListRequest(provider, key) {
+  if (provider === "anthropic") {
+    return {
+      url: "https://api.anthropic.com/v1/models",
+      init: {
+        method: "GET",
+        headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+      },
+    };
+  }
   if (provider === "openai") {
     return {
       url: "https://api.openai.com/v1/models",
       init: { method: "GET", headers: { Authorization: `Bearer ${key}` } },
     };
   }
+  return {
+    url: "https://api.x.ai/v1/models",
+    init: { method: "GET", headers: { Authorization: `Bearer ${key}` } },
+  };
+}
+
+export function validationRequest(provider, key, model) {
   if (provider === "anthropic") {
     return {
       url: "https://api.anthropic.com/v1/messages",
@@ -38,18 +63,48 @@ export function validationRequest(provider, key, model) {
           "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: model || defaultModelFor("anthropic"),
-          max_tokens: 1,
-          messages: [{ role: "user", content: "ok" }],
-        }),
+        body: pingBody(provider, model),
+      },
+    };
+  }
+  if (provider === "openai") {
+    return {
+      url: "https://api.openai.com/v1/chat/completions",
+      init: {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: pingBody(provider, model),
       },
     };
   }
   return {
-    url: "https://api.x.ai/v1/models",
-    init: { method: "GET", headers: { Authorization: `Bearer ${key}` } },
+    url: "https://api.x.ai/v1/chat/completions",
+    init: {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: pingBody(provider, model),
+    },
   };
+}
+
+export async function listProviderModels({
+  provider,
+  key,
+  selectedId = "",
+  fetchImpl = fetch,
+}) {
+  const fallback = mergeModelOptions(provider, [], selectedId);
+  if (!String(key || "").trim()) return { source: "catalog", models: fallback };
+  try {
+    const { url, init } = modelsListRequest(provider, key);
+    const res = await fetchImpl(url, withTimeout(init));
+    if (!res.ok) return { source: "catalog", models: fallback };
+    const remote = parseRemoteModelIds(provider, await res.json());
+    if (!remote.length) return { source: "catalog", models: fallback };
+    return { source: "live", models: mergeModelOptions(provider, remote, selectedId) };
+  } catch {
+    return { source: "catalog", models: fallback };
+  }
 }
 
 export function chatRequests(provider, model, key, prompt, system = LLM_SYSTEM) {

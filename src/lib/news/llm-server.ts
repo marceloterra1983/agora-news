@@ -8,6 +8,7 @@ import {
   type LlmProvider,
   type LlmUpsertResult,
 } from "./llm-accounts.mjs";
+import type { LlmModelListResult } from "./llm-client.mjs";
 
 function envSnapshot() {
   return {
@@ -36,6 +37,29 @@ function withValidate(
 ): LlmUpsertResult {
   return { ...prefs, saved, validateStatus, validateWarning };
 }
+
+export const listLlmModels = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { provider?: string; key?: string; selectedId?: string }) => {
+    const providerRaw = String(input.provider || "").trim();
+    if (providerRaw && !isLlmProvider(providerRaw)) {
+      throw new Error("llm_provider_invalid");
+    }
+    return {
+      provider: (isLlmProvider(providerRaw) ? providerRaw : "openai") as LlmProvider,
+      key: String(input.key || "").trim(),
+      selectedId: String(input.selectedId || "").trim(),
+    };
+  })
+  .handler(async ({ data, context }): Promise<LlmModelListResult> => {
+    if (data.key) await assertSpendAllowed(context.userId);
+    const { listProviderModels } = await import("./llm-client.mjs");
+    return listProviderModels({
+      provider: data.provider,
+      key: data.key,
+      selectedId: data.selectedId,
+    });
+  });
 
 export const listLlmAccounts = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
