@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { publishedLinksFrom, writtenLinkHost } from "@/lib/news/written-links.mjs";
 
@@ -15,17 +16,20 @@ export function WrittenLinks({
   return (
     <p className="mt-2 flex flex-wrap gap-x-3">
       {hrefs.map((href) => {
-        const host = writtenLinkHost(href);
+        const host = writtenLinkHost(href) || "site";
         return (
           <a
             key={href}
             href={href}
             target="_blank"
             rel="noreferrer"
-            title={host}
-            aria-label={host ? `Link publicado: ${host}` : "Link publicado"}
-            className="text-sm font-semibold text-mark"
-          >Link</a>
+            title={`Abrir em ${host}`}
+            aria-label={`Abrir em ${host}`}
+            className="inline-flex items-center gap-1 text-sm font-semibold text-mark"
+          >
+            <ExternalLink className="size-3.5" aria-hidden />
+            {host}
+          </a>
         );
       })}
     </p>
