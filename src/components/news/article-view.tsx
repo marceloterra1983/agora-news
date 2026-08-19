@@ -15,7 +15,7 @@ import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
 import { StoryAssetBlock } from "./story-media";
 import { GroupTag } from "./group-tag";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
-import { WrittenLinks } from "./written-link";
+import { PostText } from "./written-link";
 import { IconBtn, IconLink } from "./icon-btn";
 import { XLogo } from "./x-logo";
 
@@ -60,8 +60,8 @@ export function ArticleView({ story }: { story: Story }) {
     setFace(resolveFace(story.avatar, extra?.avatar || extraAvatarFor(story.source)));
   }, [story.avatar, story.source, whoCatalog]);
   const title = displayTitle(story.title);
-  const body = displayBody(story.body || story.excerpt);
-  const showTitle = isDistinctTitle(title, body);
+  const bodyText = story.body || story.excerpt;
+  const showTitle = isDistinctTitle(title, displayBody(bodyText));
 
   return (
     <article data-post="" className="mx-auto max-w-3xl max-sm:max-w-none">
@@ -121,14 +121,11 @@ export function ArticleView({ story }: { story: Story }) {
           ))}
         </div>
       ) : null}
-      {body ? (
-        <p className="mt-6 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed text-ink-soft">
-          {body}
-        </p>
-      ) : null}
-      <WrittenLinks
-        text={`${story.title}\n${story.body}\n${story.excerpt}`}
-        skipHref={[story.url, card?.url || ""]}
+      <PostText
+        text={bodyText}
+        linkText={`${story.title}\n${bodyText}`}
+        skipHref={story.url}
+        className="mt-6 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed text-ink-soft"
       />
       {quoted ? <QuoteCard quote={quoted} /> : null}
       {card && card.url !== quoted?.card?.url ? <LinkCard card={card} /> : null}
@@ -138,9 +135,11 @@ export function ArticleView({ story }: { story: Story }) {
           <summary className="cursor-pointer text-sm font-medium text-ink">
             Texto original
           </summary>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
-            {story.original}
-          </p>
+          <PostText
+            text={story.original}
+            skipHref={story.url}
+            className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft"
+          />
         </details>
       )}
       <div className="mt-10 flex items-center gap-1.5">

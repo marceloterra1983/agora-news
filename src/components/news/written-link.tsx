@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { displayBody } from "@/lib/news/format";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { publishedLinksFrom, writtenLinkHost } from "@/lib/news/written-links.mjs";
 
@@ -33,5 +34,27 @@ export function WrittenLinks({
         );
       })}
     </p>
+  );
+}
+
+export function PostText({
+  text,
+  linkText,
+  skipHref = "",
+  className,
+}: {
+  text: string;
+  linkText?: string;
+  skipHref?: string | string[];
+  className?: string;
+}) {
+  const body = displayBody(text);
+  const source = linkText ?? text;
+  if (!body && !publishedLinksFrom(source, skipHref).length) return null;
+  return (
+    <>
+      {body ? <p className={className}>{body}</p> : null}
+      <WrittenLinks text={source} skipHref={skipHref} />
+    </>
   );
 }

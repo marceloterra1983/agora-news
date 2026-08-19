@@ -2,6 +2,7 @@ import type { StoryQuote, StoryQuoteCard, StoryXArticle } from "@/lib/news/types
 import { safeHttpHref } from "@/lib/news/last-post";
 import { GroupTag } from "./group-tag";
 import { IconLink, Tip } from "./icon-btn";
+import { PostText } from "./written-link";
 import { XLogo } from "./x-logo";
 
 const KIND_LABEL: Record<StoryQuote["kind"], string> = {
@@ -64,11 +65,20 @@ export function XArticleBlock({ article }: { article: StoryXArticle }) {
         {article.paragraphs.length ? (
           <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-ink-soft">
             {article.paragraphs.map((p) => (
-              <p key={p.slice(0, 40)}>{p}</p>
+              <PostText
+                key={p.slice(0, 40)}
+                text={p}
+                skipHref={article.url}
+                className="text-[15px] leading-relaxed text-ink-soft"
+              />
             ))}
           </div>
         ) : article.preview ? (
-          <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{article.preview}</p>
+          <PostText
+            text={article.preview}
+            skipHref={article.url}
+            className="mt-3 text-[15px] leading-relaxed text-ink-soft"
+          />
         ) : null}
         {safeHttpHref(article.url, { allowPath: false }) ? (
           <IconLink
@@ -117,7 +127,11 @@ export function QuoteCard({ quote }: { quote: StoryQuote }) {
           </div>
         </div>
         {quote.text ? (
-          <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-ink">{quote.text}</p>
+          <PostText
+            text={quote.text}
+            skipHref={quote.url}
+            className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-ink"
+          />
         ) : null}
         {quote.card ? <div className="-mt-2"><LinkCard card={quote.card} /></div> : null}
         {!quote.card && quote.image ? (

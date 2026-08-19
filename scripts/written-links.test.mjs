@@ -58,7 +58,7 @@ test("feed and article hide the url behind a host chip with an external icon", (
   const article = read("src/components/news/article-view.tsx");
   const chip = read("src/components/news/written-link.tsx");
   assert.match(card, /WrittenLinks/);
-  assert.match(article, /WrittenLinks/);
+  assert.match(article, /PostText|WrittenLinks/);
   assert.match(article, /displayBody\(/);
   assert.doesNotMatch(article, /\{story\.body \|\| story\.excerpt\}/);
   assert.match(chip, /ExternalLink/);
@@ -78,9 +78,10 @@ test("article quote and original treat written urls like the feed chip", () => {
   assert.match(chip, /export function PostText/);
   assert.match(article, /<PostText/);
   assert.match(quotes, /<PostText/);
-  assert.doesNotMatch(article, />\s*\{story\.original\}\s*</);
-  assert.doesNotMatch(quotes, /\{quote\.text\}/);
-  assert.doesNotMatch(quotes, /\{p\}/);
-  assert.doesNotMatch(quotes, /\{article\.preview\}/);
-  assert.doesNotMatch(article, /card\?\.url/);
+  assert.match(article, /text=\{story\.original\}/);
+  assert.match(quotes, /text=\{quote\.text\}/);
+  assert.match(quotes, /text=\{article\.preview\}/);
+  assert.match(quotes, /text=\{p\}/);
+  assert.match(article, /skipHref=\{story\.url\}/);
+  assert.doesNotMatch(article, /skipHref=\{\[story\.url/);
 });
