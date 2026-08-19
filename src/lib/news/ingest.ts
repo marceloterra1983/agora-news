@@ -16,6 +16,7 @@ import { translateToPt } from "./translate-pt.mjs";
 import { clipAtWord } from "./summary-core.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
 import { handlesToScan, latestByAccount } from "./ingest-scan";
+import { profileFieldsFromAuthor } from "./ingest-profile-core.mjs";
 import {
   existingIds,
   needsEmbed,
@@ -220,11 +221,16 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
     await mapPool(sample, 4, async (handle) => {
       const list = collected.find((c) => c.handle.toLowerCase() === handle.toLowerCase())?.list ?? [];
       const last = list.find((t) => t.id && t.text);
-      const author = last?.author;
       const knownProfile = profileByHandle(handle);
       const prev = storedAt.get(handle.toLowerCase());
-      const name = knownProfile?.name || author?.name || handle;
-      const bio = author?.description?.trim() || prev?.bio || "";
+      const patch = profileFieldsFromAuthor(handle, last?.author, {
+        name: prev?.name,
+        bio: prev?.bio,
+        avatar: prev?.avatar,
+        followers: prev?.followers,
+      });
+      const name = knownProfile?.name || patch.name;
+      const bio = patch.bio;
       // Cron não tem sessão: oneLineAbout cai no env (XAI_API_KEY/GROK_API_KEY).
       const summary =
         (await oneLineAbout(handle, name, bio)) || prev?.summary_pt || "";
@@ -236,8 +242,8 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
         name,
         bio,
         summary_pt: summary.slice(0, 220),
-        avatar: author?.avatar_url?.replace("_normal.", "_400x400.") || prev?.avatar || null,
-        followers: Number(author?.followers) || prev?.followers || 0,
+        avatar: patch.avatar,
+        followers: patch.followers,
         last_post: packLastPosts(lastPosts) ?? prev?.last_post ?? null,
       });
       if (ok) profiles += 1;
