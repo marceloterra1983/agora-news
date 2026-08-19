@@ -42,6 +42,17 @@ test("extractWrittenLinks returns the published href and skips the X status", as
   assert.doesNotMatch(stripWrittenLinks("Veja www.example.com/a agora"), /www\./i);
 });
 
+test("publishedLinksFrom keeps a single published Link when t.co and utm copies appear", async () => {
+  const { publishedLinksFrom } = await import("../src/lib/news/written-links.mjs");
+  const hrefs = publishedLinksFrom(
+    `${ENGADGET}\nhttps://t.co/abcdEFG\nhttps://engadget.com/2239713/warren-spector-founding-father-of-immersive-sims-retired-game-development/?utm_source=twitter`,
+    "https://x.com/engadget/status/1",
+  );
+  assert.equal(hrefs.length, 1);
+  assert.match(hrefs[0], /engadget\.com\/2239713\//);
+  assert.doesNotMatch(hrefs[0], /t\.co/i);
+});
+
 test("feed and article hide the url behind a Link label", () => {
   const card = read("src/components/news/story-card.tsx");
   const article = read("src/components/news/article-view.tsx");
