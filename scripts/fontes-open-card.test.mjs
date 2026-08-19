@@ -117,8 +117,20 @@ test("Playwright Fontes: star notify power persist and back stays on /fontes", a
         }
       }
     }
-    if (!(await materia.count())) return;
-    await materia.first().click();
+    if (await materia.count()) {
+      await materia.first().click();
+    } else {
+      await page.evaluate(({ secao, open, y }) => {
+        sessionStorage.setItem(
+          "agora-feed-scroll-v1",
+          JSON.stringify({ secao, y, path: "/fontes", open }),
+        );
+      }, { secao: "ai", open: handle, y: await page.evaluate(() => window.scrollY) });
+      await page.goto(`${base}/materia/ci-fontes-back`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15_000,
+      });
+    }
     await page.waitForURL(/\/materia\//, { timeout: 15_000 });
     await page.getByRole("button", { name: /Voltar/i }).click();
     await page.waitForURL(/\/fontes/, { timeout: 15_000 });

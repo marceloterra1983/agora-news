@@ -280,11 +280,20 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
     assert.equal(await storageHas("agora-fontes-notify-v1"), true);
 
     const materia = row.locator('a[href^="/materia/"]');
-    if (!(await materia.count())) {
-      unavailable(t, "nenhum post /materia neste card — voltar não exercitado");
-      return;
+    if (await materia.count()) {
+      await materia.first().click();
+    } else {
+      await page.evaluate(({ secao, open, y }) => {
+        sessionStorage.setItem(
+          "agora-feed-scroll-v1",
+          JSON.stringify({ secao, y, path: "/fontes", open }),
+        );
+      }, { secao: "ai", open: handle, y: await page.evaluate(() => window.scrollY) });
+      await page.goto(`${base}/materia/ci-fontes-back`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15_000,
+      });
     }
-    await materia.first().click();
     await page.waitForURL(/\/materia\//, { timeout: 15_000 });
     await page.getByRole("button", { name: /Voltar/i }).click();
     await page.waitForURL(/\/fontes/, { timeout: 15_000 });
