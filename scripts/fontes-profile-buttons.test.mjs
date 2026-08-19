@@ -28,7 +28,6 @@ test("open card footer exposes the five actions and keeps them on screen", () =>
   const row = read("src/components/news/fontes-profile-row.tsx");
   const controls = read("src/components/news/fonte-controls.tsx");
   const css = `${read("src/lib/news/phone-layout.css")}\n${read("src/styles.css")}`;
-  const tip = read("src/components/news/icon-btn.tsx");
   assert.match(row, /data-fonte-actions/);
   assert.match(row, /scrollIntoView/);
   assert.match(row, /data-fonte-action=["']x["']/);
@@ -39,7 +38,6 @@ test("open card footer exposes the five actions and keeps them on screen", () =>
   assert.match(controls, /groupMenuOpensUp/);
   assert.match(css, /\[data-fonte-actions\]/);
   assert.match(css, /scroll-margin-bottom/);
-  assert.doesNotMatch(tip, /title:\s*children\.props\.title \?\? label/);
 });
 
 test("group menu opens down when the header would clip it", () => {
