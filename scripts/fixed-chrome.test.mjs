@@ -38,6 +38,14 @@ test("chrome pins top+bottom and reserves feed space with bar tokens", () => {
   assert.match(css, /--agora-nav-tap:\s*44px/);
   assert.match(css, /--agora-tap:\s*44px/);
   assert.match(css, /\[data-chrome="groups"\][\s\S]{0,220}bottom:/);
+  assert.match(css, /\[data-group-dock\][\s\S]{0,120}flex-wrap:\s*wrap/);
+  assert.match(chrome, /data-group-dock/);
+  assert.match(chrome, /flex-wrap/);
+  assert.match(chrome, /bottom-\[calc\(var\(--agora-nav-tap\)/);
+  assert.match(chrome, /opacity-70/);
+  const dock = chrome.slice(chrome.indexOf("function GroupDock"));
+  assert.doesNotMatch(dock, /data-h-scroll/);
+  assert.doesNotMatch(dock, /overflow-x-auto/);
 });
 
 test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () => {
@@ -86,6 +94,7 @@ const FIXTURE = `<!doctype html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <style>
+    :root { --agora-nav-tap: 44px; --agora-header: 64px; --agora-groups: 5.5rem; }
     [data-chrome="compact"] { position: sticky; top: 0; z-index: 30; }
     [data-chrome="tabs"] { position: relative; }
     [data-chrome="compact"] [data-h-scroll] button,
@@ -110,8 +119,14 @@ const FIXTURE = `<!doctype html>
       <div data-feed style="height: 2000px">feed</div>
     </div>
     <div data-chrome="groups">
-      <div data-h-scroll style="display:flex">
+      <div data-group-dock>
         <button type="button" data-group-chip>Todos</button>
+        <button type="button" data-group-chip>Empresas</button>
+        <button type="button" data-group-chip>Startups</button>
+        <button type="button" data-group-chip>Gadgets</button>
+        <button type="button" data-group-chip>Segurança</button>
+        <button type="button" data-group-chip>Devs</button>
+        <button type="button" data-group-chip>Imprensa</button>
       </div>
     </div>
     <nav data-chrome="tabs">
@@ -221,12 +236,15 @@ test("Playwright 390px: chrome is fixed and tap heights match 44px", async (t) =
       before.mainPadBottom >= before.tabs.h - 1,
       `pad-bottom ${before.mainPadBottom} tabs ${before.tabs.h}`,
     );
-    if (before.groups.h) {
-      assert.ok(
-        before.groups.b <= before.tabs.t + 2,
-        `groups above tabs ${before.groups.b} ${before.tabs.t}`,
-      );
-    }
+    assert.ok(before.groups.h > 0, `groups height ${before.groups.h}`);
+    assert.ok(
+      before.groups.b <= before.tabs.t + 2,
+      `groups above tabs ${before.groups.b} ${before.tabs.t}`,
+    );
+    assert.ok(
+      before.groups.h >= 64,
+      `groups wrap to 2+ lines ${before.groups.h}`,
+    );
 
     await page.evaluate(() => window.scrollTo(0, 600));
     const after = await chromeBox(page);
@@ -236,6 +254,35 @@ test("Playwright 390px: chrome is fixed and tap heights match 44px", async (t) =
     assert.ok(
       Math.abs(after.tabs.b - after.vh) <= 1,
       `tabs scrolled bottom ${after.tabs.b}`,
+    );
+    assert.ok(after.groups.h > 0, `groups still visible ${after.groups.h}`);
+    assert.ok(
+      after.groups.b <= after.tabs.t + 2,
+      `groups stay above tabs ${after.groups.b} ${after.tabs.t}`,
+    );
+  } finally {
+    await browser.close();
+  }
+});
+
+test("Playwright 1280px: group dock stays pinned above tabs", async (t) => {
+  const browser = await launchChromium(t);
+  if (!browser) return;
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+    });
+    await page.setContent(FIXTURE, { waitUntil: "domcontentloaded" });
+    const box = await chromeBox(page);
+    assert.ok(box.groups.h > 0, `desktop groups height ${box.groups.h}`);
+    assert.ok(box.groups.t > 0, `desktop groups top ${box.groups.t}`);
+    assert.ok(
+      box.groups.b <= box.tabs.t + 2,
+      `desktop groups above tabs ${box.groups.b} ${box.tabs.t}`,
+    );
+    assert.ok(
+      box.groups.b < box.vh,
+      `desktop groups in viewport ${box.groups.b} vh ${box.vh}`,
     );
   } finally {
     await browser.close();

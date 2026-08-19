@@ -149,10 +149,13 @@ function GroupDock({
 }) {
   const catalog = useSectionCatalog(category);
   return (
-    <div data-chrome="groups" className="pointer-events-none fixed inset-x-0 z-[35] px-3">
+    <div
+      data-chrome="groups"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px)+8px)] z-[35] px-3"
+    >
       <div
-        data-h-scroll=""
-        className="pointer-events-auto mx-auto flex w-max max-w-full items-center justify-center gap-1.5 overflow-x-auto"
+        data-group-dock=""
+        className="pointer-events-auto mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-1.5"
       >
         <button
           type="button"
@@ -162,8 +165,8 @@ function GroupDock({
           className={cn(
             GROUP_CHIP,
             group === "all"
-              ? "bg-ink text-paper ring-1 ring-ink/40 opacity-80"
-              : "bg-paper-2 text-mute opacity-40",
+              ? "bg-ink text-paper ring-1 ring-ink/40 opacity-95"
+              : "bg-paper-2 text-ink-soft opacity-70",
           )}
         >
           Todos
@@ -181,7 +184,7 @@ function GroupDock({
               className={cn(
                 GROUP_CHIP,
                 on ? st.chipOn : st.chip,
-                on ? "opacity-80" : "opacity-40",
+                on ? "opacity-95" : "opacity-70",
               )}
             >
               {g.label}
