@@ -65,6 +65,7 @@ export function ProfileRow({
               width={28}
               height={28}
               loading={index === 0 ? "eager" : "lazy"}
+              referrerPolicy="no-referrer"
               className="size-7 shrink-0 rounded-full bg-paper-2 object-cover"
             />
           ) : (

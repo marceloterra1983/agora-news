@@ -55,10 +55,23 @@ export function StoryAssetBlock({
 }) {
   const [failed, setFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  function motionReduced() {
+    if (typeof document !== "undefined" && document.documentElement.dataset.motion === "reduce") {
+      return true;
+    }
+    return (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
   useEffect(() => {
     const node = videoRef.current;
     if (!node || asset.type !== "video") return;
     node.muted = true;
+    if (motionReduced()) {
+      node.pause();
+      return;
+    }
     const play = node.play();
     if (play) void play.catch(() => {});
   }, [asset.type, asset.url]);
@@ -67,7 +80,6 @@ export function StoryAssetBlock({
       <video
         ref={videoRef}
         controls
-        autoPlay
         muted
         loop
         playsInline

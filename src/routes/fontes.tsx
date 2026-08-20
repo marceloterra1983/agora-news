@@ -202,6 +202,7 @@ function FontesPage() {
                               width={28}
                               height={28}
                               loading="lazy"
+                              referrerPolicy="no-referrer"
                               className="size-7 rounded-full border border-paper bg-paper-2 object-cover"
                             />
                           ) : (
