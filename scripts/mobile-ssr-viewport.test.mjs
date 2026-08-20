@@ -1,14 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PHONE_MEDIA, VIEWPORT_CONTENT } from "../src/lib/news/phone-shell.ts";
-import { unavailable } from "./required-smoke.mjs";
+import { liveSmokeUrl, unavailable } from "./required-smoke.mjs";
 
-const base = (process.env.NEWS_SMOKE_URL || "http://127.0.0.1:3080").replace(
-  /\/$/,
-  "",
-);
-
-async function live() {
+async function live(base) {
   try {
     const res = await fetch(`${base}/api/health/live`, {
       signal: AbortSignal.timeout(2_000),
@@ -20,7 +15,9 @@ async function live() {
 }
 
 test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
-  if (!(await live())) {
+  const base = liveSmokeUrl(t);
+  if (!base) return;
+  if (!(await live(base))) {
     unavailable(t, `smoke precisa de ${base} no ar`);
     return;
   }
@@ -63,7 +60,9 @@ test("rendered SSR HTML from 3080 has one device-width viewport", async (t) => {
 });
 
 test("Playwright iPhone: viewport meta + innerWidth === clientWidth", async (t) => {
-  if (!(await live())) {
+  const base = liveSmokeUrl(t);
+  if (!base) return;
+  if (!(await live(base))) {
     unavailable(t, `smoke precisa de ${base} no ar`);
     return;
   }
