@@ -21,6 +21,7 @@ import { relativeTime } from "@/lib/news/format";
 import { cn } from "@/lib/utils";
 import { profileByHandle } from "@/lib/news/profiles";
 import { mergeAvatarsIntoStories } from "@/lib/news/profile-store-core.mjs";
+import { tapIcon } from "./icon-btn";
 import { StoryCard } from "./story-card";
 
 const PAGE = PAGE_SIZE;
@@ -219,7 +220,7 @@ export function Feed({
             aria-label="Carregar mais"
             disabled={loadingMore}
             onClick={() => void loadMore()}
-            className="grid size-10 place-items-center rounded-full bg-paper-2 text-ink disabled:opacity-40"
+            className={cn(tapIcon, "bg-paper-2 text-ink disabled:opacity-40")}
           >
             <ChevronDown className={cn("size-5", loadingMore && "opacity-50")} />
           </button>

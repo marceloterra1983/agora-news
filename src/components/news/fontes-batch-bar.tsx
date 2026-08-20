@@ -19,7 +19,7 @@ export function FontesBatchBar({
             key={id}
             type="button"
             onClick={() => onMove(id)}
-            className="h-7 rounded-full px-2.5 text-[11px] font-semibold"
+            className="min-h-[44px] rounded-full px-3 text-[11px] font-semibold"
             style={groupStyle(id)}
           >
             {groupLabel(id)}

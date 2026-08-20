@@ -1,4 +1,4 @@
-import { Tip } from "@/components/news/icon-btn";
+import { tapIcon, Tip } from "@/components/news/icon-btn";
 import { ProfileCard } from "@/components/news/x-profile-card";
 import type { FoundProfile } from "@/lib/news/server";
 import { addExtraFonteFromProfile, loadExtraFontes, removeExtraFonte } from "@/lib/news/extra-fontes";
@@ -64,7 +64,7 @@ export function BuscarInterests({
                     <button
                       type="button"
                       onClick={() => onRemove(handle)}
-                      className="grid size-8 shrink-0 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
+                      className={`${tapIcon} text-mute hover:bg-paper-2 hover:text-ink`}
                       aria-label={`Remover @${handle}`}
                     >
                       <X className="size-3.5" />
