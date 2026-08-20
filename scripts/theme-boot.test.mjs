@@ -59,8 +59,24 @@ test("buscar uses useExtraFontes and login focuses email after error", () => {
   assert.doesNotMatch(buscar, /fontesTick/);
 
   const login = read("src/routes/login.tsx");
-  assert.match(login, /emailRef\.current\?\.focus\(\)/);
-  assert.match(login, /useRef/);
+  const signInPanel = login.slice(
+    login.indexOf("function SignInPanel()"),
+    login.indexOf("function SignUpPanel()"),
+  );
+  const signUpPanel = login.slice(login.indexOf("function SignUpPanel()"));
+  assert.equal(
+    (login.match(/emailRef\.current\?\.focus\(\)/g) ?? []).length,
+    2,
+    "SignIn and SignUp must focus email after auth error",
+  );
+  for (const [name, panel] of [
+    ["SignInPanel", signInPanel],
+    ["SignUpPanel", signUpPanel],
+  ]) {
+    assert.match(panel, /useRef/, name);
+    assert.match(panel, /emailRef/, name);
+    assert.match(panel, /emailRef\.current\?\.focus\(\)/, name);
+  }
 });
 
 test("app menu closes when focus leaves the box", () => {
