@@ -50,6 +50,19 @@ test("save, remove-interest, load-more and batch-move use 44px targets", () => {
   assert.doesNotMatch(batch, /className="h-7 /);
 });
 
+test("buscar uses useExtraFontes and login focuses email after error", () => {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const read = (rel) => readFileSync(join(root, rel), "utf8");
+  const buscar = read("src/routes/buscar.tsx");
+  assert.match(buscar, /useExtraFontes/);
+  assert.doesNotMatch(buscar, /syncExtraFontes\s*\(/);
+  assert.doesNotMatch(buscar, /fontesTick/);
+
+  const login = read("src/routes/login.tsx");
+  assert.match(login, /emailRef\.current\?\.focus\(\)/);
+  assert.match(login, /useRef/);
+});
+
 test("app menu closes when focus leaves the box", () => {
   const src = readFileSync(join(root, "src/components/news/app-menu.tsx"), "utf8");
   assert.match(src, /focusout|onBlur/);

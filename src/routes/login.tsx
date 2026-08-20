@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, LogOut } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { authEnabled, signIn, signOut, signUp } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Tip } from "@/components/news/icon-btn";
@@ -103,6 +103,7 @@ function SignInPanel() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,6 +113,7 @@ function SignInPanel() {
       await signIn(email, password, "/");
     } catch {
       setError("E-mail ou senha inválidos.");
+      emailRef.current?.focus();
     } finally {
       setBusy(false);
     }
@@ -128,6 +130,7 @@ function SignInPanel() {
           <label className="grid gap-1 text-sm">
             E-mail
             <input
+              ref={emailRef}
               type="email"
               name="email"
               autoComplete="email"
@@ -178,6 +181,7 @@ function SignUpPanel() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -187,6 +191,7 @@ function SignUpPanel() {
       await signUp(name, email, password, "/");
     } catch {
       setError("Não foi possível criar a conta.");
+      emailRef.current?.focus();
     } finally {
       setBusy(false);
     }
@@ -213,6 +218,7 @@ function SignUpPanel() {
         <label className="grid gap-1 text-sm">
           E-mail
           <input
+            ref={emailRef}
             type="email"
             name="email"
             autoComplete="email"
