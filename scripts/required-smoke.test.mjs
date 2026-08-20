@@ -24,6 +24,19 @@ test("127.0.0.1:3080 é produção e exige override", () => {
   }
 });
 
+test("qualquer host em :3080 é produção sem override", () => {
+  const prev = process.env.NEWS_SMOKE_ALLOW_PROD;
+  delete process.env.NEWS_SMOKE_ALLOW_PROD;
+  try {
+    const got = resolveSmokeUrl("http://example.internal:3080");
+    assert.equal(got.base, "");
+    assert.match(got.reason, /3080/);
+  } finally {
+    if (prev === undefined) delete process.env.NEWS_SMOKE_ALLOW_PROD;
+    else process.env.NEWS_SMOKE_ALLOW_PROD = prev;
+  }
+});
+
 test("CI em :3180 passa sem override", () => {
   const got = resolveSmokeUrl("http://127.0.0.1:3180");
   assert.equal(got.base, "http://127.0.0.1:3180");

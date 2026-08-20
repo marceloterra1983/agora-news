@@ -3,10 +3,6 @@ export function unavailable(t, message) {
   t.skip(message);
 }
 
-function hostnameIsLoopback(hostname) {
-  return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "[::1]";
-}
-
 export function resolveSmokeUrl(raw = process.env.NEWS_SMOKE_URL) {
   const trimmed = String(raw || "").trim().replace(/\/$/, "");
   if (!trimmed) return { base: "", reason: "NEWS_SMOKE_URL ausente" };
@@ -16,8 +12,7 @@ export function resolveSmokeUrl(raw = process.env.NEWS_SMOKE_URL) {
   } catch {
     return { base: "", reason: "NEWS_SMOKE_URL inválida" };
   }
-  const prodLoopback = hostnameIsLoopback(url.hostname) && url.port === "3080";
-  if (prodLoopback && process.env.NEWS_SMOKE_ALLOW_PROD !== "1") {
+  if (url.port === "3080" && process.env.NEWS_SMOKE_ALLOW_PROD !== "1") {
     return { base: "", reason: "NEWS_SMOKE_URL aponta para produção :3080" };
   }
   return { base: trimmed, reason: "" };
