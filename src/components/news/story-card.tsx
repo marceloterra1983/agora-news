@@ -9,7 +9,7 @@ import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
 import { StoryMedia } from "./story-media";
 import { GroupTag } from "./group-tag";
-import { Tip } from "./icon-btn";
+import { tapIcon, Tip } from "./icon-btn";
 import { WrittenLinks } from "./written-link";
 
 export function StoryCard({
@@ -173,7 +173,7 @@ export function StoryCard({
             onClick={() => toggleSave(story)}
             aria-pressed={saved}
             aria-label={saved ? "Remover dos salvos" : "Salvar matéria"}
-            className="mt-2 grid size-8 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
+            className={cn("mt-2 text-mute hover:bg-paper-2 hover:text-ink", tapIcon)}
           >
             {saved ? (
               <BookmarkCheck className="size-4 text-mark" />

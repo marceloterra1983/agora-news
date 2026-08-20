@@ -5,9 +5,6 @@ import { readLastSection } from "./section-pref";
 import { profileByHandle } from "./profiles";
 import type { Category } from "./types";
 
-const GROUP_KEY = "agora-fontes-groups-v1";
-void GROUP_KEY;
-
 function sectionOf(section?: Category): Category {
   return section || (typeof window === "undefined" ? "ai" : readLastSection());
 }

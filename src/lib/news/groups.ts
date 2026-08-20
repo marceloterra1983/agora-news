@@ -6,9 +6,7 @@ import type { Category } from "./types";
 
 export type CustomGroup = { id: string; label: string };
 
-const CUSTOM_KEY = "agora-custom-groups-v1";
 const EVENT = "agora-custom-groups";
-void CUSTOM_KEY;
 
 function sectionOf(section?: Category): Category {
   return section || (typeof window === "undefined" ? "ai" : readLastSection());

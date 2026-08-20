@@ -230,6 +230,9 @@ test("dead paths and direct dependencies are removed only with zero consumers", 
     `${Object.keys(deps).length} direct packages`,
   );
 
+  assert.doesNotMatch(read("src/lib/news/fontes-prefs.ts"), /void GROUP_KEY/);
+  assert.doesNotMatch(read("src/lib/news/groups.ts"), /void CUSTOM_KEY/);
+
   for (const [path, pattern] of [
     ["src/lib/news/types.ts", /export const FALLBACK_CATEGORIES/],
     ["src/lib/news/profiles.ts", /export const GROUP_HINTS|export function profileGroups/],

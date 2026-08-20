@@ -1,47 +1,17 @@
-active_flow: fix_bug
+active_flow: sustain
 active_epic_id: e04
-active_story_id: e04s08
-active_bug_id: BUG-2026-08-19T000500
+active_story_id: ""
+active_bug_id: ""
 release:
-  target_version: "60261c8"
-  last_tag: "news-news:60261c8"
-  last_publish: "2026-08-17T19:52:43-03:00"
-epic_cycle:
-  current_step: verify
-  next_skill: verification-before-completion
-  completed_steps:
-    - brainstorming
-    - scope-work
-    - slice-tasks
-    - assess-impact
-    - kickoff-branch
-    - plan-work
-    - execute-plan
-bug_cycle:
-  current_step: 5
-  completed_steps:
-    - investigate-bug
-    - diagnose-root
-    - develop-tdd
-    - validate-fix
-  next_skill: release-branch
-project_cycle:
-  current_phase: verify
-  completed_steps:
-    - survey-context
-    - map-codebase
-    - deepen-architecture
-    - security-review
+  target_version: "ffd19db"
+  last_tag: "news-news:ffd19db"
 git:
   branch: main
-  baseline: 60261c8b66a2d84c9711d086370905659947003e
-  hash: 60261c8b66a2d84c9711d086370905659947003e
+  hash: ffd19db2a0479ef780e34c78b8c56af4e70a2382
 handoff:
-  last_step_completed: "video player muted autoplay + no-referrer; awaiting land"
-  open_decisions: []
-  required_reading:
-    - specs/bugs/BUG-2026-08-19-video-autoplay.md
-  next_skill: release-branch
+  last_step_completed: "audit 2026-08-20 remediation S1–S6"
+  required_reading: []
+  next_skill: ""
 learned_preferences:
   - "PT-BR, concise status, complete implementation requested and design approved"
   - "Keep the currently active keys; do not rotate or revoke without a new incident-driven decision"

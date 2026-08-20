@@ -2,7 +2,6 @@ import { AppChrome } from "@/components/news/app-chrome";
 import { BuscarHitList } from "@/components/news/buscar-hit-list";
 import { BuscarInterests } from "@/components/news/buscar-interests";
 import { Input } from "@/components/ui/input";
-import { loadExtraFontes, syncExtraFontes } from "@/lib/news/extra-fontes";
 import { loadInterests, removeInterest } from "@/lib/news/profile-interests";
 import { profilesFor } from "@/lib/news/profiles";
 import { catalogFor, handleInCatalog } from "@/lib/news/section-catalog.mjs";
@@ -13,6 +12,7 @@ import {
   normalizeSection,
   type Category,
 } from "@/lib/news/types";
+import { useExtraFontes } from "@/lib/news/use-extra-fontes";
 import { useOpenXProfile } from "@/lib/news/use-open-x-profile";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
@@ -41,22 +41,15 @@ function BuscarPage() {
   const [searchError, setSearchError] = useState(false);
   const [searchAttempt, setSearchAttempt] = useState(0);
   const [interests, setInterests] = useState<string[]>([]);
-  const [fontesTick, setFontesTick] = useState(0);
   const searchSeq = useRef(0);
+  const extras = useExtraFontes();
   const profile = useOpenXProfile();
-  void fontesTick;
 
   useEffect(() => {
     setInterests(loadInterests());
     const refresh = () => setInterests(loadInterests());
     window.addEventListener("agora-profile-interests", refresh);
-    const refreshFontes = () => setFontesTick((n) => n + 1);
-    window.addEventListener("agora-extra-fontes", refreshFontes);
-    syncExtraFontes();
-    return () => {
-      window.removeEventListener("agora-profile-interests", refresh);
-      window.removeEventListener("agora-extra-fontes", refreshFontes);
-    };
+    return () => window.removeEventListener("agora-profile-interests", refresh);
   }, []);
 
   useEffect(() => {
@@ -82,7 +75,7 @@ function BuscarPage() {
         }
         const catalog = catalogFor(secao, {
           profiles: profilesFor(secao),
-          extras: loadExtraFontes(),
+          extras,
         });
         setHits(
           res.users.map((u) => ({
@@ -99,7 +92,7 @@ function BuscarPage() {
       }
     }, 280);
     return () => window.clearTimeout(t);
-  }, [query, secao, searchAttempt]);
+  }, [query, secao, searchAttempt, extras]);
 
   function toggleSearch(handle: string) {
     if (profile.isActive("search", handle)) {

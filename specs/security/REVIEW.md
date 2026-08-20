@@ -62,3 +62,12 @@ and `createServerFn` only.
 Production on port 3080 runs `news-news:2ab7717` with the host `.env` outside
 the image. Rollback: `NEWS_IMAGE_TAG=3bfa24f docker compose up -d --no-build news`.
 Better Auth migrations stay additive and explicit.
+
+## Produção atual (2026-08-20)
+
+Baseline verificado na branch de remediação: `ffd19db`
+(`ffd19db2a0479ef780e34c78b8c56af4e70a2382`). Suite cega:
+405 passed, 0 failed, 9 skipped (`NEWS_SMOKE_URL=http://127.0.0.1:9`);
+typecheck, lint e `npm audit --omit=dev --audit-level=high` limpos. Imagem
+Docker em `127.0.0.1:3080` permanece tag histórica até deploy explícito;
+runtime de código alinhado ao HEAD acima. Chaves ativas; sem rotação.
