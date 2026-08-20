@@ -8,12 +8,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
 test("custom groups and per-handle override come from the Grok Fontes model", () => {
+  const sectionPrefs = read("src/lib/news/section-prefs.mjs");
+  assert.match(sectionPrefs, /agora-custom-groups-v1/);
+  assert.match(sectionPrefs, /agora-fontes-groups-v1/);
   const groups = read("src/lib/news/groups.ts");
-  assert.match(groups, /agora-custom-groups-v1/);
   assert.match(groups, /export function addCustomGroup/);
   assert.match(groups, /export function allGroupIds/);
   const prefs = read("src/lib/news/fontes-prefs.ts");
-  assert.match(prefs, /agora-fontes-groups-v1/);
   assert.match(prefs, /export function setGroupOverride/);
   const hook = read("src/lib/news/use-fontes-prefs.ts");
   assert.match(hook, /setGroup:/);
