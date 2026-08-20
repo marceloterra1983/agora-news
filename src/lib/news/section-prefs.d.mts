@@ -10,11 +10,12 @@ export type SectionSlice = {
 export function migrateLegacyCustom(raw: unknown): Record<string, CustomGroup[]>;
 export function migrateLegacyGroups(raw: unknown): Record<string, Record<string, string>>;
 export function readCustomGroups(section: string): CustomGroup[];
-export function writeCustomGroups(section: string, list: CustomGroup[]): CustomGroup[];
+export function writeCustomGroups(section: string, list: CustomGroup[], emit?: boolean): CustomGroup[];
 export function readGroupOverrides(section: string): Record<string, string>;
-export function writeGroupOverrides(section: string, map: Record<string, string>): void;
+export function writeGroupOverrides(section: string, map: Record<string, string>, emit?: boolean): void;
 export function findCustomGroup(id: string): CustomGroup | undefined;
 export function snapshotBySection(): Record<string, SectionSlice>;
 export function applyBySection(
   bySection: Record<string, { groups?: Record<string, string>; customGroups?: CustomGroup[] } | undefined>,
+  emit?: boolean,
 ): void;

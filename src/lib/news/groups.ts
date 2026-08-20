@@ -66,9 +66,13 @@ export function loadCustomGroups(section?: Category): CustomGroup[] {
   return readCustomGroups(sectionOf(section));
 }
 
-export function replaceCustomGroups(list: CustomGroup[], section?: Category): CustomGroup[] {
+export function replaceCustomGroups(
+  list: CustomGroup[],
+  section?: Category,
+  emit = true,
+): CustomGroup[] {
   if (typeof window === "undefined") return [];
-  return writeCustomGroups(sectionOf(section), list || []);
+  return writeCustomGroups(sectionOf(section), list || [], emit);
 }
 
 export function removeCustomGroup(id: string, section?: Category): CustomGroup[] {

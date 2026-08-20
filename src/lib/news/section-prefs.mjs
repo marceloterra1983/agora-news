@@ -119,13 +119,13 @@ export function readCustomGroups(section) {
   return migrateLegacyCustom(readJson(CUSTOM_KEY))[normalizeSection(section)] ?? [];
 }
 
-export function writeCustomGroups(section, list) {
+export function writeCustomGroups(section, list, emit = true) {
   const all = migrateLegacyCustom(readJson(CUSTOM_KEY));
   const slug = normalizeSection(section);
   const clean = sanitizeCustom(list);
   all[slug] = clean;
   writeJson(CUSTOM_KEY, { bySection: all });
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("agora-custom-groups"));
+  if (emit && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("agora-custom-groups"));
   return clean;
 }
 
@@ -133,11 +133,11 @@ export function readGroupOverrides(section) {
   return migrateLegacyGroups(readJson(GROUP_MAP_KEY))[normalizeSection(section)] ?? {};
 }
 
-export function writeGroupOverrides(section, map) {
+export function writeGroupOverrides(section, map, emit = true) {
   const all = migrateLegacyGroups(readJson(GROUP_MAP_KEY));
   all[normalizeSection(section)] = sanitizeGroups(map);
   writeJson(GROUP_MAP_KEY, { bySection: all });
-  if (typeof window !== "undefined") {
+  if (emit && typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key: GROUP_MAP_KEY } }));
   }
 }
@@ -163,10 +163,10 @@ export function snapshotBySection() {
   return out;
 }
 
-export function applyBySection(bySection) {
+export function applyBySection(bySection, emit = true) {
   for (const [key, slice] of Object.entries(bySection || {})) {
     if (!slice) continue;
-    if (slice.groups) writeGroupOverrides(key, slice.groups);
-    if (Array.isArray(slice.customGroups)) writeCustomGroups(key, slice.customGroups);
+    if (slice.groups) writeGroupOverrides(key, slice.groups, emit);
+    if (Array.isArray(slice.customGroups)) writeCustomGroups(key, slice.customGroups, emit);
   }
 }

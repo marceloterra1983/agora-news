@@ -8,6 +8,13 @@ export type SectionPrefsSlice = {
   customGroups?: CustomGroup[];
 };
 
+export type FontesRev = {
+  starred?: string;
+  disabled?: string;
+  notify?: string;
+  groups?: string;
+};
+
 export type CloudPrefs = {
   starred?: string[];
   disabled?: string[];
@@ -18,6 +25,9 @@ export type CloudPrefs = {
   groups?: Record<string, string>;
   customGroups?: CustomGroup[];
   bySection?: Record<string, SectionPrefsSlice>;
+  fontesRev?: FontesRev;
+  /** Row `user_prefs.updated_at`. Not persisted inside the prefs JSON. */
+  updatedAt?: string;
 };
 
 export const loadPrefs = createServerFn({ method: "GET" })

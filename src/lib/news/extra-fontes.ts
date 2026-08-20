@@ -100,15 +100,18 @@ function dropWatch(handle: string, section?: string) {
   }).catch(() => {});
 }
 
-function write(list: ExtraFonte[]): ExtraFonte[] {
+function write(list: ExtraFonte[], detail?: Record<string, unknown>): ExtraFonte[] {
   localStorage.setItem(KEY, JSON.stringify(list));
-  window.dispatchEvent(new CustomEvent("agora-extra-fontes"));
+  window.dispatchEvent(new CustomEvent("agora-extra-fontes", { detail }));
   return list;
 }
 
 /** Substitui a lista local — `[]` limpa o aparelho (pull da nuvem). */
-export function replaceExtraFontes(list: ExtraFonte[]): ExtraFonte[] {
-  return write(Array.isArray(list) ? list : []);
+export function replaceExtraFontes(
+  list: ExtraFonte[],
+  detail?: Record<string, unknown>,
+): ExtraFonte[] {
+  return write(Array.isArray(list) ? list : [], detail);
 }
 
 export function addExtraFonteFromProfile(

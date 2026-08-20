@@ -3,24 +3,35 @@ import { adminHeaders, SUPABASE_URL } from "./admin";
 import { mergePrefsPreservingLlm, stripLlmFromPrefs } from "./llm-accounts.mjs";
 import type { CloudPrefs } from "./prefs-server";
 
-export async function readUserPrefsRaw(
-  userId: string,
-): Promise<Record<string, unknown> | null> {
+type PrefsRow = { prefs: Record<string, unknown>; updatedAt?: string };
+
+async function readUserPrefsRow(userId: string): Promise<PrefsRow | null> {
   const uid = userId.trim();
   if (!uid) throw new Error("prefs_owner_required");
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/user_prefs?user_id=eq.${encodeURIComponent(uid)}&select=prefs&limit=1`,
+    `${SUPABASE_URL}/rest/v1/user_prefs?user_id=eq.${encodeURIComponent(uid)}&select=prefs,updated_at&limit=1`,
     { headers: adminHeaders(), signal: AbortSignal.timeout(5_000) },
   );
   if (!res.ok) throw new Error(`prefs_read_${res.status}`);
-  const rows = (await res.json()) as Array<{ prefs?: unknown }>;
+  const rows = (await res.json()) as Array<{ prefs?: unknown; updated_at?: string }>;
   if (!Array.isArray(rows)) throw new Error("prefs_read_invalid");
-  const prefs = rows[0]?.prefs;
+  if (!rows[0]) return null;
+  const prefs = rows[0].prefs;
   if (prefs === undefined) return null;
   if (!prefs || typeof prefs !== "object" || Array.isArray(prefs)) {
     throw new Error("prefs_read_invalid");
   }
-  return prefs as Record<string, unknown>;
+  return {
+    prefs: prefs as Record<string, unknown>,
+    updatedAt: typeof rows[0].updated_at === "string" ? rows[0].updated_at : undefined,
+  };
+}
+
+export async function readUserPrefsRaw(
+  userId: string,
+): Promise<Record<string, unknown> | null> {
+  const row = await readUserPrefsRow(userId);
+  return row?.prefs ?? null;
 }
 
 export async function writeUserPrefsRaw(
@@ -57,9 +68,10 @@ export async function writeUserPrefsRaw(
 export async function readUserPrefs(
   userId: string,
 ): Promise<CloudPrefs | null> {
-  const raw = await readUserPrefsRaw(userId);
-  if (!raw) return null;
-  return stripLlmFromPrefs(raw) as CloudPrefs;
+  const row = await readUserPrefsRow(userId);
+  if (!row) return null;
+  const prefs = stripLlmFromPrefs(row.prefs) as CloudPrefs;
+  return { ...prefs, updatedAt: row.updatedAt };
 }
 
 export async function writeUserPrefs(
@@ -69,9 +81,11 @@ export async function writeUserPrefs(
   if (!prefs || typeof prefs !== "object" || Array.isArray(prefs)) {
     throw new Error("prefs_write_invalid");
   }
+  // updatedAt is the row column; fontesRev stays inside the prefs JSON.
+  const { updatedAt: _rowAt, ...persistable } = prefs;
   const existing = await readUserPrefsRaw(userId);
   await writeUserPrefsRaw(
     userId,
-    mergePrefsPreservingLlm(prefs as Record<string, unknown>, existing),
+    mergePrefsPreservingLlm(persistable as Record<string, unknown>, existing),
   );
 }
