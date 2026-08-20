@@ -71,7 +71,7 @@ export async function readUserPrefs(
   const row = await readUserPrefsRow(userId);
   if (!row) return null;
   const prefs = stripLlmFromPrefs(row.prefs) as CloudPrefs;
-  return { ...prefs, updatedAt: row.updatedAt };
+  return row.updatedAt ? { ...prefs, updatedAt: row.updatedAt } : prefs;
 }
 
 export async function writeUserPrefs(
