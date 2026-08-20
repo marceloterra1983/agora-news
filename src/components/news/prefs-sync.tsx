@@ -4,10 +4,11 @@ import { pullCloudPrefs, pushCloudPrefs } from "@/lib/news/prefs-sync";
 
 export function PrefsSync() {
   const { user, isPending } = useCurrentUserState();
+  const userId = user && !user.isDevFallback ? user.id : null;
   useEffect(() => {
-    if (isPending || !user || user.isDevFallback) return;
-    void pullCloudPrefs(user.id).then(() => pushCloudPrefs(user.id));
-    const save = () => void pushCloudPrefs(user.id);
+    if (isPending || !userId) return;
+    void pullCloudPrefs(userId).then(() => pushCloudPrefs(userId));
+    const save = () => void pushCloudPrefs(userId);
     window.addEventListener("agora-fontes-prefs", save);
     window.addEventListener("agora-settings", save);
     window.addEventListener("agora-extra-fontes", save);
@@ -20,6 +21,6 @@ export function PrefsSync() {
       window.removeEventListener("agora-custom-groups", save);
       window.removeEventListener("agora-theme", save);
     };
-  }, [user, isPending]);
+  }, [userId, isPending]);
   return null;
 }

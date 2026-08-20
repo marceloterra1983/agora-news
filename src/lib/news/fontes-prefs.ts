@@ -15,6 +15,34 @@ function sectionOf(section?: Category): Category {
 const STAR_KEY = "agora-fontes-starred-v1";
 const DISABLED_KEY = "agora-fontes-disabled-v1";
 const NOTIFY_KEY = "agora-fontes-notify-v1";
+const DIRTY_KEY = "agora-fontes-prefs-dirty-v1";
+
+export function isFontesPrefsDirty(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(DIRTY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markFontesPrefsDirty(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(DIRTY_KEY, "1");
+  } catch {
+    /* quota */
+  }
+}
+
+export function clearFontesPrefsDirty(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(DIRTY_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 export function normHandle(h: string): string {
   return String(h || "")
@@ -40,6 +68,7 @@ function writeList(key: string, list: string[]) {
   if (typeof window === "undefined") return;
   const clean = [...new Set(list.map(normHandle).filter(Boolean))];
   window.localStorage.setItem(key, JSON.stringify(clean));
+  markFontesPrefsDirty();
   window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key, list: clean } }));
 }
 

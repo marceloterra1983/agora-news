@@ -88,6 +88,7 @@ test("Playwright Fontes: star notify power persist and back stays on /fontes", a
     const power = row.locator('[data-fonte-action="power"]');
     if ((await power.getAttribute("aria-pressed")) !== "true") await power.click();
     await power.click();
+    await page.waitForTimeout(1500);
     assert.equal(await power.getAttribute("aria-pressed"), "false");
     assert.equal(await storageHas("agora-fontes-disabled-v1"), true);
     assert.ok(await row.getByText(/pausada/i).count());
