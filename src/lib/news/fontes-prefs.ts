@@ -16,6 +16,54 @@ const STAR_KEY = "agora-fontes-starred-v1";
 const DISABLED_KEY = "agora-fontes-disabled-v1";
 const NOTIFY_KEY = "agora-fontes-notify-v1";
 const DIRTY_KEY = "agora-fontes-prefs-dirty-v1";
+const REV_KEY = "agora-fontes-rev-v1";
+
+export type FontesRev = {
+  starred?: string;
+  disabled?: string;
+  notify?: string;
+  groups?: string;
+};
+
+const REV_FIELDS = ["starred", "disabled", "notify", "groups"] as const;
+
+export function getFontesRev(): FontesRev {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(REV_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: FontesRev = {};
+    for (const field of REV_FIELDS) {
+      const value = (parsed as Record<string, unknown>)[field];
+      if (typeof value === "string" && Number.isFinite(Date.parse(value))) out[field] = value;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function setFontesRev(rev: FontesRev): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(REV_KEY, JSON.stringify(rev || {}));
+  } catch {
+    /* quota */
+  }
+}
+
+function bumpFontesRev(field: keyof FontesRev): void {
+  setFontesRev({ ...getFontesRev(), [field]: new Date().toISOString() });
+}
+
+function revFieldForKey(key: string): keyof FontesRev | null {
+  if (key === STAR_KEY) return "starred";
+  if (key === DISABLED_KEY) return "disabled";
+  if (key === NOTIFY_KEY) return "notify";
+  return null;
+}
 
 export function isFontesPrefsDirty(): boolean {
   if (typeof window === "undefined") return false;
@@ -68,6 +116,8 @@ function writeList(key: string, list: string[]) {
   if (typeof window === "undefined") return;
   const clean = [...new Set(list.map(normHandle).filter(Boolean))];
   window.localStorage.setItem(key, JSON.stringify(clean));
+  const field = revFieldForKey(key);
+  if (field) bumpFontesRev(field);
   markFontesPrefsDirty();
   window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { key, list: clean } }));
 }
@@ -145,9 +195,17 @@ export function groupOf(handle?: string | null, section?: Category): string {
   return groupOverrideOf(handle, section) ?? profileByHandle(handle)?.group ?? "novos";
 }
 
-export function setGroupOverrides(map: Record<string, string>, section?: Category): void {
+export function setGroupOverrides(
+  map: Record<string, string>,
+  section?: Category,
+  emit = true,
+): void {
   if (typeof window === "undefined") return;
-  writeGroupOverrides(sectionOf(section), map || {});
+  if (emit) {
+    bumpFontesRev("groups");
+    markFontesPrefsDirty();
+  }
+  writeGroupOverrides(sectionOf(section), map || {}, emit);
 }
 
 export function clearGroupOverride(handle: string, section?: Category): void {
