@@ -65,9 +65,9 @@ Better Auth migrations stay additive and explicit.
 
 ## Produção atual (2026-08-20)
 
-Baseline verificado na branch de remediação: `1f73d81`
-(`1f73d8140a06861630850787d60bab80f943e89e`). Suite cega:
-403 passed, 0 failed, 9 skipped (`NEWS_SMOKE_URL=http://127.0.0.1:9`);
+Baseline verificado na branch de remediação: `ffd19db`
+(`ffd19db2a0479ef780e34c78b8c56af4e70a2382`). Suite cega:
+405 passed, 0 failed, 9 skipped (`NEWS_SMOKE_URL=http://127.0.0.1:9`);
 typecheck, lint e `npm audit --omit=dev --audit-level=high` limpos. Imagem
 Docker em `127.0.0.1:3080` permanece tag histórica até deploy explícito;
 runtime de código alinhado ao HEAD acima. Chaves ativas; sem rotação.

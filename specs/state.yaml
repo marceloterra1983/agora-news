@@ -3,13 +3,13 @@ active_epic_id: e04
 active_story_id: ""
 active_bug_id: ""
 release:
-  target_version: "1f73d81"
-  last_tag: "news-news:1f73d81"
+  target_version: "ffd19db"
+  last_tag: "news-news:ffd19db"
 git:
   branch: main
-  hash: 1f73d8140a06861630850787d60bab80f943e89e
+  hash: ffd19db2a0479ef780e34c78b8c56af4e70a2382
 handoff:
-  last_step_completed: "audit 2026-08-20 remediation S1–S3"
+  last_step_completed: "audit 2026-08-20 remediation S1–S6"
   required_reading: []
   next_skill: ""
 learned_preferences:
