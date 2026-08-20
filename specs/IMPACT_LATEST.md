@@ -56,12 +56,6 @@ operacional, documentação viva e limpeza de código sem callers.
 - `accessibility-contract.test.mjs`: feed truthful, tema, formulários e PWA.
 - `release-gates.behavior.test.mjs`: Compose, CI e release smoke.
 - `simplification-contract.test.mjs`: documentação e zero consumers.
-- ~~Gap P0: não existe teste que prove que uma watch de A nunca entra no feed
-  anônimo ou no feed de B, inclusive quando a dependência falha depois de
-  `lastGood` receber o snapshot personalizado de A.~~
-- ~~Gap P1: não existe teste que prove o mesmo catálogo em download e pós-filtro.~~
-- ~~Gap P2: não há contrato para `theme-color` no boot, metadados dos inputs,
-  live region do instalador, logrotate ou recuperação do cron.~~
 - Fechado em e04s08 / public-catalog-privacy / theme-boot; ver auditoria 2026-08-20.
 
 ## Risk: High
