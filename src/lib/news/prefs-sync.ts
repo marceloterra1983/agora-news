@@ -1,6 +1,15 @@
 import { loadExtraFontes, replaceExtraFontes } from "./extra-fontes";
-import { getDisabled, getGroupOverrides, getNotifyHandles, getStarred, setGroupOverrides } from "./fontes-prefs";
+import {
+  clearFontesPrefsDirty,
+  getDisabled,
+  getGroupOverrides,
+  getNotifyHandles,
+  getStarred,
+  isFontesPrefsDirty,
+  setGroupOverrides,
+} from "./fontes-prefs";
 import { loadCustomGroups, replaceCustomGroups } from "./groups";
+import { mergeCloudPrefs } from "./prefs-merge";
 import { applyBySection, snapshotBySection } from "./section-prefs.mjs";
 import { applySettings, readSettings, SETTINGS_KEY } from "./settings";
 import { applyTheme, type ThemeMode } from "./theme";
@@ -56,16 +65,23 @@ function writeLocal(prefs: CloudPrefs) {
   }
 }
 
+export function applyRemotePrefs(remote: CloudPrefs) {
+  writeLocal(mergeCloudPrefs(remote, snapshotPrefs(), isFontesPrefsDirty()));
+}
+
 export async function pullCloudPrefs(_userId?: string) {
   const remote = await loadPrefs();
   if (!remote) return;
-  writeLocal(remote);
+  applyRemotePrefs(remote);
 }
 
 let timer: number | undefined;
 export function pushCloudPrefs(_userId?: string) {
   window.clearTimeout(timer);
   timer = window.setTimeout(() => {
-    void savePrefs({ data: { prefs: snapshotPrefs() } });
+    void savePrefs({ data: { prefs: snapshotPrefs() } }).then(
+      () => clearFontesPrefsDirty(),
+      () => undefined,
+    );
   }, 800);
 }
