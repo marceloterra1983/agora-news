@@ -12,6 +12,9 @@ npm run dev
 
 ## Verificação
 
+Smokes Playwright exigem NEWS_SMOKE_URL (CI usa :3180). Sem a variável, pulam.
+Não apontar para :3080 sem NEWS_SMOKE_ALLOW_PROD=1.
+
 ```bash
 npm test
 npm run typecheck

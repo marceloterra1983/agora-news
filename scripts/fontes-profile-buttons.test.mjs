@@ -3,17 +3,13 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { unavailable } from "./required-smoke.mjs";
+import { liveSmokeUrl, unavailable } from "./required-smoke.mjs";
 import { groupMenuOpensUp } from "../src/lib/news/fonte-menu-place.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
-const base = (process.env.NEWS_SMOKE_URL || "http://127.0.0.1:3080").replace(
-  /\/$/,
-  "",
-);
 
-async function live() {
+async function live(base) {
   try {
     const res = await fetch(`${base}/api/health/live`, {
       signal: AbortSignal.timeout(2_000),
@@ -164,7 +160,9 @@ test("notify persists the handle when permission is denied", async (t) => {
 });
 
 test("Playwright: all five profile actions stay above the tab bar and respond", async (t) => {
-  if (!(await live())) {
+  const base = liveSmokeUrl(t);
+  if (!base) return;
+  if (!(await live(base))) {
     unavailable(t, `smoke precisa de ${base} no ar`);
     return;
   }

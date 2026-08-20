@@ -3,16 +3,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { unavailable } from "./required-smoke.mjs";
+import { liveSmokeUrl, unavailable } from "./required-smoke.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
-const base = (process.env.NEWS_SMOKE_URL || "http://127.0.0.1:3080").replace(
-  /\/$/,
-  "",
-);
 
-async function live() {
+async function live(base) {
   try {
     const response = await fetch(`${base}/api/health/live`, {
       signal: AbortSignal.timeout(2_000),
@@ -24,16 +20,21 @@ async function live() {
 }
 
 async function launchChromium(t) {
-  if (!(await live())) {
+  const base = liveSmokeUrl(t);
+  if (!base) return null;
+  if (!(await live(base))) {
     unavailable(t, `smoke precisa de ${base} no ar`);
     return null;
   }
   const { chromium } = await import("playwright");
   try {
-    return await chromium.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-dev-shm-usage"],
-    });
+    return {
+      base,
+      browser: await chromium.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-dev-shm-usage"],
+      }),
+    };
   } catch (error) {
     if (/Executable doesn't exist/i.test(String(error))) {
       unavailable(
@@ -509,8 +510,9 @@ test("PWA media grouped empty live: product claims match rendered capability", (
 });
 
 test("Playwright landmark heading select: every core route has one usable shell", async (t) => {
-  const browser = await launchChromium(t);
-  if (!browser) return;
+  const launched = await launchChromium(t);
+  if (!launched) return;
+  const { browser, base } = launched;
   try {
     const page = await browser.newPage({
       viewport: { width: 390, height: 844 },
@@ -580,8 +582,9 @@ test("Playwright landmark heading select: every core route has one usable shell"
 });
 
 test("Playwright unread pressed confirm and search error expose truthful state", async (t) => {
-  const browser = await launchChromium(t);
-  if (!browser) return;
+  const launched = await launchChromium(t);
+  if (!launched) return;
+  const { browser, base } = launched;
   try {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -643,8 +646,9 @@ test("Playwright unread pressed confirm and search error expose truthful state",
 });
 
 test("Playwright hydration URL theme media and grouped empty remain stable", async (t) => {
-  const browser = await launchChromium(t);
-  if (!browser) return;
+  const launched = await launchChromium(t);
+  if (!launched) return;
+  const { browser, base } = launched;
   try {
     const context = await browser.newContext({
       colorScheme: "light",
