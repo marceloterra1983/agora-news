@@ -9,7 +9,7 @@
 ## 2. Status
 
 Closed 2026-08-17. All accepted audit findings are in `main` and in production
-image `news-news:2ab7717`. Anonymous feed uses the public seed catalog;
+image `news-news:2ab7717` (histórico; runtime atual é o HEAD). Anonymous feed uses the public seed catalog;
 authenticated feed adds only `listUserWatchAccounts(userId)` in
 `serverCatalogFor()`. `listAllWatchAccounts()` stays on ingest/cron.
 
@@ -35,7 +35,7 @@ The public-feed ownership gap is closed: `serverCatalogFor()` loads seed
 profiles plus, when a verified `userId` is present, that user's watches.
 `listAllWatchAccounts()` is ingest-only. The 2026-08-17 P2/P3 leftovers
 (`theme-color` boot, 44px back targets, menu `focusout`, honest release
-docs, dead symbols) shipped in #47 and are live on `news-news:2ab7717`.
+docs, dead symbols) shipped in #47 and are live on `news-news:2ab7717` (histórico; runtime atual é o HEAD).
 
 ## 7. Outcome
 
