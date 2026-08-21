@@ -60,10 +60,19 @@ export function catalogFor(section, input = {}) {
     section: slug,
     profiles,
     extras,
+    members,
     handles: members.map((m) => m.handle),
     groupIds,
     groups: groupIds.map((id) => ({ id, label: labelOfGroup(id, slug) })),
   };
+}
+
+/** Contas do grupo já com override. `all` devolve o catálogo inteiro. */
+export function handlesForGroup(catalog, group) {
+  const wanted = String(group || "").trim();
+  const members = Array.isArray(catalog?.members) ? catalog.members : [];
+  if (!wanted || wanted === "all") return catalog?.handles ?? members.map((m) => m.handle);
+  return members.filter((m) => m.group === wanted).map((m) => m.handle);
 }
 
 export function handleInCatalog(handle, catalog) {

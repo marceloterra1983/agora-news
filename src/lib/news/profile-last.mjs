@@ -1,5 +1,5 @@
 /**
- * Histórico curto do perfil: 10 últimos posts, UI abre de 2 em 2.
+ * Histórico curto do perfil: 10 últimos posts, UI abre 12h a partir do último visível.
  */
 import { parseLastPost } from "./last-post-core.mjs";
 
@@ -67,6 +67,31 @@ export function nextProfileShown(shown, total) {
   const current = Math.max(0, Number(shown) || 0);
   if (current >= cap) return cap;
   return Math.min(cap, current + PROFILE_LAST_PAGE);
+}
+
+/**
+ * Abre os posts dos próximos `hours` a partir do último já visível.
+ * Um clique nunca é no-op: avança pelo menos 1 se ainda houver lista.
+ * @param {{ publishedAt?: string }[]} posts
+ * @param {number} shown
+ * @param {number} [hours]
+ */
+export function nextShownByHours(posts, shown, hours = 12) {
+  const list = Array.isArray(posts) ? posts : [];
+  const cap = list.length;
+  const current = Math.min(cap, Math.max(0, Number(shown) || 0));
+  if (current >= cap) return cap;
+  const anchor = list[Math.max(0, current - 1)] ?? list[0];
+  const end = Date.parse(anchor?.publishedAt ?? "");
+  if (!Number.isFinite(end)) return Math.min(cap, current + PROFILE_LAST_PAGE);
+  const cutoff = end - Math.max(1, Number(hours) || 12) * 3_600_000;
+  let n = current;
+  while (n < cap) {
+    const t = Date.parse(list[n]?.publishedAt ?? "");
+    if (!Number.isFinite(t) || t < cutoff) break;
+    n += 1;
+  }
+  return Math.min(cap, Math.max(n, current + 1));
 }
 
 /**

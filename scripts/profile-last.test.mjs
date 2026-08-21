@@ -74,8 +74,8 @@ test("ingest packs last_posts and Fontes opens them two at a time", () => {
   assert.match(live, /lastPosts/);
   assert.match(row, /FonteLastPosts/);
   assert.match(chip, /fonte-mais-posts/);
-  assert.match(chip, /nextProfileShown/);
-  assert.match(chip, /Mais/);
+  assert.match(chip, /nextShownByHours/);
+  assert.match(chip, /mais 12 horas/);
   assert.match(read("src/lib/news/ingest-fetch.ts"), /count=10/);
 });
 

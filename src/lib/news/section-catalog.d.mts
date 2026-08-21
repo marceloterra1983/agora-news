@@ -6,6 +6,7 @@ export type SectionCatalog = {
   section: string;
   profiles: CatalogProfile[];
   extras: CatalogExtra[];
+  members: Array<{ handle: string; group: string }>;
   handles: string[];
   groupIds: string[];
   groups: Array<{ id: string; label: string }>;
@@ -21,6 +22,7 @@ export function catalogFor(
   },
 ): SectionCatalog;
 
+export function handlesForGroup(catalog: SectionCatalog, group?: string | null): string[];
 export function handleInCatalog(handle: string, catalog: SectionCatalog): boolean;
 export function sectionOfHandle(
   handle: string,

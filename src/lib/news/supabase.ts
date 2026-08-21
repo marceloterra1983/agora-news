@@ -1,3 +1,4 @@
+import { postedAtQuery } from "./feed-more.mjs";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { isNewsRow } from "./news-row.mjs";
@@ -137,7 +138,12 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
   };
 }
 
-export type ListOpts = { before?: string; limit?: number; accounts?: string[] };
+export type ListOpts = {
+  before?: string;
+  after?: string;
+  limit?: number;
+  accounts?: string[];
+};
 
 function normalizeAccount(value: string): string {
   return String(value || "")
@@ -175,7 +181,9 @@ async function fetchList(
   params.set("select", LIST_SELECT);
   params.set("order", "posted_at.desc");
   params.set("limit", String(opts.limit ?? PAGE_SIZE));
-  if (opts.before) params.set("posted_at", `lt.${opts.before}`);
+  const posted = postedAtQuery(opts);
+  if (posted.and) params.set("and", posted.and);
+  if (posted.posted_at) params.set("posted_at", posted.posted_at);
   params.set("category", `eq.${normalizeSection(category)}`);
   if (opts.accounts) {
     const accounts = [...new Set(opts.accounts.map(normalizeAccount).filter(Boolean))];
@@ -245,7 +253,7 @@ export async function downloadSupabase(
   fallbackCategory: Category,
   opts: ListOpts = {},
 ): Promise<Story[]> {
-  if (opts.before) return fetchList(fallbackCategory, opts);
+  if (opts.before || opts.after) return fetchList(fallbackCategory, opts);
 
   const slug = normalizeSection(fallbackCategory);
   const limit = opts.limit ?? PAGE_SIZE;
