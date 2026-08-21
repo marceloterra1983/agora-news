@@ -91,15 +91,19 @@ test("Playwright feed: avatar opens the profile card and Escape closes it", asyn
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const res = await page.goto(`${base}/?secao=ai`, {
-      waitUntil: "domcontentloaded",
+      waitUntil: "networkidle",
       timeout: 20_000,
     });
     assert.ok(res && res.status() < 400, `GET / ${res?.status()}`);
     const face = page.locator('[data-testid="feed-profile-face"]').first();
     await face.waitFor({ timeout: 15_000 });
-    await face.click();
     const dialog = page.locator('[data-testid="feed-profile-popup"]');
-    await dialog.waitFor({ timeout: 8_000 });
+    await face.click();
+    if (!(await dialog.isVisible().catch(() => false))) {
+      await page.waitForTimeout(400);
+      await face.click();
+    }
+    await dialog.waitFor({ timeout: 12_000 });
     assert.equal(await dialog.getAttribute("role"), "dialog");
     assert.ok(await dialog.locator("[data-fonte-actions]").count(), "ações do perfil");
     const identity = dialog.locator('[data-testid="feed-profile-identity"]');

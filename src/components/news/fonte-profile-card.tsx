@@ -40,7 +40,7 @@ export function FonteProfileCard({
       <p className={cn("text-[13px] leading-relaxed text-ink-soft", showGroup && "mt-1")}>
         {displayBlurb(row.handle, row.name, row.bio)}
       </p>
-      {followers || row.er > 0 ? (
+      {followers || (row.er ?? 0) > 0 ? (
         <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
           {followers ? <span>{followers} seguidores</span> : null}
           <ProfileEr handle={row.handle} fallback={row.er} />

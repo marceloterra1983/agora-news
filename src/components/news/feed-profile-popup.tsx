@@ -36,7 +36,7 @@ function PopupIdentity({ row }: { row: InfluenceRow }) {
           {row.verified ? (
             <BadgeCheck className="size-4 shrink-0 text-ink" aria-label="verificado" />
           ) : null}
-          <GroupTag group={row.group} />
+          <GroupTag handle={row.handle} group={row.group} />
         </p>
         <p className="text-sm text-mute">@{row.handle}</p>
         {followers ? (
