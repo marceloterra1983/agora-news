@@ -6,9 +6,18 @@ import { attachStoryAvatars, hydrateStory } from "./story-hydrate";
 import { persistHydratedBody } from "./story-persist";
 import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
+import { FEED_MORE_LIMIT, intersectAccounts } from "./feed-more.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 import type { SectionCatalog } from "./section-catalog.mjs";
 import { getSessionUser } from "@/lib/auth/verify.server";
+
+type NewsInput = {
+  category?: Category;
+  q?: string;
+  before?: string;
+  after?: string;
+  accounts?: string[];
+};
 
 function toNews(
   payload: ReturnType<typeof fallbackPayload>,
@@ -36,35 +45,39 @@ export function newsFromFallback(category: Category, q?: string) {
   return toNews(fallbackPayload(category), category, q);
 }
 
+function asStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
 export const loadNews = createServerFn({ method: "GET" })
-  .validator(
-    (
-      input:
-        | { category?: Category; q?: string; before?: string }
-        | undefined,
-    ) => ({
-      category: normalizeSection(input?.category || DEFAULT_SECTION),
-      q: typeof input?.q === "string" ? input.q : undefined,
-      before: typeof input?.before === "string" ? input.before : undefined,
-    }),
-  )
+  .validator((input: NewsInput | undefined) => ({
+    category: normalizeSection(input?.category || DEFAULT_SECTION),
+    q: typeof input?.q === "string" ? input.q : undefined,
+    before: typeof input?.before === "string" ? input.before : undefined,
+    after: typeof input?.after === "string" ? input.after : undefined,
+    accounts: asStringList(input?.accounts),
+  }))
   .handler(async ({ data }) => {
     return timed(
       `loadNews ${data.category}`,
       async () => {
         const user = await getSessionUser();
         const catalog = await serverCatalogFor(data.category, user?.id);
-        if (data.before) {
+        const accounts = intersectAccounts(data.accounts, catalog.handles);
+        const scoped = accounts.length > 0 && accounts.length < catalog.handles.length;
+        if (data.before || data.after || scoped) {
           const { downloadSupabase } = await import("./supabase");
           const older = await downloadSupabase(data.category, {
             before: data.before,
-            limit: PAGE_SIZE,
-            accounts: catalog.handles,
+            after: data.after,
+            limit: data.before || data.after ? FEED_MORE_LIMIT : PAGE_SIZE,
+            accounts: scoped ? accounts : catalog.handles,
           });
           const stories = await attachStoryAvatars(
             filterStories(older, data.category, data.q, catalog).map((s) => ({
               ...s,
-              body: s.excerpt || s.title,
+              body: s.body || s.excerpt || s.title,
               original: s.original || "",
             })),
           );
@@ -76,7 +89,7 @@ export const loadNews = createServerFn({ method: "GET" })
               folder: `NEWS/${data.category.toUpperCase()}`,
               count: stories.length,
               source: "supabase",
-              hasMore: stories.length >= PAGE_SIZE,
+              hasMore: stories.length >= (data.before || data.after ? FEED_MORE_LIMIT : PAGE_SIZE),
             },
           };
         }

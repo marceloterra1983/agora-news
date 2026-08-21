@@ -20,7 +20,7 @@ test("PAGE_SIZE is 40 and the feed/list/hasMore share it", () => {
   assert.doesNotMatch(read("src/lib/news/feed.ts"), /FIRST_LIMIT\s*=\s*24/);
   assert.doesNotMatch(read("src/lib/news/server-news.ts"), />= 40/);
   const feed = read("src/components/news/feed.tsx");
-  assert.match(feed, /aria-label="Carregar mais"/);
+  assert.match(feed, /aria-label="mais 12 horas"/);
   assert.doesNotMatch(feed, /Tip label="Carregar mais"/);
 });
 

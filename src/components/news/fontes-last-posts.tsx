@@ -4,7 +4,7 @@ import { displayTitle, relativeTime } from "@/lib/news/format";
 import { safeHttpHref } from "@/lib/news/last-post";
 import {
   PROFILE_LAST_PAGE,
-  nextProfileShown,
+  nextShownByHours,
   visibleProfilePosts,
 } from "@/lib/news/profile-last.mjs";
 
@@ -15,14 +15,19 @@ export type FontePost = {
   publishedAt: string;
 };
 
+function usablePosts(posts: FontePost[]) {
+  return posts.filter((post) => displayTitle(post.title).trim());
+}
+
 export function FonteLastPosts({ posts }: { posts: FontePost[] }) {
   const [shown, setShown] = useState<number>(PROFILE_LAST_PAGE);
-  const visible = visibleProfilePosts(posts, shown);
-  const more = shown < posts.length;
+  const list = usablePosts(posts);
+  const visible = visibleProfilePosts(list, shown);
+  const more = shown < list.length;
   return (
     <div className="mt-3 border-t border-line pt-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-mute">
-        {posts.length === 1 ? "Último post" : "Últimos posts"}
+        {list.length === 1 ? "Último post" : "Últimos posts"}
       </p>
       {visible.length ? (
         <ul className="mt-1 space-y-2">
@@ -59,10 +64,14 @@ export function FonteLastPosts({ posts }: { posts: FontePost[] }) {
         <button
           type="button"
           data-testid="fonte-mais-posts"
-          onClick={() => setShown((current) => nextProfileShown(current, posts.length))}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setShown((current) => nextShownByHours(list, current));
+          }}
           className="mt-2 min-h-[44px] text-sm font-semibold text-mark"
         >
-          Mais
+          mais 12 horas
         </button>
       ) : null}
     </div>
