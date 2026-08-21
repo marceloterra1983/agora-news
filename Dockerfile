@@ -36,6 +36,8 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build --chown=node:node /app/.output ./.output
 COPY --from=build --chown=node:node /app/scripts/migrate.mjs ./scripts/migrate.mjs
+COPY --from=build --chown=node:node /app/src/lib/pg-ssl.mjs ./src/lib/pg-ssl.mjs
+COPY --from=build --chown=node:node /app/src/lib/supabase-ca-2021.mjs ./src/lib/supabase-ca-2021.mjs
 COPY --from=build --chown=node:node /app/migrations ./migrations
 
 # Nitro empacota o JS do PGLite mas não os sidecars wasm/data (ENOENT em runtime).
