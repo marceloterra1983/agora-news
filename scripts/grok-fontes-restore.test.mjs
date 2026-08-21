@@ -23,9 +23,11 @@ test("custom groups and per-handle override come from the Grok Fontes model", ()
 
 test("open Fontes card keeps star/bell/power/group only in the footer", () => {
   const row = read("src/components/news/fontes-profile-row.tsx");
+  const card = read("src/components/news/fonte-profile-card.tsx");
   const open = row.slice(row.indexOf("{open ?"));
-  assert.match(open, /FonteControls/);
-  assert.match(open, /onSetGroup/);
+  assert.match(open, /FonteProfileCard/);
+  assert.match(card, /FonteControls/);
+  assert.match(card, /onSetGroup/);
   const header = row.slice(0, row.indexOf("{open ?"));
   assert.doesNotMatch(header, /<FonteControls/);
   assert.match(read("src/components/news/fontes-closed-post.tsx"), /formatPostEr/);

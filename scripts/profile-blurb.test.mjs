@@ -29,7 +29,7 @@ test("displayBlurb keeps an extra-fonte AI summary when the handle is unknown", 
 });
 
 test("Fontes card shows displayBlurb instead of the raw X bio", () => {
-  const row = read("src/components/news/fontes-profile-row.tsx");
+  const row = read("src/components/news/fonte-profile-card.tsx");
   assert.match(row, /displayBlurb\(/);
   assert.doesNotMatch(row, /row\.bio \|\| blurbFor/);
 });
