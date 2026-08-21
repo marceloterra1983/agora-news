@@ -15,6 +15,7 @@ export function FonteProfileCard({
   row,
   prefs,
   hideGroup,
+  hideFollowers,
   onToggleNotify,
   actionsRef,
   className,
@@ -22,12 +23,15 @@ export function FonteProfileCard({
   row: InfluenceRow;
   prefs: ReturnType<typeof useFontesPrefs>;
   hideGroup?: boolean;
+  hideFollowers?: boolean;
   onToggleNotify: (handle: string) => void;
   actionsRef?: Ref<HTMLDivElement>;
   className?: string;
 }) {
   const paused = prefs.isDisabled(row.handle);
   const showGroup = !hideGroup && row.group !== "novos";
+  const followers =
+    !hideFollowers && row.followers ? formatCount(row.followers) : "";
   return (
     <div className={cn("rounded-md bg-paper-2 px-3 py-2.5", className)}>
       {showGroup ? (
@@ -36,10 +40,12 @@ export function FonteProfileCard({
       <p className={cn("text-[13px] leading-relaxed text-ink-soft", showGroup && "mt-1")}>
         {displayBlurb(row.handle, row.name, row.bio)}
       </p>
-      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
-        {row.followers ? <span>{formatCount(row.followers)} seguidores</span> : null}
-        <ProfileEr handle={row.handle} fallback={row.er} />
-      </p>
+      {followers || (row.er ?? 0) > 0 ? (
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
+          {followers ? <span>{followers} seguidores</span> : null}
+          <ProfileEr handle={row.handle} fallback={row.er} />
+        </p>
+      ) : null}
       <FonteLastPosts
         posts={
           row.lastPosts?.length ? row.lastPosts : row.lastPost ? [row.lastPost] : []

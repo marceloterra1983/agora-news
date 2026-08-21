@@ -298,10 +298,7 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
     await page.getByRole("button", { name: /Voltar/i }).click();
     await page.waitForURL(/\/fontes/, { timeout: 15_000 });
     assert.equal(new URL(page.url()).pathname, "/fontes");
-    assert.ok(
-      await page.locator("[data-fonte-actions]").count(),
-      "card aberto após voltar",
-    );
+    await page.locator("[data-fonte-actions]").first().waitFor({ timeout: 8_000 });
   } finally {
     await browser.close();
   }

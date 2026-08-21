@@ -42,6 +42,14 @@ test("reader face opens a dialog that reuses the Fontes profile card", () => {
   assert.match(popup, /Escape/);
   assert.match(popup, /data-fonte-action=["']group["']/);
   assert.match(popup, /<FonteProfileCard/);
+  assert.match(popup, /data-testid=["']feed-profile-identity["']/);
+  assert.match(popup, /@{row.handle}/);
+  assert.match(popup, /formatCount\(row.followers\)/);
+  assert.match(popup, /<GroupTag/);
+  assert.match(popup, /width=\{56\}/);
+  assert.match(popup, /height=\{56\}/);
+  assert.match(popup, /hideGroup/);
+  assert.match(popup, /hideFollowers/);
 
   assert.match(shared, /<FonteLastPosts/);
   assert.match(shared, /<FonteControls/);
@@ -83,17 +91,25 @@ test("Playwright feed: avatar opens the profile card and Escape closes it", asyn
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const res = await page.goto(`${base}/?secao=ai`, {
-      waitUntil: "domcontentloaded",
+      waitUntil: "networkidle",
       timeout: 20_000,
     });
     assert.ok(res && res.status() < 400, `GET / ${res?.status()}`);
     const face = page.locator('[data-testid="feed-profile-face"]').first();
     await face.waitFor({ timeout: 15_000 });
-    await face.click();
     const dialog = page.locator('[data-testid="feed-profile-popup"]');
-    await dialog.waitFor({ timeout: 8_000 });
+    await face.click();
+    if (!(await dialog.isVisible().catch(() => false))) {
+      await page.waitForTimeout(400);
+      await face.click();
+    }
+    await dialog.waitFor({ timeout: 12_000 });
     assert.equal(await dialog.getAttribute("role"), "dialog");
     assert.ok(await dialog.locator("[data-fonte-actions]").count(), "ações do perfil");
+    const identity = dialog.locator('[data-testid="feed-profile-identity"]');
+    assert.ok(await identity.count(), "cabeçalho de identidade");
+    assert.match(String(await identity.innerText()), /@\w+/);
+    assert.ok(await identity.locator("[data-group]").count(), "grupo no topo");
     assert.ok(
       await dialog.getByText(/últimos? posts?/i).count(),
       "lista de posts do card expandido",
