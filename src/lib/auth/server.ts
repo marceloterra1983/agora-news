@@ -5,6 +5,7 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
+import { postgresPoolConfig } from "../pg-ssl.mjs";
 import { emailAndPasswordEnabled } from "./email-password";
 import { pgliteDialect } from "./pglite-dialect";
 import { productionAuthConfig } from "./runtime-config";
@@ -72,7 +73,7 @@ const databaseUrl = production?.databaseUrl ?? env("DATABASE_URL");
 // SAME DB as app data, including email/password users. Both use the Better Auth
 // schema from `migrations/0001_auth.sql`.
 const database = databaseUrl
-  ? new Pool({ connectionString: databaseUrl })
+  ? new Pool(postgresPoolConfig(databaseUrl))
   : { dialect: pgliteDialect(() => getPglite()), type: "postgres" as const };
 
 /** Session token cookie name — also read by the live-preview popup completion page. */
