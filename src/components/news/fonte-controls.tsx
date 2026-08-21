@@ -70,16 +70,16 @@ export function FonteControls({
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      e.stopImmediatePropagation();
-      setOpen(false);
-      setCreating(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setCreating(false);
+      }
     }
     document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey, true);
+    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 

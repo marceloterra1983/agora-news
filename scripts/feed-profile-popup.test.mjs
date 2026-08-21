@@ -42,7 +42,6 @@ test("reader face opens a dialog that reuses the Fontes profile card", () => {
   assert.match(popup, /Escape/);
   assert.match(popup, /data-fonte-action=["']group["']/);
   assert.match(popup, /<FonteProfileCard/);
-  assert.match(read("src/components/news/fonte-controls.tsx"), /stopImmediatePropagation/);
 
   assert.match(shared, /<FonteLastPosts/);
   assert.match(shared, /<FonteControls/);
