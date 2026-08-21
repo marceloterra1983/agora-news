@@ -42,6 +42,14 @@ test("reader face opens a dialog that reuses the Fontes profile card", () => {
   assert.match(popup, /Escape/);
   assert.match(popup, /data-fonte-action=["']group["']/);
   assert.match(popup, /<FonteProfileCard/);
+  assert.match(popup, /data-testid=["']feed-profile-identity["']/);
+  assert.match(popup, /@{row.handle}/);
+  assert.match(popup, /formatCount\(row.followers\)/);
+  assert.match(popup, /<GroupTag/);
+  assert.match(popup, /width=\{56\}/);
+  assert.match(popup, /height=\{56\}/);
+  assert.match(popup, /hideGroup/);
+  assert.match(popup, /hideFollowers/);
 
   assert.match(shared, /<FonteLastPosts/);
   assert.match(shared, /<FonteControls/);
@@ -94,6 +102,10 @@ test("Playwright feed: avatar opens the profile card and Escape closes it", asyn
     await dialog.waitFor({ timeout: 8_000 });
     assert.equal(await dialog.getAttribute("role"), "dialog");
     assert.ok(await dialog.locator("[data-fonte-actions]").count(), "ações do perfil");
+    const identity = dialog.locator('[data-testid="feed-profile-identity"]');
+    assert.ok(await identity.count(), "cabeçalho de identidade");
+    assert.match(String(await identity.innerText()), /@\w+/);
+    assert.ok(await identity.locator("[data-group]").count(), "grupo no topo");
     assert.ok(
       await dialog.getByText(/últimos? posts?/i).count(),
       "lista de posts do card expandido",

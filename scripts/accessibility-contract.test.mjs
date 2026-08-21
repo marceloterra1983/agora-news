@@ -494,6 +494,7 @@ test("PWA media grouped empty live: product claims match rendered capability", (
   for (const path of [
     "src/components/news/app-menu.tsx",
     "src/components/news/article-view.tsx",
+    "src/components/news/feed-profile-popup.tsx",
     "src/components/news/fontes-profile-row.tsx",
     "src/components/news/quote-card.tsx",
     "src/components/news/story-card.tsx",
