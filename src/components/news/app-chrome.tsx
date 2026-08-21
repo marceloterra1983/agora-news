@@ -189,8 +189,8 @@ function GroupDock({
           className={cn(
             GROUP_CHIP,
             group === "all"
-              ? "bg-ink text-paper ring-1 ring-ink/40 opacity-95"
-              : "bg-paper-2 text-ink-soft opacity-70",
+              ? "bg-ink text-paper ring-1 ring-ink/40 opacity-100"
+              : "bg-paper-2 text-ink-soft opacity-90",
           )}
         >
           Todos
@@ -208,7 +208,7 @@ function GroupDock({
               className={cn(
                 GROUP_CHIP,
                 on ? st.chipOn : st.chip,
-                on ? "opacity-95" : "opacity-70",
+                on ? "opacity-100" : "opacity-90",
               )}
             >
               {g.label}

@@ -42,7 +42,9 @@ test("chrome pins top+bottom and reserves feed space with bar tokens", () => {
   assert.match(chrome, /data-group-dock/);
   assert.match(chrome, /flex-wrap/);
   assert.match(chrome, /bottom-\[calc\(var\(--agora-nav-tap\)/);
-  assert.match(chrome, /opacity-70/);
+  assert.match(chrome, /opacity-90/);
+  assert.match(chrome, /opacity-100/);
+  assert.doesNotMatch(chrome, /opacity-70/);
   const dock = chrome.slice(chrome.indexOf("function GroupDock"));
   assert.doesNotMatch(dock, /data-h-scroll/);
   assert.doesNotMatch(dock, /overflow-x-auto/);
