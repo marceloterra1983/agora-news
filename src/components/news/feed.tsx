@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
 import { useNewsStore } from "@/lib/news/store";
-import { PAGE_SIZE } from "@/lib/news/page-size.mjs";
 import { type Category, type Story } from "@/lib/news/types";
 import { normHandle } from "@/lib/news/fontes-prefs";
 import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
@@ -22,10 +22,10 @@ import { handlesForGroup } from "@/lib/news/section-catalog.mjs";
 import { useSectionCatalog } from "@/lib/news/use-section-catalog";
 import { useFeedOlder } from "@/lib/news/use-feed-older";
 import { useFeedProfile } from "@/lib/news/use-feed-profile";
+import { cn } from "@/lib/utils";
+import { tapIcon } from "./icon-btn";
 import { FeedProfilePopup } from "./feed-profile-popup";
 import { StoryCard } from "./story-card";
-
-const PAGE = PAGE_SIZE;
 
 type NewsPayload = ReturnType<typeof newsFromFallback> & {
   meta: ReturnType<typeof newsFromFallback>["meta"] & { hasMore?: boolean };
@@ -152,9 +152,7 @@ export function Feed({
 
   const updatedAt = stories[0]?.publishedAt || data?.meta?.syncedAt;
   const updatedLabel = updatedAt ? relativeTime(updatedAt) : null;
-  const showMore =
-    page.hasMore &&
-    (page.raw.length >= PAGE || (group !== "all" && stories.length > 0));
+  const showMore = page.hasMore && stories.length > 0;
 
   if (isError && !stories.length) {
     return (
@@ -199,17 +197,18 @@ export function Feed({
       )}
 
       {showMore ? (
-        <div className="flex justify-center py-6">
+        <div className="flex flex-col items-center gap-1 py-6">
+          <p className="text-[12px] text-mute">mais 12 horas</p>
           <button
             type="button"
-            aria-label="mais 12 horas"
+            aria-label="Carregar mais"
             disabled={page.loadingMore}
             onClick={() =>
               void page.loadMore((stories.at(-1) ?? page.raw.at(-1))?.publishedAt)
             }
-            className="min-h-[44px] rounded-md bg-paper-2 px-4 text-sm font-semibold text-ink disabled:opacity-40"
+            className={cn(tapIcon, "bg-paper-2 text-ink disabled:opacity-40")}
           >
-            {page.loadingMore ? "Carregando…" : "mais 12 horas"}
+            <ChevronDown className={cn("size-5", page.loadingMore && "opacity-50")} />
           </button>
         </div>
       ) : null}

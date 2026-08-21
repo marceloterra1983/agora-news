@@ -15,12 +15,13 @@ test("PAGE_SIZE is 40 and the feed/list/hasMore share it", () => {
   assert.equal(PAGE_SIZE, 40);
   assert.match(read("src/lib/news/feed.ts"), /PAGE_SIZE/);
   assert.match(read("src/lib/news/server-news.ts"), /PAGE_SIZE/);
-  assert.match(read("src/components/news/feed.tsx"), /PAGE_SIZE/);
   assert.match(read("src/lib/news/supabase.ts"), /PAGE_SIZE/);
   assert.doesNotMatch(read("src/lib/news/feed.ts"), /FIRST_LIMIT\s*=\s*24/);
   assert.doesNotMatch(read("src/lib/news/server-news.ts"), />= 40/);
   const feed = read("src/components/news/feed.tsx");
-  assert.match(feed, /aria-label="mais 12 horas"/);
+  assert.match(feed, /aria-label="Carregar mais"/);
+  assert.match(feed, /mais 12 horas/);
+  assert.match(feed, /<ChevronDown/);
   assert.doesNotMatch(feed, /Tip label="Carregar mais"/);
 });
 

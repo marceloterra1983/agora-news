@@ -1,7 +1,9 @@
 /** Paginação do feed: janela de 12 horas a partir do último post visível. */
 export const FEED_MORE_HOURS = 12;
+export const FEED_MORE_WIDE_HOURS = 24;
 export const FEED_MORE_STEPS = 8;
 export const FEED_MORE_LIMIT = 80;
+export const FEED_MORE_HOUR_STEPS = [FEED_MORE_HOURS, FEED_MORE_WIDE_HOURS];
 
 /**
  * @param {string} beforeIso
@@ -73,4 +75,23 @@ export function shouldWalkEmptyWindow(state) {
   if (state.addedVisible > 0) return false;
   if (state.steps >= FEED_MORE_STEPS) return false;
   return state.serverHasMore || state.freshCount > 0;
+}
+
+/**
+ * 12h, depois 24h. Sem posts na janela → ainda busca o lote `before` sem teto.
+ * @param {number} hours
+ */
+export function nextMoreHours(hours) {
+  const current = Number(hours) || 0;
+  const next = FEED_MORE_HOUR_STEPS.find((step) => step > current);
+  return next ?? 0;
+}
+
+/**
+ * @param {{ addedVisible: number, hours: number, unboundedTried: boolean, unboundedCount: number }} state
+ */
+export function moreStillOpen(state) {
+  if (state.addedVisible > 0) return true;
+  if (!state.unboundedTried) return true;
+  return state.unboundedCount > 0;
 }
