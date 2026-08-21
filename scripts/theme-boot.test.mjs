@@ -41,8 +41,8 @@ test("save, remove-interest, load-more and batch-move use 44px targets", () => {
   assert.doesNotMatch(remove.slice(0, 350), /size-8 /);
 
   const feed = read("src/components/news/feed.tsx");
-  const more = feed.slice(feed.indexOf("mais 12 horas"));
-  assert.match(more, /min-h-\[44px\]|tapIcon|size-\[44px\]/);
+  const more = feed.slice(feed.indexOf("Carregar mais"));
+  assert.match(more, /tapIcon|size-\[44px\]/);
   assert.doesNotMatch(more.slice(0, 350), /size-10 /);
 
   const batch = read("src/components/news/fontes-batch-bar.tsx");

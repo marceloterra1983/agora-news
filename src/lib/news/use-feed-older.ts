@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { loadNews } from "@/lib/news/server";
 import type { Category, Story } from "@/lib/news/types";
 import {
-  FEED_MORE_STEPS,
-  shouldWalkEmptyWindow,
+  FEED_MORE_HOUR_STEPS,
+  moreStillOpen,
   storyHasText,
   windowAfter,
 } from "@/lib/news/feed-more.mjs";
@@ -57,57 +57,68 @@ export function useFeedOlder({
       .then((next) => {
         const fresh = next.stories.filter((s) => !seen.has(s.id) && storyHasText(s));
         if (fresh.length) setOlder((cur) => dedupe([...cur, ...fresh]));
-        setHasMore(Boolean(next.meta.hasMore));
       })
       .catch(() => {
         /* one attempt per group — do not retry-loop */
       });
   }, [group, category, query, visible.length, live, groupAccounts]);
 
+  async function pull(
+    cursor: string,
+    accounts: string[] | undefined,
+    after?: string,
+  ) {
+    const next = await loadNews({
+      data: {
+        category,
+        q: query,
+        before: cursor,
+        after,
+        accounts,
+      },
+    });
+    return next.stories.filter((s) => storyHasText(s));
+  }
+
   async function loadMore(lastPublishedAt?: string) {
     if (!lastPublishedAt || loadingMore) return;
     setLoadingMore(true);
     setMoreError(false);
     try {
-      let cursor = lastPublishedAt;
-      let addedVisible = 0;
-      let steps = 0;
-      let serverHasMore = true;
       const seen = new Set(rawRef.current.map((s) => s.id));
       const bundled: Story[] = [];
       const accounts = group === "all" ? undefined : groupAccounts;
-      while (steps < FEED_MORE_STEPS && addedVisible === 0) {
-        const after = windowAfter(cursor);
-        const next = await loadNews({
-          data: {
-            category,
-            q: query,
-            before: cursor,
-            after: after || undefined,
-            accounts,
-          },
-        });
-        const fresh = next.stories.filter((s) => !seen.has(s.id) && storyHasText(s));
+      let addedVisible = 0;
+
+      for (const hours of FEED_MORE_HOUR_STEPS) {
+        const after = windowAfter(lastPublishedAt, hours);
+        const fresh = (await pull(lastPublishedAt, accounts, after || undefined)).filter(
+          (s) => !seen.has(s.id),
+        );
         for (const row of fresh) seen.add(row.id);
         bundled.push(...fresh);
-        addedVisible = fresh.filter((s) => viewRef.current(s)).length;
-        serverHasMore = Boolean(next.meta.hasMore);
-        if (
-          !shouldWalkEmptyWindow({
-            addedVisible,
-            freshCount: fresh.length,
-            serverHasMore,
-            steps,
-          })
-        ) {
-          break;
-        }
-        cursor = after || fresh.at(-1)?.publishedAt || "";
-        if (!cursor) break;
-        steps += 1;
+        addedVisible = bundled.filter((s) => viewRef.current(s)).length;
+        if (addedVisible > 0) break;
       }
+
+      let unboundedCount = 0;
+      if (addedVisible === 0) {
+        const fresh = (await pull(lastPublishedAt, accounts)).filter((s) => !seen.has(s.id));
+        for (const row of fresh) seen.add(row.id);
+        bundled.push(...fresh);
+        unboundedCount = fresh.length;
+        addedVisible = bundled.filter((s) => viewRef.current(s)).length;
+      }
+
       if (bundled.length) setOlder((cur) => dedupe([...cur, ...bundled]));
-      setHasMore(addedVisible > 0 || serverHasMore);
+      setHasMore(
+        moreStillOpen({
+          addedVisible,
+          hours: addedVisible > 0 ? 12 : 24,
+          unboundedTried: addedVisible === 0,
+          unboundedCount,
+        }),
+      );
     } catch {
       setMoreError(true);
     } finally {

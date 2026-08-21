@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   FEED_MORE_HOURS,
+  FEED_MORE_WIDE_HOURS,
   intersectAccounts,
+  moreStillOpen,
+  nextMoreHours,
   postedAtQuery,
   shouldWalkEmptyWindow,
   storyHasText,
@@ -69,6 +72,25 @@ test("empty 12h window walks once so the first click is not a no-op", () => {
   );
 });
 
+test("a click tries 12 hours then 24 hours before an unbounded older page", () => {
+  assert.equal(nextMoreHours(0), FEED_MORE_HOURS);
+  assert.equal(nextMoreHours(12), FEED_MORE_WIDE_HOURS);
+  assert.equal(nextMoreHours(24), 0);
+  assert.equal(windowAfter("2026-08-21T15:00:00.000Z", 24), "2026-08-20T15:00:00.000Z");
+  assert.equal(
+    moreStillOpen({ addedVisible: 3, hours: 12, unboundedTried: false, unboundedCount: 0 }),
+    true,
+  );
+  assert.equal(
+    moreStillOpen({ addedVisible: 0, hours: 24, unboundedTried: true, unboundedCount: 0 }),
+    false,
+  );
+  assert.equal(
+    moreStillOpen({ addedVisible: 0, hours: 24, unboundedTried: false, unboundedCount: 0 }),
+    true,
+  );
+});
+
 test("profile Mais opens the next 12 hours and always advances", () => {
   const posts = [
     { id: "a", publishedAt: "2026-08-21T15:00:00.000Z" },
@@ -102,8 +124,10 @@ test("feed and profile wire the 12h more button", () => {
   const chip = read("src/components/news/fontes-last-posts.tsx");
   const news = read("src/lib/news/server-news.ts");
   assert.match(feed, /mais 12 horas/);
+  assert.match(feed, /<ChevronDown/);
+  assert.match(feed, /aria-label="Carregar mais"/);
   assert.match(feed, /handlesForGroup|useFeedOlder/);
-  assert.match(read("src/lib/news/use-feed-older.ts"), /windowAfter/);
+  assert.match(read("src/lib/news/use-feed-older.ts"), /FEED_MORE_HOUR_STEPS|windowAfter/);
   assert.match(chip, /mais 12 horas/);
   assert.match(chip, /nextShownByHours/);
   assert.match(news, /after/);
