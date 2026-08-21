@@ -22,11 +22,12 @@ async function live(base) {
 
 test("open card footer exposes the five actions and keeps them on screen", () => {
   const row = read("src/components/news/fontes-profile-row.tsx");
+  const card = read("src/components/news/fonte-profile-card.tsx");
   const controls = read("src/components/news/fonte-controls.tsx");
   const css = `${read("src/lib/news/phone-layout.css")}\n${read("src/styles.css")}`;
-  assert.match(row, /data-fonte-actions/);
+  assert.match(card, /data-fonte-actions/);
   assert.match(row, /scrollIntoView/);
-  assert.match(row, /data-fonte-action=["']x["']/);
+  assert.match(card, /data-fonte-action=["']x["']/);
   assert.match(controls, /data-fonte-action=["']star["']/);
   assert.match(controls, /data-fonte-action=["']notify["']/);
   assert.match(controls, /data-fonte-action=["']power["']/);

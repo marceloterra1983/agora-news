@@ -17,11 +17,15 @@ export function StoryCard({
   variant = "grid",
   unread = false,
   priority = false,
+  profileOpen = false,
+  onOpenProfile,
 }: {
   story: Story;
   variant?: "grid" | "row" | "compact" | "reader";
   unread?: boolean;
   priority?: boolean;
+  profileOpen?: boolean;
+  onOpenProfile?: (handle: string) => void;
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
@@ -31,6 +35,24 @@ export function StoryCard({
   }, [story.avatar, story.source]);
 
   if (variant === "reader") {
+    const handle = story.source.replace(/^@/, "");
+    const faceNode = face ? (
+      <img
+        src={face}
+        alt=""
+        width={24}
+        height={24}
+        referrerPolicy="no-referrer"
+        className="size-6 rounded-full bg-paper-2 object-cover"
+      />
+    ) : (
+      <span
+        aria-hidden
+        className="grid size-6 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-ink"
+      >
+        {handle.charAt(0).toUpperCase()}
+      </span>
+    );
     return (
       <article
         data-story=""
@@ -49,24 +71,22 @@ export function StoryCard({
           </>
         ) : null}
         <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-mute">
-          {face ? (
-            <img
-              src={face}
-              alt=""
-              width={24}
-              height={24}
-              referrerPolicy="no-referrer"
-              className="size-6 shrink-0 rounded-full bg-paper-2 object-cover"
-            />
-          ) : (
-            <span
-              aria-hidden
-              className="grid size-6 shrink-0 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-ink"
+          {onOpenProfile ? (
+            <button
+              type="button"
+              data-testid="feed-profile-face"
+              aria-label={`Abrir perfil @${handle}`}
+              aria-haspopup="dialog"
+              aria-expanded={profileOpen || undefined}
+              onClick={() => onOpenProfile(story.source)}
+              className="-ml-2 grid size-11 shrink-0 place-items-center rounded-full"
             >
-              {story.source.replace(/^@/, "").charAt(0).toUpperCase()}
-            </span>
+              {faceNode}
+            </button>
+          ) : (
+            <span className="grid shrink-0 place-items-center">{faceNode}</span>
           )}
-          <span className="lowercase">@{story.source.replace(/^@/, "")}</span>
+          <span className="lowercase">@{handle}</span>
           <GroupTag handle={story.source} />
           <span aria-hidden>·</span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>

@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { profileByHandle } from "@/lib/news/profiles";
 import { mergeAvatarsIntoStories } from "@/lib/news/profile-store-core.mjs";
 import { tapIcon } from "./icon-btn";
+import { useFeedProfile } from "@/lib/news/use-feed-profile";
+import { FeedProfilePopup } from "./feed-profile-popup";
 import { StoryCard } from "./story-card";
 
 const PAGE = PAGE_SIZE;
@@ -99,6 +101,7 @@ export function Feed({
     });
     return mergeAvatarsIntoStories(scoped, storedStories);
   }, [rawStories, prefs.disabled, prefs.groups, group, storedStories]);
+  const profile = useFeedProfile(category, stories, prefs);
 
   useEffect(() => {
     if (!rawStories.length) return;
@@ -200,6 +203,8 @@ export function Feed({
             variant="reader"
             unread={unread.isUnread(story.id)}
             priority={index === 0}
+            profileOpen={profile.openHandle === normHandle(story.source)}
+            onOpenProfile={profile.openProfile}
           />
         ))
       ) : (
@@ -227,6 +232,14 @@ export function Feed({
         </div>
       ) : null}
       {moreError ? <p className="pb-6 text-center text-sm text-mark" role="alert">Não foi possível carregar mais. Tente novamente.</p> : null}
+      {profile.row ? (
+        <FeedProfilePopup
+          row={profile.row}
+          prefs={prefs}
+          onClose={profile.closeProfile}
+          onToggleNotify={prefs.toggleNotify}
+        />
+      ) : null}
     </div>
   );
 }

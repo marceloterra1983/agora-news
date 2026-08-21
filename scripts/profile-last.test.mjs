@@ -66,7 +66,7 @@ test("Mais opens two more posts until the stored 10", () => {
 
 test("ingest packs last_posts and Fontes opens them two at a time", () => {
   const ingest = read("src/lib/news/ingest.ts");
-  const row = read("src/components/news/fontes-profile-row.tsx");
+  const row = read("src/components/news/fonte-profile-card.tsx");
   const chip = read("src/components/news/fontes-last-posts.tsx");
   const live = read("src/lib/news/influence.ts");
   assert.match(ingest, /packLastPosts|keepLastPosts/);
@@ -81,7 +81,7 @@ test("ingest packs last_posts and Fontes opens them two at a time", () => {
 
 test("open card shows each post age and divides the action buttons", () => {
   const chip = read("src/components/news/fontes-last-posts.tsx");
-  const row = read("src/components/news/fontes-profile-row.tsx");
+  const row = read("src/components/news/fonte-profile-card.tsx");
   assert.match(chip, /relativeTime\(post\.publishedAt\)/);
   assert.match(chip, /<time\b[^>]*dateTime=\{post\.publishedAt\}/);
   assert.doesNotMatch(chip, /relativeTime\(visible\[0\]\.publishedAt\)/);

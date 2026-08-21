@@ -1,17 +1,12 @@
 import { BadgeCheck, CheckSquare, ChevronDown, Square } from "lucide-react";
-import { FonteControls, FonteDisabledBadge } from "@/components/news/fonte-controls";
+import { FonteDisabledBadge } from "@/components/news/fonte-controls";
 import { ClosedPostMeta } from "@/components/news/fontes-closed-post";
-import { ProfileEr } from "@/components/news/fontes-profile-er";
-import { GroupTag } from "@/components/news/group-tag";
-import { Tip } from "@/components/news/icon-btn";
-import { XLogo } from "@/components/news/x-logo";
-import { FonteLastPosts } from "@/components/news/fontes-last-posts";
+import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { FontePostLink } from "@/components/news/fonte-post-link";
+import { GroupTag } from "@/components/news/group-tag";
 import { displayTitle, formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
-import { groupLabel } from "@/lib/news/groups";
 import { safeHttpHref } from "@/lib/news/last-post";
-import { displayBlurb } from "@/lib/news/profiles";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
@@ -125,57 +120,14 @@ export function ProfileRow({
       ) : null}
 
       {open ? (
-        <div className="mb-2.5 ml-7 mr-0.5 rounded-md bg-paper-2 px-3 py-2.5">
-          {hideGroup || row.group === "novos" ? null : (
-            <p className="text-[12px] font-medium text-mute">{groupLabel(row.group)}</p>
-          )}
-          <p className={cn("text-[13px] leading-relaxed text-ink-soft", !hideGroup && row.group !== "novos" && "mt-1")}>
-            {displayBlurb(row.handle, row.name, row.bio)}
-          </p>
-          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-mute">
-            {row.followers ? <span>{formatCount(row.followers)} seguidores</span> : null}
-            <ProfileEr handle={row.handle} fallback={row.er} />
-          </p>
-          <FonteLastPosts
-            posts={
-              row.lastPosts?.length
-                ? row.lastPosts
-                : row.lastPost
-                  ? [row.lastPost]
-                  : []
-            }
+        <div className="mb-2.5 ml-7 mr-0.5">
+          <FonteProfileCard
+            row={row}
+            prefs={prefs}
+            hideGroup={hideGroup}
+            onToggleNotify={onToggleNotify}
+            actionsRef={actionsRef}
           />
-          <div
-            ref={actionsRef}
-            data-fonte-actions
-            className="relative z-50 mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3"
-          >
-            <Tip label={`Abrir @${row.handle} no X`}>
-              <a
-                href={`https://x.com/${row.handle}`}
-                target="_blank"
-                rel="noreferrer"
-                data-fonte-action="x"
-                aria-label={`Abrir @${row.handle} no X`}
-                className="grid size-[44px] place-items-center rounded-full border border-line bg-paper text-ink active:bg-paper-2"
-              >
-                <XLogo className="size-3.5 translate-x-px" />
-              </a>
-            </Tip>
-            <FonteControls
-              handle={row.handle}
-              starred={prefs.isStarred(row.handle)}
-              disabled={pausedRow}
-              notify={prefs.isNotify(row.handle)}
-              notifyBusy={prefs.notifyBusy === row.handle.toLowerCase()}
-              group={row.group}
-              onToggleStar={prefs.toggleStar}
-              onToggleDisabled={prefs.toggleDisabled}
-              onToggleNotify={onToggleNotify}
-              onSetGroup={prefs.setGroup}
-              onResetGroup={prefs.clearGroup}
-            />
-          </div>
         </div>
       ) : null}
     </li>

@@ -4,19 +4,25 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+const root = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "../src/components/news/fontes-profile-row.tsx"),
+  join(root, "../src/components/news/fontes-profile-row.tsx"),
+  "utf8",
+);
+const shared = readFileSync(
+  join(root, "../src/components/news/fonte-profile-card.tsx"),
   "utf8",
 );
 
 test("FonteControls render only inside the open Fontes card, next to X", () => {
   const header = src.slice(0, src.indexOf("{open ?"));
   assert.doesNotMatch(header, /<FonteControls/);
-  const card = src.slice(src.indexOf("{open ?"));
-  assert.match(card, /<FonteControls/);
-  assert.match(card, /<XLogo/);
+  const open = src.slice(src.indexOf("{open ?"));
+  assert.match(open, /<FonteProfileCard/);
+  assert.match(shared, /<FonteControls/);
+  assert.match(shared, /<XLogo/);
   assert.ok(
-    card.indexOf("<XLogo") < card.indexOf("<FonteControls"),
+    shared.indexOf("<XLogo") < shared.indexOf("<FonteControls"),
     "X should sit left of the three controls in the open card footer",
   );
 });
