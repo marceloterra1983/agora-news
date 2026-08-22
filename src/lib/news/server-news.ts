@@ -6,6 +6,7 @@ import { attachStoryAvatars, hydrateStory } from "./story-hydrate";
 import { persistHydratedBody } from "./story-persist";
 import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
+import { accountsForQuery } from "./account-in-filter.mjs";
 import { FEED_MORE_LIMIT, intersectAccounts } from "./feed-more.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 import type { SectionCatalog } from "./section-catalog.mjs";
@@ -72,7 +73,7 @@ export const loadNews = createServerFn({ method: "GET" })
             before: data.before,
             after: data.after,
             limit: data.before || data.after ? FEED_MORE_LIMIT : PAGE_SIZE,
-            accounts: scoped ? accounts : catalog.handles,
+            accounts: accountsForQuery(catalog, scoped ? accounts : []),
           });
           const stories = await attachStoryAvatars(
             filterStories(older, data.category, data.q, catalog).map((s) => ({

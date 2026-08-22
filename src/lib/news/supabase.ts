@@ -1,3 +1,4 @@
+import { accountInFilter } from "./account-in-filter.mjs";
 import { postedAtQuery } from "./feed-more.mjs";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
@@ -186,11 +187,8 @@ async function fetchList(
   if (posted.posted_at) params.set("posted_at", posted.posted_at);
   params.set("category", `eq.${normalizeSection(category)}`);
   if (opts.accounts) {
-    const accounts = [...new Set(opts.accounts.map(normalizeAccount).filter(Boolean))];
-    params.set(
-      "account",
-      accounts.length ? `in.(${accounts.join(",")})` : "eq.__no_catalog__",
-    );
+    const filter = accountInFilter(opts.accounts);
+    params.set("account", filter ? `in.(${filter})` : "eq.__no_catalog__");
   }
 
   const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {

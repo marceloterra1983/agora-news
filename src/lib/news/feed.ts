@@ -10,6 +10,7 @@ import { getSection, mergeSectionList } from "./sections";
 import { serverCatalogFor } from "./server-catalog";
 import { downloadSupabase } from "./supabase";
 import { PAGE_SIZE } from "./page-size.mjs";
+import { accountsForQuery } from "./account-in-filter.mjs";
 import {
   DEFAULT_SECTION,
   normalizeSection,
@@ -103,7 +104,7 @@ export async function loadFeed(
   try {
     const stories = await downloadSupabase(section.slug, {
       limit: FIRST_LIMIT,
-      accounts: scopedCatalog.handles,
+      accounts: accountsForQuery(scopedCatalog),
     });
     const scoped = filterStories(stories, section.slug, undefined, scopedCatalog);
     const payload = wrap(
