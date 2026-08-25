@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { loadExtraFontes, syncExtraFontes } from "./extra-fontes";
+import { loadExtraFontes, syncExtraFontes, type ExtraFonte } from "./extra-fontes";
 
 export function useExtraFontes() {
-  const [extras, setExtras] = useState(() => loadExtraFontes());
+  // Vazio no primeiro render para casar com o SSR; o effect carrega do localStorage.
+  const [extras, setExtras] = useState<ExtraFonte[]>([]);
   useEffect(() => {
     const refresh = () => setExtras(loadExtraFontes());
     refresh();

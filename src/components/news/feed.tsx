@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
@@ -15,7 +15,7 @@ import {
   markLeaveFeed,
   restoreScrollY,
 } from "@/lib/news/feed-scroll";
-import { freshMemberCountFor, markClusterSeen } from "@/lib/news/cluster-seen";
+import { freshMemberCount, markClusterSeen, readClusterSeen } from "@/lib/news/cluster-seen";
 import { noteFirstUnread } from "@/lib/news/unread";
 import { observeUnreadImpressions } from "@/lib/news/unread-impression";
 import { useUnread } from "@/lib/news/use-unread";
@@ -55,6 +55,18 @@ export function Feed({
   const prefs = useFontesPrefs(category);
   const catalog = useSectionCatalog(category);
   const unread = useUnread();
+  // Vazio no primeiro render para casar com o SSR (localStorage só existe no cliente).
+  const [clusterSeen, setClusterSeen] = useState<Record<string, string[]>>({});
+  useEffect(() => {
+    setClusterSeen(readClusterSeen());
+  }, []);
+  // Vira true depois do primeiro flush de effects, quando prefs/extras/unread já
+  // aplicaram o localStorage — antes disso a lista ainda é a do SSR e restaurar
+  // o scroll consumiria a marca one-shot na altura errada.
+  const [restoreReady, setRestoreReady] = useState(false);
+  useEffect(() => {
+    setRestoreReady(true);
+  }, []);
   const seedBaseline = unread.seedBaseline;
   const markRead = unread.markRead;
   const feedRef = useRef<HTMLDivElement>(null);
@@ -144,18 +156,19 @@ export function Feed({
       const story = stories.find((row) => row.id === id);
       if (story?.clusterId && story.memberIds) {
         markClusterSeen(story.clusterId, story.memberIds);
+        setClusterSeen(readClusterSeen());
       }
     });
   }, [unreadKey, markRead, stories]);
 
   useLayoutEffect(() => {
-    if (!stories.length) return;
+    if (!restoreReady || !stories.length) return;
     const y = consumeFeedScroll(category);
     if (y == null) return;
     restoreScrollY(y);
     const later = window.setTimeout(() => restoreScrollY(y), 200);
     return () => window.clearTimeout(later);
-  }, [category, stories.length]);
+  }, [category, stories.length, restoreReady]);
 
   useEffect(() => {
     const root = feedRef.current;
@@ -192,7 +205,12 @@ export function Feed({
     <div ref={feedRef} data-feed="" aria-busy={isFetching || page.loadingMore} className="mx-auto max-w-2xl pt-3 max-sm:max-w-none">
       {isError ? <p className="mb-3 text-sm text-mark" role="alert">Feed ao vivo indisponível. Exibindo o conteúdo disponível.</p> : null}
       {updatedLabel ? (
-        <p className="mb-4 text-[12px] text-mute" role="status">Atualizado {updatedLabel}</p>
+        <p className="mb-4 text-[12px] text-mute" role="status">
+          Atualizado{" "}
+          <time dateTime={updatedAt} suppressHydrationWarning>
+            {updatedLabel}
+          </time>
+        </p>
       ) : null}
 
       <div
@@ -227,7 +245,7 @@ export function Feed({
             priority={index === 0}
             profileOpen={profile.openHandle === normHandle(story.source)}
             onOpenProfile={profile.openProfile}
-            freshCount={freshMemberCountFor(story.clusterId || story.id, story.memberIds || [story.id])}
+            freshCount={freshMemberCount(clusterSeen[story.clusterId || story.id], story.memberIds || [story.id])}
           />
         ))
       ) : (

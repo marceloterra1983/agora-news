@@ -16,12 +16,12 @@ import { setFavoriteNotifyHandle } from "./notify-favorites";
 import type { Category } from "./types";
 
 export function useFontesPrefs(section?: Category) {
-  const [starred, setStarredState] = useState<string[]>(getStarred);
-  const [disabled, setDisabledState] = useState<string[]>(getDisabled);
-  const [notify, setNotifyState] = useState<string[]>(getNotifyHandles);
-  const [groups, setGroupsState] = useState<Record<string, string>>(() =>
-    getGroupOverrides(section),
-  );
+  // Vazio no primeiro render: o HTML do servidor não vê o localStorage,
+  // então hidratar com ele divergiria (React #418). O refresh() do effect carrega.
+  const [starred, setStarredState] = useState<string[]>([]);
+  const [disabled, setDisabledState] = useState<string[]>([]);
+  const [notify, setNotifyState] = useState<string[]>([]);
+  const [groups, setGroupsState] = useState<Record<string, string>>({});
   const [notifyBusy, setNotifyBusy] = useState<string | null>(null);
   const [notifyError, setNotifyError] = useState("");
   const notifyPending = useRef(false);
