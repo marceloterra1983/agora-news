@@ -30,10 +30,13 @@ test("CloudPrefs snapshot and type include groups and customGroups", () => {
   assert.match(server, /groups\?:/);
   assert.match(server, /customGroups\?:/);
   assert.match(server, /bySection\?:/);
+  assert.match(server, /rssFeeds\?:/);
   assert.match(sync, /getGroupOverrides/);
   assert.match(sync, /loadCustomGroups/);
   assert.match(sync, /setGroupOverrides|replaceCustomGroups/);
   assert.match(sync, /bySection/);
+  assert.match(sync, /loadRssFeeds/);
+  assert.match(sync, /rssFeeds:/);
 });
 
 test("Fontes reads the store; catalog enrichment runs only on ingest", () => {

@@ -8,6 +8,7 @@ import { BRASIL_PROFILES } from "../src/lib/news/catalog-brasil.mjs";
 import { TECH_PROFILES } from "../src/lib/news/catalog-tech.mjs";
 import { categoryForCsvRow } from "../src/lib/news/csv-category.mjs";
 import { storiesFromCsv } from "../src/lib/news/csv.ts";
+import { attachClusterChrome } from "../src/lib/news/story-cluster.mjs";
 import {
   catalogFor,
   filterStoriesForCatalog,
@@ -65,6 +66,34 @@ function csvText(rows) {
 }
 
 const SILENT_AI = /\|\|\s*["']ai["']|category:\s*["']ai["']|section\s*\|\|\s*["']ai["']/;
+
+test("cluster chrome cannot revive a handle outside the catalog", () => {
+  const catalog = catalogFor("ai", { profiles: FIXTURES, extras: EXTRAS });
+  const scoped = filterStoriesForCatalog(
+    [
+      story("OpenAI", "ai"),
+      {
+        ...story("OpenAI", "ai"),
+        id: "twin",
+        title: "OpenAI lanca modelo GPT novo hoje",
+        source: "RenanSantosMBL",
+        sourceLabel: "@RenanSantosMBL",
+      },
+    ],
+    catalog,
+  );
+  const heads = attachClusterChrome(scoped);
+  assert.equal(
+    heads.some((row) =>
+      (row.alsoFrom || []).some((also) => /renan/i.test(also.source)),
+    ),
+    false,
+  );
+  assert.equal(
+    heads.some((row) => /renan/i.test(row.source)),
+    false,
+  );
+});
 
 test("IA feed drops a leaked category=ai post whose handle is not in catalogFor(ai)", () => {
   const catalog = catalogFor("ai", { profiles: FIXTURES, extras: EXTRAS });

@@ -5,6 +5,12 @@ import {
   accountsForQuery,
 } from "../src/lib/news/account-in-filter.mjs";
 
+test("accountInFilter keeps a 14-char RSS r_ handle", () => {
+  const handle = "r_bea4293d5edd";
+  assert.equal(handle.length, 14);
+  assert.match(accountInFilter([handle]), /"r_bea4293d5edd"/);
+});
+
 test("accountInFilter adds seed casing so OpenAI matches the stored account", () => {
   const filter = accountInFilter(["openai", "@OpenAI"]);
   assert.match(filter, /"OpenAI"/);

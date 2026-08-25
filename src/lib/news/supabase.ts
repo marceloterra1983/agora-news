@@ -1,6 +1,7 @@
 import { accountInFilter } from "./account-in-filter.mjs";
 import { postedAtQuery } from "./feed-more.mjs";
 import { PAGE_SIZE } from "./page-size.mjs";
+import { isRssAccount, rssLabelFor } from "./rss-catalog.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { isNewsRow } from "./news-row.mjs";
 import { supabaseApiKeyHeaders } from "./supabase-rest";
@@ -34,13 +35,14 @@ type DbPost = {
   image_url: string | null;
   category: string | null;
   batch_name: string | null;
+  source?: string | null;
 };
 
 /** Lista do feed: sem content/translation pesados — só o que a card precisa. */
 const LIST_SELECT =
-  "post_id,account,posted_at,summary_pt,translation_pt,post_url,media_label,image_url,category,batch_name";
+  "post_id,account,posted_at,summary_pt,translation_pt,post_url,media_label,image_url,category,batch_name,source";
 const FULL_SELECT =
-  "post_id,account,posted_at,posted_at_sp,content,translation_pt,summary_pt,post_url,media_label,image_url,category,batch_name";
+  "post_id,account,posted_at,posted_at_sp,content,translation_pt,summary_pt,post_url,media_label,image_url,category,batch_name,source";
 
 export function supabaseReadHeaders(): Record<string, string> {
   const key = env("SUPABASE_PUBLISHABLE_KEY").trim();
@@ -86,7 +88,18 @@ function handle(raw: string): { source: string; sourceLabel: string } {
 }
 
 export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
-  const { source, sourceLabel } = handle(p.account || "");
+  const { source, sourceLabel: atLabel } = handle(p.account || "");
+  let sourceLabel = atLabel;
+  if (isRssAccount(p.account || "") || p.source === "rss") {
+    const host = (() => {
+      try {
+        return new URL(p.post_url || "").hostname.replace(/^www\./, "");
+      } catch {
+        return "";
+      }
+    })();
+    sourceLabel = rssLabelFor(p.account || "") || host || atLabel.replace(/^@/, "");
+  }
   const title = (
     p.summary_pt ||
     p.translation_pt ||

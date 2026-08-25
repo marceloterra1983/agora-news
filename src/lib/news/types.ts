@@ -40,6 +40,11 @@ export type StoryAsset = {
   height?: number;
 };
 
+export type StoryAlsoFrom = {
+  source: string;
+  sourceLabel: string;
+};
+
 export type Story = {
   id: string;
   title: string;
@@ -60,6 +65,9 @@ export type Story = {
   category: Category;
   media: string;
   batch: string;
+  clusterId?: string;
+  memberIds?: string[];
+  alsoFrom?: StoryAlsoFrom[];
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {

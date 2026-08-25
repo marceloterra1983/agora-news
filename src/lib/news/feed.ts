@@ -9,7 +9,8 @@ import {
 import { getSection, mergeSectionList } from "./sections";
 import { serverCatalogFor } from "./server-catalog";
 import { downloadSupabase } from "./supabase";
-import { PAGE_SIZE } from "./page-size.mjs";
+import { FEED_CLUSTER_FETCH, PAGE_SIZE } from "./page-size.mjs";
+import { attachClusterChrome } from "./story-cluster.mjs";
 import { accountsForQuery } from "./account-in-filter.mjs";
 import {
   DEFAULT_SECTION,
@@ -26,9 +27,10 @@ export type FeedPayload = {
   live: boolean;
   categories: Category[];
   source?: string;
+  hasMore?: boolean;
 };
 
-const FIRST_LIMIT = PAGE_SIZE;
+const FIRST_LIMIT = FEED_CLUSTER_FETCH;
 
 const lastGood = new Map<string, FeedPayload>();
 
@@ -107,13 +109,16 @@ export async function loadFeed(
       accounts: accountsForQuery(scopedCatalog),
     });
     const scoped = filterStories(stories, section.slug, undefined, scopedCatalog);
+    const clustered = attachClusterChrome(scoped);
+    const heads = clustered.slice(0, PAGE_SIZE);
     const payload = wrap(
-      scoped,
+      heads,
       true,
       `NEWS/${section.folderName}`,
       new Date().toISOString(),
       `supabase/${section.slug}`,
     );
+    payload.hasMore = scoped.length >= FEED_CLUSTER_FETCH || clustered.length > PAGE_SIZE;
     lastGood.set(section.slug, payload);
     return payload;
   } catch {

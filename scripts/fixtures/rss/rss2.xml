@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Fixture RSS</title>
+    <item>
+      <title>Primeiro item</title>
+      <link>https://example.com/one</link>
+      <guid isPermaLink="true">https://example.com/one</guid>
+      <pubDate>Tue, 25 Aug 2026 12:00:00 GMT</pubDate>
+      <description>Resumo um</description>
+    </item>
+    <item>
+      <title>Segundo item</title>
+      <link>https://example.com/two</link>
+      <guid>urn:example:two</guid>
+      <pubDate>Tue, 25 Aug 2026 11:00:00 GMT</pubDate>
+      <description>Resumo dois</description>
+    </item>
+  </channel>
+</rss>

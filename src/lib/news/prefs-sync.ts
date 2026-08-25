@@ -1,4 +1,5 @@
 import { loadExtraFontes, replaceExtraFontes } from "./extra-fontes";
+import { loadRssFeeds, replaceRssFeeds } from "./rss-feeds";
 import {
   clearFontesPrefsDirty,
   getDisabled,
@@ -46,6 +47,7 @@ export function snapshotPrefs(): CloudPrefs {
     disabled: getDisabled(),
     notify: getNotifyHandles(),
     extras: loadExtraFontes(),
+    rssFeeds: loadRssFeeds(),
     settings,
     theme,
     groups: getGroupOverrides(DEFAULT_SECTION),
@@ -75,6 +77,7 @@ function writeLocal(prefs: CloudPrefs) {
     if (prefs.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(prefs.settings));
     if (prefs.theme) localStorage.setItem("agora-theme", themeMode(prefs.theme));
     if (Array.isArray(prefs.extras)) replaceExtraFontes(prefs.extras, { fromRemote: true });
+    if (Array.isArray(prefs.rssFeeds)) replaceRssFeeds(prefs.rssFeeds, { silent: true });
     if (prefs.bySection) applyBySection(prefs.bySection, false);
     else {
       if (prefs.groups) setGroupOverrides(prefs.groups, DEFAULT_SECTION, false);
