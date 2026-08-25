@@ -58,13 +58,13 @@ test("Fontes sort lives in the AppChrome header toolbar as a labeled select", ()
   assert.match(css, /--agora-header:\s*3\.75rem/);
 });
 
-test("group chips render inside the header toolbar, not a fixed dock", () => {
+test("group chips float in a fixed dock above the tab bar (decisão do dono)", () => {
   const chrome = read("src/components/news/app-chrome.tsx");
-  assert.match(chrome, /function GroupChips/);
+  assert.match(chrome, /function GroupDock/);
+  assert.match(chrome, /data-chrome="groups"/);
+  assert.match(chrome, /data-groups-dock/);
   assert.match(chrome, /data-group-chip/);
-  assert.doesNotMatch(chrome, /data-chrome="groups"/);
-  assert.doesNotMatch(chrome, /data-groups-dock/);
   const css = read("src/lib/news/phone-layout.css");
-  assert.doesNotMatch(css, /\[data-chrome="groups"\]/);
-  assert.doesNotMatch(css, /--agora-groups/);
+  assert.match(css, /\[data-chrome="groups"\][\s\S]{0,220}bottom:/);
+  assert.match(css, /--agora-groups/);
 });
