@@ -5,6 +5,8 @@ import { StoryCard } from "@/components/news/story-card";
 import { Tip } from "@/components/news/icon-btn";
 import { useNewsStore } from "@/lib/news/store";
 import { routeMeta } from "@/lib/news/route-meta";
+import { groupSavedByCategory } from "@/lib/news/saved-groups.mjs";
+import { listKnownSections } from "@/lib/news/sections";
 import {
   DEFAULT_SECTION,
   labelFor,
@@ -28,10 +30,11 @@ function SavedPage() {
   const { secao } = Route.useSearch();
   const savedIds = useNewsStore((s) => s.savedIds);
   const stories = useNewsStore((s) => s.stories);
-  const items = savedIds
-    .map((id) => stories[id])
-    .filter(Boolean)
-    .filter((s) => normalizeSection(s.category) === secao);
+  const items = savedIds.map((id) => stories[id]).filter(Boolean);
+  const groups = groupSavedByCategory(
+    items.map((s) => ({ ...s, category: normalizeSection(s.category) })),
+    listKnownSections(),
+  );
 
   return (
     <AppChrome category={secao}>
@@ -43,8 +46,8 @@ function SavedPage() {
         {items.length === 0 ? (
           <div className="mt-12 max-w-md">
             <p className="text-ink-soft">
-              Ainda não há matérias guardadas neste tema. Abra uma manchete e
-              toque em Salvar para ler depois neste aparelho.
+              Ainda não há matérias guardadas. Abra uma manchete e toque em
+              Salvar para ler depois neste aparelho.
             </p>
             <Tip label={`Voltar para ${labelFor(secao)}`}>
               <Link
@@ -58,11 +61,18 @@ function SavedPage() {
             </Tip>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6">
-            {items.map((story) => (
-              <StoryCard key={story.id} story={story} variant="row" />
-            ))}
-          </div>
+          groups.map((g) => (
+            <section key={g.category} className="mt-8">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-mute">
+                {labelFor(g.category)}
+              </h2>
+              <div className="mt-4 grid gap-6">
+                {g.items.map((story) => (
+                  <StoryCard key={story.id} story={story} variant="row" />
+                ))}
+              </div>
+            </section>
+          ))
         )}
       </div>
     </AppChrome>

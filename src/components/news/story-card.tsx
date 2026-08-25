@@ -123,6 +123,21 @@ export function StoryCard({
           <time dateTime={story.publishedAt} suppressHydrationWarning>
             {relativeTime(story.publishedAt)}
           </time>
+          <Tip label={saved ? "Remover dos salvos" : "Salvar matéria"}>
+            <button
+              type="button"
+              onClick={() => toggleSave(story)}
+              aria-pressed={saved}
+              aria-label={saved ? "Remover dos salvos" : "Salvar matéria"}
+              className="-my-2 ml-auto grid size-11 shrink-0 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
+            >
+              {saved ? (
+                <BookmarkCheck className="size-4 text-mark" />
+              ) : (
+                <Bookmark className="size-4" />
+              )}
+            </button>
+          </Tip>
         </p>
         <h2 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
           <Link to="/materia/$id" params={{ id: story.id }}>

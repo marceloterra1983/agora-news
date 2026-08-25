@@ -60,30 +60,32 @@ export function AppChrome({
   return (
     <div
       data-chrome-root=""
-      data-groups-dock={onGroup ? "" : undefined}
       className="min-h-dvh w-full min-w-0 overflow-x-clip bg-paper text-ink"
     >
       <PrefsSync />
-      <GrokHeader category={shown} onPickSec={pickSec} toolbar={toolbar} />
+      <GrokHeader
+        category={shown}
+        onPickSec={pickSec}
+        toolbar={
+          onGroup ? (
+            <GroupChips
+              category={shown}
+              group={group ?? "all"}
+              onPick={onGroup}
+            />
+          ) : (
+            toolbar
+          )
+        }
+      />
       <main
         id="conteudo-principal"
         tabIndex={-1}
         data-chrome-main=""
-        className={cn(
-          "pb-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px))] max-sm:pt-[calc(var(--agora-header)+env(safe-area-inset-top,0px))]",
-          onGroup &&
-            "pb-[calc(var(--agora-nav-tap)+var(--agora-groups)+env(safe-area-inset-bottom,0px))]",
-        )}
+        className="pb-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px))] max-sm:pt-[calc(var(--agora-header)+env(safe-area-inset-top,0px))]"
       >
         {children}
       </main>
-      {onGroup ? (
-        <GroupDock
-          category={shown}
-          group={group ?? "all"}
-          onPick={onGroup}
-        />
-      ) : null}
       <TabBar category={shown} />
     </div>
   );
@@ -106,47 +108,30 @@ function GrokHeader({
       className="sticky top-0 z-40 w-full min-w-0 overflow-x-clip border-b border-line bg-paper pt-[env(safe-area-inset-top,0px)]"
     >
       <div className="mx-auto flex h-[var(--agora-header)] w-full min-w-0 max-w-2xl items-center gap-1.5 pr-3 pl-2 max-sm:max-w-none">
-        <div className="relative shrink-0">
-          <div
-            data-section-switch=""
-            className="flex h-[44px] min-w-[44px] items-center rounded-full bg-paper-2 p-0.5"
-          >
-            {SECTIONS.map((section) => {
-              const on = section.slug === current.slug;
-              return (
-                <button
-                  key={section.slug}
-                  type="button"
-                  data-section-chip=""
-                  tabIndex={-1}
-                  aria-hidden="true"
-                  onClick={() => onPickSec(section.slug)}
-                  className={cn(
-                    "h-10 rounded-full px-3 text-[13px] font-semibold tracking-wide",
-                    on ? "bg-ink text-paper" : "text-mute",
-                  )}
-                >
-                  {section.label}
-                </button>
-              );
-            })}
-          </div>
-          <label htmlFor="agora-section" className="sr-only">
-            Assunto
-          </label>
-          <select
-            id="agora-section"
-            data-section-select=""
-            value={current.slug}
-            onChange={(event) => onPickSec(event.target.value as Category)}
-            className="sr-only"
-          >
-            {SECTIONS.map((section) => (
-              <option key={section.slug} value={section.slug}>
+        <div
+          role="group"
+          aria-label="Assunto"
+          data-section-switch=""
+          className="flex h-[44px] min-w-[44px] shrink-0 items-center rounded-full bg-paper-2 p-0.5"
+        >
+          {SECTIONS.map((section) => {
+            const on = section.slug === current.slug;
+            return (
+              <button
+                key={section.slug}
+                type="button"
+                data-section-chip=""
+                aria-pressed={on}
+                onClick={() => onPickSec(section.slug)}
+                className={cn(
+                  "h-10 rounded-full px-3 text-[13px] font-semibold tracking-wide",
+                  on ? "bg-ink text-paper" : "text-mute",
+                )}
+              >
                 {section.label}
-              </option>
-            ))}
-          </select>
+              </button>
+            );
+          })}
         </div>
 
         <div
@@ -162,7 +147,7 @@ function GrokHeader({
   );
 }
 
-function GroupDock({
+function GroupChips({
   category,
   group,
   onPick,
@@ -173,50 +158,42 @@ function GroupDock({
 }) {
   const catalog = useSectionCatalog(category);
   return (
-    <div
-      data-chrome="groups"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--agora-nav-tap)+env(safe-area-inset-bottom,0px)+8px)] z-[35] px-3"
-    >
-      <div
-        data-group-dock=""
-        className="pointer-events-auto mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-1.5"
+    <>
+      <button
+        type="button"
+        data-group-chip=""
+        aria-pressed={group === "all"}
+        onClick={() => onPick("all")}
+        className={cn(
+          GROUP_CHIP,
+          group === "all"
+            ? "bg-ink text-paper ring-1 ring-ink/40 opacity-100"
+            : "bg-paper-2 text-ink-soft opacity-90",
+        )}
       >
-        <button
-          type="button"
-          data-group-chip=""
-          aria-pressed={group === "all"}
-          onClick={() => onPick("all")}
-          className={cn(
-            GROUP_CHIP,
-            group === "all"
-              ? "bg-ink text-paper ring-1 ring-ink/40 opacity-100"
-              : "bg-paper-2 text-ink-soft opacity-90",
-          )}
-        >
-          Todos
-        </button>
-        {catalog.groups.map((g) => {
-          const st = groupStyle(g.id);
-          const on = group === g.id;
-          return (
-            <button
-              key={g.id}
-              type="button"
-              data-group-chip=""
-              aria-pressed={on}
-              onClick={() => onPick(g.id)}
-              className={cn(
-                GROUP_CHIP,
-                on ? st.chipOn : st.chip,
-                on ? "opacity-100" : "opacity-90",
-              )}
-            >
-              {g.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+        Todos
+      </button>
+      {catalog.groups.map((g) => {
+        const st = groupStyle(g.id);
+        const on = group === g.id;
+        return (
+          <button
+            key={g.id}
+            type="button"
+            data-group-chip=""
+            aria-pressed={on}
+            onClick={() => onPick(g.id)}
+            className={cn(
+              GROUP_CHIP,
+              on ? st.chipOn : st.chip,
+              on ? "opacity-100" : "opacity-90",
+            )}
+          >
+            {g.label}
+          </button>
+        );
+      })}
+    </>
   );
 }
 

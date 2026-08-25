@@ -156,10 +156,11 @@ export function ArticleView({ story }: { story: Story }) {
         ) : null}
         <IconBtn
           label={saved ? "Remover dos salvos" : "Salvar para depois"}
+          aria-pressed={saved}
           onClick={() => toggleSave(story)}
         >
           {saved ? (
-            <BookmarkCheck className="size-4" />
+            <BookmarkCheck className="size-4 text-mark" />
           ) : (
             <Bookmark className="size-4" />
           )}

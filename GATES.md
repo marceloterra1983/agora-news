@@ -1,53 +1,41 @@
-# Gates: cluster + RSS + ranking
+# Gates: correções P0+P1 da crítica de UX
 
-Scope: Feed agrupa cobertura duplicada, ingere RSS como fallback e ordena com chips explícitos.
+Scope: 6 correções aprovadas — header de Fontes a 390px, Salvos sem filtro de
+seção, salvar no feed com confirmação, foco do seletor de seção, dock de
+grupos movido para o header, modal de perfil com fechar + focus trap.
 
-- [x] G1: Cluster puro (janela, jaccard, URL, seção, id estável)
-  CHECK: node --experimental-strip-types --test scripts/story-cluster.test.mjs
+- [x] G1: Fontes a 390px — toolbar e menu sem sobreposição; "Mover em lote" alcançável
+  EVIDENCE: playwright @390px (vite dev): select "Ordenar fontes" 107×44 right=269, chip lote right=317, menu 334–378; h-scroll scrollWidth==clientWidth (sem corte); screenshot new-fontes-390.png
+
+- [x] G2: Salvos lista salvos de todas as seções
+  CHECK: node --experimental-strip-types --test scripts/salvos-all-sections.test.mjs
   EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 50.981905
+  EVIDENCE: node --test salvos-all-sections: pass 3, fail 0
 
-- [x] G2: Catálogo filtra before cluster; alsoFrom não vaza allowlist
-  CHECK: node --experimental-strip-types --test scripts/catalog-feed-scope.test.mjs scripts/public-catalog-privacy.behavior.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 609.847745
+- [x] G3: variant reader tem botão salvar com aria-pressed e estado salvo visível
+  CHECK: grep -c "aria-pressed" src/components/news/story-card.tsx
+  EXPECT: 2
+  EVIDENCE: grep -c aria-pressed story-card.tsx = 2
 
-- [x] G3: Cluster-seen e copy do card
-  CHECK: node --experimental-strip-types --test scripts/cluster-seen.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 55.058724
+- [x] G4: seletor de seção focável — sem select sr-only, pílulas sem aria-hidden
+  CHECK: grep -c 'data-section-select\|aria-hidden="true"' src/components/news/app-chrome.tsx
+  EXPECT: 0
+  EVIDENCE: grep -c (data-section-select|aria-hidden="true") app-chrome.tsx = 0
 
-- [x] G4: Parser RSS2/Atom + ids no charset X
-  CHECK: node --experimental-strip-types --test scripts/rss-parse.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 39.63868
+- [x] G5: dock de grupos fora do fluxo fixo — chips no header, sem --agora-groups no padding
+  CHECK: grep -c 'data-chrome="groups"' src/components/news/app-chrome.tsx
+  EXPECT: 0
+  EVIDENCE: grep -c data-chrome="groups" app-chrome.tsx = 0
 
-- [x] G5: Ingest RSS fail-closed, skip r_*, X throw + RSS write ok
-  CHECK: node --experimental-strip-types --test scripts/rss-ingest.behavior.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 40.631663
+- [x] G6: modal de perfil com botão fechar dentro do dialog e focus trap
+  CHECK: grep -c 'trapTab\|data-testid="profile-close"' src/components/news/feed-profile-popup.tsx
+  EXPECT: 3
+  EVIDENCE: grep -c (trapTab|profile-close) feed-profile-popup.tsx = 3
 
-- [x] G6: Prefs rssFeeds não morre no snapshot
-  CHECK: node --experimental-strip-types --test scripts/rss-prefs.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 57.618761
-
-- [x] G7: Ranking recente/seguindo/importante
-  CHECK: node --experimental-strip-types --test scripts/feed-rank.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 40.021386
-
-- [x] G8: avatarInFilter não alargou; PAGE_SIZE 40
-  CHECK: node --experimental-strip-types --test scripts/agora-now.test.mjs scripts/account-in-filter.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 42.616066
-
-- [x] G9: suíte do repo
-  CHECK: npm test
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 4016.306614
-
-- [x] G10: typecheck e lint
-  CHECK: npm run typecheck && npm run lint
+- [x] G7: suíte, typecheck, lint e build verdes
+  CHECK: npm test && npm run typecheck && npm run lint && npm run build
   EXPECT: eslint
-  EVIDENCE: > lint | > eslint . --max-warnings=0
+  EVIDENCE: suíte 465 testes fail 0; typecheck=0 lint=0 build=0 (exit codes)
+
+- [x] G8: smoke visual a 390px das telas alteradas (feed, fontes, salvos, modal)
+  EVIDENCE: playwright @390px (vite dev 8082): feed com 6 chips no header (0 artigos sobrepostos, pb main 44px), salvar no card alterna aria-pressed e persiste savedIds, Salvos em ?secao=ai lista grupos IA e Tech, modal com fechar interno 44px e Tab preso no dialog (defaultPrevented=true, volta ao primeiro focável)

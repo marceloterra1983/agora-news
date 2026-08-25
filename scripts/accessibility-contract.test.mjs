@@ -81,7 +81,15 @@ test("landmark heading select: the shared shell uses native semantics", () => {
 
   assert.match(rootRoute, /href=["']#conteudo-principal["']/);
   assert.match(chrome, /<main\b[^>]*id=["']conteudo-principal["']/s);
-  assert.match(chrome, /<select\b[^>]*(?:aria-label|id)=/s);
+  // O seletor de seção são botões visíveis e focáveis (aria-pressed), sem
+  // select sr-only paralelo; o select nativo rotulado vive no sort de Fontes.
+  assert.match(chrome, /aria-label="Assunto"/);
+  assert.match(chrome, /data-section-chip[\s\S]{0,160}aria-pressed=\{on\}/);
+  assert.doesNotMatch(chrome, /<select\b/);
+  assert.match(
+    read("src/components/news/fontes-chip.tsx"),
+    /<select\b[\s\S]{0,200}aria-label=/,
+  );
   assert.doesNotMatch(
     `${chrome}\n${controls}`,
     /role=["'](?:listbox|option)["']/,
@@ -568,10 +576,19 @@ test("Playwright landmark heading select: every core route has one usable shell"
     }
 
     await page.goto(`${base}/?secao=ai`, { waitUntil: "networkidle" });
-    const subject = page.getByRole("combobox", { name: /assunto/i });
+    // O seletor de seção são botões reais focáveis num group "Assunto";
+    // o antigo select sr-only engolia o foco do teclado.
+    const subject = page.getByRole("group", { name: /assunto/i });
     assert.equal(await subject.count(), 1);
-    await subject.selectOption("tech");
+    await subject.getByRole("button", { name: "Tech", pressed: false }).click();
     await page.waitForURL((url) => url.searchParams.get("secao") === "tech");
+    // waitFor: a URL muda antes do commit do React; count() não espera.
+    const pressedTech = subject.getByRole("button", {
+      name: "Tech",
+      pressed: true,
+    });
+    await pressedTech.waitFor({ timeout: 5000 });
+    assert.equal(await pressedTech.count(), 1);
     assert.equal(
       await page.locator('[role="listbox"], [role="option"]').count(),
       0,
@@ -683,7 +700,10 @@ test("Playwright hydration URL theme media and grouped empty remain stable", asy
       .getByRole("status")
       .filter({ hasText: /nenhum/i })
       .waitFor();
-    await page.getByRole("button", { name: "Seguidores" }).click();
+    // A ordenação de Fontes é um select nativo no toolbar do header.
+    await page
+      .getByRole("combobox", { name: "Ordenar fontes" })
+      .selectOption("followers");
     await page.waitForURL(
       (url) => url.searchParams.get("sort") === "followers",
     );
