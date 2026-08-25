@@ -8,6 +8,7 @@ html {
   --agora-nav-tap: 44px;
   --agora-tap: 44px;
   --agora-header: 64px;
+  --agora-groups: 5.5rem;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -58,6 +59,27 @@ html[data-font="xl"] {
   line-height: 1.2 !important;
 }
 
+/* Dock acima da tab bar em TODOS os viewports. Sem bottom, `fixed` no
+   desktop cai no fluxo (depois do feed) e some da tela. */
+[data-chrome="groups"] {
+  position: fixed !important;
+  z-index: 35;
+  left: 0;
+  right: 0;
+  bottom: calc(
+    var(--agora-nav-tap, 44px) + env(safe-area-inset-bottom, 0px) + 8px
+  );
+}
+[data-chrome="groups"] [data-group-dock] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
 @media (max-width: 640px) {
   html {
     --agora-type: 1rem;
@@ -68,6 +90,7 @@ html[data-font="xl"] {
     --agora-tap: 44px;
     --agora-nav-tap: 44px;
     --agora-header: 64px;
+    --agora-groups: 5.5rem;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -152,6 +175,19 @@ html[data-font="xl"] {
     padding-top: calc(var(--agora-header) + env(safe-area-inset-top, 0px));
     padding-bottom: calc(var(--agora-nav-tap) + env(safe-area-inset-bottom, 0px));
   }
+  [data-chrome-root][data-groups-dock] [data-chrome-main] {
+    padding-bottom: calc(
+      var(--agora-nav-tap) + var(--agora-groups, 5.5rem) +
+        env(safe-area-inset-bottom, 0px)
+    );
+  }
+  [data-chrome="groups"] {
+    position: fixed !important;
+    z-index: 35;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--agora-nav-tap) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
 
   [data-story] h2,
   [data-story] h2 a,
@@ -228,6 +264,7 @@ html[data-shell="phone"] {
   --agora-tap: 44px;
   --agora-nav-tap: 44px;
   --agora-header: 64px;
+  --agora-groups: 5.5rem;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -310,6 +347,19 @@ html[data-shell="phone"] [data-chrome="tabs"] svg {
 html[data-shell="phone"] [data-chrome-main] {
   padding-top: calc(var(--agora-header) + env(safe-area-inset-top, 0px));
   padding-bottom: calc(var(--agora-nav-tap) + env(safe-area-inset-bottom, 0px));
+}
+html[data-shell="phone"] [data-chrome-root][data-groups-dock] [data-chrome-main] {
+  padding-bottom: calc(
+    var(--agora-nav-tap) + var(--agora-groups, 5.5rem) +
+      env(safe-area-inset-bottom, 0px)
+  );
+}
+html[data-shell="phone"] [data-chrome="groups"] {
+  position: fixed !important;
+  z-index: 35;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--agora-nav-tap) + env(safe-area-inset-bottom, 0px) + 8px);
 }
 html[data-shell="phone"] [data-story] h2,
 html[data-shell="phone"] [data-story] h2 a,

@@ -37,17 +37,17 @@ test("chrome pins top+bottom and reserves feed space with bar tokens", () => {
   assert.match(css, /\[data-chrome-main\][\s\S]{0,240}padding-top:/);
   assert.match(css, /--agora-nav-tap:\s*44px/);
   assert.match(css, /--agora-tap:\s*44px/);
-
-  // Os chips de grupo moram no toolbar rolável do header — nenhum dock fixo
-  // sobrepondo o feed, nenhum padding extra reservado para ele.
-  assert.match(chrome, /function GroupChips/);
-  assert.doesNotMatch(chrome, /data-chrome="groups"/);
-  assert.doesNotMatch(chrome, /data-groups-dock/);
-  assert.doesNotMatch(css, /\[data-chrome="groups"\]/);
-  assert.doesNotMatch(css, /--agora-groups/);
+  assert.match(css, /\[data-chrome="groups"\][\s\S]{0,220}bottom:/);
+  assert.match(css, /\[data-group-dock\][\s\S]{0,120}flex-wrap:\s*wrap/);
+  assert.match(chrome, /data-group-dock/);
+  assert.match(chrome, /flex-wrap/);
+  assert.match(chrome, /bottom-\[calc\(var\(--agora-nav-tap\)/);
   assert.match(chrome, /opacity-90/);
   assert.match(chrome, /opacity-100/);
   assert.doesNotMatch(chrome, /opacity-70/);
+  const dock = chrome.slice(chrome.indexOf("function GroupDock"));
+  assert.doesNotMatch(dock, /data-h-scroll/);
+  assert.doesNotMatch(dock, /overflow-x-auto/);
 });
 
 test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () => {
@@ -79,6 +79,7 @@ test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () =>
   assert.match(chrome, /data-section-chip/);
   assert.match(css, /\[data-section-switch\][\s\S]{0,280}height:\s*44px/);
   assert.match(chrome, /data-group-chip/);
+  assert.match(chrome, /data-chrome="groups"/);
   assert.match(chrome, /h-\[32px\]/);
   assert.match(styles, /\[data-h-scroll\][\s\S]{0,280}scrollbar-width:\s*none/);
   assert.match(
@@ -94,7 +95,7 @@ const FIXTURE = `<!doctype html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <style>
-    :root { --agora-nav-tap: 44px; --agora-header: 64px; }
+    :root { --agora-nav-tap: 44px; --agora-header: 64px; --agora-groups: 5.5rem; }
     [data-chrome="compact"] { position: sticky; top: 0; z-index: 30; }
     [data-chrome="tabs"] { position: relative; }
     [data-chrome="compact"] [data-h-scroll] button { height: 32px; }
@@ -113,20 +114,25 @@ const FIXTURE = `<!doctype html>
           <button type="button" data-section-chip>Tech</button>
           <button type="button" data-section-chip>Brasil</button>
         </div>
-        <div data-h-scroll style="display:flex;min-width:0;flex:1;align-items:center;gap:6px">
-          <button type="button" data-group-chip>Todos</button>
-          <button type="button" data-group-chip>Empresas</button>
-          <button type="button" data-group-chip>Startups</button>
-          <button type="button" data-group-chip>Gadgets</button>
-          <button type="button" data-group-chip>Segurança</button>
-          <button type="button" data-group-chip>Devs</button>
-          <button type="button" data-group-chip>Imprensa</button>
+        <div data-h-scroll style="display:flex;min-width:0;flex:1">
+          <button type="button">Todos</button>
         </div>
         <button type="button" aria-haspopup="menu" aria-label="Menu">☰</button>
       </div>
     </header>
     <div data-chrome-main>
       <div data-feed style="height: 2000px">feed</div>
+    </div>
+    <div data-chrome="groups">
+      <div data-group-dock>
+        <button type="button" data-group-chip>Todos</button>
+        <button type="button" data-group-chip>Empresas</button>
+        <button type="button" data-group-chip>Startups</button>
+        <button type="button" data-group-chip>Gadgets</button>
+        <button type="button" data-group-chip>Segurança</button>
+        <button type="button" data-group-chip>Devs</button>
+        <button type="button" data-group-chip>Imprensa</button>
+      </div>
     </div>
     <nav data-chrome="tabs">
       <div>
@@ -165,8 +171,8 @@ async function chromeBox(page) {
     const header = document.querySelector("[data-chrome=compact]");
     const tabs = document.querySelector("[data-chrome=tabs]");
     const main = document.querySelector("[data-chrome-main]");
-    const hs = document.querySelector("[data-h-scroll]");
-    const chips = [...document.querySelectorAll("[data-group-chip]")];
+    const chip = document.querySelector("[data-group-chip], [data-h-scroll] button");
+    const groups = document.querySelector("[data-chrome=groups]");
     const ia = document.querySelector("[data-section-switch]");
     const menu = document.querySelector("[aria-haspopup=menu]");
     const nav = document.querySelector("[data-chrome=tabs] a");
@@ -185,11 +191,8 @@ async function chromeBox(page) {
       mainPadBottom: main
         ? parseFloat(getComputedStyle(main).paddingBottom)
         : 0,
-      chipH: box(chips[0]).h,
-      chipCount: chips.length,
-      chipBoxes: chips.map(box),
-      hsScrollable: hs ? hs.scrollWidth > hs.clientWidth : false,
-      hsOverflowX: hs ? getComputedStyle(hs).overflowX : "",
+      chipH: box(chip).h,
+      groups: box(groups),
       iaH: box(ia).h,
       menuH: box(menu).h,
       navH: box(nav).h,
@@ -198,7 +201,7 @@ async function chromeBox(page) {
   });
 }
 
-test("Playwright 390px: chrome is fixed, chips scroll inside the header", async (t) => {
+test("Playwright 390px: chrome is fixed and tap heights match 44px", async (t) => {
   const browser = await launchChromium(t);
   if (!browser) return;
   try {
@@ -238,14 +241,15 @@ test("Playwright 390px: chrome is fixed, chips scroll inside the header", async 
       before.mainPadBottom >= before.tabs.h - 1,
       `pad-bottom ${before.mainPadBottom} tabs ${before.tabs.h}`,
     );
-    // Chips ficam DENTRO do header (nada flutua sobre o feed) e o excesso
-    // rola horizontalmente em vez de embrulhar ou vazar.
-    for (const chip of before.chipBoxes) {
-      assert.ok(chip.t >= before.header.t - 1, `chip top ${chip.t}`);
-      assert.ok(chip.b <= before.header.b + 1, `chip bottom ${chip.b}`);
-    }
-    assert.equal(before.hsOverflowX, "auto", `h-scroll ${before.hsOverflowX}`);
-    assert.ok(before.hsScrollable, "7 chips a 390px devem rolar");
+    assert.ok(before.groups.h > 0, `groups height ${before.groups.h}`);
+    assert.ok(
+      before.groups.b <= before.tabs.t + 2,
+      `groups above tabs ${before.groups.b} ${before.tabs.t}`,
+    );
+    assert.ok(
+      before.groups.h >= 64,
+      `groups wrap to 2+ lines ${before.groups.h}`,
+    );
 
     await page.evaluate(() => window.scrollTo(0, 600));
     const after = await chromeBox(page);
@@ -256,13 +260,17 @@ test("Playwright 390px: chrome is fixed, chips scroll inside the header", async 
       Math.abs(after.tabs.b - after.vh) <= 1,
       `tabs scrolled bottom ${after.tabs.b}`,
     );
-    assert.ok(after.chipCount === 7, `chips ${after.chipCount}`);
+    assert.ok(after.groups.h > 0, `groups still visible ${after.groups.h}`);
+    assert.ok(
+      after.groups.b <= after.tabs.t + 2,
+      `groups stay above tabs ${after.groups.b} ${after.tabs.t}`,
+    );
   } finally {
     await browser.close();
   }
 });
 
-test("Playwright 1280px: chips stay in the header row on desktop", async (t) => {
+test("Playwright 1280px: group dock stays pinned above tabs", async (t) => {
   const browser = await launchChromium(t);
   if (!browser) return;
   try {
@@ -271,11 +279,16 @@ test("Playwright 1280px: chips stay in the header row on desktop", async (t) => 
     });
     await page.setContent(FIXTURE, { waitUntil: "domcontentloaded" });
     const box = await chromeBox(page);
-    assert.ok(box.chipCount === 7, `desktop chips ${box.chipCount}`);
-    for (const chip of box.chipBoxes) {
-      assert.ok(chip.t >= box.header.t - 1, `desktop chip top ${chip.t}`);
-      assert.ok(chip.b <= box.header.b + 1, `desktop chip bottom ${chip.b}`);
-    }
+    assert.ok(box.groups.h > 0, `desktop groups height ${box.groups.h}`);
+    assert.ok(box.groups.t > 0, `desktop groups top ${box.groups.t}`);
+    assert.ok(
+      box.groups.b <= box.tabs.t + 2,
+      `desktop groups above tabs ${box.groups.b} ${box.tabs.t}`,
+    );
+    assert.ok(
+      box.groups.b < box.vh,
+      `desktop groups in viewport ${box.groups.b} vh ${box.vh}`,
+    );
   } finally {
     await browser.close();
   }
