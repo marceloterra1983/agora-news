@@ -56,7 +56,8 @@ test("phone chrome keeps IA/menu/nav at 44px; group chips are 32px pills", () =>
   const styles = read("src/styles.css");
 
   assert.match(css, /\[data-h-scroll\] > button[\s\S]{0,160}height:\s*32px/);
-  assert.match(css, /\[data-group-chip\][\s\S]{0,160}padding:\s*10px 12px/);
+  // padding vertical 0: 10px+conteúdo estourava a caixa de 32px
+  assert.match(css, /\[data-group-chip\][\s\S]{0,160}padding:\s*0 12px/);
   assert.doesNotMatch(
     css,
     /\[data-h-scroll\][^\n]{0,40}button[\s\S]{0,160}height:\s*44px/,

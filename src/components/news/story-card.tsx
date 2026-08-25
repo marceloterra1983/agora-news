@@ -110,7 +110,7 @@ export function StoryCard({
               aria-haspopup="dialog"
               aria-expanded={profileOpen || undefined}
               onClick={() => onOpenProfile(story.source)}
-              className="-ml-2 grid size-11 shrink-0 place-items-center rounded-full"
+              className="relative z-10 -ml-2 grid size-11 shrink-0 place-items-center rounded-full"
             >
               {faceNode}
             </button>
@@ -129,7 +129,7 @@ export function StoryCard({
               onClick={() => toggleSave(story)}
               aria-pressed={saved}
               aria-label={saved ? "Remover dos salvos" : "Salvar matéria"}
-              className="-my-2 ml-auto grid size-11 shrink-0 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
+              className="relative z-10 -my-2 ml-auto grid size-11 shrink-0 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
             >
               {saved ? (
                 <BookmarkCheck className="size-4 text-mark" />
@@ -140,7 +140,11 @@ export function StoryCard({
           </Tip>
         </p>
         <h2 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
-          <Link to="/materia/$id" params={{ id: story.id }}>
+          <Link
+            to="/materia/$id"
+            params={{ id: story.id }}
+            className="after:absolute after:inset-0 hover:text-mark"
+          >
             {displayTitle(story.title)}
           </Link>
         </h2>
