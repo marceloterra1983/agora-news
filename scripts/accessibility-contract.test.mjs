@@ -576,10 +576,19 @@ test("Playwright landmark heading select: every core route has one usable shell"
     }
 
     await page.goto(`${base}/?secao=ai`, { waitUntil: "networkidle" });
-    const subject = page.getByRole("combobox", { name: /assunto/i });
+    // O seletor de seção são botões reais focáveis num group "Assunto";
+    // o antigo select sr-only engolia o foco do teclado.
+    const subject = page.getByRole("group", { name: /assunto/i });
     assert.equal(await subject.count(), 1);
-    await subject.selectOption("tech");
+    await subject.getByRole("button", { name: "Tech", pressed: false }).click();
     await page.waitForURL((url) => url.searchParams.get("secao") === "tech");
+    // waitFor: a URL muda antes do commit do React; count() não espera.
+    const pressedTech = subject.getByRole("button", {
+      name: "Tech",
+      pressed: true,
+    });
+    await pressedTech.waitFor({ timeout: 5000 });
+    assert.equal(await pressedTech.count(), 1);
     assert.equal(
       await page.locator('[role="listbox"], [role="option"]').count(),
       0,

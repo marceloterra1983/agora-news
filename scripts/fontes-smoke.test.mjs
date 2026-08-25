@@ -85,6 +85,11 @@ test("Playwright opens /fontes and sees the catalog list", async (t) => {
       );
     }
     await expand.click();
+    // waitFor: o clique retorna antes do commit do React em dev.
+    await first
+      .locator('button[aria-expanded="true"]')
+      .first()
+      .waitFor({ timeout: 5000 });
     assert.equal(await expand.getAttribute("aria-expanded"), "true");
     assert.ok(await first.getByText(/Últimos? posts?/i).count());
   } finally {
