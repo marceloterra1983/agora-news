@@ -60,6 +60,13 @@ export function Feed({
   useEffect(() => {
     setClusterSeen(readClusterSeen());
   }, []);
+  // Vira true depois do primeiro flush de effects, quando prefs/extras/unread já
+  // aplicaram o localStorage — antes disso a lista ainda é a do SSR e restaurar
+  // o scroll consumiria a marca one-shot na altura errada.
+  const [restoreReady, setRestoreReady] = useState(false);
+  useEffect(() => {
+    setRestoreReady(true);
+  }, []);
   const seedBaseline = unread.seedBaseline;
   const markRead = unread.markRead;
   const feedRef = useRef<HTMLDivElement>(null);
@@ -155,13 +162,13 @@ export function Feed({
   }, [unreadKey, markRead, stories]);
 
   useLayoutEffect(() => {
-    if (!stories.length) return;
+    if (!restoreReady || !stories.length) return;
     const y = consumeFeedScroll(category);
     if (y == null) return;
     restoreScrollY(y);
     const later = window.setTimeout(() => restoreScrollY(y), 200);
     return () => window.clearTimeout(later);
-  }, [category, stories.length]);
+  }, [category, stories.length, restoreReady]);
 
   useEffect(() => {
     const root = feedRef.current;
