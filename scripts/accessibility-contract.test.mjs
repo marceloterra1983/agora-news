@@ -700,7 +700,10 @@ test("Playwright hydration URL theme media and grouped empty remain stable", asy
       .getByRole("status")
       .filter({ hasText: /nenhum/i })
       .waitFor();
-    await page.getByRole("button", { name: "Seguidores" }).click();
+    // A ordenação de Fontes é um select nativo no toolbar do header.
+    await page
+      .getByRole("combobox", { name: "Ordenar fontes" })
+      .selectOption("followers");
     await page.waitForURL(
       (url) => url.searchParams.get("sort") === "followers",
     );
