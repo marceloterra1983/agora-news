@@ -44,12 +44,9 @@ function fixture(font = "") {
         <button type="button" data-section-chip>Tech</button>
         <button type="button" data-section-chip>Brasil</button>
       </div>
-      <select data-section-select aria-label="Assunto"><option>IA</option></select>
-      <div data-chrome="groups">
-        <div data-h-scroll>
-          <button type="button" data-group-chip>Todos</button>
-          <button type="button" data-group-chip>Instituições</button>
-        </div>
+      <div data-h-scroll>
+        <button type="button" data-group-chip>Todos</button>
+        <button type="button" data-group-chip>Instituições</button>
       </div>
       <button type="button" aria-haspopup="menu" aria-label="Menu">☰</button>
     </div>

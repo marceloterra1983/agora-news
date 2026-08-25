@@ -1,4 +1,3 @@
-import { Clock, Layers, Star, Users } from "lucide-react";
 import { extraFonteToRow, type ExtraFonte } from "./extra-fontes";
 import { extrasForSection } from "./watch-section.mjs";
 import { matchProfiles } from "./profiles";
@@ -12,11 +11,11 @@ export type SortKey = "recent" | "followers" | "groups" | "starred";
 
 export const FONTES_SORT_KEY = "agora-fontes-sort";
 
-export const FONTES_SORTS: { id: SortKey; label: string; icon: typeof Clock }[] = [
-  { id: "recent", label: "Recente", icon: Clock },
-  { id: "followers", label: "Seguidores", icon: Users },
-  { id: "groups", label: "Grupos", icon: Layers },
-  { id: "starred", label: "Fav", icon: Star },
+export const FONTES_SORTS: { id: SortKey; label: string }[] = [
+  { id: "recent", label: "Recente" },
+  { id: "followers", label: "Seguidores" },
+  { id: "groups", label: "Grupos" },
+  { id: "starred", label: "Favoritos" },
 ];
 
 export function readStoredSort(): SortKey {

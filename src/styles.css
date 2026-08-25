@@ -30,7 +30,6 @@
 
   --agora-header: 3.75rem;
   --agora-subbar: 2.5rem;
-  --agora-groups: 5.5rem;
 
   /* Reader defaults — data-font in phone-layout.css scales these via rem. */
   --agora-type: 16px;

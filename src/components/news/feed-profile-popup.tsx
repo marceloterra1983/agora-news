@@ -1,12 +1,19 @@
 import { useEffect, useRef } from "react";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, X } from "lucide-react";
 import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { GroupTag } from "@/components/news/group-tag";
+import { Tip } from "@/components/news/icon-btn";
 import { formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 
-function PopupIdentity({ row }: { row: InfluenceRow }) {
+function PopupIdentity({
+  row,
+  onClose,
+}: {
+  row: InfluenceRow;
+  onClose: () => void;
+}) {
   const followers = row.followers ? formatCount(row.followers) : "";
   return (
     <div
@@ -45,6 +52,17 @@ function PopupIdentity({ row }: { row: InfluenceRow }) {
           </p>
         ) : null}
       </div>
+      <Tip label="Fechar perfil">
+        <button
+          type="button"
+          data-testid="profile-close"
+          aria-label="Fechar perfil"
+          onClick={onClose}
+          className="grid size-11 shrink-0 place-items-center rounded-full text-mute hover:bg-paper hover:text-ink"
+        >
+          <X className="size-4" />
+        </button>
+      </Tip>
     </div>
   );
 }
@@ -66,7 +84,35 @@ export function FeedProfilePopup({
     panel.current?.focus();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    function trapTab(event: KeyboardEvent) {
+      const box = panel.current;
+      if (!box) return;
+      const focusables = [
+        ...box.querySelectorAll<HTMLElement>(
+          'a[href], button:not(:disabled), select, input, [tabindex]:not([tabindex="-1"])',
+        ),
+      ];
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey) {
+        if (active === first || !box.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+      if (active === last || !box.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
     function onKey(event: KeyboardEvent) {
+      if (event.key === "Tab") {
+        trapTab(event);
+        return;
+      }
       if (event.key !== "Escape") return;
       if (panel.current?.querySelector('[data-fonte-action="group"][aria-expanded="true"]')) {
         return;
@@ -98,7 +144,7 @@ export function FeedProfilePopup({
         data-testid="feed-profile-popup"
         className="relative z-10 w-full max-w-lg overflow-hidden rounded-md bg-paper-2 shadow-card outline-none"
       >
-        <PopupIdentity row={row} />
+        <PopupIdentity row={row} onClose={onClose} />
         <FonteProfileCard
           row={row}
           prefs={prefs}

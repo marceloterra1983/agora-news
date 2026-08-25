@@ -7,13 +7,18 @@ import test from "node:test";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
-test("header shows IA/Tech/Brasil as chips and keeps a native Assunto select", () => {
+test("header shows IA/Tech/Brasil as real focusable chips (no hidden select)", () => {
   const chrome = read("src/components/news/app-chrome.tsx");
   assert.match(chrome, /data-section-switch/);
   assert.match(chrome, /data-section-chip/);
-  assert.match(chrome, /<select\b[^>]*id=["']agora-section["']/);
-  assert.match(chrome, /htmlFor=["']agora-section["']/);
-  assert.match(chrome, /className="sr-only"/);
+  // Foco de teclado fica nas pílulas visíveis: nada de select sr-only nem
+  // chips escondidos de tecnologia assistiva (WCAG 2.4.7).
+  assert.doesNotMatch(chrome, /<select\b/);
+  assert.doesNotMatch(chrome, /aria-hidden="true"/);
+  assert.doesNotMatch(chrome, /tabIndex=\{-1\}\s*\n?\s*aria-hidden/);
+  const chip = chrome.slice(chrome.indexOf("data-section-chip"));
+  assert.match(chip.slice(0, 200), /aria-pressed=\{on\}/);
+  assert.match(chrome, /aria-label="Assunto"/);
   assert.doesNotMatch(chrome, /ChevronDown/);
 });
 

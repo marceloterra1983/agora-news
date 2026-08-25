@@ -71,7 +71,9 @@ test("Playwright opens /fontes and sees the catalog list", async (t) => {
     const n = await rows.count();
     assert.ok(n >= 8, `esperava ≥8 fontes, veio ${n}`);
     assert.equal(await page.locator("h1").innerText(), "Fontes");
-    assert.ok(await page.getByRole("button", { name: "Recente" }).count());
+    assert.ok(
+      await page.getByRole("combobox", { name: "Ordenar fontes" }).count(),
+    );
     const first = rows.first();
     const expand = first.locator("button[aria-expanded]").first();
     const post = first.locator('[data-testid="fonte-last-post"]');

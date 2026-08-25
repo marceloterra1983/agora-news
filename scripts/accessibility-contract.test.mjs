@@ -81,7 +81,15 @@ test("landmark heading select: the shared shell uses native semantics", () => {
 
   assert.match(rootRoute, /href=["']#conteudo-principal["']/);
   assert.match(chrome, /<main\b[^>]*id=["']conteudo-principal["']/s);
-  assert.match(chrome, /<select\b[^>]*(?:aria-label|id)=/s);
+  // O seletor de seção são botões visíveis e focáveis (aria-pressed), sem
+  // select sr-only paralelo; o select nativo rotulado vive no sort de Fontes.
+  assert.match(chrome, /aria-label="Assunto"/);
+  assert.match(chrome, /data-section-chip[\s\S]{0,160}aria-pressed=\{on\}/);
+  assert.doesNotMatch(chrome, /<select\b/);
+  assert.match(
+    read("src/components/news/fontes-chip.tsx"),
+    /<select\b[\s\S]{0,200}aria-label=/,
+  );
   assert.doesNotMatch(
     `${chrome}\n${controls}`,
     /role=["'](?:listbox|option)["']/,

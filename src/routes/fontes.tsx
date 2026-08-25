@@ -1,6 +1,6 @@
 import { AppChrome } from "@/components/news/app-chrome";
 import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
-import { FontesChip } from "@/components/news/fontes-chip";
+import { FontesChip, FontesSortSelect } from "@/components/news/fontes-chip";
 import { FontesSites } from "@/components/news/fontes-sites";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
@@ -134,17 +134,10 @@ function FontesPage() {
         <div
           className="flex min-w-0 flex-1 items-center gap-1"
           role="toolbar"
-          aria-label="Ordenar fontes"
+          aria-label="Ordenar e editar fontes"
           data-testid="fontes-toolbar"
         >
-          {FONTES_SORTS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <FontesChip key={s.id} active={sort === s.id} label={s.label} onClick={() => changeSort(s.id)}>
-                <Icon className="size-3.5" />
-              </FontesChip>
-            );
-          })}
+          <FontesSortSelect sort={sort} onChange={changeSort} />
           <FontesChip
             active={picking}
             label="Mover em lote"
