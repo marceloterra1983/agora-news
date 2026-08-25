@@ -98,7 +98,6 @@ export function ArticleView({ story }: { story: Story }) {
           </time>
         </span>
       </p>
-      <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{who}</p>
       <h1
         className={
           showTitle
@@ -142,6 +141,14 @@ export function ArticleView({ story }: { story: Story }) {
           />
         </details>
       )}
+      {who ? (
+        <p className="mt-8 border-t border-line pt-4 text-[14px] leading-relaxed text-ink-soft">
+          <span className="font-semibold text-ink">
+            Sobre @{story.source.replace(/^@/, "")}
+          </span>{" "}
+          · {who}
+        </p>
+      ) : null}
       <div className="mt-10 flex items-center gap-1.5">
         {safeHttpHref(story.url, { allowPath: false }) ? (
           <IconLink

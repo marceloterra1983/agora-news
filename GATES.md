@@ -1,41 +1,27 @@
-# Gates: correções P0+P1 da crítica de UX
+# Gates: P1 da crítica rodada 2
 
-Scope: 6 correções aprovadas — header de Fontes a 390px, Salvos sem filtro de
-seção, salvar no feed com confirmação, foco do seletor de seção, dock de
-grupos movido para o header, modal de perfil com fechar + focus trap.
+Scope: 3 correções — card do feed totalmente tocável, chip de grupo sem
+estouro de caixa, bio da conta depois do conteúdo na matéria.
 
-- [x] G1: Fontes a 390px — toolbar e menu sem sobreposição; "Mover em lote" alcançável
-  EVIDENCE: playwright @390px (vite dev): select "Ordenar fontes" 107×44 right=269, chip lote right=317, menu 334–378; h-scroll scrollWidth==clientWidth (sem corte); screenshot new-fontes-390.png
+- [x] G1: card reader tocável — link esticado no título, controles acima do overlay
+  CHECK: grep -c "after:absolute after:inset-0" src/components/news/story-card.tsx
+  EXPECT: 1
+  EVIDENCE: 1
 
-- [x] G2: Salvos lista salvos de todas as seções
-  CHECK: node --experimental-strip-types --test scripts/salvos-all-sections.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: node --test salvos-all-sections: pass 3, fail 0
+- [x] G2: chips 32px sem estouro — min-height + padding vertical 0
+  CHECK: grep -c "padding: 0 12px" src/lib/news/phone-layout.css
+  EXPECT: 1
+  EVIDENCE: 1
 
-- [x] G3: variant reader tem botão salvar com aria-pressed e estado salvo visível
-  CHECK: grep -c "aria-pressed" src/components/news/story-card.tsx
-  EXPECT: 2
-  EVIDENCE: grep -c aria-pressed story-card.tsx = 2
+- [x] G3: matéria — "Sobre @handle" depois do conteúdo, não antes
+  CHECK: python3 -c "s=open('src/components/news/article-view.tsx').read(); import sys; sys.exit(0 if 0 < s.find('PostText') < s.find('Sobre @') else 1)" && echo ordem-ok
+  EXPECT: ordem-ok
+  EVIDENCE: ordem-ok
 
-- [x] G4: seletor de seção focável — sem select sr-only, pílulas sem aria-hidden
-  CHECK: grep -c 'data-section-select\|aria-hidden="true"' src/components/news/app-chrome.tsx
-  EXPECT: 0
-  EVIDENCE: grep -c (data-section-select|aria-hidden="true") app-chrome.tsx = 0
-
-- [x] G5: dock de grupos fora do fluxo fixo — chips no header, sem --agora-groups no padding
-  CHECK: grep -c 'data-chrome="groups"' src/components/news/app-chrome.tsx
-  EXPECT: 0
-  EVIDENCE: grep -c data-chrome="groups" app-chrome.tsx = 0
-
-- [x] G6: modal de perfil com botão fechar dentro do dialog e focus trap
-  CHECK: grep -c 'trapTab\|data-testid="profile-close"' src/components/news/feed-profile-popup.tsx
-  EXPECT: 3
-  EVIDENCE: grep -c (trapTab|profile-close) feed-profile-popup.tsx = 3
-
-- [x] G7: suíte, typecheck, lint e build verdes
+- [x] G4: suíte, typecheck, lint e build verdes
   CHECK: npm test && npm run typecheck && npm run lint && npm run build
   EXPECT: eslint
-  EVIDENCE: suíte 465 testes fail 0; typecheck=0 lint=0 build=0 (exit codes)
+  EVIDENCE: ℹ Generated .output/nitro.json | [nitro] ✔ You can preview this build using npx vite preview
 
-- [x] G8: smoke visual a 390px das telas alteradas (feed, fontes, salvos, modal)
-  EVIDENCE: playwright @390px (vite dev 8082): feed com 6 chips no header (0 artigos sobrepostos, pb main 44px), salvar no card alterna aria-pressed e persiste savedIds, Salvos em ?secao=ai lista grupos IA e Tech, modal com fechar interno 44px e Tab preso no dialog (defaultPrevented=true, volta ao primeiro focável)
+- [x] G5: comportamento no browser — clique no meio do card navega para /materia; chip mede 32px sem transbordo
+  EVIDENCE: playwright @dev: elementFromPoint no meio do card → a[href=/materia/2092386565045747719]; botão salvar continua clicável por cima; chip h=32, padding-top 0, scrollHeight==clientHeight

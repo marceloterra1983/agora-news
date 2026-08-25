@@ -50,11 +50,10 @@ html[data-font="xl"] {
 /* Pílulas de grupo: compactas em phone e desktop — não o 44×44 de IA/menu. */
 [data-h-scroll] > button,
 [data-group-chip] {
-  height: 32px !important;
   min-height: 32px !important;
   min-width: 0 !important;
   flex-shrink: 0 !important;
-  padding: 10px 12px !important;
+  padding: 0 12px !important;
   font-size: 12px !important;
   line-height: 1.2 !important;
 }

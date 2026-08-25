@@ -15,7 +15,7 @@ export function WrittenLinks({
     .filter(Boolean);
   if (!hrefs.length) return null;
   return (
-    <p className="mt-2 flex flex-wrap gap-x-3">
+    <p className="relative z-10 mt-2 flex flex-wrap gap-x-3">
       {hrefs.map((href) => {
         const host = writtenLinkHost(href) || "site";
         return (
