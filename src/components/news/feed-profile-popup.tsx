@@ -97,7 +97,9 @@ export function FeedProfilePopup({
       const last = focusables[focusables.length - 1];
       const active = document.activeElement;
       if (event.shiftKey) {
-        if (active === first || !box.contains(active)) {
+        // active === box: foco inicial no painel; sem intercepto o Shift+Tab
+        // recuaria para o backdrop, fora do aria-modal.
+        if (active === first || active === box || !box.contains(active)) {
           event.preventDefault();
           last.focus();
         }
