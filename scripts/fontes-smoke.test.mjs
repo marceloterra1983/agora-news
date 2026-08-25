@@ -84,12 +84,14 @@ test("Playwright opens /fontes and sees the catalog list", async (t) => {
         `last post href ${href}`,
       );
     }
+    // Um clique antes da hidratação cai em HTML sem handler e se perde;
+    // re-clica até o React responder (dev hidrata em segundos).
+    const openBtn = first.locator('button[aria-expanded="true"]');
     await expand.click();
-    // waitFor: o clique retorna antes do commit do React em dev.
-    await first
-      .locator('button[aria-expanded="true"]')
-      .first()
-      .waitFor({ timeout: 5000 });
+    for (let i = 0; i < 6 && (await openBtn.count()) === 0; i++) {
+      await page.waitForTimeout(500);
+      if ((await openBtn.count()) === 0) await expand.click();
+    }
     assert.equal(await expand.getAttribute("aria-expanded"), "true");
     assert.ok(await first.getByText(/Últimos? posts?/i).count());
   } finally {
