@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
 import type { ExtraFonte } from "./extra-fontes";
+import type { RssFeed } from "./rss-feeds";
 import type { CustomGroup } from "./groups";
 
 export type SectionPrefsSlice = {
@@ -26,6 +27,7 @@ export type CloudPrefs = {
   customGroups?: CustomGroup[];
   bySection?: Record<string, SectionPrefsSlice>;
   fontesRev?: FontesRev;
+  rssFeeds?: RssFeed[];
   /** Row `user_prefs.updated_at`. Not persisted inside the prefs JSON. */
   updatedAt?: string;
 };

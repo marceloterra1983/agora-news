@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Fixture Atom</title>
+  <entry>
+    <title>Entrada um</title>
+    <id>urn:atom:one</id>
+    <updated>2026-08-25T12:00:00Z</updated>
+    <link rel="alternate" href="https://example.com/atom-one"/>
+    <summary>Sumario um</summary>
+  </entry>
+  <entry>
+    <title>Entrada dois</title>
+    <id>urn:atom:two</id>
+    <updated>2026-08-25T11:00:00Z</updated>
+    <link href="https://example.com/atom-two"/>
+    <summary>Sumario dois</summary>
+  </entry>
+</feed>

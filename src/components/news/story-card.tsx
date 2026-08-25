@@ -12,6 +12,35 @@ import { GroupTag } from "./group-tag";
 import { tapIcon, Tip } from "./icon-btn";
 import { WrittenLinks } from "./written-link";
 
+function ClusterChrome({
+  story,
+  freshCount = 0,
+}: {
+  story: Story;
+  freshCount?: number;
+}) {
+  const also = story.alsoFrom ?? [];
+  if (!also.length && freshCount <= 0) return null;
+  return (
+    <p className="mt-2 text-[12px] text-mute">
+      {also.length ? (
+        <span>
+          Também
+          {also.map((row) => (
+            <span key={row.source}> · {row.sourceLabel || row.source}</span>
+          ))}
+        </span>
+      ) : null}
+      {freshCount > 0 ? (
+        <span data-fresh-count={freshCount}>
+          {also.length ? " · " : ""}
+          {freshCount} fontes novas
+        </span>
+      ) : null}
+    </p>
+  );
+}
+
 export function StoryCard({
   story,
   variant = "grid",
@@ -19,6 +48,7 @@ export function StoryCard({
   priority = false,
   profileOpen = false,
   onOpenProfile,
+  freshCount = 0,
 }: {
   story: Story;
   variant?: "grid" | "row" | "compact" | "reader";
@@ -26,6 +56,7 @@ export function StoryCard({
   priority?: boolean;
   profileOpen?: boolean;
   onOpenProfile?: (handle: string) => void;
+  freshCount?: number;
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
@@ -102,6 +133,7 @@ export function StoryCard({
           text={`${story.title}\n${story.body}\n${story.excerpt}`}
           skipHref={story.url}
         />
+        <ClusterChrome story={story} freshCount={freshCount} />
         {story.image ? (
           <Link
             to="/materia/$id"
@@ -187,6 +219,7 @@ export function StoryCard({
           text={`${story.title}\n${story.body}\n${story.excerpt}`}
           skipHref={story.url}
         />
+        <ClusterChrome story={story} freshCount={freshCount} />
         <Tip label={saved ? "Remover dos salvos" : "Salvar matéria"}>
           <button
             type="button"

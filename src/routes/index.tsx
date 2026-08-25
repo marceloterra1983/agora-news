@@ -3,6 +3,7 @@ import { AppChrome } from "@/components/news/app-chrome";
 import { Feed } from "@/components/news/feed";
 import { loadNews } from "@/lib/news/server";
 import { routeMeta } from "@/lib/news/route-meta";
+import { normalizeOrdem } from "@/lib/news/feed-rank.mjs";
 import {
   DEFAULT_SECTION,
   normalizeSection,
@@ -13,6 +14,7 @@ type HomeSearch = {
   secao: Category;
   q?: string;
   group?: string;
+  ordem?: "recente" | "seguindo" | "importante";
 };
 
 export const Route = createFileRoute("/")({
@@ -26,7 +28,8 @@ export const Route = createFileRoute("/")({
     const q =
       typeof raw.q === "string" && raw.q.trim() ? raw.q.trim() : undefined;
     const group = typeof raw.group === "string" && /^[a-z0-9_-]{1,40}$/.test(raw.group) ? raw.group : undefined;
-    return { secao, q, group };
+    const ordem = normalizeOrdem(raw.ordem);
+    return { secao, q, group, ordem };
   },
   loaderDeps: ({ search }) => ({ secao: search.secao, q: search.q }),
   loader: async ({ deps }) =>
@@ -37,7 +40,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { secao, q, group = "all" } = Route.useSearch();
+  const { secao, q, group = "all", ordem = "recente" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const initial = Route.useLoaderData();
   return (
@@ -50,6 +53,17 @@ function Home() {
           query={q}
           initial={initial}
           group={group}
+          ordem={ordem}
+          onOrdem={(next) =>
+            void navigate({
+              search: (current) => ({
+                ...current,
+                ordem: next === "recente" ? undefined : next,
+              }),
+              replace: true,
+              resetScroll: false,
+            })
+          }
         />
       </div>
     </AppChrome>

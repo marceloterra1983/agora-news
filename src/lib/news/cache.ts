@@ -251,6 +251,7 @@ export const CACHE_KEYS = {
   lock: "agora:v2:lock:ingest",
   newest: "agora:v2:newest",
   scanCursor: "agora:v2:scan",
+  rssEtag: "agora:v2:rss:",
 };
 
 export function resetCacheProbe() {

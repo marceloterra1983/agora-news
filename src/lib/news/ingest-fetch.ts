@@ -52,7 +52,7 @@ export async function statusesFor(handle: string): Promise<Status[]> {
 export async function existingIds(ids: string[]): Promise<Set<string>> {
   const out = new Set<string>();
   const unique = [...new Set(ids.filter(Boolean))];
-  if (unique.some((id) => !/^\d{1,30}$/.test(id))) {
+  if (unique.some((id) => !/^(\d{1,30}|rss_[a-f0-9]{24})$/i.test(id))) {
     throw new Error("existing_ids_invalid_input");
   }
   for (let i = 0; i < unique.length; i += 80) {

@@ -69,6 +69,7 @@ export function mergeCloudPrefs(
         }
       : {}),
     fontesRev,
+    rssFeeds: Array.isArray(remote.rssFeeds) ? remote.rssFeeds : local.rssFeeds,
     updatedAt: remote.updatedAt,
   };
 }

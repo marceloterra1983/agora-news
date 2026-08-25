@@ -6,6 +6,7 @@ import { attachStoryAvatars, hydrateStory } from "./story-hydrate";
 import { persistHydratedBody } from "./story-persist";
 import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
+import { attachClusterChrome } from "./story-cluster.mjs";
 import { accountsForQuery } from "./account-in-filter.mjs";
 import { FEED_MORE_LIMIT, intersectAccounts } from "./feed-more.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
@@ -76,11 +77,13 @@ export const loadNews = createServerFn({ method: "GET" })
             accounts: accountsForQuery(catalog, scoped ? accounts : []),
           });
           const stories = await attachStoryAvatars(
-            filterStories(older, data.category, data.q, catalog).map((s) => ({
-              ...s,
-              body: s.body || s.excerpt || s.title,
-              original: s.original || "",
-            })),
+            attachClusterChrome(
+              filterStories(older, data.category, data.q, catalog).map((s) => ({
+                ...s,
+                body: s.body || s.excerpt || s.title,
+                original: s.original || "",
+              })),
+            ),
           );
           return {
             stories,
@@ -90,7 +93,7 @@ export const loadNews = createServerFn({ method: "GET" })
               folder: `NEWS/${data.category.toUpperCase()}`,
               count: stories.length,
               source: "supabase",
-              hasMore: stories.length >= (data.before || data.after ? FEED_MORE_LIMIT : PAGE_SIZE),
+              hasMore: older.length >= (data.before || data.after ? FEED_MORE_LIMIT : PAGE_SIZE),
             },
           };
         }
@@ -100,7 +103,10 @@ export const loadNews = createServerFn({ method: "GET" })
         return {
           ...news,
           stories,
-          meta: { ...news.meta, hasMore: stories.length >= PAGE_SIZE },
+          meta: {
+            ...news.meta,
+            hasMore: payload.hasMore ?? stories.length >= PAGE_SIZE,
+          },
         };
       },
       (r) => ({ count: r.stories?.length ?? 0, live: Boolean(r.meta?.live) }),

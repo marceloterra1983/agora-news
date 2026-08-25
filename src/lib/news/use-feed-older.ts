@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { loadNews } from "@/lib/news/server";
 import type { Category, Story } from "@/lib/news/types";
+import { attachClusterChrome } from "@/lib/news/story-cluster.mjs";
 import {
   FEED_MORE_HOUR_STEPS,
   moreStillOpen,
@@ -34,7 +35,7 @@ export function useFeedOlder({
   const [moreError, setMoreError] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const filling = useRef("");
-  const raw = dedupe([...preview, ...older]);
+  const raw = attachClusterChrome(dedupe([...preview, ...older]));
   const visible = raw.filter((s) => storyHasText(s) && inView(s));
   const rawRef = useRef(raw);
   rawRef.current = raw;

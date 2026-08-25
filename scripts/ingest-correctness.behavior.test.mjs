@@ -581,11 +581,12 @@ test("ingest wires confirmed rows and a renewable owner lease", () => {
   assert.doesNotMatch(source, /storiesFromDbPosts|CACHE_KEYS\.list|cloudKvSet/);
   assert.match(source, /persistedRows\.map\(\(r\) =>/);
   assert.doesNotMatch(source, /written\.ok && rows\.length/);
-  assert.match(source, /acquireIngestLease/);
+  assert.match(source, /runIngestWithRss/);
+  assert.match(read("src/lib/news/ingest-wrap.ts"), /acquireIngestLease/);
   assert.match(lease, /randomUUID/);
   assert.match(lease, /setInterval/);
   assert.match(lease, /renewCacheLease/);
-  assert.match(source, /finally\s*{[\s\S]*lease\.release/);
+  assert.match(read("src/lib/news/ingest-wrap.ts"), /finally\s*{[\s\S]*lease\.release/);
   assert.match(source, /confirmed:[\s\S]*failed:/);
   assert.match(source, /confirmedIds:\s*written\.confirmedIds/);
   assert.match(source, /failedIds:\s*written\.failedIds/);

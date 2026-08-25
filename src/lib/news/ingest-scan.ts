@@ -1,3 +1,4 @@
+import { isRssAccount } from "./rss-catalog.mjs";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { rotateFrom } from "./ingest-scan-core.mjs";
 import { profilesFor } from "./profiles";
@@ -24,13 +25,13 @@ export async function handlesToScan(
   limit: number,
   beforeWrite?: () => Promise<void>,
 ): Promise<{ catalog: string[]; extra: string[]; watch: WatchAccount[] }> {
-  const catalog = listKnownSections().flatMap((s) =>
-    profilesFor(s).map((p) => p.handle.replace(/^@/, "")),
-  );
+  const catalog = listKnownSections()
+    .flatMap((s) => profilesFor(s).map((p) => p.handle.replace(/^@/, "")))
+    .filter((handle) => !isRssAccount(handle));
   const watch = await listAllWatchAccounts();
-  const extra = watch.map((w) =>
-    w.handle.replace(/^@/, ""),
-  );
+  const extra = watch
+    .map((w) => w.handle.replace(/^@/, ""))
+    .filter((handle) => !isRssAccount(handle));
   const extras = take(extra, Math.min(16, limit));
   const cursor = Number(
     (await cacheGetJson<number>(CACHE_KEYS.scanCursor)) || 0,

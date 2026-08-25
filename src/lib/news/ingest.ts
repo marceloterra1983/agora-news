@@ -28,9 +28,9 @@ import {
 } from "./ingest-fetch";
 import { invalidateSupabaseList } from "./supabase";
 import { cacheBackend } from "./cache";
-import { acquireIngestLease } from "./ingest-lease";
-import { logTiming, nowMs, elapsedMs } from "./timing";
+import { logTiming, elapsedMs } from "./timing";
 import { sendPushForStories } from "./push-server";
+import { runIngestWithRss } from "./ingest-wrap";
 
 const MAX_AGE_MS = 36 * 60 * 60_000;
 const MAX_INSERT = 40;
@@ -48,18 +48,12 @@ function lastPostsFromStatuses(handle: string, list: Status[]) {
     .filter((p) => p.publishedAt);
 }
 
-export async function runIngest(opts?: { limitHandles?: number; withProfiles?: boolean }) {
-  const t0 = nowMs();
-  const lease = await acquireIngestLease();
-  if (!lease) return { ok: true, skipped: true, reason: "locked" as const };
-  try {
-    return await runOwnedIngest(opts, t0, lease.assertOwned);
-  } catch {
-    logTiming("ingest", elapsedMs(t0), { ok: false, error: true });
-    throw new Error("ingest_failed");
-  } finally {
-    await lease.release();
-  }
+export async function runIngest(opts?: {
+  limitHandles?: number;
+  withProfiles?: boolean;
+  withRss?: boolean;
+}) {
+  return runIngestWithRss(runOwnedIngest, opts);
 }
 async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: boolean } | undefined, t0: number, assertOwned: () => Promise<void>) {
   const { catalog, extra, watch } = await handlesToScan(

@@ -15,6 +15,7 @@ export type ExtraFonte = {
   followers: number;
   summary: string;
   section: Category;
+  group?: string;
   lastPost: { id: string; title: string; publishedAt: string } | null;
 };
 
@@ -58,6 +59,7 @@ export function loadExtraFontes(): ExtraFonte[] {
         followers: Number(row.followers) || 0,
         summary: String(row.summary || ""),
         section: String(row.section || ""),
+        group: row.group || undefined,
         lastPost: row.lastPost?.id
           ? {
               id: String(row.lastPost.id),

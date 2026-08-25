@@ -1,6 +1,7 @@
 import { AppChrome } from "@/components/news/app-chrome";
 import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
 import { FontesChip } from "@/components/news/fontes-chip";
+import { FontesSites } from "@/components/news/fontes-sites";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
 import { useFontesLeave } from "@/lib/news/use-fontes-leave";
@@ -287,6 +288,7 @@ function FontesPage() {
             ))}
           </ol>
         )}
+        <FontesSites section={secao} />
       </div>
     </AppChrome>
   );
