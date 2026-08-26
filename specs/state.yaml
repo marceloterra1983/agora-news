@@ -9,7 +9,7 @@ git:
   branch: main
   hash: ffd19db2a0479ef780e34c78b8c56af4e70a2382
 handoff:
-  last_step_completed: "audit 2026-08-20 remediation S1–S6"
+  last_step_completed: "fix RSS byline r_hash → TecMundo"
   required_reading: []
   next_skill: ""
 learned_preferences:

@@ -73,3 +73,52 @@ export function rssLabelFor(account, owned = []) {
 export function isRssAccount(handle) {
   return /^r_[a-f0-9]{12}$/i.test(String(handle || "").replace(/^@+/, "").trim());
 }
+
+function bareHandle(value) {
+  return String(value || "")
+    .replace(/^@+/, "")
+    .trim();
+}
+
+function hostnameOf(url) {
+  try {
+    return new URL(String(url || "")).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+/** Campos source/sourceLabel da história — RSS nunca vaza o id interno como @handle. */
+export function storySourceFromAccount(account, opts = {}) {
+  const source = bareHandle(account) || "fonte";
+  if (isRssAccount(source) || opts.source === "rss") {
+    const sourceLabel =
+      rssLabelFor(source, opts.owned) || hostnameOf(opts.postUrl) || "Site";
+    return { source, sourceLabel };
+  }
+  return { source, sourceLabel: `@${source}` };
+}
+
+/** Texto da byline: título do site para RSS, @handle para X. */
+export function displaySourceByline(source, sourceLabel) {
+  const handle = bareHandle(source);
+  const label = bareHandle(sourceLabel);
+  if (isRssAccount(handle)) {
+    if (label && !isRssAccount(label)) return label;
+    return rssLabelFor(handle) || "Site";
+  }
+  const raw = String(sourceLabel || "").trim();
+  return raw || (handle ? `@${handle}` : "");
+}
+
+export function displaySourceInitial(source, sourceLabel) {
+  const text = displaySourceByline(source, sourceLabel).replace(/^@+/, "");
+  return (text.charAt(0) || "?").toUpperCase();
+}
+
+/** @handle só quando a conta é do X; RSS devolve vazio. */
+export function displaySourceAt(source) {
+  const handle = bareHandle(source);
+  if (!handle || isRssAccount(handle)) return "";
+  return `@${handle}`;
+}

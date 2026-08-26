@@ -5,6 +5,7 @@ import { GroupTag } from "@/components/news/group-tag";
 import { Tip } from "@/components/news/icon-btn";
 import { formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
+import { displaySourceAt, displaySourceInitial } from "@/lib/news/rss-catalog.mjs";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 
 function PopupIdentity({
@@ -15,6 +16,7 @@ function PopupIdentity({
   onClose: () => void;
 }) {
   const followers = row.followers ? formatCount(row.followers) : "";
+  const at = displaySourceAt(row.handle);
   return (
     <div
       data-testid="feed-profile-identity"
@@ -34,7 +36,7 @@ function PopupIdentity({
           aria-hidden
           className="grid size-14 shrink-0 place-items-center rounded-full bg-paper text-lg font-medium text-mute"
         >
-          {(row.name || row.handle).charAt(0)}
+          {displaySourceInitial(row.handle, row.name)}
         </span>
       )}
       <div className="min-w-0 flex-1">
@@ -45,7 +47,7 @@ function PopupIdentity({
           ) : null}
           <GroupTag handle={row.handle} group={row.group} />
         </p>
-        <p className="text-sm text-mute">@{row.handle}</p>
+        {at ? <p className="text-sm text-mute">{at}</p> : null}
         {followers ? (
           <p className="mt-0.5 text-[12px] tabular-nums text-mute">
             {followers} seguidores
@@ -141,7 +143,7 @@ export function FeedProfilePopup({
         ref={panel}
         role="dialog"
         aria-modal="true"
-        aria-label={`Perfil @${row.handle}`}
+        aria-label={`Perfil ${row.name || displaySourceAt(row.handle) || row.handle}`}
         tabIndex={-1}
         data-testid="feed-profile-popup"
         className="relative z-10 w-full max-w-lg overflow-hidden rounded-md bg-paper-2 shadow-card outline-none"

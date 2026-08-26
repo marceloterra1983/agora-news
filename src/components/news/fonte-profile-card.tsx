@@ -5,6 +5,7 @@ import { ProfileEr } from "@/components/news/fontes-profile-er";
 import { Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
 import { formatCount } from "@/lib/news/format";
+import { isRssAccount } from "@/lib/news/rss-catalog.mjs";
 import { groupLabel } from "@/lib/news/groups";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { displayBlurb } from "@/lib/news/profiles";
@@ -56,18 +57,20 @@ export function FonteProfileCard({
         data-fonte-actions
         className="relative z-50 mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3"
       >
-        <Tip label={`Abrir @${row.handle} no X`}>
-          <a
-            href={`https://x.com/${row.handle}`}
-            target="_blank"
-            rel="noreferrer"
-            data-fonte-action="x"
-            aria-label={`Abrir @${row.handle} no X`}
-            className="grid size-[44px] place-items-center rounded-full border border-line bg-paper text-ink active:bg-paper-2"
-          >
-            <XLogo className="size-3.5 translate-x-px" />
-          </a>
-        </Tip>
+        {isRssAccount(row.handle) ? null : (
+          <Tip label={`Abrir @${row.handle} no X`}>
+            <a
+              href={`https://x.com/${row.handle}`}
+              target="_blank"
+              rel="noreferrer"
+              data-fonte-action="x"
+              aria-label={`Abrir @${row.handle} no X`}
+              className="grid size-[44px] place-items-center rounded-full border border-line bg-paper text-ink active:bg-paper-2"
+            >
+              <XLogo className="size-3.5 translate-x-px" />
+            </a>
+          </Tip>
+        )}
         <FonteControls
           handle={row.handle}
           starred={prefs.isStarred(row.handle)}

@@ -28,7 +28,7 @@ test("reader face opens a dialog that reuses the Fontes profile card", () => {
 
   assert.match(card, /data-testid=["']feed-profile-face["']/);
   assert.match(card, /onOpenProfile/);
-  assert.match(card, /Abrir perfil @/);
+  assert.match(card, /Abrir perfil /);
   assert.match(card, /aria-haspopup=["']dialog["']/);
   assert.match(card, /size-11|min-h-\[44px\]/);
 
@@ -43,7 +43,7 @@ test("reader face opens a dialog that reuses the Fontes profile card", () => {
   assert.match(popup, /data-fonte-action=["']group["']/);
   assert.match(popup, /<FonteProfileCard/);
   assert.match(popup, /data-testid=["']feed-profile-identity["']/);
-  assert.match(popup, /@{row.handle}/);
+  assert.match(popup, /displaySourceAt/);
   assert.match(popup, /formatCount\(row.followers\)/);
   assert.match(popup, /<GroupTag/);
   assert.match(popup, /width=\{56\}/);
@@ -108,7 +108,9 @@ test("Playwright feed: avatar opens the profile card and Escape closes it", asyn
     assert.ok(await dialog.locator("[data-fonte-actions]").count(), "ações do perfil");
     const identity = dialog.locator('[data-testid="feed-profile-identity"]');
     assert.ok(await identity.count(), "cabeçalho de identidade");
-    assert.match(String(await identity.innerText()), /@\w+/);
+    const identityText = String(await identity.innerText());
+    assert.doesNotMatch(identityText, /r_[a-f0-9]{12}/i);
+    assert.match(identityText, /@\w+|[A-Za-zÀ-ÿ]{2,}/);
     assert.ok(await identity.locator("[data-group]").count(), "grupo no topo");
     assert.ok(
       await dialog.getByText(/últimos? posts?/i).count(),

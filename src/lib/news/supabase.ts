@@ -1,7 +1,7 @@
 import { accountInFilter } from "./account-in-filter.mjs";
 import { postedAtQuery } from "./feed-more.mjs";
 import { PAGE_SIZE } from "./page-size.mjs";
-import { isRssAccount, rssLabelFor } from "./rss-catalog.mjs";
+import { storySourceFromAccount } from "./rss-catalog.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { isNewsRow } from "./news-row.mjs";
 import { supabaseApiKeyHeaders } from "./supabase-rest";
@@ -82,24 +82,11 @@ export function invalidateSupabaseList() {
   postCache.clear();
 }
 
-function handle(raw: string): { source: string; sourceLabel: string } {
-  const cleaned = raw.replace(/^@+/, "").trim() || "fonte";
-  return { source: cleaned, sourceLabel: `@${cleaned}` };
-}
-
 export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
-  const { source, sourceLabel: atLabel } = handle(p.account || "");
-  let sourceLabel = atLabel;
-  if (isRssAccount(p.account || "") || p.source === "rss") {
-    const host = (() => {
-      try {
-        return new URL(p.post_url || "").hostname.replace(/^www\./, "");
-      } catch {
-        return "";
-      }
-    })();
-    sourceLabel = rssLabelFor(p.account || "") || host || atLabel.replace(/^@/, "");
-  }
+  const { source, sourceLabel } = storySourceFromAccount(p.account || "", {
+    source: p.source || undefined,
+    postUrl: p.post_url || "",
+  });
   const title = (
     p.summary_pt ||
     p.translation_pt ||
