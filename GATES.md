@@ -1,26 +1,27 @@
-# Gates: ordenação por decisão do dono
+# Gates: toggle Mostrar fotos
 
-Scope: (a) feed sem Recente/Seguindo/Importante — toda fonte já é "seguida",
-o feed fica sempre em ordem recente; (b) Fontes volta a ordenar por chips com
-rótulo (Recente/Seguidores/Grupos/Favoritos), numa linha abaixo do header,
-no lugar do select no toolbar.
+Scope: o botão "Mostrar fotos" em Configurações liga/desliga de fato
+(`localStorage` + `html[data-images]` + mídia do feed some/volta).
 
-- [x] G1: nenhum vestígio de ordem no código de produto
-  CHECK: grep -rc "FEED_ORDENS\|normalizeOrdem\|feed-ordem\|Ordenar feed\|seguindo\|importante" src/components/news/feed.tsx src/routes/index.tsx src/lib/news/feed-rank.mjs | grep -v ":0" | wc -l
-  EXPECT: 0
-  EVIDENCE: 0
-
-- [x] G2: feed continua ordenado por data desc com desempate estável
-  CHECK: node --experimental-strip-types --test scripts/feed-rank.test.mjs
+- [x] G1: writeSettings({ showImages: false }) persiste e marca html data-images=off
+  CHECK: node --experimental-strip-types --test scripts/show-images-settings.test.mjs
   EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 62.658661
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 70.667973
 
-- [x] G3: Fontes ordena por chips rotulados numa linha abaixo do header; select extinto
-  CHECK: grep -c "FontesSortSelect\|<select" src/routes/fontes.tsx src/components/news/fontes-chip.tsx | grep -v ":0" | wc -l
-  EXPECT: 0
-  EVIDENCE: 0
+- [x] G2: evento agora-settings com { fromRemote: true } não apaga showImages do estado
+  CHECK: node --experimental-strip-types --test scripts/show-images-settings.test.mjs
+  EXPECT: fromRemote
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 65.82501
 
-- [x] G4: suíte, typecheck, lint e build verdes
-  CHECK: npm test && npm run typecheck && npm run lint && npm run build
-  EXPECT: eslint
-  EVIDENCE: ℹ Generated .output/nitro.json | [nitro] ✔ You can preview this build using npx vite preview
+- [x] G3: suíte do repo verde
+  CHECK: npm test
+  EXPECT: fail 0
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 7231.683173
+
+- [x] G4: typecheck e lint dos arquivos TS do fix
+  CHECK: npx tsc --noEmit && npx eslint src/lib/news/settings.ts src/lib/news/use-settings.ts src/lib/news/prefs-sync.ts scripts/show-images-settings.test.mjs --max-warnings=0 && echo lint-ok
+  EXPECT: lint-ok
+  EVIDENCE: lint-ok
+
+- [x] G5: no browser, clicar Mostrar fotos esconde [data-media] no feed
+  EVIDENCE: 8181 after fromRemote aria-checked=false (not null); click → on; feed data-images=off, 24/24 [data-media] display:none, 0 foto de matéria visível
