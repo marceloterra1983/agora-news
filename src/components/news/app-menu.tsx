@@ -6,6 +6,7 @@ import {
   Settings,
   Smartphone,
   UserRound,
+  Video,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -160,6 +161,14 @@ export function AppMenu() {
           >
             <Smartphone className="size-4 shrink-0" />
             Instalar o app
+          </Link>
+          <Link
+            to="/videos"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink hover:bg-paper-2"
+          >
+            <Video className="size-4 shrink-0" />
+            Vídeos
           </Link>
           <Link
             to="/configuracoes"
