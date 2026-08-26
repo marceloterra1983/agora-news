@@ -121,7 +121,8 @@ html[data-font="xl"] {
     margin-right: 0;
   }
 
-  [data-chrome="compact"] [data-section-switch] {
+  [data-chrome="compact"] [data-section-switch],
+  [data-chrome="compact"] [data-origin-switch] {
     display: inline-flex !important;
     align-items: center !important;
     min-height: 44px !important;
@@ -289,7 +290,8 @@ html[data-shell="phone"] [data-story] {
   margin-left: 0;
   margin-right: 0;
 }
-html[data-shell="phone"] [data-chrome="compact"] [data-section-switch] {
+html[data-shell="phone"] [data-chrome="compact"] [data-section-switch],
+html[data-shell="phone"] [data-chrome="compact"] [data-origin-switch] {
   display: inline-flex !important;
   align-items: center !important;
   min-height: 44px !important;

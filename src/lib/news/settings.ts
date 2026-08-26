@@ -7,6 +7,8 @@ export type AppSettings = {
   density: Density;
   typeface: Typeface;
   showImages: boolean;
+  showX: boolean;
+  showRss: boolean;
   highlightUnread: boolean;
   reduceMotion: boolean;
 };
@@ -57,6 +59,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   density: "regular",
   typeface: "literata",
   showImages: true,
+  showX: true,
+  showRss: true,
   highlightUnread: true,
   reduceMotion: false,
 };
@@ -77,9 +81,22 @@ function parse(raw: unknown): AppSettings {
     density: o.density === "compact" ? "compact" : "regular",
     typeface: parseTypeface(o.typeface),
     showImages: o.showImages !== false,
+    showX: o.showX !== false,
+    showRss: o.showRss !== false,
     highlightUnread: o.highlightUnread !== false,
     reduceMotion: o.reduceMotion === true,
   };
+}
+
+/** Nuvem sem chave nova não apaga showX/showRss locais. */
+export function mergeSettingsBlob(remote: unknown, local: unknown): AppSettings {
+  const r = remote && typeof remote === "object" ? (remote as Record<string, unknown>) : {};
+  const l = local && typeof local === "object" ? (local as Record<string, unknown>) : {};
+  const out: Record<string, unknown> = { ...l };
+  for (const [key, value] of Object.entries(r)) {
+    if (value !== undefined) out[key] = value;
+  }
+  return parse(out);
 }
 
 export function readSettings(): AppSettings {

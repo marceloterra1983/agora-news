@@ -24,6 +24,8 @@ import { handlesForGroup } from "@/lib/news/section-catalog.mjs";
 import { useSectionCatalog } from "@/lib/news/use-section-catalog";
 import { useFeedOlder } from "@/lib/news/use-feed-older";
 import { useFeedProfile } from "@/lib/news/use-feed-profile";
+import { filterStoriesByOrigin } from "@/lib/news/rss-catalog.mjs";
+import { useSettings } from "@/lib/news/use-settings";
 import { cn } from "@/lib/utils";
 import { tapIcon } from "./icon-btn";
 import { FeedProfilePopup } from "./feed-profile-popup";
@@ -47,6 +49,7 @@ export function Feed({
   const ingest = useNewsStore((s) => s.ingest);
   const storedStories = useNewsStore((s) => s.stories);
   const prefs = useFontesPrefs(category);
+  const { settings } = useSettings();
   const catalog = useSectionCatalog(category);
   const unread = useUnread();
   // Vazio no primeiro render para casar com o SSR (localStorage só existe no cliente).
@@ -88,6 +91,14 @@ export function Feed({
   );
 
   function inView(story: Story) {
+    if (
+      !filterStoriesByOrigin([story], {
+        showX: settings.showX,
+        showRss: settings.showRss,
+      }).length
+    ) {
+      return false;
+    }
     const h = normHandle(story.source || story.sourceLabel || "");
     if (h && prefs.isDisabled(h)) return false;
     if (group !== "all") {
@@ -174,7 +185,7 @@ export function Feed({
 
   const updatedAt = stories[0]?.publishedAt || data?.meta?.syncedAt;
   const updatedLabel = updatedAt ? relativeTime(updatedAt) : null;
-  const showMore = page.hasMore && stories.length > 0;
+  const showMore = Boolean(page.hasMore) && (stories.length > 0 || page.raw.length > 0);
 
   if (isError && !stories.length) {
     return (
@@ -217,9 +228,15 @@ export function Feed({
         <div className="mx-auto max-w-lg py-16 text-center" role="status">
           <p className="font-display text-2xl">Nada neste recorte</p>
           <p className="mt-2 text-sm text-ink-soft">
-            {group === "all"
-              ? "Todas as contas ativas estão pausadas. Reative em Fontes."
-              : "Nenhum post deste grupo no recorte atual."}
+            {!settings.showX && !settings.showRss
+              ? "Ligue o X ou o RSS no topo para ver posts."
+              : !settings.showX
+                ? "Nenhum post de site neste recorte. Ligue o X para ver as contas."
+                : !settings.showRss
+                  ? "Nenhum post RSS neste recorte. Ligue o RSS para ver os sites."
+                  : group === "all"
+                    ? "Todas as contas ativas estão pausadas. Reative em Fontes."
+                    : "Nenhum post deste grupo no recorte atual."}
           </p>
         </div>
       )}

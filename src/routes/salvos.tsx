@@ -5,7 +5,9 @@ import { StoryCard } from "@/components/news/story-card";
 import { Tip } from "@/components/news/icon-btn";
 import { useNewsStore } from "@/lib/news/store";
 import { routeMeta } from "@/lib/news/route-meta";
+import { filterStoriesByOrigin } from "@/lib/news/rss-catalog.mjs";
 import { groupSavedByCategory } from "@/lib/news/saved-groups.mjs";
+import { useSettings } from "@/lib/news/use-settings";
 import { listKnownSections } from "@/lib/news/sections";
 import {
   DEFAULT_SECTION,
@@ -30,7 +32,11 @@ function SavedPage() {
   const { secao } = Route.useSearch();
   const savedIds = useNewsStore((s) => s.savedIds);
   const stories = useNewsStore((s) => s.stories);
-  const items = savedIds.map((id) => stories[id]).filter(Boolean);
+  const { settings } = useSettings();
+  const items = filterStoriesByOrigin(
+    savedIds.map((id) => stories[id]).filter(Boolean),
+    { showX: settings.showX, showRss: settings.showRss },
+  );
   const groups = groupSavedByCategory(
     items.map((s) => ({ ...s, category: normalizeSection(s.category) })),
     listKnownSections(),

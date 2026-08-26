@@ -31,3 +31,8 @@ export function storySourceFromAccount(
 export function displaySourceByline(source: string, sourceLabel?: string | null): string;
 export function displaySourceInitial(source: string, sourceLabel?: string | null): string;
 export function displaySourceAt(source: string): string;
+export function storyIsRss(story: { id?: string; source?: string } | null | undefined): boolean;
+export function filterStoriesByOrigin<T extends { id?: string; source?: string }>(
+  stories: T[],
+  opts?: { showX?: boolean; showRss?: boolean },
+): T[];
