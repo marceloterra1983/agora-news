@@ -41,22 +41,23 @@ test("FonteControls can edit group and create a custom one", () => {
   assert.match(src, /addCustomGroup/);
 });
 
-test("Fontes sort lives in the AppChrome header toolbar as a labeled select", () => {
+test("Fontes sort são chips rotulados numa linha abaixo do header", () => {
   const chrome = read("src/components/news/app-chrome.tsx");
   const fontes = read("src/routes/fontes.tsx");
   assert.match(chrome, /toolbar\?:/);
   assert.match(chrome, /\{toolbar\}/);
   assert.match(fontes, /toolbar=\{/);
-  // Um select nativo rotulado cabe a 390px; 5 círculos de 44px não cabiam
-  // (o 5º ficava fora da janela de scroll invisível).
-  assert.match(fontes, /FontesSortSelect/);
+  // Decisão do dono: chips com rótulo no conteúdo, não select no header.
+  assert.match(fontes, /FontesSortChips/);
   const chip = read("src/components/news/fontes-chip.tsx");
-  assert.match(chip, /<select\b/);
   assert.match(chip, /aria-label="Ordenar fontes"/);
+  assert.match(chip, /data-testid="fontes-toolbar"/);
+  assert.doesNotMatch(`${fontes}\n${chip}`, /<select\b/);
   assert.doesNotMatch(fontes, /sticky top-\[57px\]/);
   const css = read("src/styles.css");
   assert.match(css, /--agora-header:\s*3\.75rem/);
 });
+
 
 test("group chips float in a fixed dock above the tab bar (decisão do dono)", () => {
   const chrome = read("src/components/news/app-chrome.tsx");

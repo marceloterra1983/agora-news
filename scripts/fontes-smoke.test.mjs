@@ -25,7 +25,12 @@ test("Fontes list and group faces have stable smoke hooks", () => {
     "utf8",
   );
   assert.match(page, /data-testid=["']fontes-list["']/);
-  assert.match(page, /data-testid=["']fontes-toolbar["']/);
+  // O toolbar de ordenação vive em fontes-chip.tsx (FontesSortChips).
+  assert.match(page, /FontesSortChips/);
+  assert.match(
+    readFileSync(join(root, "src/components/news/fontes-chip.tsx"), "utf8"),
+    /data-testid=["']fontes-toolbar["']/,
+  );
   assert.match(row, /data-testid=["']fonte-row["']/);
   assert.doesNotMatch(page, /src=\{f\.avatar \?\? ""\}/);
 });
@@ -72,7 +77,7 @@ test("Playwright opens /fontes and sees the catalog list", async (t) => {
     assert.ok(n >= 8, `esperava ≥8 fontes, veio ${n}`);
     assert.equal(await page.locator("h1").innerText(), "Fontes");
     assert.ok(
-      await page.getByRole("combobox", { name: "Ordenar fontes" }).count(),
+      await page.getByRole("button", { name: "Recente" }).count(),
     );
     const first = rows.first();
     const expand = first.locator("button[aria-expanded]").first();

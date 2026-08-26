@@ -86,9 +86,11 @@ test("landmark heading select: the shared shell uses native semantics", () => {
   assert.match(chrome, /aria-label="Assunto"/);
   assert.match(chrome, /data-section-chip[\s\S]{0,160}aria-pressed=\{on\}/);
   assert.doesNotMatch(chrome, /<select\b/);
+  // Ordenação de Fontes: chips rotulados com aria-pressed numa linha
+  // abaixo do header (decisão do dono; o select foi removido).
   assert.match(
     read("src/components/news/fontes-chip.tsx"),
-    /<select\b[\s\S]{0,200}aria-label=/,
+    /aria-label="Ordenar fontes"[\s\S]{0,400}aria-pressed=\{sort === s\.id\}/,
   );
   assert.doesNotMatch(
     `${chrome}\n${controls}`,
@@ -700,10 +702,7 @@ test("Playwright hydration URL theme media and grouped empty remain stable", asy
       .getByRole("status")
       .filter({ hasText: /nenhum/i })
       .waitFor();
-    // A ordenação de Fontes é um select nativo no toolbar do header.
-    await page
-      .getByRole("combobox", { name: "Ordenar fontes" })
-      .selectOption("followers");
+    await page.getByRole("button", { name: "Seguidores" }).click();
     await page.waitForURL(
       (url) => url.searchParams.get("sort") === "followers",
     );

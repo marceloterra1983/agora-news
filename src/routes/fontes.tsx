@@ -1,6 +1,6 @@
 import { AppChrome } from "@/components/news/app-chrome";
 import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
-import { FontesChip, FontesSortSelect } from "@/components/news/fontes-chip";
+import { FontesChip, FontesSortChips } from "@/components/news/fontes-chip";
 import { FontesSites } from "@/components/news/fontes-sites";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
@@ -131,13 +131,7 @@ function FontesPage() {
     <AppChrome
       category={secao}
       toolbar={
-        <div
-          className="flex min-w-0 flex-1 items-center gap-1"
-          role="toolbar"
-          aria-label="Ordenar e editar fontes"
-          data-testid="fontes-toolbar"
-        >
-          <FontesSortSelect sort={sort} onChange={changeSort} />
+        <div className="flex min-w-0 flex-1 items-center gap-1">
           <FontesChip
             active={picking}
             label="Mover em lote"
@@ -153,6 +147,7 @@ function FontesPage() {
     >
       <div aria-busy={isFetching} className="mx-auto max-w-2xl px-4 pb-24 max-sm:max-w-none">
         <h1 className="sr-only">Fontes</h1>
+        <FontesSortChips sort={sort} onChange={changeSort} />
         <label className="mt-3 block">
           <span className="sr-only">Filtrar no catálogo</span>
           <input
