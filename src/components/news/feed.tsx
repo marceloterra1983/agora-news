@@ -4,8 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { loadNews, newsFromFallback } from "@/lib/news/server";
 import { useNewsStore } from "@/lib/news/store";
 import { type Category, type Story } from "@/lib/news/types";
-import { FEED_ORDENS, rankStories } from "@/lib/news/feed-rank.mjs";
-import { useExtraFontes } from "@/lib/news/use-extra-fontes";
+import { rankStories } from "@/lib/news/feed-rank.mjs";
 import { normHandle } from "@/lib/news/fontes-prefs";
 import { showFavoriteAlerts } from "@/lib/news/notify-favorites";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
@@ -39,19 +38,14 @@ export function Feed({
   query,
   initial,
   group: groupProp,
-  ordem = "recente",
-  onOrdem,
 }: {
   category: Category;
   query?: string;
   initial?: NewsPayload;
   group?: string;
-  ordem?: "recente" | "seguindo" | "importante";
-  onOrdem?: (next: "recente" | "seguindo" | "importante") => void;
 }) {
   const ingest = useNewsStore((s) => s.ingest);
   const storedStories = useNewsStore((s) => s.stories);
-  const extras = useExtraFontes();
   const prefs = useFontesPrefs(category);
   const catalog = useSectionCatalog(category);
   const unread = useUnread();
@@ -114,14 +108,7 @@ export function Feed({
   });
 
   const merged = mergeAvatarsIntoStories(page.visible, storedStories);
-  const stories = rankStories(merged, ordem, {
-    starred: prefs.starred,
-    watched: extras.map((row) => row.handle),
-    read: unread.ready
-      ? merged.filter((s) => !unread.isUnread(s.id)).map((s) => s.id)
-      : [],
-    hasBaseline: unread.hasBaseline,
-  });
+  const stories = rankStories(merged);
   const profile = useFeedProfile(category, stories, prefs);
 
   useEffect(() => {
@@ -212,28 +199,6 @@ export function Feed({
           </time>
         </p>
       ) : null}
-
-      <div
-        className="mb-4 flex flex-wrap gap-2"
-        role="toolbar"
-        aria-label="Ordenar feed"
-        data-testid="feed-ordem"
-      >
-        {FEED_ORDENS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={ordem === id}
-            onClick={() => onOrdem?.(id)}
-            className={cn(
-              "inline-flex h-8 items-center rounded-full px-3 text-[12px] font-semibold",
-              ordem === id ? "bg-ink text-paper" : "bg-paper-2 text-mute",
-            )}
-          >
-            {id === "recente" ? "Recente" : id === "seguindo" ? "Seguindo" : "Importante"}
-          </button>
-        ))}
-      </div>
 
       {stories.length ? (
         stories.map((story, index) => (

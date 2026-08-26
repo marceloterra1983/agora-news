@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
 import { FONTES_SORTS, type SortKey } from "@/lib/news/fontes-sort";
 import { cn } from "@/lib/utils";
 import { tapIcon, Tip } from "./icon-btn";
 
-export function FontesSortSelect({
+/** Chips rotulados de ordenação, na linha abaixo do header (decisão do dono). */
+export function FontesSortChips({
   sort,
   onChange,
 }: {
@@ -12,24 +12,27 @@ export function FontesSortSelect({
   onChange: (next: SortKey) => void;
 }) {
   return (
-    <span className="relative shrink-0">
-      <select
-        value={sort}
-        onChange={(event) => onChange(event.target.value as SortKey)}
-        aria-label="Ordenar fontes"
-        className="h-11 appearance-none rounded-full bg-paper-2 pl-3 pr-8 text-[13px] font-semibold text-ink"
-      >
-        {FONTES_SORTS.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        aria-hidden
-        className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-mute"
-      />
-    </span>
+    <div
+      role="toolbar"
+      aria-label="Ordenar fontes"
+      data-testid="fontes-toolbar"
+      className="mt-3 flex flex-wrap gap-2"
+    >
+      {FONTES_SORTS.map((s) => (
+        <button
+          key={s.id}
+          type="button"
+          aria-pressed={sort === s.id}
+          onClick={() => onChange(s.id)}
+          className={cn(
+            "inline-flex h-8 items-center rounded-full px-3 text-[12px] font-semibold",
+            sort === s.id ? "bg-ink text-paper" : "bg-paper-2 text-mute",
+          )}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

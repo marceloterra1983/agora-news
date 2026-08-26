@@ -7,13 +7,12 @@ import { allGroupIds, groupHint, groupLabel } from "./groups";
 import { profilesFor } from "./profiles";
 import type { Category } from "./types";
 
-export type SortKey = "recent" | "followers" | "groups" | "starred";
+export type SortKey = "recent" | "groups" | "starred";
 
 export const FONTES_SORT_KEY = "agora-fontes-sort";
 
 export const FONTES_SORTS: { id: SortKey; label: string }[] = [
   { id: "recent", label: "Recente" },
-  { id: "followers", label: "Seguidores" },
   { id: "groups", label: "Grupos" },
   { id: "starred", label: "Favoritos" },
 ];
@@ -22,7 +21,7 @@ export function readStoredSort(): SortKey {
   if (typeof window === "undefined") return "recent";
   try {
     const v = localStorage.getItem(FONTES_SORT_KEY);
-    if (v === "recent" || v === "followers" || v === "groups" || v === "starred") return v;
+    if (v === "recent" || v === "groups" || v === "starred") return v;
   } catch {
     /* ignore */
   }
@@ -92,7 +91,6 @@ export function sortFontesRows(
   const fav = new Set(starred);
   const list = sort === "starred" ? rows.filter((r) => fav.has(normHandle(r.handle))) : rows;
   return [...list].sort((a, b) => {
-    if (sort === "followers") return (b.followers || 0) - (a.followers || 0) || byRecent(a, b);
     return byRecent(a, b);
   });
 }
