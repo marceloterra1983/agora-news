@@ -1,39 +1,39 @@
 type StyleKey = "labs" | "lideres" | "pesquisa" | "imprensa" | "builders" | "novos";
 
-/** Cores sóbrias dos chips/tags — hue vem do tema, joia no dock. */
+/** Joia do dock: só o token de hue. Cor fica em [data-jewel] no tema. */
 export const GROUP_STYLE: Record<
   StyleKey,
   { chip: string; chipOn: string; tag: string }
 > = {
   labs: {
-    chip: "bg-[color-mix(in_oklab,var(--agora-hue-labs)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-labs)_45%,#f0e9e0)]",
-    chipOn: "bg-[color-mix(in_oklab,var(--agora-hue-labs)_58%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-labs)_28%,#f0e9e0)] ring-1 ring-[color-mix(in_oklab,var(--agora-hue-labs)_40%,transparent)]",
-    tag: "bg-[color-mix(in_oklab,var(--agora-hue-labs)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-labs)_45%,#f0e9e0)]",
+    chip: "[--chip-hue:var(--agora-hue-labs)]",
+    chipOn: "[--chip-hue:var(--agora-hue-labs)]",
+    tag: "[--chip-hue:var(--agora-hue-labs)]",
   },
   lideres: {
-    chip: "bg-[color-mix(in_oklab,var(--agora-hue-lideres)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-lideres)_45%,#f0e9e0)]",
-    chipOn: "bg-[color-mix(in_oklab,var(--agora-hue-lideres)_58%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-lideres)_28%,#f0e9e0)] ring-1 ring-[color-mix(in_oklab,var(--agora-hue-lideres)_40%,transparent)]",
-    tag: "bg-[color-mix(in_oklab,var(--agora-hue-lideres)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-lideres)_45%,#f0e9e0)]",
+    chip: "[--chip-hue:var(--agora-hue-lideres)]",
+    chipOn: "[--chip-hue:var(--agora-hue-lideres)]",
+    tag: "[--chip-hue:var(--agora-hue-lideres)]",
   },
   pesquisa: {
-    chip: "bg-[color-mix(in_oklab,var(--agora-hue-pesquisa)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-pesquisa)_45%,#f0e9e0)]",
-    chipOn: "bg-[color-mix(in_oklab,var(--agora-hue-pesquisa)_58%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-pesquisa)_28%,#f0e9e0)] ring-1 ring-[color-mix(in_oklab,var(--agora-hue-pesquisa)_40%,transparent)]",
-    tag: "bg-[color-mix(in_oklab,var(--agora-hue-pesquisa)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-pesquisa)_45%,#f0e9e0)]",
+    chip: "[--chip-hue:var(--agora-hue-pesquisa)]",
+    chipOn: "[--chip-hue:var(--agora-hue-pesquisa)]",
+    tag: "[--chip-hue:var(--agora-hue-pesquisa)]",
   },
   imprensa: {
-    chip: "bg-[color-mix(in_oklab,var(--agora-hue-imprensa)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-imprensa)_45%,#f0e9e0)]",
-    chipOn: "bg-[color-mix(in_oklab,var(--agora-hue-imprensa)_58%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-imprensa)_28%,#f0e9e0)] ring-1 ring-[color-mix(in_oklab,var(--agora-hue-imprensa)_40%,transparent)]",
-    tag: "bg-[color-mix(in_oklab,var(--agora-hue-imprensa)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-imprensa)_45%,#f0e9e0)]",
+    chip: "[--chip-hue:var(--agora-hue-imprensa)]",
+    chipOn: "[--chip-hue:var(--agora-hue-imprensa)]",
+    tag: "[--chip-hue:var(--agora-hue-imprensa)]",
   },
   builders: {
-    chip: "bg-[color-mix(in_oklab,var(--agora-hue-builders)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-builders)_45%,#f0e9e0)]",
-    chipOn: "bg-[color-mix(in_oklab,var(--agora-hue-builders)_58%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-builders)_28%,#f0e9e0)] ring-1 ring-[color-mix(in_oklab,var(--agora-hue-builders)_40%,transparent)]",
-    tag: "bg-[color-mix(in_oklab,var(--agora-hue-builders)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-builders)_45%,#f0e9e0)]",
+    chip: "[--chip-hue:var(--agora-hue-builders)]",
+    chipOn: "[--chip-hue:var(--agora-hue-builders)]",
+    tag: "[--chip-hue:var(--agora-hue-builders)]",
   },
   novos: {
-    chip: "bg-[color-mix(in_oklab,var(--agora-hue-novos)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-novos)_45%,#f0e9e0)]",
-    chipOn: "bg-[color-mix(in_oklab,var(--agora-hue-novos)_58%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-novos)_28%,#f0e9e0)] ring-1 ring-[color-mix(in_oklab,var(--agora-hue-novos)_40%,transparent)]",
-    tag: "bg-[color-mix(in_oklab,var(--agora-hue-novos)_42%,#1c1916)] text-[color-mix(in_oklab,var(--agora-hue-novos)_45%,#f0e9e0)]",
+    chip: "[--chip-hue:var(--agora-hue-novos)]",
+    chipOn: "[--chip-hue:var(--agora-hue-novos)]",
+    tag: "[--chip-hue:var(--agora-hue-novos)]",
   },
 };
 

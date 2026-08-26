@@ -71,6 +71,17 @@
   --agora-hue-novos: #c4a860;
 }
 
+[data-jewel] {
+  background: color-mix(in oklab, var(--chip-hue) 42%, #1c1916);
+  color: color-mix(in oklab, var(--chip-hue) 45%, #f0e9e0);
+}
+
+[data-jewel][aria-pressed="true"] {
+  background: color-mix(in oklab, var(--chip-hue) 58%, #1c1916);
+  color: color-mix(in oklab, var(--chip-hue) 28%, #f0e9e0);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--chip-hue) 40%, transparent);
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
