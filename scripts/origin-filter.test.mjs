@@ -7,7 +7,7 @@ import {
   filterStoriesByOrigin,
   storyIsRss,
 } from "../src/lib/news/rss-catalog.mjs";
-import { writeSettings } from "../src/lib/news/settings.ts";
+import { mergeSettingsBlob, writeSettings } from "../src/lib/news/settings.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
@@ -49,6 +49,16 @@ test("filterStoriesByOrigin keeps chronological subset", () => {
   assert.deepEqual(filterStoriesByOrigin(list, { showX: true, showRss: false }), [x]);
   assert.deepEqual(filterStoriesByOrigin(list, { showX: false, showRss: true }), [rss]);
   assert.deepEqual(filterStoriesByOrigin(list, { showX: false, showRss: false }), []);
+});
+
+test("mergeSettingsBlob keeps local origin flags when remote omits them", () => {
+  const merged = mergeSettingsBlob(
+    { showImages: true, fontSize: "md" },
+    { showX: false, showRss: true, showImages: false },
+  );
+  assert.equal(merged.showX, false);
+  assert.equal(merged.showRss, true);
+  assert.equal(merged.showImages, true);
 });
 
 test("writeSettings persists showX/showRss", (t) => {

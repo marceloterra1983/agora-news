@@ -88,6 +88,17 @@ function parse(raw: unknown): AppSettings {
   };
 }
 
+/** Nuvem sem chave nova não apaga showX/showRss locais. */
+export function mergeSettingsBlob(remote: unknown, local: unknown): AppSettings {
+  const r = remote && typeof remote === "object" ? (remote as Record<string, unknown>) : {};
+  const l = local && typeof local === "object" ? (local as Record<string, unknown>) : {};
+  const out: Record<string, unknown> = { ...l };
+  for (const [key, value] of Object.entries(r)) {
+    if (value !== undefined) out[key] = value;
+  }
+  return parse(out);
+}
+
 export function readSettings(): AppSettings {
   if (typeof window === "undefined") return { ...DEFAULT_SETTINGS };
   try {

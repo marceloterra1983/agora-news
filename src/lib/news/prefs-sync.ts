@@ -14,7 +14,7 @@ import {
 import { loadCustomGroups, replaceCustomGroups } from "./groups";
 import { mergeCloudPrefs } from "./prefs-merge";
 import { applyBySection, snapshotBySection } from "./section-prefs.mjs";
-import { applySettings, readSettings, SETTINGS_KEY } from "./settings";
+import { applySettings, mergeSettingsBlob, readSettings, SETTINGS_KEY } from "./settings";
 import { applyTheme, type ThemeMode } from "./theme";
 import { DEFAULT_SECTION } from "./types";
 import { loadPrefs, savePrefs, type CloudPrefs } from "./prefs-server";
@@ -74,7 +74,18 @@ function writeLocal(prefs: CloudPrefs) {
       localStorage.setItem("agora-fontes-notify-v1", JSON.stringify(prefs.notify));
     }
     if (prefs.fontesRev) setFontesRev(prefs.fontesRev);
-    if (prefs.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(prefs.settings));
+    if (prefs.settings) {
+      let current = {};
+      try {
+        current = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") as object;
+      } catch {
+        current = {};
+      }
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify(mergeSettingsBlob(prefs.settings, current)),
+      );
+    }
     if (prefs.theme) localStorage.setItem("agora-theme", themeMode(prefs.theme));
     if (Array.isArray(prefs.extras)) replaceExtraFontes(prefs.extras, { fromRemote: true });
     if (Array.isArray(prefs.rssFeeds)) replaceRssFeeds(prefs.rssFeeds, { silent: true });
