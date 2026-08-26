@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import type { VideoWithChannel } from "@/lib/news/youtube-types";
-import { formatRelativeTime } from "@/lib/news/format";
+import { relativeTime } from "@/lib/news/format";
 
 export function VideoCard({ video }: { video: VideoWithChannel }) {
   return (
     <Link
-      to="/videos/$videoId"
-      params={{ videoId: video.video_id }}
+      to="/videos/$id"
+      params={{ id: video.video_id }}
       className="group block overflow-hidden rounded-lg border border-line bg-paper hover:border-ink-soft transition-colors no-underline"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-paper-2">
@@ -20,7 +20,7 @@ export function VideoCard({ video }: { video: VideoWithChannel }) {
       <div className="p-4">
         <p className="text-xs text-mute">
           {video.channel?.name || video.channel_id} ·{" "}
-          {formatRelativeTime(video.published_at)}
+          {relativeTime(video.published_at)}
         </p>
         <h3 className="mt-1 font-semibold leading-snug text-ink group-hover:text-ink">
           {video.title}

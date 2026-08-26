@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import type { VideoWithChannel } from "@/lib/news/youtube-types";
-import { formatRelativeTime } from "@/lib/news/format";
+import { relativeTime } from "@/lib/news/format";
 
 function formatDuration(seconds: number | null): string {
   if (!seconds || seconds <= 0) return "";
@@ -17,7 +17,7 @@ export function VideoDetail({ video }: { video: VideoWithChannel }) {
       <div className="mb-4 flex items-center gap-2 text-xs text-mute">
         <span>{video.channel?.name || video.channel_id}</span>
         <span>·</span>
-        <span>{formatRelativeTime(video.published_at)}</span>
+        <span>{relativeTime(video.published_at)}</span>
         {video.duration_seconds && (
           <>
             <span>·</span>

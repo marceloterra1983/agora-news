@@ -25,6 +25,8 @@ import { Route as ApiProfileRouteImport } from './routes/api/profile'
 import { Route as ApiPushRouteImport } from './routes/api/push'
 import { Route as ApiWatchRouteImport } from './routes/api/watch'
 import { Route as MateriaIdRouteImport } from './routes/materia.$id'
+import { Route as VideosRouteImport } from './routes/videos'
+import { Route as VideosIdRouteImport } from './routes/videos.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiHealthLiveRouteImport } from './routes/api/health.live'
 
@@ -108,6 +110,16 @@ const MateriaIdRoute = MateriaIdRouteImport.update({
   path: '/materia/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VideosRoute = VideosRouteImport.update({
+  id: '/videos',
+  path: '/videos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VideosIdRoute = VideosIdRouteImport.update({
+  id: '/videos/$id',
+  path: '/videos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -136,6 +148,8 @@ export interface FileRoutesByFullPath {
   '/api/push': typeof ApiPushRoute
   '/api/watch': typeof ApiWatchRoute
   '/materia/$id': typeof MateriaIdRoute
+  '/videos': typeof VideosRoute
+  '/videos/$id': typeof VideosIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/health/live': typeof ApiHealthLiveRoute
 }
@@ -148,6 +162,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/referencias': typeof ReferenciasRoute
   '/salvos': typeof SalvosRoute
+  '/videos': typeof VideosRoute
+  '/videos/$id': typeof VideosIdRoute
   '/api/cache': typeof ApiCacheRoute
   '/api/feed': typeof ApiFeedRoute
   '/api/health': typeof ApiHealthRouteWithChildren
@@ -177,6 +193,8 @@ export interface FileRoutesById {
   '/api/push': typeof ApiPushRoute
   '/api/watch': typeof ApiWatchRoute
   '/materia/$id': typeof MateriaIdRoute
+  '/videos': typeof VideosRoute
+  '/videos/$id': typeof VideosIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/health/live': typeof ApiHealthLiveRoute
 }
@@ -199,6 +217,8 @@ export interface FileRouteTypes {
     | '/api/push'
     | '/api/watch'
     | '/materia/$id'
+    | '/videos'
+    | '/videos/$id'
     | '/api/auth/$'
     | '/api/health/live'
   fileRoutesByTo: FileRoutesByTo
@@ -219,6 +239,8 @@ export interface FileRouteTypes {
     | '/api/push'
     | '/api/watch'
     | '/materia/$id'
+    | '/videos'
+    | '/videos/$id'
     | '/api/auth/$'
     | '/api/health/live'
   id:
@@ -239,6 +261,8 @@ export interface FileRouteTypes {
     | '/api/push'
     | '/api/watch'
     | '/materia/$id'
+    | '/videos'
+    | '/videos/$id'
     | '/api/auth/$'
     | '/api/health/live'
   fileRoutesById: FileRoutesById
@@ -260,6 +284,8 @@ export interface RootRouteChildren {
   ApiPushRoute: typeof ApiPushRoute
   ApiWatchRoute: typeof ApiWatchRoute
   MateriaIdRoute: typeof MateriaIdRoute
+  VideosRoute: typeof VideosRoute
+  VideosIdRoute: typeof VideosIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -377,6 +403,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MateriaIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/videos': {
+      id: '/videos'
+      path: '/videos'
+      fullPath: '/videos'
+      preLoaderRoute: typeof VideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/videos/$id': {
+      id: '/videos/$id'
+      path: '/videos/$id'
+      fullPath: '/videos/$id'
+      preLoaderRoute: typeof VideosIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -423,6 +463,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPushRoute: ApiPushRoute,
   ApiWatchRoute: ApiWatchRoute,
   MateriaIdRoute: MateriaIdRoute,
+  VideosRoute: VideosRoute,
+  VideosIdRoute: VideosIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

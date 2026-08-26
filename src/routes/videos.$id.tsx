@@ -8,8 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { loadVideoById } from "@/lib/news/server-youtube";
 import { routeMeta } from "@/lib/news/route-meta";
 
-export const Route = createFileRoute("/videos/$videoId")({
-  loader: async ({ params }) => loadVideoById({ data: params.videoId }),
+export const Route = createFileRoute("/videos/$id")({
+  loader: async ({ params }) => loadVideoById({ data: params.id }),
   head: ({ loaderData }) => ({
     meta: routeMeta(
       loaderData?.title || "Vídeo",
@@ -20,11 +20,11 @@ export const Route = createFileRoute("/videos/$videoId")({
 });
 
 function VideoPage() {
-  const { videoId } = Route.useParams();
+  const { id } = Route.useParams();
   const loaded = Route.useLoaderData();
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["video", videoId],
-    queryFn: () => loadVideoById({ data: videoId }),
+    queryKey: ["video", id],
+    queryFn: () => loadVideoById({ data: id }),
     initialData: loaded ?? undefined,
     staleTime: 60_000,
     refetchOnMount: false,

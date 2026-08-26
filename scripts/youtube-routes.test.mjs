@@ -7,7 +7,7 @@ import test from "node:test";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const videosRoute = readFileSync(join(root, "src/routes/videos.tsx"), "utf8");
 const videoDetailRoute = readFileSync(
-  join(root, "src/routes/videos.$videoId.tsx"),
+  join(root, "src/routes/videos.$id.tsx"),
   "utf8",
 );
 
@@ -27,7 +27,7 @@ test("videos route has channel filter", () => {
 
 test("video detail route exports Route", () => {
   assert.match(videoDetailRoute, /export const Route = createFileRoute/);
-  assert.match(videoDetailRoute, /createFileRoute\("\/videos\/\$videoId"\)/);
+  assert.match(videoDetailRoute, /createFileRoute\("\/videos\/\$id"\)/);
 });
 
 test("video detail route has Ao Vivo badge pattern", () => {
@@ -46,7 +46,7 @@ test("VideoCard component has thumbnail and channel name", () => {
   );
   assert.match(videoCard, /thumbnail_url/);
   assert.match(videoCard, /channel\?\.name/);
-  assert.match(videoCard, /formatRelativeTime/);
+  assert.match(videoCard, /relativeTime/);
 });
 
 test("VideoDetail component has YouTube CTA", () => {
