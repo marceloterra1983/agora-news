@@ -41,6 +41,15 @@ function fromTweet(row: {
   };
 }
 
+export function pickBuzzRow<T extends { id?: string }>(
+  rows: T[],
+  tweetId?: string,
+): T | null {
+  if (!rows.length) return null;
+  if (!tweetId) return rows[0] ?? null;
+  return rows.find((r) => String(r.id) === String(tweetId)) ?? null;
+}
+
 function pickBuzz(hit: { at: number } & PostBuzz): PostBuzz {
   return {
     likes: hit.likes,
@@ -97,8 +106,8 @@ export async function fetchLastBuzz(handle: string, tweetId?: string): Promise<P
     };
     const rows = body.results ?? [];
     if (!rows.length) return hit ? pickBuzz(hit) : null;
-    const picked =
-      tweetId ? rows.find((r) => String(r.id) === String(tweetId)) ?? rows[0] : rows[0];
+    const picked = pickBuzzRow(rows, tweetId);
+    if (!picked) return hit ? pickBuzz(hit) : null;
     const first = fromTweet(picked);
     const rates = rows.map((r) => engagementRate(fromTweet(r))).filter((n) => n > 0);
     const profileEr = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
