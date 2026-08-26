@@ -702,9 +702,9 @@ test("Playwright hydration URL theme media and grouped empty remain stable", asy
       .getByRole("status")
       .filter({ hasText: /nenhum/i })
       .waitFor();
-    await page.getByRole("button", { name: "Seguidores" }).click();
+    await page.getByRole("button", { name: "Favoritos" }).click();
     await page.waitForURL(
-      (url) => url.searchParams.get("sort") === "followers",
+      (url) => url.searchParams.get("sort") === "starred",
     );
 
     await page.goto(`${base}/buscar?secao=ai`, { waitUntil: "networkidle" });
