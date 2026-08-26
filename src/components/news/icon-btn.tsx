@@ -9,7 +9,7 @@ export const tapIcon =
   "grid size-[44px] shrink-0 place-items-center rounded-full";
 
 const BASE =
-  `${tapIcon} border border-line text-ink transition-colors hover:bg-paper-2 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50`;
+  `${tapIcon} icon-btn-press border border-line text-ink disabled:pointer-events-none disabled:opacity-50`;
 
 export function Tip({
   label,

@@ -176,7 +176,7 @@ export function StoryCard({
   return (
     <article
       className={cn(
-        "group relative",
+        "relative",
         variant === "grid" && "flex flex-col gap-3",
         variant === "row" &&
           "grid grid-cols-[7.5rem_1fr] gap-4 sm:grid-cols-[11rem_1fr]",
@@ -199,7 +199,7 @@ export function StoryCard({
             src={story.image}
             alt={story.title}
             priority={priority}
-            className="size-full transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+            className="size-full"
           />
         </Link>
       )}
