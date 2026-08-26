@@ -20,3 +20,14 @@ export function rssLabelFor(
   owned?: Array<{ title?: string; account?: string }>,
 ): string;
 export function isRssAccount(handle: string): boolean;
+export function storySourceFromAccount(
+  account: string,
+  opts?: {
+    source?: string;
+    postUrl?: string;
+    owned?: Array<{ title?: string; account?: string }>;
+  },
+): { source: string; sourceLabel: string };
+export function displaySourceByline(source: string, sourceLabel?: string | null): string;
+export function displaySourceInitial(source: string, sourceLabel?: string | null): string;
+export function displaySourceAt(source: string): string;
