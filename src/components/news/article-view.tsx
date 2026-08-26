@@ -10,6 +10,7 @@ import { extraAvatarFor, loadExtraFontes } from "@/lib/news/extra-fontes";
 import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { loadTweetEmbed } from "@/lib/news/server";
 import { displayBody, displayTitle, relativeTime } from "@/lib/news/format";
+import { displaySourceByline, displaySourceInitial } from "@/lib/news/rss-catalog.mjs";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
 import { StoryAssetBlock } from "./story-media";
@@ -62,6 +63,8 @@ export function ArticleView({ story }: { story: Story }) {
   const title = displayTitle(story.title);
   const bodyText = story.body || story.excerpt;
   const showTitle = isDistinctTitle(title, displayBody(bodyText));
+  const byline = displaySourceByline(story.source, story.sourceLabel);
+  const initial = displaySourceInitial(story.source, story.sourceLabel);
 
   return (
     <article data-post="" className="mx-auto max-w-3xl max-sm:max-w-none">
@@ -84,12 +87,12 @@ export function ArticleView({ story }: { story: Story }) {
             aria-hidden
             className="grid size-[44px] shrink-0 place-items-center rounded-full bg-paper-2 text-[11px] font-medium text-ink"
           >
-            {story.source.replace(/^@/, "").charAt(0).toUpperCase()}
+            {initial}
           </span>
         )}
         <span className="flex min-w-0 flex-wrap items-center gap-1.5 pt-1.5">
-          <span className="break-all lowercase">
-            @{story.source.replace(/^@/, "")}
+          <span className={byline.startsWith("@") ? "break-all lowercase" : "break-all"}>
+            {byline}
           </span>
           <GroupTag handle={story.source} />
           <span aria-hidden> · </span>
@@ -144,7 +147,7 @@ export function ArticleView({ story }: { story: Story }) {
       {who ? (
         <p className="mt-8 border-t border-line pt-4 text-[14px] leading-relaxed text-ink-soft">
           <span className="font-semibold text-ink">
-            Sobre @{story.source.replace(/^@/, "")}
+            Sobre {byline}
           </span>{" "}
           · {who}
         </p>
@@ -156,7 +159,7 @@ export function ArticleView({ story }: { story: Story }) {
             target="_blank"
             rel="noreferrer"
             data-cta="open-x"
-            label="Abrir no X"
+            label={byline.startsWith("@") ? "Abrir no X" : "Abrir matéria"}
           >
             <XLogo className="size-3.5" />
           </IconLink>

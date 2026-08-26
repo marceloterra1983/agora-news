@@ -4,6 +4,7 @@ import { Bookmark, BookmarkCheck } from "lucide-react";
 import type { Story } from "@/lib/news/types";
 import { extraAvatarFor } from "@/lib/news/extra-fontes";
 import { relativeTime, displayBody, displayTitle } from "@/lib/news/format";
+import { displaySourceByline, displaySourceInitial } from "@/lib/news/rss-catalog.mjs";
 import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
@@ -66,7 +67,8 @@ export function StoryCard({
   }, [story.avatar, story.source]);
 
   if (variant === "reader") {
-    const handle = story.source.replace(/^@/, "");
+    const byline = displaySourceByline(story.source, story.sourceLabel);
+    const initial = displaySourceInitial(story.source, story.sourceLabel);
     const faceNode = face ? (
       <img
         src={face}
@@ -81,7 +83,7 @@ export function StoryCard({
         aria-hidden
         className="grid size-6 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-ink"
       >
-        {handle.charAt(0).toUpperCase()}
+        {initial}
       </span>
     );
     return (
@@ -106,7 +108,7 @@ export function StoryCard({
             <button
               type="button"
               data-testid="feed-profile-face"
-              aria-label={`Abrir perfil @${handle}`}
+              aria-label={`Abrir perfil ${byline}`}
               aria-haspopup="dialog"
               aria-expanded={profileOpen || undefined}
               onClick={() => onOpenProfile(story.source)}
@@ -117,7 +119,7 @@ export function StoryCard({
           ) : (
             <span className="grid shrink-0 place-items-center">{faceNode}</span>
           )}
-          <span className="lowercase">@{handle}</span>
+          <span className={byline.startsWith("@") ? "lowercase" : undefined}>{byline}</span>
           <GroupTag handle={story.source} />
           <span aria-hidden>·</span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>

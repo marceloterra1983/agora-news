@@ -1,31 +1,33 @@
-# Gates: tighten motion per emil review
+# Gates: RSS source byline
 
-Scope: apagar zoom da foto em Salvos, press de IconBtn a 160ms/0.97 com hover de cor gated, reduced-motion sem zerar cor/opacity.
+Scope: Contas RSS `r_<hex>` aparecem no feed/matéria/perfil pelo título editorial (TecMundo), nunca como `@r_…`.
 
-- [x] G1: grep no produto sem group-hover:scale na story-card
-  CHECK: if grep -F "group-hover:scale" src/components/news/story-card.tsx; then echo G1_FAIL; else echo G1_OK no group-hover:scale; fi
-  EXPECT: G1_OK
-  EVIDENCE: G1_OK no group-hover:scale
+- [x] G1: Helper de byline do seed TecMundo
+  CHECK: node --experimental-strip-types --test scripts/rss-source-display.test.mjs
+  EXPECT: fail 0
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 149.608222
 
-- [x] G2: IconBtn tem transition de transform 160ms + scale 0.97; hover de cor gated
-  CHECK: node --input-type=module -e "import { readFileSync } from 'node:fs'; const icon=readFileSync('src/components/news/icon-btn.tsx','utf8'); const css=readFileSync('src/styles.css','utf8'); const src=icon+css; const hasScale=/scale\\(0\\.97\\)|active:scale-\\[0\\.97\\]/.test(src); const hasDur=/160ms/.test(src); const hasEase=/cubic-bezier\\(0\\.23,\\s*1,\\s*0\\.32,\\s*1\\)/.test(src); const hasHoverGate=/hover:\\s*hover/.test(src)&&/pointer:\\s*fine/.test(src); const noOld=!icon.includes('active:scale-[0.96]'); console.log(hasScale&&hasDur&&hasEase&&hasHoverGate&&noOld?'G2_OK':JSON.stringify({hasScale,hasDur,hasEase,hasHoverGate,noOld}));"
-  EXPECT: G2_OK
-  EVIDENCE: G2_OK
+- [x] G2: Card reader e matéria usam o helper
+  CHECK: rg -n "displaySourceByline" src/components/news/story-card.tsx src/components/news/article-view.tsx
+  EXPECT: displaySourceByline
+  EVIDENCE: src/components/news/story-card.tsx:7:import { displaySourceByline, displaySourceInitial } from "@/lib/news/rss-catalog.mjs"; | src/components/news/story-card.tsx:70:    const byline = displaySourceByl
 
-- [x] G3: reduced-motion não zera transition de cor/opacity
-  CHECK: node --input-type=module -e "import { readFileSync } from 'node:fs'; const s=readFileSync('src/styles.css','utf8'); const ticker=s.indexOf('.ticker-track'); const head=s.slice(0, ticker<0?s.length:ticker); const i1=head.indexOf('html[data-motion=\"reduce\"]'); const i2=head.indexOf('@media (prefers-reduced-motion: reduce)'); function ok(b){ return !/transition-duration:\\s*0\\.01ms/.test(b) && /transition-property:[\\s\\S]*color/.test(b) && /transition-property:[\\s\\S]*opacity/.test(b); } const pass=i1>=0&&i2>=0&&ok(head.slice(i1,i2))&&ok(head.slice(i2)); console.log(pass?'G3_OK keeps color/opacity; no duration nuke':'G3_FAIL');"
-  EXPECT: G3_OK
-  EVIDENCE: G3_OK keeps color/opacity; no duration nuke
+- [x] G3: Reader não imprime mais `@{handle}` cru
+  CHECK: rg -n "lowercase\">@\{handle\}" src/components/news/story-card.tsx || echo GONE
+  EXPECT: GONE
+  EVIDENCE: GONE
 
-- [x] G4: npm test fail 0
+- [x] G4: Suíte do repo
   CHECK: npm test
   EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 4935.630966
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 16479.516479
 
-- [x] G5: typecheck + eslint dos arquivos tocados
-  CHECK: npm run typecheck && npx eslint src/components/news/story-card.tsx src/components/news/icon-btn.tsx --max-warnings=0 && echo G5_OK
-  EXPECT: G5_OK
-  EVIDENCE: > tsc --noEmit | G5_OK
+- [x] G5: Typecheck
+  CHECK: npm run typecheck && echo TYPECHECK_OK
+  EXPECT: TYPECHECK_OK
+  EVIDENCE: > tsc --noEmit | TYPECHECK_OK
 
-- [x] G6: browser em Vite local — press no ícone ~160ms; Salvos sem zoom na foto; Menos movimento ainda permite hover de cor
-  EVIDENCE: Vite :8182 /instalar — transition `transform 0.16s cubic-bezier(0.23, 1, 0.32, 1)`; :active `matrix(0.97, 0, 0, 0.97)`. /salvos `[data-media]` hover `transform:none`, sem group-hover:scale. `data-motion=reduce` hover bg `rgb(231, 225, 211)` (#e7e1d3); transition-property cor/opacity (sem transform); duration 0.16s.
+- [x] G6: Lint dos arquivos do fix
+  CHECK: npx eslint src/lib/news/rss-catalog.mjs src/lib/news/supabase.ts src/lib/news/csv.ts src/components/news/story-card.tsx src/components/news/article-view.tsx src/components/news/feed-profile-popup.tsx src/components/news/fonte-profile-card.tsx scripts/rss-source-display.test.mjs --max-warnings=0 && echo LINT_OK
+  EXPECT: LINT_OK
+  EVIDENCE: LINT_OK

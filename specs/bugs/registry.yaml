@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-26T194800
+    date: 2026-08-26
+    severity: medium
+    priority: p1
+    scope: ui-rss
+    summary: Feed mostra @r_hash no lugar do nome do site RSS (TecMundo)
+    file: specs/bugs/BUG-2026-08-26-rss-source-handle.md
   - bug_id: BUG-2026-08-26T030800
     date: 2026-08-26
     severity: medium

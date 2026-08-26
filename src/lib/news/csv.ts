@@ -1,4 +1,5 @@
 import { categoryForCsvRow } from "./csv-category.mjs";
+import { storySourceFromAccount } from "./rss-catalog.mjs";
 import type { Story } from "./types";
 
 export function parseCsv(text: string): string[][] {
@@ -92,11 +93,6 @@ function toIso(raw: string): string {
   return Number.isNaN(+d) ? t : d.toISOString();
 }
 
-function handle(raw: string): { source: string; sourceLabel: string } {
-  const cleaned = raw.replace(/^@+/, "").trim() || "fonte";
-  return { source: cleaned, sourceLabel: `@${cleaned}` };
-}
-
 function richer(a: Story, b: Story): Story {
   const score = (s: Story) =>
     (s.image ? 4 : 0) +
@@ -146,7 +142,7 @@ export function storiesFromCsv(text: string): Story[] {
     const original = col(header, row, "Conteúdo", "Conteudo", "original");
     if (!id && !title && !body) continue;
     const account = col(header, row, "Conta de origem", "conta", "source");
-    const { source, sourceLabel } = handle(account);
+    const { source, sourceLabel } = storySourceFromAccount(account);
     const utc = col(header, row, "Data/Hora (UTC)", "utc", "published");
     const sp = col(header, row, "Data/Hora (São Paulo)", "Data/Hora", "sp");
     const publishedAt = toIso(utc || sp);
