@@ -1,33 +1,28 @@
-# Gates: RSS source byline
+# Gates: origem X / RSS no topo
 
-Scope: Contas RSS `r_<hex>` aparecem no feed/matéria/perfil pelo título editorial (TecMundo), nunca como `@r_…`.
+Scope: Dois botões no header ligam/desligam posts do X e do RSS; o feed respeita a escolha e persiste.
 
-- [x] G1: Helper de byline do seed TecMundo
-  CHECK: node --experimental-strip-types --test scripts/rss-source-display.test.mjs
+- [ ] G1: Filtro de origem
+  CHECK: node --experimental-strip-types --test scripts/origin-filter.test.mjs
   EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 149.608222
+  EVIDENCE: pending
 
-- [x] G2: Card reader e matéria usam o helper
-  CHECK: rg -n "displaySourceByline" src/components/news/story-card.tsx src/components/news/article-view.tsx
-  EXPECT: displaySourceByline
-  EVIDENCE: src/components/news/story-card.tsx:7:import { displaySourceByline, displaySourceInitial } from "@/lib/news/rss-catalog.mjs"; | src/components/news/story-card.tsx:70:    const byline = displaySourceByl
+- [ ] G2: Header expõe o grupo de origem
+  CHECK: rg -n "data-origin-switch" src/components/news/app-chrome.tsx src/components/news/origin-switch.tsx
+  EXPECT: data-origin-switch
+  EVIDENCE: pending
 
-- [x] G3: Reader não imprime mais `@{handle}` cru
-  CHECK: rg -n "lowercase\">@\{handle\}" src/components/news/story-card.tsx || echo GONE
-  EXPECT: GONE
-  EVIDENCE: GONE
-
-- [x] G4: Suíte do repo
+- [ ] G3: Suíte do repo
   CHECK: npm test
   EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 16479.516479
+  EVIDENCE: pending
 
-- [x] G5: Typecheck
+- [ ] G4: Typecheck
   CHECK: npm run typecheck && echo TYPECHECK_OK
   EXPECT: TYPECHECK_OK
-  EVIDENCE: > tsc --noEmit | TYPECHECK_OK
+  EVIDENCE: pending
 
-- [x] G6: Lint dos arquivos do fix
-  CHECK: npx eslint src/lib/news/rss-catalog.mjs src/lib/news/supabase.ts src/lib/news/csv.ts src/components/news/story-card.tsx src/components/news/article-view.tsx src/components/news/feed-profile-popup.tsx src/components/news/fonte-profile-card.tsx scripts/rss-source-display.test.mjs --max-warnings=0 && echo LINT_OK
+- [ ] G5: Lint do diff
+  CHECK: npx eslint src/lib/news/rss-catalog.mjs src/lib/news/settings.ts src/components/news/origin-switch.tsx src/components/news/app-chrome.tsx src/components/news/feed.tsx src/routes/salvos.tsx scripts/origin-filter.test.mjs --max-warnings=0 && echo LINT_OK
   EXPECT: LINT_OK
-  EVIDENCE: LINT_OK
+  EVIDENCE: pending

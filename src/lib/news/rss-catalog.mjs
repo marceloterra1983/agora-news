@@ -122,3 +122,16 @@ export function displaySourceAt(source) {
   if (!handle || isRssAccount(handle)) return "";
   return `@${handle}`;
 }
+
+export function storyIsRss(story) {
+  const source = bareHandle(story?.source);
+  const id = String(story?.id || "");
+  return isRssAccount(source) || id.startsWith("rss_");
+}
+
+/** Recorta X e/ou RSS sem reordenar. */
+export function filterStoriesByOrigin(stories, { showX = true, showRss = true } = {}) {
+  if (!Array.isArray(stories)) return [];
+  if (showX && showRss) return stories;
+  return stories.filter((story) => (storyIsRss(story) ? showRss : showX));
+}

@@ -7,6 +7,8 @@ export type AppSettings = {
   density: Density;
   typeface: Typeface;
   showImages: boolean;
+  showX: boolean;
+  showRss: boolean;
   highlightUnread: boolean;
   reduceMotion: boolean;
 };
@@ -57,6 +59,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   density: "regular",
   typeface: "literata",
   showImages: true,
+  showX: true,
+  showRss: true,
   highlightUnread: true,
   reduceMotion: false,
 };
@@ -77,6 +81,8 @@ function parse(raw: unknown): AppSettings {
     density: o.density === "compact" ? "compact" : "regular",
     typeface: parseTypeface(o.typeface),
     showImages: o.showImages !== false,
+    showX: o.showX !== false,
+    showRss: o.showRss !== false,
     highlightUnread: o.highlightUnread !== false,
     reduceMotion: o.reduceMotion === true,
   };

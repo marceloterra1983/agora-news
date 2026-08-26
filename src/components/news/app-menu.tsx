@@ -16,6 +16,7 @@ import { FONT_STEPS } from "@/lib/news/font-scale";
 import { useSettings } from "@/lib/news/use-settings";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
+import { OriginSwitch } from "./origin-switch";
 import { ThemeSwitch } from "./settings-ui";
 
 export function AppMenu() {
@@ -121,6 +122,10 @@ export function AppMenu() {
             </Link>
           )}
           <div className="h-px bg-line" />
+          <div className="px-3 py-2.5">
+            <p className="mb-1.5 text-[11px] text-mute">Origem</p>
+            <OriginSwitch />
+          </div>
           <div className="px-3 py-2.5">
             <ThemeSwitch
               value={mode}

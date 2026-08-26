@@ -14,6 +14,7 @@ import { useSectionCatalog } from "@/lib/news/use-section-catalog";
 import { cn } from "@/lib/utils";
 import { AppMenu } from "./app-menu";
 import { Tip } from "./icon-btn";
+import { OriginSwitch } from "./origin-switch";
 import { PrefsSync } from "./prefs-sync";
 
 const GROUP_CHIP =
@@ -139,6 +140,7 @@ function GrokHeader({
           {toolbar}
         </div>
 
+        <OriginSwitch />
         <AppMenu />
       </div>
     </header>
