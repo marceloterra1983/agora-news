@@ -92,6 +92,18 @@ export function readSettings(): AppSettings {
   }
 }
 
+/** Envelope `{ fromRemote: true }` não é settings — lê o storage. */
+export function settingsFromEventDetail(detail: unknown): AppSettings {
+  if (
+    detail &&
+    typeof detail === "object" &&
+    typeof (detail as { showImages?: unknown }).showImages === "boolean"
+  ) {
+    return parse(detail);
+  }
+  return readSettings();
+}
+
 export function applySettings(next: AppSettings) {
   if (typeof document === "undefined") return;
   const el = document.documentElement;

@@ -96,7 +96,9 @@ function writeLocal(prefs: CloudPrefs) {
     if (before !== after) {
       window.dispatchEvent(new CustomEvent("agora-fontes-prefs", { detail: { fromRemote: true } }));
     }
-    window.dispatchEvent(new CustomEvent("agora-settings", { detail: { fromRemote: true } }));
+    window.dispatchEvent(
+      new CustomEvent("agora-settings", { detail: { ...readSettings(), fromRemote: true } }),
+    );
     window.dispatchEvent(
       new CustomEvent("agora-theme", { detail: { fromRemote: true, mode: themeMode(prefs.theme) } }),
     );

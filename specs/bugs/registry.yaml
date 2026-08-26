@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-26T030800
+    date: 2026-08-26
+    severity: medium
+    priority: p1
+    scope: ui-settings
+    summary: Toggle Mostrar fotos perde estado após sync da nuvem ({ fromRemote: true })
+    file: specs/bugs/BUG-2026-08-26-show-images-toggle.md
   - bug_id: BUG-2026-08-19T000500
     date: 2026-08-19
     severity: high

@@ -6,6 +6,7 @@ import {
   readSettings,
   resetSettings,
   SETTINGS_EVENT,
+  settingsFromEventDetail,
   writeSettings,
   type AppSettings,
 } from "./settings";
@@ -27,8 +28,7 @@ export function useSettings() {
     setSettings(next);
     setReady(true);
     const on = (e: Event) => {
-      const detail = (e as CustomEvent<AppSettings>).detail;
-      const raw = detail ?? readSettings();
+      const raw = settingsFromEventDetail((e as CustomEvent<unknown>).detail);
       setSettings({ ...raw, fontSize: normalizeFontSize(raw.fontSize) });
     };
     window.addEventListener(SETTINGS_EVENT, on);
