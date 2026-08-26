@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { groupStyle, hasGroupStyle } from "@/lib/news/group-style";
 import { groupOf } from "@/lib/news/fontes-prefs";
 import { groupLabel, groupStyle as customGroupStyle } from "@/lib/news/groups";
 import { profileByHandle } from "@/lib/news/profiles";
@@ -28,16 +27,14 @@ export function GroupTag({
   }, [group, handle]);
   const label = groupLabel(id);
   if (!label) return null;
-  const st = hasGroupStyle(id) ? groupStyle(id) : null;
   return (
     <span
       data-group={id}
       className={cn(
-        "inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-[9px] font-semibold leading-none",
-        st ? st.tag : null,
+        "inline-flex min-h-[1.125rem] shrink-0 items-center rounded-full px-1.5 text-[length:var(--agora-kicker)] font-semibold leading-none",
         className,
       )}
-      style={st ? undefined : customGroupStyle(id)}
+      style={customGroupStyle(id)}
     >
       {label}
     </span>

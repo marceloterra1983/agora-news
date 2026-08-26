@@ -192,7 +192,7 @@ function SettingsPage() {
                 ? "Este aparelho não permite avisos."
                 : notify.permission === "denied"
                   ? "O navegador bloqueou. Libere nas permissões do site."
-                  : "Contas com o sino ligado em Fontes."
+                  : "Contas com o sino ligado em Fontes. Entre para gravar o aviso na nuvem."
             }
           />
           {notify.error ? <p className="mt-2 text-sm text-mark" role="alert">{notify.error}</p> : null}

@@ -20,13 +20,25 @@ const SOFT = [
   { bg: "color-mix(in oklab, #5a3d72 34%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 88%, #3c2850)", pip: "#5a3d72" },
 ];
 
+function wash(
+  hue: string,
+  mix = 34,
+  inkMix = 88,
+): { bg: string; fg: string; pip: string } {
+  return {
+    bg: `color-mix(in oklab, ${hue} ${mix}%, var(--color-paper-2))`,
+    fg: `color-mix(in oklab, var(--color-ink) ${inkMix}%, ${hue})`,
+    pip: hue,
+  };
+}
+
 const TONE = {
-  labs: { bg: "color-mix(in oklab, #8a7a2e 34%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 88%, #5a4e18)", pip: "#8a7a2e" },
-  lideres: { bg: "color-mix(in oklab, #3d5f8a 34%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 88%, #2a4060)", pip: "#3d5f8a" },
-  pesquisa: { bg: "color-mix(in oklab, #3d6a48 34%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 88%, #2a4a32)", pip: "#3d6a48" },
-  imprensa: { bg: "color-mix(in oklab, #8a4a32 34%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 88%, #5a3020)", pip: "#8a4a32" },
-  builders: { bg: "color-mix(in oklab, #4a4742 36%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 90%, #2e2c28)", pip: "#4a4742" },
-  novos: { bg: "color-mix(in oklab, #9a7a4a 28%, var(--color-paper-2))", fg: "color-mix(in oklab, var(--color-ink) 80%, #6a5430)", pip: "#9a7a4a" },
+  labs: wash("var(--agora-hue-labs)"),
+  lideres: wash("var(--agora-hue-lideres)"),
+  pesquisa: wash("var(--agora-hue-pesquisa)"),
+  imprensa: wash("var(--agora-hue-imprensa)"),
+  builders: wash("var(--agora-hue-builders)", 36, 90),
+  novos: wash("var(--agora-hue-novos)", 28, 80),
 };
 
 const TONE_ALIAS: Record<string, keyof typeof TONE> = {
