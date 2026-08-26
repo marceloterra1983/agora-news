@@ -75,6 +75,13 @@ test("subscribeWebPush only marks subscribed on HTTP 2xx", () => {
   assert.match(src, /unsubscribeWebPush|method:\s*["']DELETE["']/);
 });
 
+test("settings copy says login is required for cloud alerts", () => {
+  assert.match(
+    read("src/routes/configuracoes.tsx"),
+    /Entre para gravar o aviso na nuvem/,
+  );
+});
+
 test("stale x-last older than 14 days is refreshed", () => {
   const old = { publishedAt: "2023-01-01T00:00:00.000Z" };
   const fresh = { publishedAt: new Date().toISOString() };
@@ -88,7 +95,15 @@ test("buzz fetch uses the card tweet id, not only rows\\[0\\]", () => {
   const src = read("src/lib/news/fonte-metrics.ts");
   assert.match(src, /tweetId/);
   assert.match(src, /fetchLastBuzz\(handle/);
+  assert.match(src, /pickBuzzRow/);
+  assert.doesNotMatch(src, /find\([^)]*\) \?\? rows\[0\]/);
   assert.match(read("src/lib/news/influence.ts"), /fetchLastBuzz\(r\.handle,\s*r\.lastPost/);
+});
+
+test("article skips fxtwitter when the row already packed media", () => {
+  const src = read("src/components/news/article-view.tsx");
+  assert.match(src, /enabled:\s*!/);
+  assert.match(src, /story\.assets/);
 });
 
 test("reader card has avatar, word ellipsis and no-referrer on the header face", () => {

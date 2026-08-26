@@ -55,7 +55,7 @@ test("Fontes sort são chips rotulados numa linha abaixo do header", () => {
   assert.doesNotMatch(`${fontes}\n${chip}`, /<select\b/);
   assert.doesNotMatch(fontes, /sticky top-\[57px\]/);
   const css = read("src/styles.css");
-  assert.match(css, /--agora-header:\s*3\.75rem/);
+  assert.match(css, /--agora-header:\s*64px/);
 });
 
 

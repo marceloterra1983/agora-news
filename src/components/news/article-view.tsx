@@ -23,21 +23,28 @@ import { XLogo } from "./x-logo";
 export function ArticleView({ story }: { story: Story }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
+  const packed = Boolean(
+    story.quoted ||
+      story.replyTo ||
+      story.card ||
+      story.xArticle ||
+      story.assets?.length,
+  );
   const { data: embed } = useQuery({
     queryKey: ["tweet-embed", story.id, story.source],
     queryFn: () =>
       loadTweetEmbed({ data: { id: story.id, source: story.source } }),
-    initialData:
-      story.quoted || story.replyTo || story.card || story.xArticle
-        ? {
-            quoted: story.quoted ?? null,
-            replyTo: story.replyTo ?? null,
-            card: story.card ?? null,
-            article: story.xArticle ?? null,
-            assets: story.assets ?? [],
-            text: story.original,
-          }
-        : undefined,
+    initialData: packed
+      ? {
+          quoted: story.quoted ?? null,
+          replyTo: story.replyTo ?? null,
+          card: story.card ?? null,
+          article: story.xArticle ?? null,
+          assets: story.assets ?? [],
+          text: story.original,
+        }
+      : undefined,
+    enabled: !packed,
     staleTime: 30 * 60_000,
   });
   const quoted = embed?.quoted ?? story.quoted ?? null;

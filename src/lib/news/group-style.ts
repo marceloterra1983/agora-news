@@ -1,39 +1,39 @@
 type StyleKey = "labs" | "lideres" | "pesquisa" | "imprensa" | "builders" | "novos";
 
-/** Cores sóbrias dos chips/tags — alinhado ao visual Grok publicado. */
+/** Joia do dock: só o token de hue. Cor fica em [data-jewel] no tema. */
 export const GROUP_STYLE: Record<
   StyleKey,
   { chip: string; chipOn: string; tag: string }
 > = {
   labs: {
-    chip: "bg-[#3d3a2e] text-[#d4c9a0]",
-    chipOn: "bg-[#5c563f] text-[#f0e6c0] ring-1 ring-[#c4b87a]/40",
-    tag: "bg-[#3d3a2e] text-[#d4c9a0]",
+    chip: "[--chip-hue:var(--agora-hue-labs)]",
+    chipOn: "[--chip-hue:var(--agora-hue-labs)]",
+    tag: "[--chip-hue:var(--agora-hue-labs)]",
   },
   lideres: {
-    chip: "bg-[#2a3548] text-[#a8c0e0]",
-    chipOn: "bg-[#3a4d6a] text-[#d0e0f5] ring-1 ring-[#7a9cc8]/40",
-    tag: "bg-[#2a3548] text-[#a8c0e0]",
+    chip: "[--chip-hue:var(--agora-hue-lideres)]",
+    chipOn: "[--chip-hue:var(--agora-hue-lideres)]",
+    tag: "[--chip-hue:var(--agora-hue-lideres)]",
   },
   pesquisa: {
-    chip: "bg-[#243a32] text-[#a8d4b8]",
-    chipOn: "bg-[#2f5444] text-[#c8ecd4] ring-1 ring-[#6ab890]/40",
-    tag: "bg-[#243a32] text-[#a8d4b8]",
+    chip: "[--chip-hue:var(--agora-hue-pesquisa)]",
+    chipOn: "[--chip-hue:var(--agora-hue-pesquisa)]",
+    tag: "[--chip-hue:var(--agora-hue-pesquisa)]",
   },
   imprensa: {
-    chip: "bg-[#3a2e2a] text-[#d4b0a0]",
-    chipOn: "bg-[#543f38] text-[#f0d0c0] ring-1 ring-[#c89070]/40",
-    tag: "bg-[#3a2e2a] text-[#d4b0a0]",
+    chip: "[--chip-hue:var(--agora-hue-imprensa)]",
+    chipOn: "[--chip-hue:var(--agora-hue-imprensa)]",
+    tag: "[--chip-hue:var(--agora-hue-imprensa)]",
   },
   builders: {
-    chip: "bg-[#2e3238] text-[#b0b8c4]",
-    chipOn: "bg-[#404850] text-[#d8dee8] ring-1 ring-[#8890a0]/40",
-    tag: "bg-[#2e3238] text-[#b0b8c4]",
+    chip: "[--chip-hue:var(--agora-hue-builders)]",
+    chipOn: "[--chip-hue:var(--agora-hue-builders)]",
+    tag: "[--chip-hue:var(--agora-hue-builders)]",
   },
   novos: {
-    chip: "bg-[#3a3428] text-[#d4c090]",
-    chipOn: "bg-[#544a35] text-[#f0e0b0] ring-1 ring-[#c4a860]/40",
-    tag: "bg-[#3a3428] text-[#d4c090]",
+    chip: "[--chip-hue:var(--agora-hue-novos)]",
+    chipOn: "[--chip-hue:var(--agora-hue-novos)]",
+    tag: "[--chip-hue:var(--agora-hue-novos)]",
   },
 };
 

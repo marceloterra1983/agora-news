@@ -28,9 +28,16 @@
   --shadow-card: 0 1px 0 color-mix(in oklab, var(--color-ink) 6%, transparent),
     0 12px 28px -22px color-mix(in oklab, var(--color-ink) 45%, transparent);
 
-  --agora-header: 3.75rem;
+  --agora-header: 64px;
   --agora-subbar: 2.5rem;
   --agora-groups: 5.5rem;
+  --agora-kicker: 0.6875rem;
+  --agora-hue-labs: #8a7a2e;
+  --agora-hue-lideres: #3d5f8a;
+  --agora-hue-pesquisa: #3d6a48;
+  --agora-hue-imprensa: #8a4a32;
+  --agora-hue-builders: #4a4742;
+  --agora-hue-novos: #9a7a4a;
 
   /* Reader defaults — data-font in phone-layout.css scales these via rem. */
   --agora-type: 16px;
@@ -56,6 +63,23 @@
   --color-mark-fg: #1a1210;
   --color-hero: #0c0b09;
   --color-hero-fg: #f0e9e0;
+  --agora-hue-labs: #c4b87a;
+  --agora-hue-lideres: #7a9cc8;
+  --agora-hue-pesquisa: #6ab890;
+  --agora-hue-imprensa: #c89070;
+  --agora-hue-builders: #8890a0;
+  --agora-hue-novos: #c4a860;
+}
+
+[data-jewel] {
+  background: color-mix(in oklab, var(--chip-hue) 42%, #1c1916);
+  color: color-mix(in oklab, var(--chip-hue) 45%, #f0e9e0);
+}
+
+[data-jewel][aria-pressed="true"] {
+  background: color-mix(in oklab, var(--chip-hue) 58%, #1c1916);
+  color: color-mix(in oklab, var(--chip-hue) 28%, #f0e9e0);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--chip-hue) 40%, transparent);
 }
 
 @layer base {

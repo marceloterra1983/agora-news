@@ -188,6 +188,7 @@ function GroupDock({
               key={g.id}
               type="button"
               data-group-chip=""
+              data-jewel=""
               aria-pressed={on}
               onClick={() => onPick(g.id)}
               className={cn(
