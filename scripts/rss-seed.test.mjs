@@ -93,10 +93,103 @@ const REQUIRED = [
     section: "brasil",
     group: "br-instituicoes",
   },
+  { url: "https://mistral.ai/news/rss", title: "Mistral", section: "ai", group: "labs" },
+  { url: "https://the-decoder.com/feed/", title: "The Decoder", section: "ai", group: "imprensa" },
+  { url: "https://www.platformer.news/feed", title: "Platformer", section: "ai", group: "imprensa" },
+  { url: "https://www.aisnakeoil.com/feed", title: "AI Snake Oil", section: "ai", group: "pesquisa" },
+  { url: "https://lilianweng.github.io/index.xml", title: "Lilian Weng", section: "ai", group: "pesquisa" },
+  { url: "https://thegradient.pub/rss/", title: "The Gradient", section: "ai", group: "imprensa" },
+  { url: "https://venturebeat.com/category/ai/feed/", title: "VentureBeat AI", section: "ai", group: "imprensa" },
+  {
+    url: "https://www.microsoft.com/en-us/research/feed/",
+    title: "Microsoft Research",
+    section: "ai",
+    group: "pesquisa",
+  },
+  {
+    url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+    title: "The Verge AI",
+    section: "ai",
+    group: "imprensa",
+  },
+  { url: "https://www.wired.com/feed/tag/ai/latest/rss", title: "WIRED AI", section: "ai", group: "imprensa" },
+  { url: "https://arstechnica.com/ai/feed/", title: "Ars Technica AI", section: "ai", group: "imprensa" },
+  { url: "https://9to5google.com/feed/", title: "9to5Google", section: "tech", group: "tech-gadgets" },
+  { url: "https://feeds.macrumors.com/MacRumors-All", title: "MacRumors", section: "tech", group: "tech-gadgets" },
+  { url: "https://www.cnet.com/rss/news/", title: "CNET", section: "tech", group: "tech-imprensa" },
+  { url: "https://blogs.microsoft.com/feed/", title: "Microsoft Blog", section: "tech", group: "tech-empresas" },
+  { url: "https://aws.amazon.com/blogs/aws/feed/", title: "AWS News", section: "tech", group: "tech-empresas" },
+  { url: "https://stackoverflow.blog/feed/", title: "Stack Overflow", section: "tech", group: "tech-devs" },
+  { url: "https://daringfireball.net/feeds/main", title: "Daring Fireball", section: "tech", group: "tech-gadgets" },
+  { url: "https://www.androidpolice.com/feed/", title: "Android Police", section: "tech", group: "tech-gadgets" },
+  { url: "https://www.ycombinator.com/blog/rss", title: "Y Combinator", section: "tech", group: "tech-startups" },
+  { url: "https://www.sequoiacap.com/feed/", title: "Sequoia", section: "tech", group: "tech-startups" },
+  {
+    url: "https://github.blog/engineering/feed/",
+    title: "GitHub Engineering",
+    section: "tech",
+    group: "tech-devs",
+  },
+  { url: "https://nextjs.org/feed.xml", title: "Next.js", section: "tech", group: "tech-devs" },
+  { url: "https://react.dev/rss.xml", title: "React", section: "tech", group: "tech-devs" },
+  { url: "https://nodejs.org/en/feed/blog.xml", title: "Node.js", section: "tech", group: "tech-devs" },
+  {
+    url: "https://blog.cloudflare.com/tag/security/rss/",
+    title: "Cloudflare Security",
+    section: "tech",
+    group: "tech-seguranca",
+  },
+  { url: "https://engineering.fb.com/feed/", title: "Engineering at Meta", section: "tech", group: "tech-devs" },
+  {
+    url: "https://blog.google/technology/developers/rss/",
+    title: "Google Developers",
+    section: "tech",
+    group: "tech-devs",
+  },
+  {
+    url: "https://feeds.feedburner.com/TheHackersNews",
+    title: "The Hacker News",
+    section: "tech",
+    group: "tech-seguranca",
+  },
+  { url: "https://rss.uol.com.br/feed/noticias.xml", title: "UOL", section: "brasil", group: "br-jornais" },
+  { url: "https://rss.uol.com.br/feed/economia.xml", title: "UOL Economia", section: "brasil", group: "br-economia" },
+  { url: "https://www.infomoney.com.br/feed/", title: "InfoMoney", section: "brasil", group: "br-economia" },
+  {
+    url: "https://www.congressoemfoco.com.br/feed/",
+    title: "Congresso em Foco",
+    section: "brasil",
+    group: "br-politica",
+  },
+  {
+    url: "https://feeds.folha.uol.com.br/poder/rss091.xml",
+    title: "Folha Poder",
+    section: "brasil",
+    group: "br-politica",
+  },
+  { url: "https://www.intercept.com.br/feed/", title: "Intercept Brasil", section: "brasil", group: "br-politica" },
+  { url: "https://piaui.uol.com.br/feed/", title: "piauí", section: "brasil", group: "br-colunistas" },
+  { url: "https://www.cartacapital.com.br/feed/", title: "CartaCapital", section: "brasil", group: "br-politica" },
+  { url: "https://veja.abril.com.br/feed/", title: "VEJA", section: "brasil", group: "br-jornais" },
+  {
+    url: "https://www.estadao.com.br/arc/outboundfeeds/rss/?outputType=xml",
+    title: "Estadão",
+    section: "brasil",
+    group: "br-jornais",
+  },
+  { url: "https://g1.globo.com/rss/g1/economia/", title: "g1 Economia", section: "brasil", group: "br-economia" },
+  { url: "https://g1.globo.com/rss/g1/politica/", title: "g1 Política", section: "brasil", group: "br-politica" },
+  { url: "https://rss.dw.com/rdf/rss-br-all", title: "DW Brasil", section: "brasil", group: "br-jornais" },
+  {
+    url: "https://feeds.bbci.co.uk/portuguese/topics/economia/rss.xml",
+    title: "BBC Economia",
+    section: "brasil",
+    group: "br-economia",
+  },
 ];
 
-test("RSS_SEED has the 43 editorial feeds with stable ids", () => {
-  assert.equal(RSS_SEED.length, 43);
+test("RSS_SEED has the 86 editorial feeds with stable ids", () => {
+  assert.equal(RSS_SEED.length, 86);
   const urls = new Set();
   const accounts = new Set();
   for (const row of RSS_SEED) {
@@ -121,13 +214,10 @@ test("incluir list is present with section and group", () => {
 });
 
 test("rssExtrasFor exposes seed handles per section", () => {
-  assert.equal(rssExtrasFor("ai").length, 14);
-  assert.equal(rssExtrasFor("tech").length, 14);
-  assert.equal(rssExtrasFor("brasil").length, 15);
-  assert.ok(rssExtrasFor("ai").some((row) => row.name === "Google DeepMind" && row.group === "labs"));
-  assert.ok(rssExtrasFor("ai").some((row) => row.name === "NVIDIA" && row.group === "labs"));
-  assert.ok(rssExtrasFor("tech").some((row) => row.name === "KrebsOnSecurity" && row.group === "tech-seguranca"));
-  assert.ok(rssExtrasFor("tech").some((row) => row.name === "Apple Newsroom" && row.group === "tech-empresas"));
-  assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Poder360" && row.group === "br-politica"));
-  assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Câmara" && row.group === "br-instituicoes"));
+  assert.equal(rssExtrasFor("ai").length, 25);
+  assert.equal(rssExtrasFor("tech").length, 32);
+  assert.equal(rssExtrasFor("brasil").length, 29);
+  assert.ok(rssExtrasFor("ai").some((row) => row.name === "Mistral" && row.group === "labs"));
+  assert.ok(rssExtrasFor("tech").some((row) => row.name === "Y Combinator" && row.group === "tech-startups"));
+  assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Estadão" && row.group === "br-jornais"));
 });
