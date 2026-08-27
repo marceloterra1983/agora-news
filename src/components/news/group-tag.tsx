@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { groupOf } from "@/lib/news/fontes-prefs";
 import { groupLabel, groupStyle as customGroupStyle } from "@/lib/news/groups";
-import { profileByHandle } from "@/lib/news/profiles";
 import { cn } from "@/lib/utils";
 
 export function GroupTag({
@@ -13,16 +12,18 @@ export function GroupTag({
   group?: string | null;
   className?: string;
 }) {
-  const initial = group || profileByHandle(handle || "")?.group || "novos";
+  const initial = group || groupOf(handle);
   const [id, setId] = useState(initial);
   useEffect(() => {
     const refresh = () => setId(group || groupOf(handle));
     refresh();
     window.addEventListener("agora-fontes-prefs", refresh);
     window.addEventListener("agora-custom-groups", refresh);
+    window.addEventListener("agora-rss-feeds", refresh);
     return () => {
       window.removeEventListener("agora-fontes-prefs", refresh);
       window.removeEventListener("agora-custom-groups", refresh);
+      window.removeEventListener("agora-rss-feeds", refresh);
     };
   }, [group, handle]);
   const label = groupLabel(id);
