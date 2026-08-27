@@ -1,5 +1,4 @@
-import { translateToPt } from "./translate-pt.mjs";
-import { needsFullTranslation } from "./story-pt.mjs";
+import { hydrateStoryBody } from "./translate-pt.mjs";
 import { readAvatarsByHandles, readStoredProfile } from "./profile-store";
 import { displayAvatarUrl, withAvatars } from "./profile-store-core.mjs";
 import type { Story } from "./types";
@@ -59,12 +58,10 @@ export async function attachStoryAvatars(stories: Story[]): Promise<Story[]> {
 }
 
 export async function hydrateStory(story: Story): Promise<Story> {
-  let body = (story.body || story.excerpt || "").trim();
-  if (needsFullTranslation(story.original, body)) {
-    const pt = await translateToPt(story.original);
-    if (pt) body = pt;
-  }
-  if (!body) body = story.original || story.title;
+  const body =
+    (await hydrateStoryBody(story.original, story.body || story.excerpt)) ||
+    story.original ||
+    story.title;
   const avatar = displayAvatarUrl(story.avatar) || (await avatarOf(story.source));
   return { ...story, body, avatar };
 }

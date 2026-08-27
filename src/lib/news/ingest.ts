@@ -12,8 +12,8 @@ import { persistBuzzCache } from "./fonte-buzz-store";
 import { enrichFontesCatalog, invalidateFontesLastCache } from "./influence";
 import { mapPool } from "./map-pool";
 import { embedForStory } from "./x-media";
-import { translateToPt } from "./translate-pt.mjs";
-import { clipAtWord } from "./summary-core.mjs";
+import { applyStoredTranslation, translateToPt } from "./translate-pt.mjs";
+import { retranslateMissingPt } from "./ingest-translate.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
 import { handlesToScan, latestByAccount } from "./ingest-scan";
 import { ownedAuthorFromStatuses, profileFieldsFromAuthor, statusesOwnedByHandle } from "./ingest-profile-core.mjs";
@@ -148,14 +148,15 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
     }
 
     const translation = await translateToPt(content, { onFail: () => { gtxFail += 1; } });
+    const stored = applyStoredTranslation(content, translation);
     const row: UpsertPost = {
       post_id: String(status.id),
       account: handle,
       posted_at: posted,
       posted_at_sp: saoPauloIso(posted),
       content,
-      translation_pt: translation,
-      summary_pt: clipAtWord(translation, 180),
+      translation_pt: stored.translation_pt,
+      summary_pt: stored.summary_pt,
       post_url: status.url || `https://x.com/${handle}/status/${status.id}`,
       media_label: packMediaLabel(media, embedMeta),
       image_url: photo,
@@ -169,6 +170,12 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
   const embeds = built.filter((b) => b.usedEmbed).length;
 
   const written = await upsertPosts(rows, assertOwned);
+  const retried = await retranslateMissingPt({
+    assertOwned,
+    onFail: () => {
+      gtxFail += 1;
+    },
+  });
   await assertOwned();
   const confirmed = new Set(written.confirmedIds);
   const persistedRows = rows.filter((row) => confirmed.has(row.post_id));
@@ -278,6 +285,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
     inserted: rows.length,
     embeds,
     gtxFail,
+    retried,
     written: written.status,
     writtenCount: written.count,
     confirmed: written.confirmedIds.length,

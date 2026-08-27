@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-27T181700
+    date: 2026-08-27
+    severity: medium
+    priority: p1
+    scope: ingest-translate
+    summary: GTX 429 fail-open grava inglês como translation_pt e o ingest nunca retraduz
+    file: specs/bugs/BUG-2026-08-27-gtx-failopen-en.md
   - bug_id: BUG-2026-08-27T193800
     date: 2026-08-27
     severity: medium

@@ -2,6 +2,7 @@ import { upsertPosts } from "./admin";
 import { clipAtWord } from "./summary-core.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
 import { invalidateSupabaseList } from "./supabase";
+import { pickStoredPt } from "./translate-pt.mjs";
 import type { Story } from "./types";
 
 /** Grava o PT hidratado na 1ª abertura para o corte de 280 não voltar. */
@@ -9,6 +10,7 @@ export async function persistHydratedBody(story: Story, body: string): Promise<b
   const text = String(body || "").trim();
   if (!story.id || !text) return false;
   if (text === String(story.body || "").trim()) return false;
+  if (!pickStoredPt(story.original || text, text)) return false;
   const written = await upsertPosts([
     {
       post_id: story.id,

@@ -10,6 +10,7 @@ import {
   skipRssResponse,
 } from "../src/lib/news/rss-ingest-core.mjs";
 import { isRssAccount } from "../src/lib/news/rss-catalog.mjs";
+import { rssPostId } from "../src/lib/news/rss-id.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
@@ -29,6 +30,30 @@ test("304 does not write; garbage does not throw", () => {
   assert.equal(skipRssResponse(500), true);
   assert.deepEqual(parseFeedXml("<<<not xml>>>", feed.url), []);
   assert.deepEqual(rssPostsFromItems(feed, [], new Set(), "batch"), []);
+});
+
+test("rss translation_pt stays empty when the translator copied English", () => {
+  const items = [
+    {
+      title: "Open models are the only path forward today.",
+      summary: "The company announced the open model with the new weights.",
+      link: "https://example.com/en",
+      guid: "https://example.com/en",
+      publishedAt: "2026-08-25T12:00:00.000Z",
+    },
+  ];
+  const id = rssPostId(items[0].guid);
+  const copied = rssPostsFromItems(feed, items, new Set(), "2026-08-25", {
+    [id]: { title: items[0].title, summary: items[0].summary },
+  });
+  assert.equal(copied[0].translation_pt, "");
+  const pt = rssPostsFromItems(feed, items, new Set(), "2026-08-25", {
+    [id]: {
+      title: "Modelos abertos são o único caminho.",
+      summary: "A empresa também anunciou o modelo aberto hoje.",
+    },
+  });
+  assert.equal(pt[0].translation_pt, "A empresa também anunciou o modelo aberto hoje.");
 });
 
 test("rss items write with source rss and skip known ids", () => {
