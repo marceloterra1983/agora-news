@@ -1,16 +1,18 @@
-# Gates: tempo do grupo à esquerda
+# Gates: mais RSS nos 3 temas
 
-Scope: Na vista Grupos das Fontes, o relativeTime do último post fica ao lado do nome, não à direita.
+Scope: Expandir o seed editorial com feeds oficiais verificados em IA, Tech e Brasil.
 
-- [x] G1: o `<time>` do grupo não tem ml-auto
-  CHECK: node --experimental-strip-types --test scripts/fontes-group-time.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 300.625822
+- [x] G1: seed cresce nos 3 temas e ids batem com o URL
+  CHECK: node --experimental-strip-types --test scripts/rss-seed.test.mjs
+  EXPECT: /fail 0/
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 65.951507
 
-- [x] G2: fontes.tsx continua ≤ 300 linhas
-  CHECK: node --experimental-strip-types --test scripts/split-pages.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 268.651065
+- [x] G2: cada tema tem mais RSS do que o baseline 6/6/7
+  CHECK: node --experimental-strip-types --test scripts/rss-seed.test.mjs
+  EXPECT: rssExtrasFor
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 90.067504
 
-- [ ] G3: browser em /fontes?sort=groups mostra o tempo junto do título
-  EVIDENCE: pending
+- [x] G3: npm test passa
+  CHECK: npm test
+  EXPECT: /fail 0/
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 5831.319568

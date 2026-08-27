@@ -39,10 +39,64 @@ const REQUIRED = [
     group: "br-economia",
   },
   { url: "https://canaltech.com.br/rss/", title: "Canaltech", section: "brasil", group: "br-jornais" },
+  { url: "https://developer.nvidia.com/blog/feed/", title: "NVIDIA", section: "ai", group: "labs" },
+  {
+    url: "https://aws.amazon.com/blogs/machine-learning/feed/",
+    title: "AWS Machine Learning",
+    section: "ai",
+    group: "labs",
+  },
+  { url: "https://blog.google/technology/ai/rss/", title: "Google AI", section: "ai", group: "labs" },
+  { url: "https://research.google/blog/rss/", title: "Google Research", section: "ai", group: "pesquisa" },
+  { url: "https://ai.stanford.edu/blog/feed.xml", title: "Stanford AI Lab", section: "ai", group: "pesquisa" },
+  { url: "https://www.interconnects.ai/feed", title: "Interconnects", section: "ai", group: "builders" },
+  { url: "https://www.latent.space/feed", title: "Latent Space", section: "ai", group: "imprensa" },
+  { url: "https://www.oneusefulthing.org/feed", title: "One Useful Thing", section: "ai", group: "imprensa" },
+  {
+    url: "https://www.theregister.com/headlines.atom",
+    title: "The Register",
+    section: "tech",
+    group: "tech-imprensa",
+  },
+  { url: "https://www.404media.co/rss/", title: "404 Media", section: "tech", group: "tech-imprensa" },
+  { url: "https://www.engadget.com/rss.xml", title: "Engadget", section: "tech", group: "tech-gadgets" },
+  { url: "https://9to5mac.com/feed/", title: "9to5Mac", section: "tech", group: "tech-gadgets" },
+  {
+    url: "https://www.apple.com/newsroom/rss-feed.rss",
+    title: "Apple Newsroom",
+    section: "tech",
+    group: "tech-empresas",
+  },
+  { url: "https://blog.google/rss/", title: "Google Blog", section: "tech", group: "tech-empresas" },
+  { url: "https://blog.cloudflare.com/rss/", title: "Cloudflare", section: "tech", group: "tech-devs" },
+  {
+    url: "https://www.bleepingcomputer.com/feed/",
+    title: "BleepingComputer",
+    section: "tech",
+    group: "tech-seguranca",
+  },
+  { url: "https://www.cnnbrasil.com.br/feed/", title: "CNN Brasil", section: "brasil", group: "br-jornais" },
+  { url: "https://www.nexojornal.com.br/rss.xml", title: "Nexo Jornal", section: "brasil", group: "br-colunistas" },
+  { url: "https://www.jota.info/feed", title: "JOTA", section: "brasil", group: "br-politica" },
+  { url: "https://valor.globo.com/rss/valor", title: "Valor", section: "brasil", group: "br-economia" },
+  { url: "https://exame.com/feed/", title: "Exame", section: "brasil", group: "br-economia" },
+  {
+    url: "https://agenciabrasil.ebc.com.br/rss.xml",
+    title: "Agência Brasil",
+    section: "brasil",
+    group: "br-instituicoes",
+  },
+  { url: "https://www12.senado.leg.br/noticias/rss", title: "Senado", section: "brasil", group: "br-instituicoes" },
+  {
+    url: "https://www.camara.leg.br/noticias/rss/ultimas-noticias",
+    title: "Câmara",
+    section: "brasil",
+    group: "br-instituicoes",
+  },
 ];
 
-test("RSS_SEED has the 19 editorial feeds with stable ids", () => {
-  assert.equal(RSS_SEED.length, 19);
+test("RSS_SEED has the 43 editorial feeds with stable ids", () => {
+  assert.equal(RSS_SEED.length, 43);
   const urls = new Set();
   const accounts = new Set();
   for (const row of RSS_SEED) {
@@ -67,10 +121,13 @@ test("incluir list is present with section and group", () => {
 });
 
 test("rssExtrasFor exposes seed handles per section", () => {
-  assert.equal(rssExtrasFor("ai").length, 6);
-  assert.equal(rssExtrasFor("tech").length, 6);
-  assert.equal(rssExtrasFor("brasil").length, 7);
+  assert.equal(rssExtrasFor("ai").length, 14);
+  assert.equal(rssExtrasFor("tech").length, 14);
+  assert.equal(rssExtrasFor("brasil").length, 15);
   assert.ok(rssExtrasFor("ai").some((row) => row.name === "Google DeepMind" && row.group === "labs"));
+  assert.ok(rssExtrasFor("ai").some((row) => row.name === "NVIDIA" && row.group === "labs"));
   assert.ok(rssExtrasFor("tech").some((row) => row.name === "KrebsOnSecurity" && row.group === "tech-seguranca"));
+  assert.ok(rssExtrasFor("tech").some((row) => row.name === "Apple Newsroom" && row.group === "tech-empresas"));
   assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Poder360" && row.group === "br-politica"));
+  assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Câmara" && row.group === "br-instituicoes"));
 });
