@@ -1,0 +1,15 @@
+---
+description: Depois do auto-land na main, publicar Docker sem perguntar
+alwaysApply: true
+---
+
+# Auto-deploy agora-news
+
+Depois do merge na `main` e tree limpa, **publique** — não pergunte:
+
+```bash
+bash scripts/deploy-prod.sh
+```
+
+Informe `news-news:<head>` e o rollback. Sem `db:migrate`, sem colar `.env`.
+Proibido: menu “quer deploy?”.

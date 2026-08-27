@@ -19,8 +19,8 @@ Não apontar para `:3080` sem `NEWS_SMOKE_ALLOW_PROD=1`.
 
 ## Boundaries
 
-- **Always:** rodar `npm test` (e typecheck/lint se o diff tocar TS/JS) antes de declarar pronto.
-- **Ask first:** dependência nova, migration, deploy, compose, produção, secrets.
+- **Always:** rodar `npm test` (e typecheck/lint se o diff tocar TS/JS) antes de declarar pronto. Depois do auto-land na `main`, publicar com `bash scripts/deploy-prod.sh` — não perguntar.
+- **Ask first:** dependência nova, migration, secrets, mudança de `compose.yml`/Dockerfile.
 - **Never:** commit/colar `.env` ou tokens; `push --force` em `main`; apagar teste que falhou; apontar smoke para prod sem allowlist.
 
 ## Honest tests
