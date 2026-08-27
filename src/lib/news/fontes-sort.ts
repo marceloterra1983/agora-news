@@ -5,7 +5,7 @@ import type { InfluenceRow } from "./influence";
 import { normHandle } from "./fontes-prefs";
 import { allGroupIds, groupHint, groupLabel } from "./groups";
 import { profilesFor } from "./profiles";
-import { rssExtrasFor, rssFonteRow } from "./rss-catalog.mjs";
+import { originsInHandles, rssExtrasFor, rssFonteRow } from "./rss-catalog.mjs";
 import type { Category } from "./types";
 
 export type SortKey = "recent" | "groups" | "starred";
@@ -104,6 +104,7 @@ export type FonteGroup = {
   latest: string | null;
   faces: InfluenceRow[];
   preview: string;
+  origins: Array<"x" | "rss">;
 };
 
 export function groupFontesRows(rows: InfluenceRow[], groupIds: string[] = allGroupIds()): FonteGroup[] {
@@ -124,6 +125,7 @@ export function groupFontesRows(rows: InfluenceRow[], groupIds: string[] = allGr
         .slice(0, 3)
         .map((r) => r.name)
         .join(" · "),
+      origins: originsInHandles(items.map((r) => r.handle)),
     };
   })
     .filter((g) => g.items.length)

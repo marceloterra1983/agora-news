@@ -5,12 +5,14 @@ import { XLogo } from "./x-logo";
 
 export function OriginMark({
   handle,
+  origin,
   className,
 }: {
-  handle: string;
+  handle?: string;
+  origin?: "x" | "rss";
   className?: string;
 }) {
-  const rss = isRssAccount(handle);
+  const rss = origin ? origin === "rss" : isRssAccount(handle || "");
   const label = rss ? "RSS" : "X";
   return (
     <span
