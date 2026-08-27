@@ -54,6 +54,10 @@ export function rssLabelFor(
   account: string,
   owned?: Array<{ title?: string; account?: string }>,
 ): string;
+export function rssGroupOf(
+  account: string,
+  owned?: Array<{ group?: string; account?: string }>,
+): string;
 export function isRssAccount(handle: string): boolean;
 export function originsInHandles(handles: Iterable<string>): Array<"x" | "rss">;
 export function storySourceFromAccount(

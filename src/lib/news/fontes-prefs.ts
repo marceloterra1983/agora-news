@@ -3,6 +3,8 @@
 import { readGroupOverrides, writeGroupOverrides } from "./section-prefs.mjs";
 import { readLastSection } from "./section-pref";
 import { profileByHandle } from "./profiles";
+import { rssGroupOf } from "./rss-catalog.mjs";
+import { loadRssFeeds } from "./rss-feeds";
 import type { Category } from "./types";
 
 function sectionOf(section?: Category): Category {
@@ -189,7 +191,11 @@ export function groupOverrideOf(handle: string, section?: Category): string | nu
 
 export function groupOf(handle?: string | null, section?: Category): string {
   if (!handle) return "novos";
-  return groupOverrideOf(handle, section) ?? profileByHandle(handle)?.group ?? "novos";
+  return (
+    groupOverrideOf(handle, section) ??
+    profileByHandle(handle)?.group ??
+    (rssGroupOf(handle, loadRssFeeds()) || "novos")
+  );
 }
 
 export function setGroupOverrides(

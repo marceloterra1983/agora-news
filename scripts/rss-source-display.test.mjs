@@ -7,6 +7,7 @@ import {
   displaySourceAt,
   displaySourceByline,
   displaySourceInitial,
+  rssGroupOf,
   rssLabelFor,
   storySourceFromAccount,
 } from "../src/lib/news/rss-catalog.mjs";
@@ -53,6 +54,21 @@ test("storySourceFromAccount maps seed RSS to TecMundo", () => {
 test("supabase and csv map accounts through storySourceFromAccount", () => {
   assert.match(read("src/lib/news/supabase.ts"), /storySourceFromAccount/);
   assert.match(read("src/lib/news/csv.ts"), /storySourceFromAccount/);
+});
+
+test("rssGroupOf and groupOf use the Fontes seed group, not Outros", () => {
+  assert.equal(rssGroupOf(TECMUNDO), "br-jornais");
+  assert.equal(rssGroupOf("r_1c0bfc994e71"), "regulacao");
+  assert.equal(rssGroupOf("r_deadbeefdead"), "");
+  assert.equal(
+    rssGroupOf("r_ownedowned01", [{ account: "r_ownedowned01", group: "imprensa" }]),
+    "imprensa",
+  );
+  const prefs = read("src/lib/news/fontes-prefs.ts");
+  assert.match(prefs, /rssGroupOf\(handle, loadRssFeeds\(\)\)/);
+  const tag = read("src/components/news/group-tag.tsx");
+  assert.match(tag, /groupOf\(handle\)/);
+  assert.doesNotMatch(tag, /profileByHandle/);
 });
 
 test("reader, article and profile popup use the RSS byline helper", () => {

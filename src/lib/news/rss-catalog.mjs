@@ -870,15 +870,26 @@ export function mergeRssFontes(base, owned, section) {
   return added.length ? [...base, ...added] : base;
 }
 
-export function rssLabelFor(account, owned = []) {
+function rssSeedHit(account, owned = []) {
   const key = String(account || "")
     .replace(/^@+/, "")
     .trim()
     .toLowerCase();
-  const hit = [...RSS_SEED, ...(Array.isArray(owned) ? owned : [])].find(
-    (row) => String(row.account || "").toLowerCase() === key,
+  if (!key) return null;
+  return (
+    [...RSS_SEED, ...(Array.isArray(owned) ? owned : [])].find(
+      (row) => String(row.account || "").toLowerCase() === key,
+    ) || null
   );
-  return hit?.title || "";
+}
+
+export function rssLabelFor(account, owned = []) {
+  return rssSeedHit(account, owned)?.title || "";
+}
+
+/** Grupo editorial do seed/owned RSS. Vazio se a conta não for RSS cadastrada. */
+export function rssGroupOf(account, owned = []) {
+  return String(rssSeedHit(account, owned)?.group || "");
 }
 
 export function isRssAccount(handle) {

@@ -1,18 +1,18 @@
-# Gates: novos grupos editoriais + RSS
+# Gates: feed não marca RSS como Outros
 
-Scope: Criar grupos que a taxonomia atual não cobre e preenchê-los com feeds HTTPS oficiais comprovados.
+Scope: Posts RSS no feed usam o mesmo grupo do cadastro de Fontes; Outros só existe se houver fonte sem grupo.
 
-- [x] G1: taxonomia reserva os 7 grupos novos com rótulo curto
-  CHECK: node --input-type=module -e "import { SECTION_TAXONOMY, isReservedGroup } from './src/lib/news/catalog-taxonomy.mjs'; const want = [['ai','regulacao','Regulação'],['ai','ai-riscos','Riscos'],['tech','tech-opensource','Open source'],['tech','tech-ciencia','Ciência'],['brasil','br-ciencia','Ciência'],['brasil','br-mundo','Mundo'],['brasil','br-cultura','Cultura']]; for (const [sec,id,label] of want) { if (!isReservedGroup(id)) throw new Error(id); if (SECTION_TAXONOMY[sec].labels[id] !== label) throw new Error(label); if (!SECTION_TAXONOMY[sec].order.includes(id)) throw new Error('order '+id); } console.log('groups ok', want.length);"
-  EXPECT: groups ok 7
-  EVIDENCE: groups ok 7
-
-- [x] G2: seed RSS dos grupos novos tem id estável e grupo reservado
-  CHECK: node --experimental-strip-types --test scripts/rss-seed.test.mjs
+- [x] G1: groupOf resolve o grupo do seed RSS
+  CHECK: node --experimental-strip-types --test scripts/rss-source-display.test.mjs
   EXPECT: /fail 0/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 69.266112
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 63.166309
+
+- [x] G2: GroupTag consulta groupOf, não só o catálogo X
+  CHECK: node --input-type=module -e "import { readFileSync } from 'node:fs'; const tag=readFileSync('src/components/news/group-tag.tsx','utf8'); const prefs=readFileSync('src/lib/news/fontes-prefs.ts','utf8'); if (!tag.includes('groupOf(handle)')) throw new Error('tag'); if (!prefs.includes('rssGroupOf')) throw new Error('prefs'); console.log('wired');"
+  EXPECT: wired
+  EVIDENCE: wired
 
 - [x] G3: npm test passa
   CHECK: npm test
   EXPECT: /fail 0/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 7903.492681
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 6744.164277
