@@ -1,28 +1,28 @@
-# Gates: origem X / RSS no topo
+# Gates: incluir fontes RSS no seed editorial
 
-Scope: Dois botões no header ligam/desligam posts do X e do RSS; o feed respeita a escolha e persiste.
+Scope: RSS_SEED passa a 19 feeds (5 atuais + 14 incluir); OpenAI/HF em labs; account = rssAccountId(url).
 
-- [x] G1: Filtro de origem
-  CHECK: node --experimental-strip-types --test scripts/origin-filter.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 410.049587
+- [x] G1: Seed tem 19 URLs, as 14 novas e as 5 atuais
+  CHECK: node --experimental-strip-types --test scripts/rss-seed.test.mjs
+  EXPECT: pass 3
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 127.952599
 
-- [x] G2: Header expõe o grupo de origem
-  CHECK: rg -n "data-origin-switch" src/components/news/app-chrome.tsx src/components/news/origin-switch.tsx
-  EXPECT: data-origin-switch
-  EVIDENCE: src/components/news/origin-switch.tsx:13:      data-origin-switch=""
+- [x] G2: OpenAI e Hugging Face estão no grupo labs
+  CHECK: node --input-type=module -e "import { RSS_SEED } from './src/lib/news/rss-catalog.mjs'; const g=Object.fromEntries(RSS_SEED.map(r=>[r.title,r.group])); if(g.OpenAI!=='labs'||g['Hugging Face']!=='labs') throw new Error(JSON.stringify(g)); console.log('LABS_OK');"
+  EXPECT: LABS_OK
+  EVIDENCE: LABS_OK
 
-- [x] G3: Suíte do repo
+- [x] G3: Cada account do seed é rssAccountId(url)
+  CHECK: node --input-type=module -e "import { RSS_SEED } from './src/lib/news/rss-catalog.mjs'; import { rssAccountId } from './src/lib/news/rss-id.mjs'; const bad=RSS_SEED.filter(r=>r.account!==rssAccountId(r.url)); if(bad.length) throw new Error(JSON.stringify(bad.map(r=>r.title))); console.log('IDS_OK '+RSS_SEED.length);"
+  EXPECT: IDS_OK 19
+  EVIDENCE: IDS_OK 19
+
+- [x] G4: npm test passa
   CHECK: npm test
-  EXPECT: fail 0
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 6736.582075
+  EXPECT: /fail 0/
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 9328.650995
 
-- [x] G4: Typecheck
-  CHECK: npm run typecheck && echo TYPECHECK_OK
-  EXPECT: TYPECHECK_OK
-  EVIDENCE: > tsc --noEmit | TYPECHECK_OK
-
-- [x] G5: Lint do diff
-  CHECK: npx eslint src/lib/news/rss-catalog.mjs src/lib/news/settings.ts src/lib/news/prefs-sync.ts src/components/news/origin-switch.tsx src/components/news/app-chrome.tsx src/components/news/feed.tsx src/routes/salvos.tsx scripts/origin-filter.test.mjs --max-warnings=0 && echo LINT_OK
-  EXPECT: LINT_OK
-  EVIDENCE: LINT_OK
+- [x] G5: typecheck e lint no catálogo e no teste
+  CHECK: npx tsc --noEmit && npx eslint src/lib/news/rss-catalog.mjs scripts/rss-seed.test.mjs --max-warnings=0 && echo TYPE_LINT_OK
+  EXPECT: TYPE_LINT_OK
+  EVIDENCE: TYPE_LINT_OK
