@@ -81,3 +81,14 @@ test("header do feed tem o botão de mostrar/ocultar fotos", () => {
   assert.match(switchSrc, /Mostrar fotos/);
   assert.match(css, /html\[data-images="off"\] \[data-media\]/);
 });
+
+test("botão de fotos fica ao lado do seletor de temas", () => {
+  const chrome = read("src/components/news/app-chrome.tsx");
+  const sectionAt = chrome.indexOf("data-section-switch");
+  const imagesAt = chrome.indexOf("<ImagesSwitch");
+  const originAt = chrome.indexOf("<OriginSwitch");
+  assert.ok(sectionAt > 0, "data-section-switch");
+  assert.ok(imagesAt > sectionAt, "ImagesSwitch depois dos temas");
+  assert.ok(originAt > imagesAt, "ImagesSwitch antes de OriginSwitch");
+  assert.match(chrome.slice(sectionAt, imagesAt), /<\/div>/);
+});
