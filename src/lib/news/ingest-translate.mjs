@@ -3,8 +3,11 @@ import { needsFullTranslation } from "./story-pt.mjs";
 import { applyStoredTranslation, translateToPt } from "./translate-pt.mjs";
 
 const RETRY_WINDOW_MS = 36 * 60 * 60_000;
-const RETRY_SCAN = 200;
-const RETRY_WRITE = 24;
+const RETRY_EMPTY = 120;
+const RETRY_RECENT = 400;
+const RETRY_WRITE = 48;
+const POST_SELECT =
+  "post_id,account,posted_at,posted_at_sp,content,translation_pt,summary_pt,post_url,media_label,image_url,category,batch_name,source";
 
 export function postsNeedingPt(rows) {
   return (Array.isArray(rows) ? rows : []).filter(
@@ -12,16 +15,26 @@ export function postsNeedingPt(rows) {
   );
 }
 
-export async function listRecentNewsPosts(limit = RETRY_SCAN) {
+/** Vazios primeiro: os 200 mais novos são RSS já em PT e o backlog EN some da janela. */
+export function mergeRetranslateRows(empty, recent) {
+  const seen = new Set();
+  const out = [];
+  for (const row of [...(empty || []), ...(recent || [])]) {
+    const id = row?.post_id;
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(row);
+  }
+  return out;
+}
+
+async function fetchNewsPosts(extra) {
   const { supabaseReadHeaders, SUPABASE_POSTS_URL } = await import("./supabase.ts");
   const params = new URLSearchParams();
-  params.set(
-    "select",
-    "post_id,account,posted_at,posted_at_sp,content,translation_pt,summary_pt,post_url,media_label,image_url,category,batch_name,source",
-  );
+  params.set("select", POST_SELECT);
   params.set("posted_at", `gte.${new Date(Date.now() - RETRY_WINDOW_MS).toISOString()}`);
   params.set("order", "posted_at.desc");
-  params.set("limit", String(limit));
+  for (const [key, value] of Object.entries(extra)) params.set(key, value);
   try {
     const res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
       headers: supabaseReadHeaders(),
@@ -35,11 +48,26 @@ export async function listRecentNewsPosts(limit = RETRY_SCAN) {
   }
 }
 
+export async function listRecentNewsPosts(limit = RETRY_RECENT) {
+  return fetchNewsPosts({ limit: String(limit) });
+}
+
+export async function listPostsForRetranslate() {
+  const [empty, recent] = await Promise.all([
+    fetchNewsPosts({
+      limit: String(RETRY_EMPTY),
+      or: "(translation_pt.eq.,translation_pt.is.null)",
+    }),
+    fetchNewsPosts({ limit: String(RETRY_RECENT) }),
+  ]);
+  return mergeRetranslateRows(empty, recent);
+}
+
 export async function retranslateMissingPt(opts = {}) {
-  const listRecent = opts.listRecent ?? listRecentNewsPosts;
+  const listRecent = opts.listRecent ?? listPostsForRetranslate;
   const translate = opts.translate ?? translateToPt;
   const upsert = opts.upsert ?? (await import("./admin.ts")).upsertPosts;
-  const need = postsNeedingPt(await listRecent(RETRY_SCAN)).slice(0, opts.limit ?? RETRY_WRITE);
+  const need = postsNeedingPt(await listRecent()).slice(0, opts.limit ?? RETRY_WRITE);
   const built = [];
   for (const row of need) {
     await opts.assertOwned?.();
