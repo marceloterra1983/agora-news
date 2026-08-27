@@ -14,3 +14,12 @@ Scope: Parsear pubDate PT-BR e corrigir posted_at colado que empilha UOL no feed
   CHECK: npm run typecheck && npm run lint
   EXPECT: eslint
   EVIDENCE: > lint | > eslint . --max-warnings=0
+
+- [ ] G4: PR mergeado na main
+  EVIDENCE: pending
+
+- [ ] G5: ingest regrava posted_at UOL Economia (não mais 13 iguais)
+  EVIDENCE: pending
+
+- [ ] G6: feed Brasil mistura fontes (não só UOL Economia no topo)
+  EVIDENCE: pending

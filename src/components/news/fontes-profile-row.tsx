@@ -5,7 +5,7 @@ import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { FontePostLink } from "@/components/news/fonte-post-link";
 import { GroupTag } from "@/components/news/group-tag";
 import { OriginMark } from "@/components/news/origin-mark";
-import { displayTitle, formatCount } from "@/lib/news/format";
+import { displayTitle, formatCount, relativeTime } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
@@ -79,6 +79,15 @@ export function ProfileRow({
               ) : null}
               {followers ? (
                 <span className="shrink-0 text-[11px] tabular-nums text-mute">{followers}</span>
+              ) : null}
+              {row.lastPost ? (
+                <time
+                  dateTime={row.lastPost.publishedAt}
+                  suppressHydrationWarning
+                  className="shrink-0 text-[11px] tabular-nums text-mute"
+                >
+                  {relativeTime(row.lastPost.publishedAt)}
+                </time>
               ) : null}
               <GroupTag group={row.group} />
               {picking ? (
