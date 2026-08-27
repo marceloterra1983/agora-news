@@ -1,3 +1,5 @@
+export function resetTranslateSkip(): void;
+export function parseChrome(data: unknown): string;
 export function pickStoredPt(original: string, candidate: string): string;
 export function applyStoredTranslation(
   original: string,
