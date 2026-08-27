@@ -226,7 +226,7 @@ function FontesPage() {
                           <time
                             dateTime={g.latest}
                             suppressHydrationWarning
-                            className="ml-auto shrink-0 text-[10px] tabular-nums text-mute"
+                            className="shrink-0 text-[10px] tabular-nums text-mute"
                           >
                             {relativeTime(g.latest)}
                           </time>
