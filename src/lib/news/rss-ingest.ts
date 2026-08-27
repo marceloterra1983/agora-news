@@ -1,12 +1,17 @@
 /** Server-only. Ingestão RSS com fetch injetável. */
 import { adminHeaders, SUPABASE_URL, upsertPosts, type UpsertPost } from "./admin";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson } from "./cache";
-import { existingIds } from "./ingest-fetch";
+import { existingIds, idsWithReplacement } from "./ingest-fetch";
 import { saoPauloStamp } from "./ingest-fetch";
 import { MAX_RSS_ITEMS, RSS_SEED, rssGroupFor } from "./rss-catalog.mjs";
 import { rssAccountId, rssPostId } from "./rss-id.mjs";
-import { parseFeedXml } from "./rss-parse.mjs";
-import { ingestSurvives, rssPostsFromItems, skipRssResponse } from "./rss-ingest-core.mjs";
+import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
+import {
+  ingestSurvives,
+  rssIdsToSkip,
+  rssPostsFromItems,
+  skipRssResponse,
+} from "./rss-ingest-core.mjs";
 import { translateToPt } from "./translate-pt.mjs";
 
 export { ingestSurvives };
@@ -60,11 +65,13 @@ export async function runRssIngest(opts?: {
   feeds?: RssFeedRow[];
   translate?: typeof translateToPt;
   existingIdsImpl?: (ids: string[]) => Promise<Set<string>>;
+  replacementIdsImpl?: (ids: string[]) => Promise<Set<string>>;
   upsertImpl?: typeof upsertPosts;
 }): Promise<{ written: number; ok: boolean; feeds: number }> {
   const fetchImpl = opts?.fetchImpl ?? fetch;
   const translate = opts?.translate ?? translateToPt;
   const knownIds = opts?.existingIdsImpl ?? existingIds;
+  const replacementIds = opts?.replacementIdsImpl ?? idsWithReplacement;
   const upsert = opts?.upsertImpl ?? upsertPosts;
   const ownedOrGiven = opts?.feeds ?? (await loadOwnedFeeds());
   const feeds = feedsToScan(ownedOrGiven, opts?.feeds == null);
@@ -83,7 +90,10 @@ export async function runRssIngest(opts?: {
         signal: AbortSignal.timeout(12_000),
       });
       if (skipRssResponse(res.status)) continue;
-      const xml = await res.text();
+      const xml = decodeRssBody(
+        await res.arrayBuffer(),
+        res.headers.get("content-type") || "",
+      );
       await cacheSetJson(
         cacheKey,
         {
@@ -92,15 +102,26 @@ export async function runRssIngest(opts?: {
         },
         86_400,
       );
-      const items = parseFeedXml(xml, feed.url)
-        .sort((a, b) => Date.parse(b.publishedAt || "") - Date.parse(a.publishedAt || ""))
-        .slice(0, MAX_RSS_ITEMS);
-      const ids = items.map((item) => rssPostId(item.guid || item.link));
+      const parsed = parseFeedXml(xml, feed.url).sort(
+        (a, b) => Date.parse(b.publishedAt || "") - Date.parse(a.publishedAt || ""),
+      );
+      const items = parsed.slice(0, MAX_RSS_ITEMS);
+      const latestIds = new Set(items.map((item) => rssPostId(item.guid || item.link)));
+      const ids = parsed.map((item) => rssPostId(item.guid || item.link));
       const known = ids.length ? await knownIds(ids) : new Set<string>();
+      let poisoned = new Set<string>();
+      if (ids.length) {
+        try {
+          poisoned = await replacementIds(ids);
+        } catch {
+          /* heal falho não aborta itens novos */
+        }
+      }
+      const skip = rssIdsToSkip(ids, { known, poisoned, latest: latestIds });
       const translated: Record<string, { title: string; summary: string }> = {};
-      for (const item of items) {
+      for (const item of parsed) {
         const postId = rssPostId(item.guid || item.link);
-        if (known.has(postId)) continue;
+        if (skip.has(postId)) continue;
         const title = await translate(item.title);
         const summarySrc = item.summary || item.title;
         translated[postId] = {
@@ -108,7 +129,7 @@ export async function runRssIngest(opts?: {
           summary: summarySrc === item.title ? title : await translate(summarySrc),
         };
       }
-      rows.push(...rssPostsFromItems(feed, items, known, batch, translated));
+      rows.push(...rssPostsFromItems(feed, parsed, skip, batch, translated));
     } catch {
       /* um feed morto não aborta os outros */
     }

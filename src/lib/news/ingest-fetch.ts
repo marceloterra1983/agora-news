@@ -1,5 +1,6 @@
 import { supabaseReadHeaders, SUPABASE_POSTS_URL } from "./supabase";
 import { statusesFromPayload, type Status } from "./ingest-boundary";
+import { textHasReplacement } from "./rss-parse.mjs";
 
 export type { Status } from "./ingest-boundary";
 
@@ -91,6 +92,66 @@ export async function existingIds(ids: string[]): Promise<Set<string>> {
       throw new Error("existing_ids_invalid_payload");
     }
     for (const row of rows) out.add(row.post_id);
+  }
+  return out;
+}
+
+export async function idsWithReplacement(ids: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.some((id) => !/^(\d{1,30}|rss_[a-f0-9]{24})$/i.test(id))) {
+    throw new Error("replacement_ids_invalid_input");
+  }
+  for (let i = 0; i < unique.length; i += 80) {
+    const chunk = unique.slice(i, i + 80);
+    const params = new URLSearchParams();
+    params.set("select", "post_id,content,translation_pt,summary_pt");
+    params.set("post_id", `in.(${chunk.join(",")})`);
+    let res: Response;
+    try {
+      res = await fetch(`${SUPABASE_POSTS_URL}?${params}`, {
+        headers: supabaseReadHeaders(),
+        signal: AbortSignal.timeout(6_000),
+      });
+    } catch {
+      throw new Error("replacement_ids_request_failed");
+    }
+    if (!res.ok) throw new Error(`replacement_ids_http_${res.status}`);
+    let rows: unknown;
+    try {
+      rows = await res.json();
+    } catch {
+      throw new Error("replacement_ids_invalid_json");
+    }
+    const requested = new Set(chunk);
+    if (
+      !Array.isArray(rows) ||
+      !rows.every(
+        (row) =>
+          Boolean(row) &&
+          typeof row === "object" &&
+          !Array.isArray(row) &&
+          typeof (row as { post_id?: unknown }).post_id === "string" &&
+          requested.has((row as { post_id: string }).post_id),
+      )
+    ) {
+      throw new Error("replacement_ids_invalid_payload");
+    }
+    for (const row of rows) {
+      const rec = row as {
+        post_id: string;
+        content?: unknown;
+        translation_pt?: unknown;
+        summary_pt?: unknown;
+      };
+      if (
+        textHasReplacement(rec.content) ||
+        textHasReplacement(rec.translation_pt) ||
+        textHasReplacement(rec.summary_pt)
+      ) {
+        out.add(rec.post_id);
+      }
+    }
   }
   return out;
 }

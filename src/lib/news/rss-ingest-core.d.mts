@@ -1,5 +1,9 @@
 export function ingestSurvives(xFailed: boolean, rssWritten: number): boolean;
 export function skipRssResponse(status: number): boolean;
+export function rssIdsToSkip(
+  ids: string[],
+  opts: { known: Set<string>; poisoned: Set<string>; latest: Set<string> },
+): Set<string>;
 export function rssPostsFromItems(
   feed: { url?: string; account?: string; section: string },
   items: Array<{ guid?: string; link?: string; title?: string; summary?: string; publishedAt?: string }>,

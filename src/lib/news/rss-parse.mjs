@@ -1,5 +1,69 @@
 /** RSS 2.0 + Atom. Sem dependência. HTML de content:encoded é ignorado. */
 
+function bytesOf(input) {
+  if (input instanceof Uint8Array) return input;
+  if (input instanceof ArrayBuffer) return new Uint8Array(input);
+  if (ArrayBuffer.isView(input)) {
+    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+  }
+  return new Uint8Array(0);
+}
+
+function charsetFromContentType(value) {
+  const match = String(value || "").match(/charset\s*=\s*["']?([^"';\s]+)/i);
+  return match?.[1] || "";
+}
+
+function charsetFromXmlDecl(bytes) {
+  const head = new TextDecoder("latin1").decode(bytes.subarray(0, 180));
+  const match = head.match(/encoding\s*=\s*["']\s*([^"']+)\s*["']/i);
+  return match?.[1] || "";
+}
+
+function normalizeCharset(label) {
+  const key = String(label || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_ ]/g, "-");
+  if (!key) return "";
+  if (key === "utf-8" || key === "utf8" || key === "unicode-1-1-utf-8") return "utf-8";
+  if (
+    key === "iso-8859-1" ||
+    key === "iso8859-1" ||
+    key === "latin1" ||
+    key === "latin-1" ||
+    key === "windows-1252" ||
+    key === "cp1252" ||
+    key === "csisolatin1"
+  ) {
+    return "windows-1252";
+  }
+  return key;
+}
+
+export function textHasReplacement(value) {
+  return String(value || "").includes("\uFFFD");
+}
+
+/** UTF-8 válido ganha; senão charset do header/XML ou Windows-1252 (UOL/Folha). */
+export function decodeRssBody(input, contentType = "") {
+  const bytes = bytesOf(input);
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    const hinted =
+      normalizeCharset(charsetFromContentType(contentType)) ||
+      normalizeCharset(charsetFromXmlDecl(bytes)) ||
+      "windows-1252";
+    const label = hinted === "utf-8" ? "windows-1252" : hinted;
+    try {
+      return new TextDecoder(label).decode(bytes);
+    } catch {
+      return new TextDecoder("windows-1252").decode(bytes);
+    }
+  }
+}
+
 function decodeEntities(value) {
   return String(value || "")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
