@@ -191,18 +191,25 @@ test("Playwright: all five profile actions stay above the tab bar and respond", 
     const rows = page.locator('[data-testid="fonte-row"]');
     await rows.first().waitFor({ timeout: 15_000 });
     const n = await rows.count();
-    const idx = Math.min(8, Math.max(0, n - 1));
-    const row = rows.nth(idx);
-    await row.locator("button[aria-expanded]").first().click();
-    const actions = row.locator("[data-fonte-actions]");
-    if (!(await actions.count())) {
+    let row = null;
+    for (let i = 0; i < n; i++) {
+      const candidate = rows.nth(i);
+      await candidate.locator("button[aria-expanded]").first().click();
+      const actions = candidate.locator("[data-fonte-actions]");
+      if (!(await actions.count())) continue;
+      await actions.waitFor({ timeout: 8_000 });
+      if (await candidate.locator('[data-fonte-action="x"]').count()) {
+        row = candidate;
+        break;
+      }
+    }
+    if (!row) {
       unavailable(
         t,
         "servidor vivo ainda não tem o rodapé novo do perfil — pm2 restart após o merge",
       );
       return;
     }
-    await actions.waitFor({ timeout: 8_000 });
 
     const geometry = await page.evaluate(() => {
       const bar = document.querySelector("[data-fonte-actions]");

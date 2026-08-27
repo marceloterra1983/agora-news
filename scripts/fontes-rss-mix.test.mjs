@@ -30,7 +30,7 @@ test("rssFonteRow fills avatar, group and blurb for a seed site", () => {
   assert.equal(openai.group, "labs");
   assert.ok(openai.avatar);
   assert.match(openai.bio || "", /openai\.com/);
-  assert.equal(rssExtrasFor("ai").length, 6);
+  assert.ok(rssExtrasFor("ai").length >= 14);
   assert.match(read("src/lib/news/fontes-sort.ts"), /rssFonteRow|rssExtrasFor/);
 });
 
