@@ -69,3 +69,15 @@ test("hook e sync da nuvem hidratam settings reais, não o envelope fromRemote",
   assert.match(page, /title="Mostrar fotos"/);
   assert.match(page, /showImages:\s*!settings\.showImages/);
 });
+
+test("header do feed tem o botão de mostrar/ocultar fotos", () => {
+  const chrome = read("src/components/news/app-chrome.tsx");
+  const switchSrc = read("src/components/news/images-switch.tsx");
+  const css = read("src/styles.css");
+  assert.match(chrome, /ImagesSwitch/);
+  assert.match(switchSrc, /data-images-switch/);
+  assert.match(switchSrc, /showImages:\s*!settings\.showImages/);
+  assert.match(switchSrc, /Ocultar fotos/);
+  assert.match(switchSrc, /Mostrar fotos/);
+  assert.match(css, /html\[data-images="off"\] \[data-media\]/);
+});
