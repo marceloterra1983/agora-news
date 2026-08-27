@@ -1,7 +1,8 @@
 /** Server-only. Ingestão RSS com fetch injetável. */
 import { adminHeaders, SUPABASE_URL, upsertPosts, type UpsertPost } from "./admin";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson } from "./cache";
-import { existingIds, idsWithReplacement, postedAtById } from "./ingest-fetch";
+import { existingIds, idsWithReplacement } from "./ingest-fetch";
+import { postedAtById } from "./rss-posted-at";
 import { saoPauloStamp } from "./ingest-fetch";
 import { MAX_RSS_ITEMS, RSS_SEED, rssGroupFor } from "./rss-catalog.mjs";
 import { rssAccountId, rssPostId } from "./rss-id.mjs";
