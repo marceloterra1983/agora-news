@@ -45,6 +45,11 @@ test("lastPostHref uses in-app materia only when inApp and id are set", () => {
   assert.equal(lastPostHref("@OpenAI", "", true), "https://x.com/OpenAI");
 });
 
+test("lastPostHref for RSS never points at x.com", () => {
+  assert.equal(lastPostHref("r_9c68d283ae03", "rss_aabb", false), "/materia/rss_aabb");
+  assert.equal(lastPostHref("r_9c68d283ae03", "", false), "");
+});
+
 test("parseLastPost accepts title alias and rejects incomplete rows", () => {
   assert.equal(parseLastPost(null), null);
   assert.equal(parseLastPost({ id: "9" }), null);

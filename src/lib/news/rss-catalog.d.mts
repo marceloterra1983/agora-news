@@ -14,7 +14,42 @@ export function rssGroupFor(section: string): string;
 export function rssExtrasFor(
   section: string,
   owned?: Array<{ url?: string; title?: string; section?: string; group?: string; account?: string }>,
-): Array<{ handle: string; name: string; section: string; group: string }>;
+): Array<{ handle: string; name: string; section: string; group: string; url: string }>;
+export function rssAvatarUrl(url?: string): string;
+export function rssBlurb(url?: string, title?: string): string;
+export function rssSiteHref(
+  account: string,
+  owned?: Array<{ url?: string; account?: string }>,
+): string;
+export function rssFonteRow(p: {
+  handle?: string;
+  name?: string;
+  group?: string;
+  url?: string;
+}): {
+  handle: string;
+  name: string;
+  group: string;
+  followers: number;
+  verified: boolean;
+  avatar: string | null;
+  bio: string | null;
+  siteUrl: string | null;
+  lastPost: null;
+  lastPosts: [];
+  inFeed: number;
+  articles: number;
+  longform: number;
+  likes: number;
+  engagement: number;
+  views: number;
+  er: number;
+};
+export function mergeRssFontes<T extends { handle?: string }>(
+  base: T[],
+  owned: Array<{ url?: string; title?: string; section?: string; group?: string; account?: string }>,
+  section: string,
+): Array<T | ReturnType<typeof rssFonteRow>>;
 export function rssLabelFor(
   account: string,
   owned?: Array<{ title?: string; account?: string }>,

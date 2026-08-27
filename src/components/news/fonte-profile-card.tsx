@@ -4,7 +4,9 @@ import { FonteLastPosts } from "@/components/news/fontes-last-posts";
 import { ProfileEr } from "@/components/news/fontes-profile-er";
 import { Tip } from "@/components/news/icon-btn";
 import { XLogo } from "@/components/news/x-logo";
+import { Rss } from "lucide-react";
 import { formatCount } from "@/lib/news/format";
+import { safeHttpHref } from "@/lib/news/last-post";
 import { isRssAccount } from "@/lib/news/rss-catalog.mjs";
 import { groupLabel } from "@/lib/news/groups";
 import type { InfluenceRow } from "@/lib/news/influence";
@@ -33,6 +35,7 @@ export function FonteProfileCard({
   const showGroup = !hideGroup && row.group !== "novos";
   const followers =
     !hideFollowers && row.followers ? formatCount(row.followers) : "";
+  const siteHref = isRssAccount(row.handle) ? safeHttpHref(row.siteUrl || "") : "";
   return (
     <div className={cn("rounded-md bg-paper-2 px-3 py-2.5", className)}>
       {showGroup ? (
@@ -57,7 +60,20 @@ export function FonteProfileCard({
         data-fonte-actions
         className="relative z-50 mt-3 flex flex-wrap items-center gap-1 border-t border-line pt-3"
       >
-        {isRssAccount(row.handle) ? null : (
+        {siteHref ? (
+          <Tip label={`Abrir ${row.name}`}>
+            <a
+              href={siteHref}
+              target="_blank"
+              rel="noreferrer"
+              data-fonte-action="rss"
+              aria-label={`Abrir ${row.name}`}
+              className="grid size-[44px] place-items-center rounded-full border border-line bg-paper text-ink active:bg-paper-2"
+            >
+              <Rss className="size-4" />
+            </a>
+          </Tip>
+        ) : isRssAccount(row.handle) ? null : (
           <Tip label={`Abrir @${row.handle} no X`}>
             <a
               href={`https://x.com/${row.handle}`}

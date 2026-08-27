@@ -12,6 +12,7 @@ import {
 import { mapPool } from "./map-pool";
 import { displayBlurb } from "./profile-blurb.mjs";
 import { profilesFor, type XProfile } from "./profiles";
+import { isRssAccount, rssAvatarUrl, rssBlurb, rssExtrasFor, rssSiteHref } from "./rss-catalog.mjs";
 import { listStoredProfiles, type StoredProfile } from "./profile-store";
 import { listKnownSections } from "./sections";
 import type { Category } from "./types";
@@ -26,6 +27,7 @@ export type InfluenceRow = {
   verified: boolean;
   avatar: string | null;
   bio: string | null;
+  siteUrl?: string | null;
   lastPost: FonteLastPost | null;
   lastPosts: FonteLastPost[];
   inFeed: number;
@@ -151,9 +153,14 @@ function buildRows(
   const summaries = new Map(
     stored.map((row) => [norm(row.handle).toLowerCase(), row.summary_pt || ""]),
   );
-  const base = profilesFor(section).map((p) => {
+  const catalog = [
+    ...profilesFor(section).map((p) => ({ handle: p.handle, name: p.name, group: p.group, url: "" })),
+    ...rssExtrasFor(section),
+  ];
+  const base = catalog.map((p) => {
     const key = norm(p.handle).toLowerCase();
-    const stats = cachedStats(key);
+    const rss = isRssAccount(p.handle);
+    const stats = rss ? emptyStats() : cachedStats(key);
     const fromFeed = feedMap.get(key) ?? null;
     const last = preferNewerLast(
       lastMap.get(key) ?? fromFeed,
@@ -177,8 +184,9 @@ function buildRows(
       group: p.group,
       followers: stats.followers,
       verified: stats.verified,
-      avatar: stats.avatar,
-      bio: displayBlurb(p.handle, p.name, summaries.get(key) || stats.bio),
+      avatar: rss ? rssAvatarUrl(p.url) || null : stats.avatar,
+      bio: displayBlurb(p.handle, p.name, rss ? rssBlurb(p.url, p.name) : summaries.get(key) || stats.bio),
+      siteUrl: rss ? rssSiteHref(p.handle) || null : null,
       lastPost: lastWithBuzz(last, p.handle, inApp),
       lastPosts: lastPosts.length
         ? lastPosts
@@ -191,7 +199,7 @@ function buildRows(
       likes: 0,
       engagement: 0,
       views: 0,
-      er: buzzFor(p.handle)?.profileEr ?? 0,
+      er: rss ? 0 : buzzFor(p.handle)?.profileEr ?? 0,
     } satisfies InfluenceRow;
   });
 
@@ -242,7 +250,7 @@ export async function enrichFontesCatalog(): Promise<InfluenceRow[]> {
     }
   }
   const needBuzz = rows
-    .filter((r) => r.lastPost && !buzzIsFresh(r.handle, r.lastPost.id))
+    .filter((r) => r.lastPost && !isRssAccount(r.handle) && !buzzIsFresh(r.handle, r.lastPost.id))
     .slice(0, 20);
   if (needBuzz.length) {
     await mapPool(needBuzz, 8, (r) => fetchLastBuzz(r.handle, r.lastPost?.id));

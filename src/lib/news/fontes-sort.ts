@@ -5,6 +5,7 @@ import type { InfluenceRow } from "./influence";
 import { normHandle } from "./fontes-prefs";
 import { allGroupIds, groupHint, groupLabel } from "./groups";
 import { profilesFor } from "./profiles";
+import { rssExtrasFor, rssFonteRow } from "./rss-catalog.mjs";
 import type { Category } from "./types";
 
 export type SortKey = "recent" | "groups" | "starred";
@@ -56,7 +57,7 @@ export function emptyFonteRow(p: ReturnType<typeof profilesFor>[number]): Influe
 }
 
 export function seedFontes(secao: Category): InfluenceRow[] {
-  return profilesFor(secao).map(emptyFonteRow);
+  return [...profilesFor(secao).map(emptyFonteRow), ...rssExtrasFor(secao).map(rssFonteRow)];
 }
 
 export function mergeExtraFontes(

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { RSS_SEED } from "@/lib/news/rss-catalog.mjs";
 import { loadRssFeeds, onRssFeeds, replaceRssFeeds, type RssFeed } from "@/lib/news/rss-feeds";
 import { addOwnedRssFeed, removeOwnedRssFeed } from "@/lib/news/rss-owned.mjs";
 import { resolveRssFeed } from "@/lib/news/rss-resolve";
@@ -22,7 +21,6 @@ export function FontesSites({ section }: { section: Category }) {
     return onRssFeeds(refresh);
   }, [section]);
 
-  const seed = RSS_SEED.filter((row) => row.section === section);
   const canEdit = Boolean(user) && !isPending;
 
   async function add() {
@@ -64,38 +62,27 @@ export function FontesSites({ section }: { section: Category }) {
 
   return (
     <section className="mt-8 border-t border-line pt-6" data-testid="fontes-sites">
-      <h2 className="text-sm font-medium text-ink">Sites</h2>
+      <h2 className="text-sm font-medium text-ink">Adicionar site</h2>
       <p className="mt-1 text-[12px] text-mute">
-        Fontes RSS desta seção. As editoriais ficam fixas; você pode adicionar as suas.
+        Os sites editoriais estão na lista acima, misturados às contas. Aqui você inclui os seus.
       </p>
-      <ul className="mt-3 divide-y divide-line">
-        {seed.map((row) => (
-          <li key={row.account} className="flex items-center gap-3 py-2.5">
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm text-ink">{row.title}</span>
-              <span className="block truncate text-[11px] text-mute">{row.url}</span>
-            </span>
-            <span className="text-[11px] text-mute">editorial</span>
-          </li>
-        ))}
-        {owned.map((row) => (
-          <li key={row.account} className="flex items-center gap-3 py-2.5">
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm text-ink">{row.title}</span>
-              <span className="block truncate text-[11px] text-mute">{row.url}</span>
-            </span>
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => remove(row.account)}
-                className="text-[12px] text-mark"
-              >
-                Remover
-              </button>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      {owned.length ? (
+        <ul className="mt-3 divide-y divide-line">
+          {owned.map((row) => (
+            <li key={row.account} className="flex items-center gap-3 py-2.5">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm text-ink">{row.title}</span>
+                <span className="block truncate text-[11px] text-mute">{row.url}</span>
+              </span>
+              {canEdit ? (
+                <button type="button" onClick={() => remove(row.account)} className="text-[12px] text-mark">
+                  Remover
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {canEdit ? (
         <form
           className="mt-3 flex gap-2"

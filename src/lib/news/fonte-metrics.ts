@@ -1,6 +1,7 @@
 /** Métricas de post/perfil via fxtwitter — extraídas do Grok (reef-blade). */
 
 import { isHighPostEr, isHighPostQuality, isHighPostReach } from "./metric-outlier.mjs";
+import { isRssAccount } from "./rss-catalog.mjs";
 
 export type PostBuzz = {
   likes: number;
@@ -89,6 +90,7 @@ export function importBuzzCache(map: Record<string, PostBuzz> | null | undefined
 }
 
 export async function fetchLastBuzz(handle: string, tweetId?: string): Promise<PostBuzz | null> {
+  if (isRssAccount(handle)) return null;
   const key = handle.toLowerCase();
   const tweetKey = tweetId ? `${key}:${tweetId}` : key;
   const hit = buzzCache.get(tweetKey) || buzzCache.get(key);
