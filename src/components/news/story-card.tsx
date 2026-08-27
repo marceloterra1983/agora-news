@@ -125,27 +125,29 @@ export function StoryCard({
             <span className="grid shrink-0 place-items-center">{faceNode}</span>
           )}
           <span className={byline.startsWith("@") ? "lowercase" : undefined}>{byline}</span>
-          <OriginMark handle={story.source} />
           <GroupTag handle={story.source} />
           <span aria-hidden>·</span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>
             {relativeTime(story.publishedAt)}
           </time>
-          <Tip label={saved ? "Remover dos salvos" : "Salvar matéria"}>
-            <button
-              type="button"
-              onClick={() => toggleSave(story)}
-              aria-pressed={saved}
-              aria-label={saved ? "Remover dos salvos" : "Salvar matéria"}
-              className="relative z-10 -my-2 ml-auto grid size-11 shrink-0 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
-            >
-              {saved ? (
-                <BookmarkCheck className="size-4 text-mark" />
-              ) : (
-                <Bookmark className="size-4" />
-              )}
-            </button>
-          </Tip>
+          <span className="relative z-10 ml-auto flex shrink-0 items-center">
+            <OriginMark handle={story.source} />
+            <Tip label={saved ? "Remover dos salvos" : "Salvar matéria"}>
+              <button
+                type="button"
+                onClick={() => toggleSave(story)}
+                aria-pressed={saved}
+                aria-label={saved ? "Remover dos salvos" : "Salvar matéria"}
+                className="relative z-10 -my-2 grid size-11 shrink-0 place-items-center rounded-full text-mute hover:bg-paper-2 hover:text-ink"
+              >
+                {saved ? (
+                  <BookmarkCheck className="size-4 text-mark" />
+                ) : (
+                  <Bookmark className="size-4" />
+                )}
+              </button>
+            </Tip>
+          </span>
         </p>
         <h2 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
           <Link
