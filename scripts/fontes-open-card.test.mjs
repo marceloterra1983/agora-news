@@ -52,15 +52,15 @@ test("Playwright Fontes: star notify power persist and back stays on /fontes", a
     assert.ok(res && res.status() < 400, `GET /fontes ${res?.status()}`);
     await page.locator('[data-testid="fonte-row"]').first().waitFor({ timeout: 15_000 });
     const n = await page.locator('[data-testid="fonte-row"]').count();
-    const idx = Math.min(8, Math.max(0, n - 1));
-    let row = await openCard(page, idx);
-    if (!row) {
-      for (let i = 0; i < Math.min(n, 16); i++) {
-        row = await openCard(page, i);
-        if (row) break;
+    let row = null;
+    for (let i = 0; i < n; i++) {
+      const candidate = await openCard(page, i);
+      if (candidate && (await candidate.locator('[data-fonte-action="x"]').count())) {
+        row = candidate;
+        break;
       }
     }
-    assert.ok(row, "nenhum card aberto com data-fonte-actions");
+    assert.ok(row, "nenhum card X aberto com data-fonte-actions");
     await row.locator("[data-fonte-actions]").scrollIntoViewIfNeeded();
 
     const handle = String(await row.locator('[data-fonte-action="x"]').getAttribute("href"))
