@@ -32,8 +32,9 @@ Depois do primeiro cadastro, defina `false` e reinicie o serviço.
 2. No SQL Editor do Supabase, aplique `scripts/supabase-domain-tables.sql` e depois
    `scripts/supabase-private-persistence-migrate.sql`. Guarde e confira o manifesto
    exportado antes de qualquer limpeza legada.
-3. Exija CI verde e construa a imagem: `docker compose build news`. Registre o
-   digest e mantenha uma tag de commit, por exemplo:
+3. Exija CI verde. O cutover rotineiro é `bash scripts/deploy-prod.sh` na
+   `main` limpa (build + tag `news-news:<commit>` + `up` + health). Manual:
+   `docker compose build news` e
    `docker image tag news-news:latest news-news:<commit>`.
 4. Aplique somente o schema Better Auth/Postgres:
    `docker compose run --rm news npm run db:migrate`.
