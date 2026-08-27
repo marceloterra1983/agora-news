@@ -9,7 +9,7 @@ import type { InfluenceRow } from "@/lib/news/influence";
 import { safeHttpHref } from "@/lib/news/last-post";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function ProfileRow({
   row,
@@ -35,13 +35,14 @@ export function ProfileRow({
   const pausedRow = prefs.isDisabled(row.handle);
   const followers = row.followers ? formatCount(row.followers) : "";
   const lastHref = row.lastPost ? safeHttpHref(row.lastPost.href) : "";
+  const [avatarBroken, setAvatarBroken] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     actionsRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [open]);
   return (
-    <li data-testid="fonte-row" className="border-b border-line">
+    <li data-testid="fonte-row" data-fonte-handle={row.handle} className="border-b border-line">
       <div className="flex items-start gap-1">
         <button
           type="button"
@@ -53,7 +54,7 @@ export function ProfileRow({
           <span className="w-4 shrink-0 text-right font-mono text-[10px] tabular-nums text-mute">
             {index + 1}
           </span>
-          {row.avatar ? (
+          {row.avatar && !avatarBroken ? (
             <img
               src={row.avatar}
               alt=""
@@ -61,6 +62,7 @@ export function ProfileRow({
               height={28}
               loading={index === 0 ? "eager" : "lazy"}
               referrerPolicy="no-referrer"
+              onError={() => setAvatarBroken(true)}
               className="size-7 shrink-0 rounded-full bg-paper-2 object-cover"
             />
           ) : (

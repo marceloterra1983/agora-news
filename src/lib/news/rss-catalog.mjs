@@ -154,7 +154,69 @@ export function rssExtrasFor(section, owned = []) {
       name: String(row.title || row.account),
       section: slug,
       group: String(row.group || rssGroupFor(slug)),
+      url: String(row.url || ""),
     }));
+}
+
+export function rssAvatarUrl(url) {
+  const host = hostnameOf(url);
+  return host ? `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(host)}` : "";
+}
+
+export function rssBlurb(url, title) {
+  const host = hostnameOf(url);
+  if (host) return `Feed em ${host}`;
+  return title ? `${title} é um site acompanhado neste tema.` : "";
+}
+
+export function rssSiteHref(account, owned = []) {
+  const key = String(account || "")
+    .replace(/^@+/, "")
+    .trim()
+    .toLowerCase();
+  const hit = [...RSS_SEED, ...(Array.isArray(owned) ? owned : [])].find(
+    (row) => String(row.account || "").toLowerCase() === key,
+  );
+  if (!hit?.url) return "";
+  try {
+    return new URL(hit.url).origin;
+  } catch {
+    return "";
+  }
+}
+
+/** Mesmo shape de InfluenceRow para misturar RSS na lista de Fontes. */
+export function rssFonteRow(p) {
+  const url = String(p?.url || "");
+  const handle = String(p?.handle || "").replace(/^@+/, "");
+  return {
+    handle,
+    name: String(p?.name || handle),
+    group: String(p?.group || "novos"),
+    followers: 0,
+    verified: false,
+    avatar: rssAvatarUrl(url) || null,
+    bio: rssBlurb(url, p?.name) || null,
+    siteUrl: rssSiteHref(handle, url ? [{ account: handle, url }] : []) || null,
+    lastPost: null,
+    lastPosts: [],
+    inFeed: 0,
+    articles: 0,
+    longform: 0,
+    likes: 0,
+    engagement: 0,
+    views: 0,
+    er: 0,
+  };
+}
+
+export function mergeRssFontes(base, owned, section) {
+  if (!Array.isArray(base)) return [];
+  const seen = new Set(base.map((row) => String(row?.handle || "").toLowerCase()));
+  const added = rssExtrasFor(section, owned)
+    .filter((row) => !seen.has(row.handle.toLowerCase()))
+    .map(rssFonteRow);
+  return added.length ? [...base, ...added] : base;
 }
 
 export function rssLabelFor(account, owned = []) {

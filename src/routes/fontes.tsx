@@ -17,7 +17,8 @@ import {
   type SortKey,
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
-import { filterFontesByOrigin, fontesEmptyHint } from "@/lib/news/rss-catalog.mjs";
+import { filterFontesByOrigin, fontesEmptyHint, mergeRssFontes } from "@/lib/news/rss-catalog.mjs";
+import { loadRssFeeds, onRssFeeds } from "@/lib/news/rss-feeds";
 import { loadFontes } from "@/lib/news/server";
 import { routeMeta } from "@/lib/news/route-meta";
 import { useSettings } from "@/lib/news/use-settings";
@@ -53,6 +54,7 @@ function FontesPage() {
   const [openHandle, setOpenHandle] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const extras = useExtraFontes();
+  const [rssOwned, setRssOwned] = useState(loadRssFeeds);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
   const [groupIds, setGroupIds] = useState<string[]>([]);
@@ -64,6 +66,7 @@ function FontesPage() {
     setPicking(false);
     return onCustomGroups(() => setGroupIds(allGroupIds(secao)));
   }, [secao]);
+  useEffect(() => onRssFeeds(() => setRssOwned(loadRssFeeds())), []);
 
   useEffect(() => {
     if (sortParam) return;
@@ -90,7 +93,8 @@ function FontesPage() {
 
   const base = data?.rows?.length ? data.rows : seed;
   const withExtras = useMemo(() => mergeExtraFontes(base, extras, secao), [base, extras, secao]);
-  const rows = sortFontesRows(withExtras, sort, prefs.starred).map((r) => ({
+  const withRss = useMemo(() => mergeRssFontes(withExtras, rssOwned, secao), [withExtras, rssOwned, secao]);
+  const rows = sortFontesRows(withRss, sort, prefs.starred).map((r) => ({
     ...r,
     group: prefs.groupOf(r.handle) ?? r.group ?? "novos",
   }));
