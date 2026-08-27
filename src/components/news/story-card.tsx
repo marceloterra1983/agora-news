@@ -10,6 +10,7 @@ import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
 import { StoryMedia } from "./story-media";
 import { GroupTag } from "./group-tag";
+import { OriginMark } from "./origin-mark";
 import { tapIcon, Tip } from "./icon-btn";
 import { WrittenLinks } from "./written-link";
 
@@ -28,7 +29,11 @@ function ClusterChrome({
         <span>
           Também
           {also.map((row) => (
-            <span key={row.source}> · {row.sourceLabel || row.source}</span>
+            <span key={row.source} className="inline-flex items-center gap-1">
+              {" · "}
+              <OriginMark handle={row.source} />
+              {row.sourceLabel || row.source}
+            </span>
           ))}
         </span>
       ) : null}
@@ -120,6 +125,7 @@ export function StoryCard({
             <span className="grid shrink-0 place-items-center">{faceNode}</span>
           )}
           <span className={byline.startsWith("@") ? "lowercase" : undefined}>{byline}</span>
+          <OriginMark handle={story.source} />
           <GroupTag handle={story.source} />
           <span aria-hidden>·</span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>
@@ -208,6 +214,7 @@ export function StoryCard({
       <div className="min-w-0">
         <p className="mb-1.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-mute">
           <span className="text-mark">{story.sourceLabel}</span>
+          <OriginMark handle={story.source} />
           <GroupTag
             handle={story.source}
             className="normal-case tracking-normal"
