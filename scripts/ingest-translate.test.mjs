@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { postsNeedingPt, retranslateMissingPt } from "../src/lib/news/ingest-translate.mjs";
+import { readFileSync } from "node:fs";
+import { postsNeedingPt, mergeRetranslateRows, retranslateMissingPt } from "../src/lib/news/ingest-translate.mjs";
 
 const EN = "This week the models have been better than the last ones.";
 const PT = "Nesta semana os modelos têm sido melhores do que os anteriores.";
@@ -45,6 +46,23 @@ test("retranslateMissingPt upserts only accepted Portuguese", async () => {
   assert.equal(written, 1);
   assert.equal(upserted[0].translation_pt, PT);
   assert.notEqual(upserted[0].translation_pt, EN);
+});
+
+test("mergeRetranslateRows puts empty-PT rows ahead of the newest window", () => {
+  const oldEmpty = { post_id: "old_empty", translation_pt: "" };
+  const newest = { post_id: "newest", translation_pt: "já em português." };
+  const dup = { post_id: "old_empty", translation_pt: "dup" };
+  assert.deepEqual(
+    mergeRetranslateRows([oldEmpty], [newest, dup]).map((r) => r.post_id),
+    ["old_empty", "newest"],
+  );
+});
+
+test("retry query targets empty translation_pt instead of only the newest 200", () => {
+  const src = readFileSync(new URL("../src/lib/news/ingest-translate.mjs", import.meta.url), "utf8");
+  assert.match(src, /translation_pt\.eq\./);
+  assert.match(src, /listPostsForRetranslate/);
+  assert.doesNotMatch(src, /const RETRY_SCAN = 200/);
 });
 
 test("retranslateMissingPt skips a row when the translator still fails open", async () => {
