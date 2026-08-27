@@ -4,7 +4,7 @@ import { applyStoredTranslation, translateToPt } from "./translate-pt.mjs";
 
 const RETRY_WINDOW_MS = 36 * 60 * 60_000;
 const RETRY_SCAN = 200;
-const RETRY_WRITE = 12;
+const RETRY_WRITE = 24;
 
 export function postsNeedingPt(rows) {
   return (Array.isArray(rows) ? rows : []).filter(

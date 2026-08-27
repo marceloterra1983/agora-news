@@ -80,6 +80,7 @@ test("X throw plus RSS write survives; r_* never hits fxtwitter", () => {
   assert.match(wrap, /runRssIngest/);
   assert.match(read("src/lib/news/rss-ingest.ts"), /skipRssResponse/);
   assert.match(read("src/lib/news/rss-ingest.ts"), /rssPostsFromItems/);
+  assert.match(read("src/lib/news/rss-ingest.ts"), /summarySrc === item\.title/);
   assert.match(read("src/lib/news/ingest-scan.ts"), /isRssAccount/);
   assert.match(read("src/lib/news/ingest-scan.ts"), /!isRssAccount\(handle\)/);
   assert.equal(isRssAccount("r_bea4293d5edd"), true);

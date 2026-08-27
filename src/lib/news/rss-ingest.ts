@@ -101,9 +101,11 @@ export async function runRssIngest(opts?: {
       for (const item of items) {
         const postId = rssPostId(item.guid || item.link);
         if (known.has(postId)) continue;
+        const title = await translate(item.title);
+        const summarySrc = item.summary || item.title;
         translated[postId] = {
-          title: await translate(item.title),
-          summary: await translate(item.summary || item.title),
+          title,
+          summary: summarySrc === item.title ? title : await translate(summarySrc),
         };
       }
       rows.push(...rssPostsFromItems(feed, items, known, batch, translated));
