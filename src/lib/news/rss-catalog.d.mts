@@ -55,6 +55,7 @@ export function rssLabelFor(
   owned?: Array<{ title?: string; account?: string }>,
 ): string;
 export function isRssAccount(handle: string): boolean;
+export function originsInHandles(handles: Iterable<string>): Array<"x" | "rss">;
 export function storySourceFromAccount(
   account: string,
   opts?: {

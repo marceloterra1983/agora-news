@@ -234,6 +234,21 @@ export function isRssAccount(handle) {
   return /^r_[a-f0-9]{12}$/i.test(String(handle || "").replace(/^@+/, "").trim());
 }
 
+/** Ordem estável: X, depois RSS. Grupo só-X, só-RSS ou ambos. */
+export function originsInHandles(handles) {
+  let x = false;
+  let rss = false;
+  for (const handle of handles) {
+    if (isRssAccount(handle)) rss = true;
+    else x = true;
+    if (x && rss) break;
+  }
+  const origins = [];
+  if (x) origins.push("x");
+  if (rss) origins.push("rss");
+  return origins;
+}
+
 function bareHandle(value) {
   return String(value || "")
     .replace(/^@+/, "")
