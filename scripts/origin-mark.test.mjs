@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { isRssAccount } from "../src/lib/news/rss-catalog.mjs";
+import { isRssAccount, originsInHandles } from "../src/lib/news/rss-catalog.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
@@ -24,9 +24,26 @@ test("Fontes, feed, article and popup wire OriginMark", () => {
     "src/components/news/story-card.tsx",
     "src/components/news/article-view.tsx",
     "src/components/news/feed-profile-popup.tsx",
+    "src/routes/fontes.tsx",
   ]) {
     assert.match(read(rel), /OriginMark/);
   }
+});
+
+test("originsInHandles is x, rss or both", () => {
+  assert.deepEqual(originsInHandles(["openai"]), ["x"]);
+  assert.deepEqual(originsInHandles(["r_bea4293d5edd"]), ["rss"]);
+  assert.deepEqual(originsInHandles(["openai", "r_bea4293d5edd"]), ["x", "rss"]);
+  assert.deepEqual(originsInHandles([]), []);
+});
+
+test("group headers render g.origins next to ChevronDown", () => {
+  const src = read("src/routes/fontes.tsx");
+  const mark = src.indexOf("{g.origins.map");
+  const chevron = src.indexOf("<ChevronDown");
+  assert.ok(mark > 0 && mark < chevron && chevron - mark < 220);
+  assert.match(src, /data-group-origins=\{g\.origins\.join/);
+  assert.match(read("src/lib/news/fontes-sort.ts"), /originsInHandles/);
 });
 
 test("Fontes OriginMark sits next to ChevronDown", () => {

@@ -2,6 +2,7 @@ import { AppChrome } from "@/components/news/app-chrome";
 import { FontesBatchBar } from "@/components/news/fontes-batch-bar";
 import { FontesChip, FontesSortChips } from "@/components/news/fontes-chip";
 import { FontesSites } from "@/components/news/fontes-sites";
+import { OriginMark } from "@/components/news/origin-mark";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
 import { useFontesLeave } from "@/lib/news/use-fontes-leave";
@@ -181,7 +182,7 @@ function FontesPage() {
             {shownGroups.map((g) => {
               const open = openGroups.has(g.id);
               return (
-                <li key={g.id} className="border-b border-line">
+                <li key={g.id} data-fonte-group={g.id} data-group-origins={g.origins.join(",")} className="border-b border-line">
                   <button
                     type="button"
                     aria-expanded={open}
@@ -235,12 +236,17 @@ function FontesPage() {
                         {g.preview || g.hint}
                       </span>
                     </span>
-                    <ChevronDown
-                      className={cn(
-                        "size-4 shrink-0 text-mute transition-transform",
-                        open && "rotate-180",
-                      )}
-                    />
+                    <span className="flex shrink-0 items-center gap-1">
+                      {g.origins.map((origin) => (
+                        <OriginMark key={origin} origin={origin} />
+                      ))}
+                      <ChevronDown
+                        className={cn(
+                          "size-4 shrink-0 text-mute transition-transform",
+                          open && "rotate-180",
+                        )}
+                      />
+                    </span>
                   </button>
                   {open ? (
                     <>
