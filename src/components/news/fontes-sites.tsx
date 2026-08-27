@@ -5,9 +5,11 @@ import { loadRssFeeds, onRssFeeds, replaceRssFeeds, type RssFeed } from "@/lib/n
 import { addOwnedRssFeed, removeOwnedRssFeed } from "@/lib/news/rss-owned.mjs";
 import { resolveRssFeed } from "@/lib/news/rss-resolve";
 import { pushCloudPrefs } from "@/lib/news/prefs-sync";
+import { useSettings } from "@/lib/news/use-settings";
 import type { Category } from "@/lib/news/types";
 
 export function FontesSites({ section }: { section: Category }) {
+  const { settings } = useSettings();
   const { user, isPending } = useCurrentUserState();
   const [owned, setOwned] = useState<RssFeed[]>([]);
   const [url, setUrl] = useState("");
@@ -57,6 +59,8 @@ export function FontesSites({ section }: { section: Category }) {
       setError("Só dá para remover sites que você adicionou.");
     }
   }
+
+  if (!settings.showRss) return null;
 
   return (
     <section className="mt-8 border-t border-line pt-6" data-testid="fontes-sites">

@@ -4,7 +4,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
+  filterFontesByOrigin,
   filterStoriesByOrigin,
+  fontesEmptyHint,
   storyIsRss,
 } from "../src/lib/news/rss-catalog.mjs";
 import { mergeSettingsBlob, writeSettings } from "../src/lib/news/settings.ts";
@@ -71,10 +73,28 @@ test("writeSettings persists showX/showRss", (t) => {
   assert.equal(stored.showRss, true);
 });
 
-test("chrome, feed and salvos wire the origin switch", () => {
+test("filterFontesByOrigin keeps X and RSS rows by flag", () => {
+  const xRow = { handle: "g1", name: "g1" };
+  const rssRow = { handle: "r_9c68d283ae03", name: "TecMundo" };
+  const list = [xRow, rssRow];
+  assert.deepEqual(filterFontesByOrigin(list, { showX: true, showRss: true }), list);
+  assert.deepEqual(filterFontesByOrigin(list, { showX: true, showRss: false }), [xRow]);
+  assert.deepEqual(filterFontesByOrigin(list, { showX: false, showRss: true }), [rssRow]);
+  assert.deepEqual(filterFontesByOrigin(list, { showX: false, showRss: false }), []);
+});
+
+test("fontesEmptyHint names the origin that is off", () => {
+  assert.match(fontesEmptyHint({ showX: false, showRss: false, sort: "recent" }), /X ou o RSS/);
+  assert.match(fontesEmptyHint({ showX: false, showRss: true, sort: "recent" }), /Ligue o X/);
+  assert.match(fontesEmptyHint({ showX: true, showRss: true, sort: "starred" }), /favorito/);
+});
+
+test("chrome, feed, salvos and Fontes wire the origin switch", () => {
   const chrome = read("src/components/news/app-chrome.tsx");
   const feed = read("src/components/news/feed.tsx");
   const salvos = read("src/routes/salvos.tsx");
+  const fontes = read("src/routes/fontes.tsx");
+  const sites = read("src/components/news/fontes-sites.tsx");
   const switchSrc = read("src/components/news/origin-switch.tsx");
   assert.match(chrome, /OriginSwitch/);
   assert.match(switchSrc, /data-origin-switch/);
@@ -83,4 +103,8 @@ test("chrome, feed and salvos wire the origin switch", () => {
   assert.match(switchSrc, /XLogo/);
   assert.match(feed, /filterStoriesByOrigin|storyIsRss/);
   assert.match(salvos, /filterStoriesByOrigin/);
+  assert.match(fontes, /filterFontesByOrigin/);
+  assert.match(fontes, /useSettings/);
+  assert.match(fontes, /fontesEmptyHint/);
+  assert.match(sites, /settings\.showRss/);
 });

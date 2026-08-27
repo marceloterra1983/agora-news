@@ -1,28 +1,28 @@
-# Gates: incluir fontes RSS no seed editorial
+# Gates: Fontes respeita o recorte X/RSS
 
-Scope: RSS_SEED passa a 19 feeds (5 atuais + 14 incluir); OpenAI/HF em labs; account = rssAccountId(url).
+Scope: Os botões X/RSS do chrome também recortam a lista de Fontes e o bloco Sites.
 
-- [x] G1: Seed tem 19 URLs, as 14 novas e as 5 atuais
-  CHECK: node --experimental-strip-types --test scripts/rss-seed.test.mjs
-  EXPECT: pass 3
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 127.952599
+- [x] G1: filterFontesByOrigin recorta contas X vs r_*
+  CHECK: node --experimental-strip-types --test scripts/origin-filter.test.mjs
+  EXPECT: pass
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 670.948519
 
-- [x] G2: OpenAI e Hugging Face estão no grupo labs
-  CHECK: node --input-type=module -e "import { RSS_SEED } from './src/lib/news/rss-catalog.mjs'; const g=Object.fromEntries(RSS_SEED.map(r=>[r.title,r.group])); if(g.OpenAI!=='labs'||g['Hugging Face']!=='labs') throw new Error(JSON.stringify(g)); console.log('LABS_OK');"
-  EXPECT: LABS_OK
-  EVIDENCE: LABS_OK
+- [x] G2: fontes.tsx e fontes-sites.tsx leem showX/showRss
+  CHECK: node --experimental-strip-types --test scripts/origin-filter.test.mjs
+  EXPECT: Fontes
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 300.038497
 
-- [x] G3: Cada account do seed é rssAccountId(url)
-  CHECK: node --input-type=module -e "import { RSS_SEED } from './src/lib/news/rss-catalog.mjs'; import { rssAccountId } from './src/lib/news/rss-id.mjs'; const bad=RSS_SEED.filter(r=>r.account!==rssAccountId(r.url)); if(bad.length) throw new Error(JSON.stringify(bad.map(r=>r.title))); console.log('IDS_OK '+RSS_SEED.length);"
-  EXPECT: IDS_OK 19
-  EVIDENCE: IDS_OK 19
+- [x] G3: fontes.tsx permanece ≤ 300 linhas
+  CHECK: node --experimental-strip-types --test scripts/split-pages.test.mjs
+  EXPECT: buscar and fontes routes stay under 300 lines
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 70.185353
 
 - [x] G4: npm test passa
   CHECK: npm test
   EXPECT: /fail 0/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 9328.650995
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 11724.886484
 
-- [x] G5: typecheck e lint no catálogo e no teste
-  CHECK: npx tsc --noEmit && npx eslint src/lib/news/rss-catalog.mjs scripts/rss-seed.test.mjs --max-warnings=0 && echo TYPE_LINT_OK
+- [x] G5: typecheck e lint nos arquivos tocados
+  CHECK: npx tsc --noEmit && npx eslint src/lib/news/fontes-sort.ts src/lib/news/rss-catalog.mjs src/routes/fontes.tsx src/components/news/fontes-sites.tsx scripts/origin-filter.test.mjs --max-warnings=0 && echo TYPE_LINT_OK
   EXPECT: TYPE_LINT_OK
   EVIDENCE: TYPE_LINT_OK

@@ -17,8 +17,10 @@ import {
   type SortKey,
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
+import { filterFontesByOrigin, fontesEmptyHint } from "@/lib/news/rss-catalog.mjs";
 import { loadFontes } from "@/lib/news/server";
 import { routeMeta } from "@/lib/news/route-meta";
+import { useSettings } from "@/lib/news/use-settings";
 import { relativeTime } from "@/lib/news/format";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "@/lib/news/types";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
@@ -47,6 +49,7 @@ function FontesPage() {
   const sort = sortParam ?? "recent";
   const initial = Route.useLoaderData();
   const prefs = useFontesPrefs(secao);
+  const { settings } = useSettings();
   const [openHandle, setOpenHandle] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const extras = useExtraFontes();
@@ -91,8 +94,9 @@ function FontesPage() {
     ...r,
     group: prefs.groupOf(r.handle) ?? r.group ?? "novos",
   }));
-  const visible = filterFontesRows(rows, q, secao);
+  const visible = filterFontesByOrigin(filterFontesRows(rows, q, secao), settings);
   const grouped = groupFontesRows(visible, groupIds);
+  const shownGroups = settings.showX && settings.showRss ? grouped : grouped.filter((g) => g.items.length);
   function toggleGroup(id: string) {
     setOpenGroups((prev) => {
       const next = new Set(prev);
@@ -166,11 +170,11 @@ function FontesPage() {
 
         {visible.length === 0 ? (
           <p role="status" className="py-10 text-center text-sm text-mute">
-            {sort === "starred" ? "Nenhum favorito ainda. Toque na estrela de um perfil." : "Nenhum perfil."}
+            {fontesEmptyHint({ ...settings, sort })}
           </p>
         ) : sort === "groups" ? (
           <ul>
-            {grouped.map((g) => {
+            {shownGroups.map((g) => {
               const open = openGroups.has(g.id);
               return (
                 <li key={g.id} className="border-b border-line">
