@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { BadgeCheck, X } from "lucide-react";
 import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { GroupTag } from "@/components/news/group-tag";
+import { OriginMark } from "@/components/news/origin-mark";
 import { Tip } from "@/components/news/icon-btn";
 import { formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
@@ -42,6 +43,7 @@ function PopupIdentity({
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-1.5">
           <span className="truncate text-base font-medium text-ink">{row.name}</span>
+          <OriginMark handle={row.handle} />
           {row.verified ? (
             <BadgeCheck className="size-4 shrink-0 text-ink" aria-label="verificado" />
           ) : null}

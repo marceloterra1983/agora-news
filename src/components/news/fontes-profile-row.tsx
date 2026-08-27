@@ -4,6 +4,7 @@ import { ClosedPostMeta } from "@/components/news/fontes-closed-post";
 import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { FontePostLink } from "@/components/news/fonte-post-link";
 import { GroupTag } from "@/components/news/group-tag";
+import { OriginMark } from "@/components/news/origin-mark";
 import { displayTitle, formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { safeHttpHref } from "@/lib/news/last-post";
@@ -73,6 +74,7 @@ export function ProfileRow({
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5">
               <span className="truncate text-sm font-medium text-ink">{row.name}</span>
+              <OriginMark handle={row.handle} />
               {row.verified ? (
                 <BadgeCheck className="size-3 shrink-0 text-ink" aria-label="verificado" />
               ) : null}

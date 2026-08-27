@@ -15,6 +15,7 @@ import { safeHttpHref } from "@/lib/news/last-post";
 import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
 import { StoryAssetBlock } from "./story-media";
 import { GroupTag } from "./group-tag";
+import { OriginMark } from "./origin-mark";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
 import { PostText } from "./written-link";
 import { IconBtn, IconLink } from "./icon-btn";
@@ -101,6 +102,7 @@ export function ArticleView({ story }: { story: Story }) {
           <span className={byline.startsWith("@") ? "break-all lowercase" : "break-all"}>
             {byline}
           </span>
+          <OriginMark handle={story.source} />
           <GroupTag handle={story.source} />
           <span aria-hidden> · </span>
           <time dateTime={story.publishedAt} suppressHydrationWarning>
