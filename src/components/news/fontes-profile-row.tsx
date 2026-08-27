@@ -74,7 +74,6 @@ export function ProfileRow({
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5">
               <span className="truncate text-sm font-medium text-ink">{row.name}</span>
-              <OriginMark handle={row.handle} />
               {row.verified ? (
                 <BadgeCheck className="size-3 shrink-0 text-ink" aria-label="verificado" />
               ) : null}
@@ -90,13 +89,16 @@ export function ProfileRow({
                 )
               ) : null}
               <FonteDisabledBadge show={pausedRow} />
-              <ChevronDown
-                aria-hidden
-                className={cn(
-                  "ml-auto size-3.5 shrink-0 text-mute transition-transform",
-                  open && "rotate-180",
-                )}
-              />
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <OriginMark handle={row.handle} />
+                <ChevronDown
+                  aria-hidden
+                  className={cn(
+                    "size-3.5 shrink-0 text-mute transition-transform",
+                    open && "rotate-180",
+                  )}
+                />
+              </span>
             </span>
           </span>
         </button>
