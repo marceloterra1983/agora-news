@@ -119,7 +119,14 @@ test("catalogFor('ai') keeps the IA groups, labels and seed", () => {
   assert.equal(aiLabels.pesquisa, "Cientistas");
   assert.equal(aiLabels.imprensa, "Imprensa");
   assert.equal(aiLabels.builders, "Devs");
+  assert.equal(aiLabels.regulacao, "Regulação");
+  assert.equal(aiLabels["ai-riscos"], "Riscos");
   assert.equal(aiLabels.novos, "Outros");
+  assert.equal(SECTION_TAXONOMY.tech.labels["tech-opensource"], "Open source");
+  assert.equal(SECTION_TAXONOMY.tech.labels["tech-ciencia"], "Ciência");
+  assert.equal(SECTION_TAXONOMY.brasil.labels["br-ciencia"], "Ciência");
+  assert.equal(SECTION_TAXONOMY.brasil.labels["br-mundo"], "Mundo");
+  assert.equal(SECTION_TAXONOMY.brasil.labels["br-cultura"], "Cultura");
   const seed = AI_PROFILES;
   assert.equal(seed.length, 48);
   for (const handle of AI_KEEP) {

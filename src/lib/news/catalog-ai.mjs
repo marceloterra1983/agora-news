@@ -1,4 +1,4 @@
-/** Seed de IA — não esvaziar; labels Empresas/CEOs/Cientistas/Imprensa/Devs. */
+/** Seed de IA — não esvaziar; labels Empresas/CEOs/Cientistas/Imprensa/Devs/Regulação/Riscos. */
 export const AI_PROFILES = [
   { handle: "grok", name: "Grok", group: "labs", section: "ai", blurb: "Assistente de IA da xAI, empresa fundada por Elon Musk. Conta oficial do produto." },
   { handle: "OpenAI", name: "OpenAI", group: "labs", section: "ai", blurb: "Laboratório que cria o ChatGPT, o GPT e o Sora. Uma das empresas centrais da IA generativa." },

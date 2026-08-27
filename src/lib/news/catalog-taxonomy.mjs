@@ -1,4 +1,4 @@
-const AI_ORDER = ["labs", "lideres", "pesquisa", "imprensa", "builders", "novos"];
+const AI_ORDER = ["labs", "lideres", "pesquisa", "imprensa", "builders", "regulacao", "ai-riscos", "novos"];
 
 export const SECTION_TAXONOMY = {
   ai: {
@@ -9,6 +9,8 @@ export const SECTION_TAXONOMY = {
       pesquisa: "Cientistas",
       imprensa: "Imprensa",
       builders: "Devs",
+      regulacao: "Regulação",
+      "ai-riscos": "Riscos",
       novos: "Outros",
     },
     hints: {
@@ -17,6 +19,8 @@ export const SECTION_TAXONOMY = {
       pesquisa: "Pesquisadores e autores de papers",
       imprensa: "Newsletters e quem seleciona o que importa",
       builders: "Engenheiros e makers que constroem com IA",
+      regulacao: "Normas, política pública e padrão de IA",
+      "ai-riscos": "Incidentes, alinhamento e direitos digitais",
       novos: "Sem grupo definido ou adicionados por você.",
     },
   },
@@ -28,6 +32,8 @@ export const SECTION_TAXONOMY = {
       "tech-gadgets",
       "tech-seguranca",
       "tech-devs",
+      "tech-opensource",
+      "tech-ciencia",
       "novos",
     ],
     labels: {
@@ -37,6 +43,8 @@ export const SECTION_TAXONOMY = {
       "tech-gadgets": "Gadgets",
       "tech-seguranca": "Segurança",
       "tech-devs": "Devs",
+      "tech-opensource": "Open source",
+      "tech-ciencia": "Ciência",
       novos: "Outros",
     },
     hints: {
@@ -46,6 +54,8 @@ export const SECTION_TAXONOMY = {
       "tech-gadgets": "Reviews de hardware, celulares e PCs",
       "tech-seguranca": "Jornalismo e pesquisa de segurança da informação",
       "tech-devs": "Engenharia, plataformas e ofício de quem constrói",
+      "tech-opensource": "Fundações, kernel e o ecossistema aberto",
+      "tech-ciencia": "Pesquisa, espaço e jornalismo científico",
       novos: "Sem grupo definido ou adicionados por você.",
     },
   },
@@ -56,6 +66,9 @@ export const SECTION_TAXONOMY = {
       "br-economia",
       "br-colunistas",
       "br-instituicoes",
+      "br-ciencia",
+      "br-mundo",
+      "br-cultura",
       "novos",
     ],
     labels: {
@@ -64,6 +77,9 @@ export const SECTION_TAXONOMY = {
       "br-economia": "Economia",
       "br-colunistas": "Colunistas",
       "br-instituicoes": "Instituições",
+      "br-ciencia": "Ciência",
+      "br-mundo": "Mundo",
+      "br-cultura": "Cultura",
       novos: "Outros",
     },
     hints: {
@@ -72,6 +88,9 @@ export const SECTION_TAXONOMY = {
       "br-economia": "Mercado, fiscal e negócios no Brasil",
       "br-colunistas": "Assinaturas e análise com nome próprio",
       "br-instituicoes": "Contas oficiais de Estado e órgãos públicos",
+      "br-ciencia": "Pesquisa, universidades e divulgação científica",
+      "br-mundo": "Internacional em português e América Latina",
+      "br-cultura": "Artes, livros, cinema e o caderno cultural",
       novos: "Sem grupo definido ou adicionados por você.",
     },
   },
