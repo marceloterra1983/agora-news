@@ -28,3 +28,23 @@ test("Fontes, feed, article and popup wire OriginMark", () => {
     assert.match(read(rel), /OriginMark/);
   }
 });
+
+test("Fontes OriginMark sits next to ChevronDown", () => {
+  const src = read("src/components/news/fontes-profile-row.tsx");
+  const name = src.indexOf("{row.name}");
+  const mark = src.indexOf("<OriginMark");
+  const chevron = src.indexOf("<ChevronDown");
+  assert.ok(mark > name, "mark stays after the name");
+  assert.ok(mark < chevron && chevron - mark < 180, "mark is immediately before ChevronDown");
+  assert.ok(src.indexOf("<GroupTag") < mark, "group stays with the name, not the chevron");
+});
+
+test("feed reader OriginMark sits next to Bookmark save", () => {
+  const src = read("src/components/news/story-card.tsx");
+  const reader = src.slice(0, src.indexOf('variant === "grid"'));
+  const byline = reader.indexOf("{byline}");
+  const mark = reader.lastIndexOf("<OriginMark");
+  const save = reader.indexOf("Salvar matéria", mark);
+  assert.ok(mark > byline, "mark is not next to the byline");
+  assert.ok(save > mark && save - mark < 150, "mark is immediately before the save control");
+});
