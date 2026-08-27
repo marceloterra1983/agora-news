@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-27T193800
+    date: 2026-08-27
+    severity: medium
+    priority: p1
+    scope: ui-fontes
+    summary: OpenAI (e outras contas X) herdam foto/bio do 1º tweet alheio do timeline
+    file: specs/bugs/BUG-2026-08-27-fonte-avatar-mismatch.md
   - bug_id: BUG-2026-08-26T194800
     date: 2026-08-26
     severity: medium

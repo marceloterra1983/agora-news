@@ -1,28 +1,21 @@
-# Gates: toggle de fotos no feed
+# Gates: foto da fonte X alinhada à conta
 
-Scope: Botão mostra/oculta fotos no header da tela principal; mídia some ou volta na hora.
+Scope: Timeline misto não pinta face alheia no perfil; OpenAI deixa de herdar o Greg.
 
-- [x] G1: header do chrome tem ImagesSwitch com data-images-switch
-  CHECK: node --experimental-strip-types --test scripts/show-images-settings.test.mjs
+- [x] G1: helper escolhe o author dono e evicta face roubada
+  CHECK: node --experimental-strip-types --test scripts/ingest-profile-core.test.mjs
+  EXPECT: fail 0
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 373.273077
+
+- [x] G2: ingest monta perfil pelo author dono do handle
+  CHECK: grep -l ownedAuthorFromStatuses src/lib/news/ingest.ts src/lib/news/profile-last-store.ts
+  EXPECT: ingest.ts
+  EVIDENCE: src/lib/news/ingest.ts
+
+- [x] G3: contrato de ingest + last-post + orçamento de linhas
+  CHECK: node --experimental-strip-types --test scripts/ingest-profile-core.test.mjs scripts/agora-next.test.mjs scripts/profile-last.test.mjs
   EXPECT: /fail 0/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 106.758633
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 681.229629
 
-- [x] G2: writeSettings({ showImages: false }) marca html data-images=off
-  CHECK: node --experimental-strip-types --test scripts/show-images-settings.test.mjs
-  EXPECT: data-images=off
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 155.33564
-
-- [x] G3: CSS esconde [data-media] quando html[data-images=off]
-  CHECK: grep -n 'data-images="off"' src/styles.css
-  EXPECT: [data-media]
-  EVIDENCE: 180:  html[data-images="off"] [data-media] {
-
-- [x] G4: npm test passa
-  CHECK: npm test
-  EXPECT: /fail 0/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 17765.27147
-
-- [x] G5: typecheck limpo
-  CHECK: npm run typecheck && echo TYPECHECK_OK
-  EXPECT: TYPECHECK_OK
-  EVIDENCE: > tsc --noEmit | TYPECHECK_OK
+- [ ] G4: OpenAI no banco ou na UI deixa de usar o hash do Greg
+  EVIDENCE: pending
