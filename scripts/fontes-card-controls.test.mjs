@@ -27,6 +27,15 @@ test("FonteControls render only inside the open Fontes card, next to X", () => {
   );
 });
 
+test("closed row time sits immediately before the group tag, not under the title", () => {
+  const header = src.slice(src.indexOf("<button"), src.indexOf("</button>"));
+  const time = header.indexOf("relativeTime(row.lastPost.publishedAt)");
+  const tag = header.indexOf("<GroupTag");
+  assert.ok(time > 0 && tag > time, "time must precede GroupTag in the Fontes header");
+  const meta = readFileSync(join(root, "../src/components/news/fontes-closed-post.tsx"), "utf8");
+  assert.doesNotMatch(meta, /relativeTime/);
+});
+
 test("closed last post is a link outside the leftover expand button", () => {
   const header = src.slice(0, src.indexOf("{open ?"));
   const btnStart = header.indexOf("<button");

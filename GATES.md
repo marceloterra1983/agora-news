@@ -1,26 +1,21 @@
-# Gates: encoding RSS PT (acentos)
+# Gates: horário do last-post na linha de Fontes
 
-Scope: Decodificar feeds Latin-1 e regravar posts RSS com U+FFFD.
+Scope: Em Fontes, o “há X min” fica imediatamente antes da tag do grupo no header do card, não embaixo do título.
 
-- [x] G1: Causa raiz verificada (UOL ISO-8859-1 vs res.text UTF-8)
-  EVIDENCE: UOL economia Content-Type text/xml;charset=ISO-8859-1; UTF-8 fatal falha no byte 0xDA. res.text() → "Monet�rio"/"bilh�es" (mesmo recorte da UI). decodeRssBody live 2026-08-27 20:20 BRT: UOL 15 itens, Folha agora 100, g1 100 — fffd=0; título UOL "Orçamento de 2027 prevê superávit". SQL: 189 posts RSS com chr(65533).
-
-- [x] G2: Teste de decode/heal RSS
-  CHECK: node --experimental-strip-types --test scripts/rss-encoding.test.mjs scripts/rss-parse.test.mjs scripts/rss-ingest.behavior.test.mjs
-  EXPECT: /pass 12/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 84.344636
-
-- [x] G3: Bytes Latin-1 viram bilhões/Monetário sem U+FFFD
-  CHECK: node --experimental-strip-types --test scripts/rss-encoding.test.mjs
-  EXPECT: /pass 6/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 56.344164
-
-- [x] G4: Suite do repo (exceto hang pré-existente em ingest-orchestration)
-  CHECK: node --experimental-strip-types --test --test-timeout=90000 --test-force-exit scripts/rss-encoding.test.mjs scripts/rss-parse.test.mjs scripts/rss-ingest.behavior.test.mjs scripts/ingest-correctness.behavior.test.mjs
+- [x] G1: teste RED/GREEN da ordem time → GroupTag no header; ClosedPostMeta sem relativeTime
+  CHECK: node --experimental-strip-types --test scripts/fontes-card-controls.test.mjs
   EXPECT: /fail 0/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 732.751712
+  EVIDENCE: 3/3 fontes-card-controls fail 0 (RED then GREEN)
 
-- [x] G5: typecheck e lint
-  CHECK: npm run typecheck && npm run lint
-  EXPECT: eslint
-  EVIDENCE: > lint | > eslint . --max-warnings=0
+- [x] G2: suite do repo
+  CHECK: npm test
+  EXPECT: /fail 0/
+  EVIDENCE: ℹ pass 522 | ℹ fail 0 | ℹ skipped 10
+
+- [x] G3: typecheck e lint
+  CHECK: npm run typecheck && npm run lint && echo TYPECHECK_LINT_OK
+  EXPECT: TYPECHECK_LINT_OK
+  EVIDENCE: TYPECHECK_LINT_OK
+
+- [x] G4: feed Fontes mostra o horário à esquerda da tag (browser)
+  EVIDENCE: 127.0.0.1:8081/fontes?secao=tech The Information — headerKids time "há 19 min" (idx 2) then Imprensa (idx 3); timeUnderTitle=false
