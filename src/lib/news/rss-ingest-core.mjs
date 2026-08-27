@@ -10,6 +10,19 @@ export function skipRssResponse(status) {
   return status === 304 || status < 200 || status >= 300;
 }
 
+/** Não pular item envenenado com �; novos só entram se estiverem na janela latest. */
+export function rssIdsToSkip(ids, opts) {
+  const known = opts?.known || new Set();
+  const poisoned = opts?.poisoned || new Set();
+  const latest = opts?.latest || new Set();
+  const skip = new Set();
+  for (const id of ids || []) {
+    if (poisoned.has(id)) continue;
+    if (!latest.has(id) || known.has(id)) skip.add(id);
+  }
+  return skip;
+}
+
 export function rssPostsFromItems(feed, items, known, batch, translated = {}) {
   const rows = [];
   const account = feed.account || rssAccountId(feed.url);

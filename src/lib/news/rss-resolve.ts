@@ -4,7 +4,7 @@ import { rssGroupFor } from "./rss-catalog.mjs";
 import type { RssFeed } from "./rss-feeds";
 import { rssAccountId } from "./rss-id.mjs";
 import { assertHttpsRssUrl } from "./rss-owned.mjs";
-import { parseFeedXml } from "./rss-parse.mjs";
+import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
 import { normalizeSection } from "./types";
 
 export const resolveRssFeed = createServerFn({ method: "POST" })
@@ -20,7 +20,10 @@ export const resolveRssFeed = createServerFn({ method: "POST" })
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) throw new Error(`rss_http_${res.status}`);
-    const items = parseFeedXml(await res.text(), url);
+    const items = parseFeedXml(
+      decodeRssBody(await res.arrayBuffer(), res.headers.get("content-type") || ""),
+      url,
+    );
     if (!items.length) throw new Error("rss_empty");
     return {
       url,

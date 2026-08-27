@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-27T200800
+    date: 2026-08-27
+    severity: medium
+    priority: p1
+    scope: ingest-rss
+    summary: Feeds ISO-8859-1 (UOL/Folha) lidos como UTF-8 gravam � no lugar dos acentos
+    file: specs/bugs/BUG-2026-08-27-rss-latin1-mojibake.md
   - bug_id: BUG-2026-08-27T181700
     date: 2026-08-27
     severity: medium
