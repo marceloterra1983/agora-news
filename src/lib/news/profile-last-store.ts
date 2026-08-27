@@ -1,5 +1,6 @@
 /** Persiste os 10 últimos tweets do perfil sem mexer no arquivo do feed. */
 import { upsertProfile } from "./admin";
+import { profileFieldsFromAuthor } from "./ingest-profile-core.mjs";
 import { persistLastPost } from "./last-post-store";
 import { fetchLastPosts, recentFromPosts, type StoredLastPost } from "./last-post";
 import { mapPool } from "./map-pool";
@@ -24,6 +25,7 @@ export async function persistPackedLastPosts(
   handle: string,
   incoming: StoredLastPost[] | null,
   beforeWrite?: () => Promise<void>,
+  author?: Parameters<typeof profileFieldsFromAuthor>[1],
 ): Promise<PackedPersist> {
   const key = handle.replace(/^@+/, "").trim();
   if (!key) return { handle, ok: false, count: 0, error: "empty_handle" };
@@ -37,14 +39,20 @@ export async function persistPackedLastPosts(
   if (!kept.length) return { handle: key, ok: false, count: 0, error: "no_posts" };
   const packed = packLastPosts(kept);
   const catalog = profileByHandle(key);
+  const patch = profileFieldsFromAuthor(key, author ?? null, {
+    name: prev?.name,
+    bio: prev?.bio,
+    avatar: prev?.avatar,
+    followers: prev?.followers,
+  });
   await beforeWrite?.();
   const written = await upsertProfile({
     handle: key,
     name: prev?.name || catalog?.name || key,
-    bio: prev?.bio || "",
+    bio: patch.bio,
     summary_pt: prev?.summary_pt || catalog?.blurb || "",
-    avatar: prev?.avatar || null,
-    followers: prev?.followers || 0,
+    avatar: patch.avatar,
+    followers: patch.followers,
     last_post: packed,
   });
   if (kept[0]) await persistLastPost(key, kept[0], beforeWrite);

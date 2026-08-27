@@ -11,9 +11,32 @@ function handleKey(value) {
     .toLowerCase();
 }
 
+/** Mesmo upload do X, independente do sufixo de tamanho. */
+function faceKey(url) {
+  const raw = typeof url === "string" ? url.trim() : "";
+  if (!/^https?:\/\//i.test(raw)) return "";
+  return raw.replace(/_(normal|bigger|mini|200x200|400x400)\./i, ".");
+}
+
+/**
+ * @param {string} handle
+ * @param {Array<{ id?: string, text?: string, author?: { screen_name?: string } }>} [statuses]
+ */
+export function statusesOwnedByHandle(handle, statuses) {
+  const key = handleKey(handle);
+  if (!key || !Array.isArray(statuses)) return [];
+  return statuses.filter(
+    (t) => t?.id && t?.text && handleKey(t.author?.screen_name) === key,
+  );
+}
+
+export function ownedAuthorFromStatuses(handle, statuses) {
+  return statusesOwnedByHandle(handle, statuses)[0]?.author ?? null;
+}
+
 /**
  * Só aceita face/bio/followers do author quando o screen_name é o handle.
- * Senão o cron grava a foto do tweet anterior (gdb em OpenAI, etc.).
+ * Face persistida igual à do author estrangeiro é veneno — evicta.
  *
  * @param {string} handle
  * @param {{ screen_name?: string, name?: string, description?: string | null, avatar_url?: string | null, followers?: number } | null | undefined} author
@@ -22,11 +45,12 @@ function handleKey(value) {
 export function profileFieldsFromAuthor(handle, author, prev = {}) {
   const owned = handleKey(handle) && handleKey(handle) === handleKey(author?.screen_name);
   if (!owned) {
+    const stolen = Boolean(faceKey(prev.avatar) && faceKey(prev.avatar) === faceKey(author?.avatar_url));
     return {
       name: prev.name || handle,
-      bio: prev.bio || "",
-      avatar: displayAvatarUrl(prev.avatar) || null,
-      followers: Number(prev.followers) || 0,
+      bio: stolen ? "" : prev.bio || "",
+      avatar: stolen ? null : displayAvatarUrl(prev.avatar) || null,
+      followers: stolen ? 0 : Number(prev.followers) || 0,
     };
   }
   return {

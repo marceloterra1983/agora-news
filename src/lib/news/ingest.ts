@@ -16,7 +16,7 @@ import { translateToPt } from "./translate-pt.mjs";
 import { clipAtWord } from "./summary-core.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
 import { handlesToScan, latestByAccount } from "./ingest-scan";
-import { profileFieldsFromAuthor } from "./ingest-profile-core.mjs";
+import { ownedAuthorFromStatuses, profileFieldsFromAuthor, statusesOwnedByHandle } from "./ingest-profile-core.mjs";
 import {
   existingIds,
   needsEmbed,
@@ -37,8 +37,8 @@ const MAX_INSERT = 40;
 const SKIP_IF_FRESH_MS = 10 * 60_000;
 
 function lastPostsFromStatuses(handle: string, list: Status[]) {
-  return list
-    .filter((t) => t.id && t.text && !t.replying_to)
+  return statusesOwnedByHandle(handle, list)
+    .filter((t) => !t.replying_to)
     .map((t) => ({
       id: String(t.id),
       text: String(t.text).replace(/\s+/g, " ").trim(),
@@ -197,7 +197,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
   await mapPool(collected, 4, async ({ handle, list }) => {
     const incoming = lastPostsFromStatuses(handle, list);
     if (!incoming.length) return;
-    await persistPackedLastPosts(handle, incoming, assertOwned);
+    await persistPackedLastPosts(handle, incoming, assertOwned, ownedAuthorFromStatuses(handle, list));
   });
 
   let profiles = 0;
@@ -214,14 +214,10 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
       .slice(0, 8);
     await mapPool(sample, 4, async (handle) => {
       const list = collected.find((c) => c.handle.toLowerCase() === handle.toLowerCase())?.list ?? [];
-      const last = list.find((t) => t.id && t.text);
       const knownProfile = profileByHandle(handle);
       const prev = storedAt.get(handle.toLowerCase());
-      const patch = profileFieldsFromAuthor(handle, last?.author, {
-        name: prev?.name,
-        bio: prev?.bio,
-        avatar: prev?.avatar,
-        followers: prev?.followers,
+      const patch = profileFieldsFromAuthor(handle, ownedAuthorFromStatuses(handle, list), {
+        name: prev?.name, bio: prev?.bio, avatar: prev?.avatar, followers: prev?.followers,
       });
       const name = knownProfile?.name || patch.name;
       const bio = patch.bio;
