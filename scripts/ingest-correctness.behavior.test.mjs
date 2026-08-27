@@ -369,7 +369,7 @@ test("malformed successful GTX payload reports the fallback", async (t) => {
         failures += 1;
       },
     }),
-    original,
+    "",
   );
   assert.equal(failures, 1);
 });

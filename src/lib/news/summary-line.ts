@@ -7,6 +7,7 @@ import {
   looksPortuguese,
   plausibleSummary,
 } from "./summary-core.mjs";
+import { translateToPt } from "./translate-pt.mjs";
 
 const summaryCache = new Map<string, { at: number; line: string; warning: string | null }>();
 const SUMMARY_TTL = 6 * 60 * 60_000;
@@ -25,30 +26,7 @@ export type AboutLine = {
 async function translateLine(text: string): Promise<string> {
   const src = clipOneLine(text);
   if (!src) return "";
-  if (looksPortuguese(src)) return src;
-  try {
-    const g = await fetch(
-      `https://translate.googleapis.com/translate_a/single?${new URLSearchParams({
-        client: "gtx",
-        sl: "auto",
-        tl: "pt",
-        dt: "t",
-        q: src.slice(0, 220),
-      })}`,
-      { signal: AbortSignal.timeout(6_000) },
-    );
-    if (g.ok) {
-      const data = (await g.json()) as unknown;
-      const parts = Array.isArray(data) && Array.isArray(data[0]) ? data[0] : [];
-      const out = clipOneLine(
-        parts.map((p) => (Array.isArray(p) && typeof p[0] === "string" ? p[0] : "")).join(""),
-      );
-      if (out) return out;
-    }
-  } catch {
-    /* keep original */
-  }
-  return src;
+  return clipOneLine(await translateToPt(src, { timeout: 6_000, chunk: 220 })) || src;
 }
 
 async function wikiLine(name: string, handle: string): Promise<string> {

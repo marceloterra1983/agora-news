@@ -1,54 +1,116 @@
-import { looksPortuguese } from "./summary-core.mjs";
-import { chunkText, parseGtx } from "./story-pt.mjs";
+import { clipAtWord, looksPortuguese } from "./summary-core.mjs";
+import { chunkText, needsFullTranslation, parseGtx } from "./story-pt.mjs";
+
+const GTX_URL = "https://translate.googleapis.com/translate_a/single";
+const MYMEMORY_URL = "https://api.mymemory.translated.net/get";
+
+/** Só grava PT de verdade. Inglês copiado do original não entra em translation_pt. */
+export function pickStoredPt(original, candidate) {
+  const pt = String(candidate || "").trim();
+  if (!pt) return "";
+  if (!looksPortuguese(pt)) return "";
+  return pt;
+}
+
+export function applyStoredTranslation(original, candidate) {
+  const src = String(original || "").trim();
+  const translation_pt = pickStoredPt(src, candidate);
+  return { translation_pt, summary_pt: clipAtWord(translation_pt || src, 180) };
+}
+
+export async function hydrateStoryBody(original, body, translate = translateToPt) {
+  let next = String(body || "").trim();
+  if (needsFullTranslation(original, next)) {
+    const pt = await translate(original);
+    if (pt) next = pt;
+  }
+  return next || String(original || "").trim();
+}
+
+function libreUrl(opts) {
+  const base = String(opts.libreUrl || (typeof process !== "undefined" && process.env?.LIBRETRANSLATE_URL) || "").trim();
+  return base ? `${base.replace(/\/$/, "")}/translate` : "";
+}
+
+async function readJson(res) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function translateGtx(chunk, opts, fetchImpl) {
+  const url = `${GTX_URL}?${new URLSearchParams({ client: "gtx", sl: "auto", tl: "pt", dt: "t", q: chunk })}`;
+  const init = { signal: AbortSignal.timeout(opts.timeout ?? 8_000) };
+  let res = await fetchImpl(url, init);
+  if (res.status === 429) {
+    await new Promise((r) => setTimeout(r, 500));
+    res = await fetchImpl(url, init);
+  }
+  if (!res.ok) return "";
+  return parseGtx(await readJson(res));
+}
+
+async function translateLibre(chunk, opts, fetchImpl) {
+  const url = libreUrl(opts);
+  if (!url) return "";
+  const res = await fetchImpl(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ q: chunk, source: "auto", target: "pt", format: "text" }),
+    signal: AbortSignal.timeout(opts.timeout ?? 8_000),
+  });
+  if (!res.ok) return "";
+  const data = await readJson(res);
+  return typeof data?.translatedText === "string" ? data.translatedText.trim() : "";
+}
+
+async function translateMyMemory(chunk, opts, fetchImpl) {
+  const email = String((typeof process !== "undefined" && process.env?.MYMEMORY_EMAIL) || "").trim();
+  const params = new URLSearchParams({ q: chunk.slice(0, 450), langpair: "en|pt" });
+  if (email) params.set("de", email);
+  const res = await fetchImpl(`${MYMEMORY_URL}?${params}`, {
+    signal: AbortSignal.timeout(opts.timeout ?? 8_000),
+  });
+  if (!res.ok) return "";
+  const data = await readJson(res);
+  const text = data?.responseData?.translatedText;
+  if (typeof text !== "string" || /^MYMEMORY WARNING/i.test(text)) return "";
+  return text.trim();
+}
+
+async function translateChunk(chunk, opts, fetchImpl) {
+  const providers = [translateGtx, translateLibre, translateMyMemory];
+  for (const provider of providers) {
+    try {
+      const out = await provider(chunk, opts, fetchImpl);
+      if (pickStoredPt(chunk, out)) return out;
+    } catch {
+      /* próximo provedor */
+    }
+  }
+  return "";
+}
 
 /**
- * Traduz o texto inteiro (gtx por fatia). Não corta em 280.
+ * Traduz o texto inteiro. Não devolve inglês quando o tradutor falha.
  * @param {string} text
- * @param {{ timeout?: number, chunk?: number, onFail?: () => void }} [opts]
+ * @param {{ timeout?: number, chunk?: number, onFail?: () => void, libreUrl?: string, fetch?: typeof fetch }} [opts]
  */
 export async function translateToPt(text, opts = {}) {
   const src = String(text || "").trim();
   if (!src) return "";
   if (looksPortuguese(src)) return src;
-  const timeout = opts.timeout ?? 8_000;
+  const fetchImpl = opts.fetch ?? fetch;
   const out = [];
   for (const chunk of chunkText(src, opts.chunk ?? 1500)) {
-    try {
-      let g = await fetch(
-        `https://translate.googleapis.com/translate_a/single?${new URLSearchParams({
-          client: "gtx",
-          sl: "auto",
-          tl: "pt",
-          dt: "t",
-          q: chunk,
-        })}`,
-        { signal: AbortSignal.timeout(timeout) },
-      );
-      if (g.status === 429) {
-        await new Promise((r) => setTimeout(r, 500));
-        g = await fetch(
-          `https://translate.googleapis.com/translate_a/single?${new URLSearchParams({
-            client: "gtx",
-            sl: "auto",
-            tl: "pt",
-            dt: "t",
-            q: chunk,
-          })}`,
-          { signal: AbortSignal.timeout(timeout) },
-        );
-      }
-      if (!g.ok) {
-        opts.onFail?.();
-        out.push(chunk);
-        continue;
-      }
-      const translated = parseGtx(await g.json());
-      if (!translated) opts.onFail?.();
-      out.push(translated || chunk);
-    } catch {
+    const translated = await translateChunk(chunk, opts, fetchImpl);
+    if (!translated) {
       opts.onFail?.();
-      out.push(chunk);
+      return "";
     }
+    out.push(translated);
   }
   return out.join("").trim();
 }

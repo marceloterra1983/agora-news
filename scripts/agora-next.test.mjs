@@ -29,6 +29,7 @@ test("first open persists the hydrated PT body", () => {
   assert.match(news, /hydrated\.body !== \(base\.body/);
   const persist = read("src/lib/news/story-persist.ts");
   assert.match(persist, /translation_pt: text/);
+  assert.match(persist, /pickStoredPt/);
   assert.match(persist, /packMediaLabel/);
   assert.match(persist, /written\.ok/);
 });

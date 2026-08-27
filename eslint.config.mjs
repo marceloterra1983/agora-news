@@ -14,6 +14,7 @@ export default tseslint.config(
       ".vercel/**",
       ".nitro/**",
       "node_modules/**",
+      ".claude/**",
       "src/routeTree.gen.ts",
       "news/**",
       "scripts/**/*.gs",
