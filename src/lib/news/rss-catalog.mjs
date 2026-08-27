@@ -233,3 +233,17 @@ export function filterStoriesByOrigin(stories, { showX = true, showRss = true } 
   if (showX && showRss) return stories;
   return stories.filter((story) => (storyIsRss(story) ? showRss : showX));
 }
+
+/** Mesmo recorte para a lista de Fontes: r_* é RSS, o resto é X. */
+export function filterFontesByOrigin(rows, { showX = true, showRss = true } = {}) {
+  if (!Array.isArray(rows)) return [];
+  if (showX && showRss) return rows;
+  return rows.filter((row) => (isRssAccount(row?.handle) ? showRss : showX));
+}
+
+export function fontesEmptyHint({ showX = true, showRss = true, sort = "recent" } = {}) {
+  if (!showX && !showRss) return "Ligue o X ou o RSS no topo para ver fontes.";
+  if (!showX) return "Ligue o X no topo para ver as contas.";
+  if (sort === "starred") return "Nenhum favorito ainda. Toque na estrela de um perfil.";
+  return "Nenhum perfil.";
+}

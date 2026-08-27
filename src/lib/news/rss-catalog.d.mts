@@ -36,3 +36,12 @@ export function filterStoriesByOrigin<T extends { id?: string; source?: string }
   stories: T[],
   opts?: { showX?: boolean; showRss?: boolean },
 ): T[];
+export function filterFontesByOrigin<T extends { handle?: string }>(
+  rows: T[],
+  opts?: { showX?: boolean; showRss?: boolean },
+): T[];
+export function fontesEmptyHint(opts?: {
+  showX?: boolean;
+  showRss?: boolean;
+  sort?: string;
+}): string;
