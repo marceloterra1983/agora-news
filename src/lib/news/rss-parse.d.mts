@@ -6,6 +6,7 @@ export type RssItem = {
   summary: string;
 };
 
+export function parseRssDate(value: unknown): string;
 export function textHasReplacement(value: unknown): boolean;
 export function decodeRssBody(
   input: ArrayBuffer | ArrayBufferView,

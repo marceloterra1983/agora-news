@@ -97,14 +97,56 @@ function atomLink(entry) {
   return any?.[1] || "";
 }
 
+const RSS_DAYS = {
+  dom: "Sun",
+  seg: "Mon",
+  ter: "Tue",
+  qua: "Wed",
+  qui: "Thu",
+  sex: "Fri",
+  sab: "Sat",
+};
+
+const RSS_MONTHS = {
+  jan: "Jan",
+  fev: "Feb",
+  mar: "Mar",
+  abr: "Apr",
+  mai: "May",
+  jun: "Jun",
+  jul: "Jul",
+  ago: "Aug",
+  set: "Sep",
+  out: "Oct",
+  nov: "Nov",
+  dez: "Dec",
+};
+
+/** RFC-822 em PT-BR (UOL: Qui, 27 Ago) e inglês. Vazio se não der para parsear. */
+export function parseRssDate(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const direct = Date.parse(raw);
+  if (Number.isFinite(direct)) return new Date(direct).toISOString();
+  const mapped = raw
+    .replace(/S[áa]b\b/gi, "Sat")
+    .replace(/\b(Dom|Seg|Ter|Qua|Qui|Sex)\b/gi, (word) => {
+      return RSS_DAYS[word.slice(0, 3).toLowerCase()] || word;
+    })
+    .replace(/\b(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\b/gi, (word) => {
+      return RSS_MONTHS[word.slice(0, 3).toLowerCase()] || word;
+    });
+  const at = Date.parse(mapped);
+  return Number.isFinite(at) ? new Date(at).toISOString() : "";
+}
+
 function publishedAt(block) {
   const raw =
     inner(block, "pubDate") ||
     inner(block, "published") ||
     inner(block, "updated") ||
     inner(block, "dc:date");
-  const at = Date.parse(stripTags(raw));
-  return Number.isFinite(at) ? new Date(at).toISOString() : "";
+  return parseRssDate(stripTags(raw));
 }
 
 function toItem(block, kind) {
