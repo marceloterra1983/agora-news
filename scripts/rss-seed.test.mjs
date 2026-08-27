@@ -186,10 +186,91 @@ const REQUIRED = [
     section: "brasil",
     group: "br-economia",
   },
+  { url: "https://www.nist.gov/news-events/news/rss.xml", title: "NIST", section: "ai", group: "regulacao" },
+  {
+    url: "https://digital-strategy.ec.europa.eu/en/rss.xml",
+    title: "UE Digital",
+    section: "ai",
+    group: "regulacao",
+  },
+  {
+    url: "https://foundation.mozilla.org/en/blog/rss/",
+    title: "Mozilla Foundation",
+    section: "ai",
+    group: "regulacao",
+  },
+  { url: "https://incidentdatabase.ai/rss.xml", title: "AI Incidents", section: "ai", group: "ai-riscos" },
+  { url: "https://newsletter.safe.ai/feed", title: "CAIS", section: "ai", group: "ai-riscos" },
+  { url: "https://www.eff.org/rss/updates.xml", title: "EFF", section: "ai", group: "ai-riscos" },
+  { url: "https://futureoflife.org/feed/", title: "Future of Life", section: "ai", group: "ai-riscos" },
+  {
+    url: "https://www.linuxfoundation.org/blog/rss.xml",
+    title: "Linux Foundation",
+    section: "tech",
+    group: "tech-opensource",
+  },
+  { url: "https://www.cncf.io/feed/", title: "CNCF", section: "tech", group: "tech-opensource" },
+  { url: "https://news.apache.org/feed/", title: "Apache", section: "tech", group: "tech-opensource" },
+  { url: "https://kubernetes.io/feed.xml", title: "Kubernetes", section: "tech", group: "tech-opensource" },
+  { url: "https://www.nasa.gov/rss/dyn/breaking_news.rss", title: "NASA", section: "tech", group: "tech-ciencia" },
+  { url: "https://www.quantamagazine.org/feed/", title: "Quanta", section: "tech", group: "tech-ciencia" },
+  { url: "https://www.sciencedaily.com/rss/all.xml", title: "ScienceDaily", section: "tech", group: "tech-ciencia" },
+  { url: "https://agencia.fapesp.br/rss", title: "Agência FAPESP", section: "brasil", group: "br-ciencia" },
+  {
+    url: "https://revistapesquisa.fapesp.br/feed/",
+    title: "Pesquisa FAPESP",
+    section: "brasil",
+    group: "br-ciencia",
+  },
+  {
+    url: "https://g1.globo.com/rss/g1/ciencia-e-saude/",
+    title: "g1 Ciência",
+    section: "brasil",
+    group: "br-ciencia",
+  },
+  {
+    url: "https://feeds.folha.uol.com.br/ciencia/rss091.xml",
+    title: "Folha Ciência",
+    section: "brasil",
+    group: "br-ciencia",
+  },
+  { url: "https://abori.com.br/feed/", title: "Bori", section: "brasil", group: "br-ciencia" },
+  {
+    url: "https://news.un.org/feed/subscribe/pt/news/all/rss.xml",
+    title: "ONU News",
+    section: "brasil",
+    group: "br-mundo",
+  },
+  {
+    url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada",
+    title: "El País América",
+    section: "brasil",
+    group: "br-mundo",
+  },
+  {
+    url: "https://feeds.bbci.co.uk/portuguese/topics/internacional/rss.xml",
+    title: "BBC Internacional",
+    section: "brasil",
+    group: "br-mundo",
+  },
+  { url: "https://www.rfi.fr/br/rss", title: "RFI Brasil", section: "brasil", group: "br-mundo" },
+  {
+    url: "https://feeds.folha.uol.com.br/ilustrada/rss091.xml",
+    title: "Folha Ilustrada",
+    section: "brasil",
+    group: "br-cultura",
+  },
+  { url: "https://g1.globo.com/rss/g1/pop-arte/", title: "g1 Pop & Arte", section: "brasil", group: "br-cultura" },
+  {
+    url: "https://www.estadao.com.br/arc/outboundfeeds/rss/section/cultura/?outputType=xml",
+    title: "Estadão Cultura",
+    section: "brasil",
+    group: "br-cultura",
+  },
 ];
 
-test("RSS_SEED has the 86 editorial feeds with stable ids", () => {
-  assert.equal(RSS_SEED.length, 86);
+test("RSS_SEED has the 112 editorial feeds with stable ids", () => {
+  assert.equal(RSS_SEED.length, 112);
   const urls = new Set();
   const accounts = new Set();
   for (const row of RSS_SEED) {
@@ -214,10 +295,26 @@ test("incluir list is present with section and group", () => {
 });
 
 test("rssExtrasFor exposes seed handles per section", () => {
-  assert.equal(rssExtrasFor("ai").length, 25);
-  assert.equal(rssExtrasFor("tech").length, 32);
-  assert.equal(rssExtrasFor("brasil").length, 29);
-  assert.ok(rssExtrasFor("ai").some((row) => row.name === "Mistral" && row.group === "labs"));
-  assert.ok(rssExtrasFor("tech").some((row) => row.name === "Y Combinator" && row.group === "tech-startups"));
-  assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Estadão" && row.group === "br-jornais"));
+  assert.equal(rssExtrasFor("ai").length, 32);
+  assert.equal(rssExtrasFor("tech").length, 39);
+  assert.equal(rssExtrasFor("brasil").length, 41);
+  assert.ok(rssExtrasFor("ai").some((row) => row.name === "NIST" && row.group === "regulacao"));
+  assert.ok(rssExtrasFor("tech").some((row) => row.name === "Kubernetes" && row.group === "tech-opensource"));
+  assert.ok(rssExtrasFor("brasil").some((row) => row.name === "Agência FAPESP" && row.group === "br-ciencia"));
+});
+
+test("new editorial groups have at least three seed feeds", () => {
+  const want = {
+    regulacao: 3,
+    "ai-riscos": 4,
+    "tech-opensource": 4,
+    "tech-ciencia": 3,
+    "br-ciencia": 5,
+    "br-mundo": 4,
+    "br-cultura": 3,
+  };
+  for (const [group, min] of Object.entries(want)) {
+    const n = RSS_SEED.filter((row) => row.group === group).length;
+    assert.ok(n >= min, `${group} has ${n}`);
+  }
 });

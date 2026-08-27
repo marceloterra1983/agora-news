@@ -1,5 +1,6 @@
 import { groupOrderFor, hintOfGroup, isReservedGroup, labelOfGroup, normalizeSection } from "./catalog-taxonomy.mjs";
 import { getGroupOverrides, setGroupOverrides } from "./fontes-prefs";
+import { GROUP_STYLE_ALIAS } from "./group-style";
 import { findCustomGroup, readCustomGroups, writeCustomGroups } from "./section-prefs.mjs";
 import { readLastSection } from "./section-pref";
 import type { Category } from "./types";
@@ -41,23 +42,9 @@ const TONE = {
   novos: wash("var(--agora-hue-novos)", 28, 80),
 };
 
-const TONE_ALIAS: Record<string, keyof typeof TONE> = {
-  "tech-empresas": "labs",
-  "tech-imprensa": "imprensa",
-  "tech-startups": "lideres",
-  "tech-gadgets": "pesquisa",
-  "tech-seguranca": "builders",
-  "tech-devs": "builders",
-  "br-jornais": "imprensa",
-  "br-politica": "lideres",
-  "br-economia": "labs",
-  "br-colunistas": "pesquisa",
-  "br-instituicoes": "builders",
-};
-
 export const GROUP_TONE: Record<string, { bg: string; fg: string; pip: string }> = {
   ...TONE,
-  ...Object.fromEntries(Object.entries(TONE_ALIAS).map(([id, key]) => [id, TONE[key]])),
+  ...Object.fromEntries(Object.entries(GROUP_STYLE_ALIAS).map(([id, key]) => [id, TONE[key]])),
 };
 
 function slugify(label: string): string {
@@ -148,6 +135,8 @@ export function groupPip(id?: string | null): string {
 
 const RULES: Record<string, Array<{ group: string; words: string[] }>> = {
   ai: [
+    { group: "ai-riscos", words: ["safety", "alignment", "incident", "risco", "direitos digitais"] },
+    { group: "regulacao", words: ["regulação", "regulation", "policy", "nist", "ai act", "lgpd"] },
     { group: "lideres", words: ["ceo", "founder", "fundador", "fundadora", "presidente", "cofounder", "co-founder"] },
     { group: "pesquisa", words: ["professor", "pesquisador", "researcher", "scientist", "phd", "paper", "stanford", "mit"] },
     { group: "imprensa", words: ["jornal", "news", "newsletter", "reporter", "journalist", "editor", "revista", "portal"] },
@@ -155,6 +144,8 @@ const RULES: Record<string, Array<{ group: string; words: string[] }>> = {
     { group: "labs", words: ["oficial", "official", "lab", "labs", "inc", "corp", "company", "empresa"] },
   ],
   tech: [
+    { group: "tech-opensource", words: ["open source", "linux", "cncf", "kubernetes", "apache"] },
+    { group: "tech-ciencia", words: ["ciência", "science", "nasa", "physics", "espaço"] },
     { group: "tech-seguranca", words: ["security", "segurança", "ciso", "malware", "breach"] },
     { group: "tech-startups", words: ["founder", "startup", "venture", "y combinator"] },
     { group: "tech-imprensa", words: ["jornal", "news", "newsletter", "reporter", "journalist", "editor"] },
@@ -162,6 +153,9 @@ const RULES: Record<string, Array<{ group: string; words: string[] }>> = {
     { group: "tech-empresas", words: ["oficial", "official", "inc", "corp", "company", "empresa"] },
   ],
   brasil: [
+    { group: "br-ciencia", words: ["ciência", "fapesp", "pesquisa científica"] },
+    { group: "br-mundo", words: ["internacional", "mundo", "onu", "diplomacia"] },
+    { group: "br-cultura", words: ["cultura", "ilustrada", "cinema", "livros", "música"] },
     { group: "br-instituicoes", words: ["oficial", "ministério", "tribunal", "banco central", "ibge"] },
     { group: "br-colunistas", words: ["colunista", "comentarista"] },
     { group: "br-economia", words: ["economia", "mercado", "fiscal", "copom"] },

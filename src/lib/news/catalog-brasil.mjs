@@ -1,4 +1,4 @@
-/** Brasil: jornais, política, economia, colunistas e instituições — sem CEOs do Vale. */
+/** Brasil: jornais, política, economia, colunistas, instituições, ciência, mundo e cultura — sem CEOs do Vale. */
 export const BRASIL_PROFILES = [
   { handle: "folha", name: "Folha de S.Paulo", group: "br-jornais", section: "brasil", blurb: "Jornal brasileiro. Política, economia e cotidiano do país." },
   { handle: "g1", name: "g1", group: "br-jornais", section: "brasil", blurb: "Portal de notícias da Globo. O recorte mais lido do jornalismo brasileiro." },

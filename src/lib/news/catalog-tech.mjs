@@ -1,4 +1,4 @@
-/** Tech: produto, engenharia, startups, gadgets e segurança — sem política BR e sem laboratórios de IA. */
+/** Tech: produto, engenharia, startups, gadgets, segurança, open source e ciência — sem política BR e sem laboratórios de IA. */
 export const TECH_PROFILES = [
   { handle: "Apple", name: "Apple", group: "tech-empresas", section: "tech", blurb: "Conta oficial da Apple. iPhone, Mac, Vision e os serviços da empresa." },
   { handle: "Google", name: "Google", group: "tech-empresas", section: "tech", blurb: "Conta oficial do Google. Android, busca, Pixel e a plataforma." },
