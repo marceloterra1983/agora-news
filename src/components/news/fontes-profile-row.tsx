@@ -80,6 +80,7 @@ export function ProfileRow({
               {followers ? (
                 <span className="shrink-0 text-[11px] tabular-nums text-mute">{followers}</span>
               ) : null}
+              <GroupTag group={row.group} />
               {row.lastPost ? (
                 <time
                   dateTime={row.lastPost.publishedAt}
@@ -89,7 +90,6 @@ export function ProfileRow({
                   {relativeTime(row.lastPost.publishedAt)}
                 </time>
               ) : null}
-              <GroupTag group={row.group} />
               {picking ? (
                 picked ? (
                   <CheckSquare className="size-3.5 shrink-0 text-ink" />
