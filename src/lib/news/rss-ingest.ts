@@ -2,12 +2,14 @@
 import { adminHeaders, SUPABASE_URL, upsertPosts, type UpsertPost } from "./admin";
 import { CACHE_KEYS, cacheGetJson, cacheSetJson } from "./cache";
 import { existingIds, idsWithReplacement } from "./ingest-fetch";
+import { postedAtById } from "./rss-posted-at";
 import { saoPauloStamp } from "./ingest-fetch";
 import { MAX_RSS_ITEMS, RSS_SEED, rssGroupFor } from "./rss-catalog.mjs";
 import { rssAccountId, rssPostId } from "./rss-id.mjs";
 import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
 import {
   ingestSurvives,
+  rssDateNeedsRepair,
   rssIdsToSkip,
   rssPostsFromItems,
   skipRssResponse,
@@ -66,12 +68,14 @@ export async function runRssIngest(opts?: {
   translate?: typeof translateToPt;
   existingIdsImpl?: (ids: string[]) => Promise<Set<string>>;
   replacementIdsImpl?: (ids: string[]) => Promise<Set<string>>;
+  postedAtImpl?: (ids: string[]) => Promise<Map<string, string>>;
   upsertImpl?: typeof upsertPosts;
 }): Promise<{ written: number; ok: boolean; feeds: number }> {
   const fetchImpl = opts?.fetchImpl ?? fetch;
   const translate = opts?.translate ?? translateToPt;
   const knownIds = opts?.existingIdsImpl ?? existingIds;
   const replacementIds = opts?.replacementIdsImpl ?? idsWithReplacement;
+  const postedAts = opts?.postedAtImpl ?? postedAtById;
   const upsert = opts?.upsertImpl ?? upsertPosts;
   const ownedOrGiven = opts?.feeds ?? (await loadOwnedFeeds());
   const feeds = feedsToScan(ownedOrGiven, opts?.feeds == null);
@@ -117,7 +121,21 @@ export async function runRssIngest(opts?: {
           /* heal falho não aborta itens novos */
         }
       }
-      const skip = rssIdsToSkip(ids, { known, poisoned, latest: latestIds });
+      const dateRepair = new Set<string>();
+      if (ids.length) {
+        try {
+          const storedAt = await postedAts(ids);
+          for (const item of parsed) {
+            const postId = rssPostId(item.guid || item.link);
+            if (rssDateNeedsRepair(item.publishedAt, storedAt.get(postId) || "")) {
+              dateRepair.add(postId);
+            }
+          }
+        } catch {
+          /* data velha não aborta itens novos */
+        }
+      }
+      const skip = rssIdsToSkip(ids, { known, poisoned, latest: latestIds, dateRepair });
       const translated: Record<string, { title: string; summary: string }> = {};
       for (const item of parsed) {
         const postId = rssPostId(item.guid || item.link);

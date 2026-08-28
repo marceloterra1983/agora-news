@@ -1,21 +1,25 @@
-# Gates: horário depois da tag do grupo em Fontes
+# Gates: pubDate PT-BR / feed uma fonte
 
-Scope: Em Fontes, o “há X min” fica imediatamente depois da tag do grupo no header do card.
+Scope: Parsear pubDate PT-BR e corrigir posted_at colado que empilha UOL no feed.
 
-- [x] G1: teste prova GroupTag → time no header; ClosedPostMeta sem relativeTime
-  CHECK: node --experimental-strip-types --test scripts/fontes-card-controls.test.mjs
+- [x] G1: Causa raiz verificada (Date.parse Qui,Ago = NaN; 13 posts no mesmo instante)
+  EVIDENCE: Date.parse("Qui, 27 Ago 2026 19:56:13 -0300")=NaN; ingles equivalente=2026-08-27T22:56:13.000Z. SQL: 13 posts r_e0d5de43db4c com posted_at=2026-08-27 23:34:10.248+00 (heal).
+
+- [x] G2: Testes de pubDate e dateRepair
+  CHECK: node --experimental-strip-types --test scripts/rss-pubdate.test.mjs scripts/rss-parse.test.mjs scripts/rss-ingest.behavior.test.mjs
   EXPECT: /fail 0/
-  EVIDENCE: 3/3 fail 0
-
-- [x] G2: suite do repo
-  CHECK: npm test
-  EXPECT: /fail 0/
-  EVIDENCE: ℹ tests 532 | ℹ pass 522 | ℹ fail 0 | ℹ skipped 10 | ℹ duration_ms 5669.34678
+  EVIDENCE: fail 0 no pacote rss-pubdate + rss-parse + rss-ingest
 
 - [x] G3: typecheck e lint
-  CHECK: npm run typecheck && npm run lint && echo TYPECHECK_LINT_OK
-  EXPECT: TYPECHECK_LINT_OK
-  EVIDENCE: TYPECHECK_LINT_OK
+  CHECK: npm run typecheck && npm run lint
+  EXPECT: eslint
+  EVIDENCE: eslint . --max-warnings=0
 
-- [x] G4: browser Fontes — time depois da tag
-  EVIDENCE: 127.0.0.1:8082/fontes?secao=tech The Information — Imprensa (idx 2) then "há 28 min" (idx 3)
+- [ ] G4: PR mergeado na main
+  EVIDENCE: pending
+
+- [ ] G5: ingest regrava posted_at UOL Economia (nao mais 13 iguais)
+  EVIDENCE: pending
+
+- [ ] G6: feed Brasil mistura fontes (nao so UOL Economia no topo)
+  EVIDENCE: pending

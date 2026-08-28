@@ -1,4 +1,11 @@
 bugs:
+  - bug_id: BUG-2026-08-27T204500
+    date: 2026-08-27
+    severity: medium
+    priority: p1
+    scope: ingest-rss
+    summary: pubDate PT-BR do UOL falha o parse e o feed empilha uma fonte só
+    file: specs/bugs/BUG-2026-08-27-rss-pt-pubdate.md
   - bug_id: BUG-2026-08-27T200800
     date: 2026-08-27
     severity: medium

@@ -15,12 +15,20 @@ export function rssIdsToSkip(ids, opts) {
   const known = opts?.known || new Set();
   const poisoned = opts?.poisoned || new Set();
   const latest = opts?.latest || new Set();
+  const dateRepair = opts?.dateRepair || new Set();
   const skip = new Set();
   for (const id of ids || []) {
-    if (poisoned.has(id)) continue;
+    if (poisoned.has(id) || dateRepair.has(id)) continue;
     if (!latest.has(id) || known.has(id)) skip.add(id);
   }
   return skip;
+}
+
+export function rssDateNeedsRepair(realIso, storedIso, slackMs = 90_000) {
+  const real = Date.parse(String(realIso || ""));
+  const stored = Date.parse(String(storedIso || ""));
+  if (!Number.isFinite(real) || !Number.isFinite(stored)) return false;
+  return Math.abs(real - stored) > slackMs;
 }
 
 export function rssPostsFromItems(feed, items, known, batch, translated = {}) {
