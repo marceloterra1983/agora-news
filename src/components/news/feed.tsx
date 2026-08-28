@@ -29,6 +29,7 @@ import { useSettings } from "@/lib/news/use-settings";
 import { cn } from "@/lib/utils";
 import { tapIcon } from "./icon-btn";
 import { FeedProfilePopup } from "./feed-profile-popup";
+import { FeedStoryPopup } from "./feed-story-popup";
 import { StoryCard } from "./story-card";
 
 type NewsPayload = ReturnType<typeof newsFromFallback> & {
@@ -121,6 +122,8 @@ export function Feed({
   const merged = mergeAvatarsIntoStories(page.visible, storedStories);
   const stories = rankStories(merged);
   const profile = useFeedProfile(category, stories, prefs);
+  const [openStoryId, setOpenStoryId] = useState<string | null>(null);
+  const openStory = stories.find((row) => row.id === openStoryId) ?? null;
 
   useEffect(() => {
     if (data?.stories.length) ingest(data.stories);
@@ -220,7 +223,16 @@ export function Feed({
             unread={unread.isUnread(story.id)}
             priority={index === 0}
             profileOpen={profile.openHandle === normHandle(story.source)}
-            onOpenProfile={profile.openProfile}
+            onOpenProfile={(handle) => {
+              setOpenStoryId(null);
+              profile.openProfile(handle);
+            }}
+            storyOpen={openStoryId === story.id}
+            onOpenStory={(next) => {
+              profile.closeProfile();
+              setOpenStoryId((current) => (current === next.id ? null : next.id));
+              markRead(next.id);
+            }}
             freshCount={freshMemberCount(clusterSeen[story.clusterId || story.id], story.memberIds || [story.id])}
           />
         ))
@@ -265,6 +277,9 @@ export function Feed({
           onClose={profile.closeProfile}
           onToggleNotify={prefs.toggleNotify}
         />
+      ) : null}
+      {openStory ? (
+        <FeedStoryPopup story={openStory} onClose={() => setOpenStoryId(null)} />
       ) : null}
     </div>
   );

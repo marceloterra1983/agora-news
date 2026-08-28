@@ -1,25 +1,36 @@
-# Gates: pubDate PT-BR / feed uma fonte
+# Gates: clique no texto do feed abre a mensagem em popup
 
-Scope: Parsear pubDate PT-BR e corrigir posted_at colado que empilha UOL no feed.
+Scope: No feed (reader), clicar no texto do post abre a mensagem completa num dialog; Escape e backdrop fecham.
 
-- [x] G1: Causa raiz verificada (Date.parse Qui,Ago = NaN; 13 posts no mesmo instante)
-  EVIDENCE: Date.parse("Qui, 27 Ago 2026 19:56:13 -0300")=NaN; ingles equivalente=2026-08-27T22:56:13.000Z. SQL: 13 posts r_e0d5de43db4c com posted_at=2026-08-27 23:34:10.248+00 (heal).
+- [x] G1: o título reader vira botão com testid e aria-haspopup=dialog
+  CHECK: rg -n "feed-story-text|aria-haspopup=.dialog.|onOpenStory" src/components/news/story-card.tsx
+  EXPECT: feed-story-text
+  EVIDENCE: 161:              aria-haspopup="dialog" | 164:              onClick={() => onOpenStory(story)}
 
-- [x] G2: Testes de pubDate e dateRepair
-  CHECK: node --experimental-strip-types --test scripts/rss-pubdate.test.mjs scripts/rss-parse.test.mjs scripts/rss-ingest.behavior.test.mjs
+- [x] G2: o Feed monta FeedStoryPopup quando há story aberto
+  CHECK: rg -n "FeedStoryPopup|onOpenStory|openStory" src/components/news/feed.tsx
+  EXPECT: FeedStoryPopup
+  EVIDENCE: 281:      {openStory ? ( | 282:        <FeedStoryPopup story={openStory} onClose={() => setOpenStoryId(null)} />
+
+- [x] G3: o popup é dialog modal, fecha no Escape e mostra o corpo completo
+  CHECK: rg -n "role=.dialog.|aria-modal|feed-story-popup|Escape|ArticleView" src/components/news/feed-story-popup.tsx
+  EXPECT: feed-story-popup
+  EVIDENCE: 76:        data-testid="feed-story-popup" | 93:          <ArticleView story={story} embedded />
+
+- [x] G4: teste de contrato do popup
+  CHECK: node --experimental-strip-types --test scripts/feed-story-popup.test.mjs
   EXPECT: /fail 0/
-  EVIDENCE: fail 0 no pacote rss-pubdate + rss-parse + rss-ingest
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 49.893689
 
-- [x] G3: typecheck e lint
-  CHECK: npm run typecheck && npm run lint
-  EXPECT: eslint
-  EVIDENCE: eslint . --max-warnings=0
+- [x] G5: suite do repo
+  CHECK: npm test
+  EXPECT: /fail 0/
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 6147.461037
 
-- [ ] G4: PR mergeado na main
-  EVIDENCE: pending
+- [x] G6: typecheck e lint
+  CHECK: npm run typecheck && npm run lint && echo TYPECHECK_LINT_OK
+  EXPECT: TYPECHECK_LINT_OK
+  EVIDENCE: > eslint . --max-warnings=0 | TYPECHECK_LINT_OK
 
-- [ ] G5: ingest regrava posted_at UOL Economia (nao mais 13 iguais)
-  EVIDENCE: pending
-
-- [ ] G6: feed Brasil mistura fontes (nao so UOL Economia no topo)
-  EVIDENCE: pending
+- [x] G7: no browser, clicar o texto abre o dialog com o corpo e Escape fecha
+  EVIDENCE: 127.0.0.1:8083/?secao=ai fchollet card 171 chars ("absorvendo cada vez mais o…") → popup body 226 chars ("universo computacional… infinito por construção"); Escape removeu [data-testid=feed-story-popup]; NEWS_SMOKE_URL=http://127.0.0.1:8083 feed-story-popup.test.mjs 2/2 fail 0
