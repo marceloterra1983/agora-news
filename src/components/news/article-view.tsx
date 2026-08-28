@@ -21,7 +21,13 @@ import { PostText } from "./written-link";
 import { IconBtn, IconLink } from "./icon-btn";
 import { XLogo } from "./x-logo";
 
-export function ArticleView({ story }: { story: Story }) {
+export function ArticleView({
+  story,
+  embedded = false,
+}: {
+  story: Story;
+  embedded?: boolean;
+}) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
   const packed = Boolean(
@@ -75,12 +81,23 @@ export function ArticleView({ story }: { story: Story }) {
   const initial = displaySourceInitial(story.source, story.sourceLabel);
 
   return (
-    <article data-post="" className="mx-auto max-w-3xl max-sm:max-w-none">
-      <HistoryBackButton
-        fallbackSecao={story.category}
-        label={`Voltar para ${labelFor(story.category)}`}
-      />
-      <p className="mt-6 flex items-start gap-2.5 text-[13px] text-mute">
+    <article
+      data-post=""
+      className={embedded ? "max-w-none" : "mx-auto max-w-3xl max-sm:max-w-none"}
+    >
+      {embedded ? null : (
+        <HistoryBackButton
+          fallbackSecao={story.category}
+          label={`Voltar para ${labelFor(story.category)}`}
+        />
+      )}
+      <p
+        className={
+          embedded
+            ? "flex items-start gap-2.5 text-[13px] text-mute"
+            : "mt-6 flex items-start gap-2.5 text-[13px] text-mute"
+        }
+      >
         {face ? (
           <img
             src={face}

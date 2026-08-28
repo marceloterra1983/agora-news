@@ -54,6 +54,8 @@ export function StoryCard({
   priority = false,
   profileOpen = false,
   onOpenProfile,
+  storyOpen = false,
+  onOpenStory,
   freshCount = 0,
 }: {
   story: Story;
@@ -62,6 +64,8 @@ export function StoryCard({
   priority?: boolean;
   profileOpen?: boolean;
   onOpenProfile?: (handle: string) => void;
+  storyOpen?: boolean;
+  onOpenStory?: (story: Story) => void;
   freshCount?: number;
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
@@ -150,13 +154,27 @@ export function StoryCard({
           </span>
         </p>
         <h2 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
-          <Link
-            to="/materia/$id"
-            params={{ id: story.id }}
-            className="after:absolute after:inset-0 hover:text-mark"
-          >
-            {displayTitle(story.title)}
-          </Link>
+          {onOpenStory ? (
+            <button
+              type="button"
+              data-testid="feed-story-text"
+              aria-haspopup="dialog"
+              aria-expanded={storyOpen || undefined}
+              aria-label={`Abrir mensagem: ${displayTitle(story.title)}`}
+              onClick={() => onOpenStory(story)}
+              className="relative z-10 text-left hover:text-mark"
+            >
+              {displayTitle(story.title)}
+            </button>
+          ) : (
+            <Link
+              to="/materia/$id"
+              params={{ id: story.id }}
+              className="after:absolute after:inset-0 hover:text-mark"
+            >
+              {displayTitle(story.title)}
+            </Link>
+          )}
         </h2>
         <WrittenLinks
           text={`${story.title}\n${story.body}\n${story.excerpt}`}
