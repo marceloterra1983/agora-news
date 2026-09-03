@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { HistoryBackButton } from "./history-back";
-import type { Story } from "@/lib/news/types";
+import type { Story, StoryAsset } from "@/lib/news/types";
 import { labelFor } from "@/lib/news/types";
 import { useNewsStore } from "@/lib/news/store";
 import { blurbFor } from "@/lib/news/profiles";
@@ -31,7 +31,8 @@ export function ArticleView({
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
-  const isTweet = !story.id.startsWith("yt_") && !story.id.startsWith("rss_") && !story.source.startsWith("r_") && !story.source.startsWith("y_");
+  const isYt = story.id.startsWith("yt_") || story.source.startsWith("y_");
+  const isTweet = !isYt && !story.id.startsWith("rss_") && !story.source.startsWith("r_");
   const packed = !isTweet || Boolean(
     story.quoted ||
       story.replyTo ||
@@ -60,22 +61,21 @@ export function ArticleView({
   const replyTo = embed?.replyTo ?? story.replyTo ?? null;
   const card = embed?.card ?? story.card ?? null;
   const article = embed?.article ?? story.xArticle ?? null;
-  const assets = embed?.assets?.length
-    ? embed.assets
-    : story.assets?.length
-      ? story.assets
-      : story.id.startsWith("yt_")
-        ? [
-            {
-              type: "youtube" as const,
-              url: story.url,
-              poster: story.image || `https://i.ytimg.com/vi/${story.id.replace(/^yt_/, "")}/hqdefault.jpg`,
-              videoId: story.id.replace(/^yt_/, ""),
-            },
-          ]
-        : story.image
-          ? [{ type: "photo" as const, url: story.image }]
-          : [];
+  const ytVideoId = isYt ? story.id.replace(/^yt_/, "") : "";
+  const ytAsset: StoryAsset = {
+    type: "youtube" as const,
+    url: story.url || (ytVideoId ? `https://www.youtube.com/watch?v=${ytVideoId}` : ""),
+    poster: story.image || (ytVideoId ? `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg` : undefined),
+    videoId: ytVideoId,
+  };
+  const rawAssets = embed?.assets?.length ? embed.assets : story.assets;
+  const assets = isYt
+    ? [ytAsset]
+    : rawAssets?.length
+      ? rawAssets
+      : story.image
+        ? [{ type: "photo" as const, url: story.image }]
+        : [];
   const whoCatalog = blurbFor(story.source, story.sourceLabel);
   const [who, setWho] = useState(whoCatalog);
   const [face, setFace] = useState(() =>

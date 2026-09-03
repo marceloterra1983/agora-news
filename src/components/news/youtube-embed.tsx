@@ -23,6 +23,8 @@ export function YouTubeEmbed({
   const cleanId = extractYouTubeId(videoId);
   const thumb = poster || (cleanId ? `https://i.ytimg.com/vi/${cleanId}/hqdefault.jpg` : null);
 
+  const isPlayerActive = active || autoPlay;
+
   if (!cleanId) {
     return (
       <StoryMedia
@@ -34,7 +36,7 @@ export function YouTubeEmbed({
     );
   }
 
-  if (!active) {
+  if (!isPlayerActive) {
     return (
       <div
         data-youtube-facade=""
