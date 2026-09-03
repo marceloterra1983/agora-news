@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bookmark, BookmarkCheck, Play } from "lucide-react";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 import type { Story } from "@/lib/news/types";
 import { extraAvatarFor } from "@/lib/news/extra-fontes";
 import { youtubeAvatarFor } from "@/lib/news/youtube-catalog.mjs";
@@ -82,6 +82,8 @@ export function StoryCard({
     const byline = displaySourceByline(story.source, story.sourceLabel);
     const initial = displaySourceInitial(story.source, story.sourceLabel);
     const isYt = storyIsYouTube(story);
+    const videoId = isYt ? story.id.replace(/^yt_/, "") : "";
+    const ytThumb = story.image || (isYt && videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null);
     const faceNode = face ? (
       <img
         src={face}
@@ -157,7 +159,7 @@ export function StoryCard({
             </Tip>
           </span>
         </p>
-        {isYt && story.image ? (
+        {isYt && ytThumb ? (
           <div className="mt-2.5 flex items-start gap-3 sm:gap-4">
             {onOpenStory ? (
               <button
@@ -168,16 +170,11 @@ export function StoryCard({
                 className="group relative shrink-0 w-32 sm:w-44 aspect-video overflow-hidden rounded-lg bg-hero shadow-sm cursor-pointer"
               >
                 <StoryMedia
-                  src={story.image}
+                  src={ytThumb}
                   alt={story.title}
                   priority={priority}
                   className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="absolute inset-0 grid place-items-center bg-black/25 transition-colors group-hover:bg-black/35">
-                  <span className="grid size-8 sm:size-10 place-items-center rounded-full bg-paper/95 text-ink shadow-md transition-transform group-hover:scale-110">
-                    <Play className="size-4 sm:size-5 fill-current pl-0.5" aria-hidden />
-                  </span>
-                </span>
               </button>
             ) : (
               <Link
@@ -188,16 +185,11 @@ export function StoryCard({
                 className="group relative shrink-0 w-32 sm:w-44 aspect-video overflow-hidden rounded-lg bg-hero shadow-sm cursor-pointer"
               >
                 <StoryMedia
-                  src={story.image}
+                  src={ytThumb}
                   alt={story.title}
                   priority={priority}
                   className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="absolute inset-0 grid place-items-center bg-black/25 transition-colors group-hover:bg-black/35">
-                  <span className="grid size-8 sm:size-10 place-items-center rounded-full bg-paper/95 text-ink shadow-md transition-transform group-hover:scale-110">
-                    <Play className="size-4 sm:size-5 fill-current pl-0.5" aria-hidden />
-                  </span>
-                </span>
               </Link>
             )}
             <div className="min-w-0 flex-1">
