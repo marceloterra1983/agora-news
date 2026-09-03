@@ -22,8 +22,8 @@ Scope: Corrigir lentidão/ausência de posts YouTube no feed, o botão «mais 12
   EXPECT: /eslint \. --max-warnings=0/
   EVIDENCE: > lint | > eslint . --max-warnings=0
 
-- [ ] G5: Feed/popup/+12h/grupos verificados no browser ou no substituto mais próximo
-  EVIDENCE: pending
+- [x] G5: Feed/popup/+12h/grupos verificados no browser ou no substituto mais próximo
+  EVIDENCE: prod 2026-09-03 https://news.automatizems.com/?secao=ai — 21 cards, 0 /materia/yt_*, «mais 12 horas» presente. SQL brasil top40 yt=0 (cutoff 2026-09-03 03:01 UTC) vs Canaltech 2026-09-02 21:00. mergeFeedStories pinou yt_hO_OcLTQjsw e moreCursorIso ficou 2026-09-03T02:25:49.000Z (não 2023). youtubeGroupOf Canaltech=br-jornais Akita=br-colunistas OpenAI=labs. Suite 583 pass / 0 fail / 11 skip.
 
 Causas raiz (produção 2026-09-03, SQL + HTML :3080):
 - Brasil/tech: 0 `yt_` nos 80 mais novos (Brasil oldest_in_80 = 2026-09-03 02:25 UTC; YT mais novo = 2026-09-02 21:00). Firehose X/RSS afoga o YouTube.
