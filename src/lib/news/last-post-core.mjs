@@ -51,7 +51,7 @@ export function parseLastPost(raw) {
 /** @param {string} handle @param {string} id @param {boolean} inApp */
 export function lastPostHref(handle, id, inApp) {
   const key = handle.replace(/^@+/, "").trim();
-  if (/^r_[a-f0-9]{12}$/i.test(key)) return id ? `/materia/${id}` : "";
+  if (/^[ry]_[a-f0-9]{12}$/i.test(key) || String(id || "").startsWith("yt_")) return id ? `/materia/${id}` : "";
   if (inApp && id) return `/materia/${id}`;
   if (id) return `https://x.com/${key}/status/${id}`;
   return `https://x.com/${key}`;

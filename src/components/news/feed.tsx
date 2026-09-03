@@ -97,6 +97,7 @@ export function Feed({
       !filterStoriesByOrigin([story], {
         showX: settings.showX,
         showRss: settings.showRss,
+        showYouTube: settings.showYouTube,
       }).length
     ) {
       return false;

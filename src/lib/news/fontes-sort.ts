@@ -104,7 +104,7 @@ export type FonteGroup = {
   latest: string | null;
   faces: InfluenceRow[];
   preview: string;
-  origins: Array<"x" | "rss">;
+  origins: Array<"x" | "rss" | "youtube">;
 };
 
 export function groupFontesRows(rows: InfluenceRow[], groupIds: string[] = allGroupIds()): FonteGroup[] {

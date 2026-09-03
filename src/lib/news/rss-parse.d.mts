@@ -4,6 +4,8 @@ export type RssItem = {
   link: string;
   publishedAt: string;
   summary: string;
+  imageUrl?: string;
+  videoId?: string;
 };
 
 export function parseRssDate(value: unknown): string;

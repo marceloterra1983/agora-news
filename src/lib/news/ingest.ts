@@ -52,6 +52,7 @@ export async function runIngest(opts?: {
   limitHandles?: number;
   withProfiles?: boolean;
   withRss?: boolean;
+  withYouTube?: boolean;
 }) {
   return runIngestWithRss(runOwnedIngest, opts);
 }

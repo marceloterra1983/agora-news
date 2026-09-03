@@ -1,4 +1,4 @@
-import { Rss } from "lucide-react";
+import { Rss, Youtube } from "lucide-react";
 import { useSettings } from "@/lib/news/use-settings";
 import { cn } from "@/lib/utils";
 import { Tip } from "./icon-btn";
@@ -41,6 +41,21 @@ export function OriginSwitch() {
           )}
         >
           <Rss className="size-4" />
+        </button>
+      </Tip>
+      <Tip label={settings.showYouTube ? "Ocultar vídeos do YouTube" : "Mostrar vídeos do YouTube"}>
+        <button
+          type="button"
+          data-origin="youtube"
+          aria-pressed={settings.showYouTube}
+          aria-label={settings.showYouTube ? "Ocultar vídeos do YouTube" : "Mostrar vídeos do YouTube"}
+          onClick={() => set({ showYouTube: !settings.showYouTube })}
+          className={cn(
+            "grid size-10 place-items-center rounded-full",
+            settings.showYouTube ? "bg-ink text-paper" : "text-mute",
+          )}
+        >
+          <Youtube className="size-4" />
         </button>
       </Tip>
     </div>

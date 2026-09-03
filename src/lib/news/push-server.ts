@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import { adminHeaders, SUPABASE_URL } from "./admin";
-import { validPushEndpoint } from "./push-core.mjs";
+import { cleanSub, validPushEndpoint } from "./push-core.mjs";
 import { vapidConfig } from "./push-config";
 import { mapPool } from "./map-pool";
 
@@ -10,31 +10,13 @@ export type PushSub = {
   handles: string[];
 };
 
+export { cleanSub };
+
 type StoredPush = { userId: string; sub: PushSub };
 
 function subId(endpoint: string) {
   const safe = endpoint.replace(/[^a-zA-Z0-9]/g, "").slice(-48);
   return `push_${safe || "x"}`;
-}
-
-function cleanSub(sub: PushSub): PushSub | null {
-  if (
-    !validPushEndpoint(sub.endpoint) ||
-    !sub.keys?.p256dh ||
-    !sub.keys.auth ||
-    sub.keys.p256dh.length > 512 ||
-    sub.keys.auth.length > 512
-  ) {
-    return null;
-  }
-  const handles = [
-    ...new Set(
-      (sub.handles || [])
-        .map((handle) => String(handle).replace(/^@+/, "").trim().toLowerCase())
-        .filter((handle) => /^[a-z0-9_]{1,15}$/.test(handle)),
-    ),
-  ].slice(0, 100);
-  return { endpoint: sub.endpoint, keys: sub.keys, handles };
 }
 
 async function listPushSubs(): Promise<StoredPush[]> {

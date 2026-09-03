@@ -99,9 +99,11 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
   const url =
     p.post_url && p.post_url.startsWith("http")
       ? p.post_url
-      : id
-        ? `https://x.com/${source}/status/${id}`
-        : "";
+      : id.startsWith("yt_")
+        ? `https://www.youtube.com/watch?v=${id.replace(/^yt_/, "")}`
+        : id
+          ? `https://x.com/${source}/status/${id}`
+          : "";
   const image =
     p.image_url && p.image_url.startsWith("http") ? p.image_url : null;
   const packed = unpackMediaLabel(p.media_label);
@@ -114,9 +116,18 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
   } | null;
   const assets = meta?.assets?.length
     ? meta.assets
-    : image
-      ? [{ type: "photo" as const, url: image }]
-      : [];
+    : id.startsWith("yt_")
+      ? [
+          {
+            type: "youtube" as const,
+            url,
+            poster: image || `https://i.ytimg.com/vi/${id.replace(/^yt_/, "")}/hqdefault.jpg`,
+            videoId: id.replace(/^yt_/, ""),
+          },
+        ]
+      : image
+        ? [{ type: "photo" as const, url: image }]
+        : [];
   return {
     id: id || `${source}-${p.posted_at}`,
     title: title.slice(0, 280),
@@ -134,7 +145,7 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
     source,
     sourceLabel,
     category: normalizeSection(p.category || fallbackCategory),
-    media: packed.label || (image ? "Foto" : "Nenhuma"),
+    media: packed.label || (id.startsWith("yt_") ? "Vídeo" : image ? "Foto" : "Nenhuma"),
     batch: p.batch_name || "supabase",
   };
 }

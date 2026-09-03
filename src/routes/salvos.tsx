@@ -35,7 +35,7 @@ function SavedPage() {
   const { settings } = useSettings();
   const items = filterStoriesByOrigin(
     savedIds.map((id) => stories[id]).filter(Boolean),
-    { showX: settings.showX, showRss: settings.showRss },
+    { showX: settings.showX, showRss: settings.showRss, showYouTube: settings.showYouTube },
   );
   const groups = groupSavedByCategory(
     items.map((s) => ({ ...s, category: normalizeSection(s.category) })),
