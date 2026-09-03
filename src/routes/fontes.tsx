@@ -11,6 +11,7 @@ import {
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
 import { filterFontesByOrigin, fontesEmptyHint, mergeRssFontes } from "@/lib/news/rss-catalog.mjs";
+import { mergeYouTubeFontes } from "@/lib/news/youtube-catalog.mjs";
 import { loadRssFeeds, onRssFeeds, type RssFeed } from "@/lib/news/rss-feeds";
 import { loadFontes } from "@/lib/news/server";
 import { routeMeta } from "@/lib/news/route-meta";
@@ -90,13 +91,14 @@ function FontesPage() {
   const base = data?.rows?.length ? data.rows : seed;
   const withExtras = useMemo(() => mergeExtraFontes(base, extras, secao), [base, extras, secao]);
   const withRss = useMemo(() => mergeRssFontes(withExtras, rssOwned, secao), [withExtras, rssOwned, secao]);
-  const rows = sortFontesRows(withRss, sort, prefs.starred).map((r) => ({
+  const withYt = useMemo(() => mergeYouTubeFontes(withRss, secao), [withRss, secao]);
+  const rows = sortFontesRows(withYt, sort, prefs.starred).map((r) => ({
     ...r,
     group: prefs.groupOf(r.handle) ?? r.group ?? "novos",
   }));
   const visible = filterFontesByOrigin(filterFontesRows(rows, q, secao), settings);
   const grouped = groupFontesRows(visible, groupIds);
-  const shownGroups = settings.showX && settings.showRss ? grouped : grouped.filter((g) => g.items.length);
+  const shownGroups = settings.showX && settings.showRss && settings.showYouTube ? grouped : grouped.filter((g) => g.items.length);
   function toggleGroup(id: string) {
     setOpenGroups((prev) => {
       const next = new Set(prev);

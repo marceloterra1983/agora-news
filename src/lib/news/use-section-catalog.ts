@@ -5,6 +5,7 @@ import { loadCustomGroups, type CustomGroup } from "./groups";
 import { profilesFor } from "./profiles";
 import { rssExtrasFor } from "./rss-catalog.mjs";
 import { loadRssFeeds } from "./rss-feeds";
+import { youtubeExtrasFor } from "./youtube-catalog.mjs";
 import { catalogFor, type SectionCatalog } from "./section-catalog.mjs";
 import { normalizeSection, type Category } from "./types";
 
@@ -44,6 +45,17 @@ export function useSectionCatalog(section: Category): SectionCatalog {
         verified: false,
         followers: 0,
         summary: "",
+        section: normalizeSection(row.section),
+        group: row.group,
+        lastPost: null,
+      })),
+      ...youtubeExtrasFor(section).map((row) => ({
+        handle: row.handle,
+        name: row.name,
+        avatar: null,
+        verified: false,
+        followers: 0,
+        summary: row.blurb,
         section: normalizeSection(row.section),
         group: row.group,
         lastPost: null,

@@ -1,38 +1,23 @@
-# Gates: Canal de Captura e Exibição de Vídeos do YouTube
+# Gates: Curadoria e Integração de Fontes do YouTube em Fontes
 
-Scope: Implementar captura de vídeos do YouTube via Atom/RSS com extração de media:group, suporte a IDs e contas YouTube, switch de preferências, componente Facade Player ultraleve, sanitização Web Push, catálogo seed curado e integração resiliente na ingestão.
+Scope: Expandir catálogo seed do YouTube com canais curados de alto sinal para IA, Tech e Brasil, implementar mergeYouTubeFontes com metadados editoriais e plugar na rota /fontes.
 
-- [x] G1: rss-parse extrai media:description, media:thumbnail e yt:videoId para Atom/YouTube
-  CHECK: node --experimental-strip-types --test scripts/youtube-parse.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 59.230913
+- [x] G1: youtube-catalog contém canais curados para ai, tech e brasil com IDs e grupos semânticos válidos
+  CHECK: node --experimental-strip-types --test --test-name-pattern="seed catalog" scripts/youtube-fontes.test.mjs
+  EXPECT: /pass 1/
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 47.275754
 
-- [x] G2: suporte a contas y_* e posts yt_* com storyIsYouTube e storySourceFromAccount sem @
-  CHECK: node --experimental-strip-types --test scripts/youtube-id.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 97.006202
+- [x] G2: mergeYouTubeFontes devolve linhas no formato InfluenceRow com handle y_*, avatar, bio e siteUrl
+  CHECK: node --experimental-strip-types --test --test-name-pattern="mergeYouTubeFontes" scripts/youtube-fontes.test.mjs
+  EXPECT: /pass 1/
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 55.391858
 
-- [x] G3: settings e origin-filter suportam showYouTube e OriginMark exibe ícone do YouTube
-  CHECK: node --experimental-strip-types --test scripts/youtube-origin.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 87.186057
+- [x] G3: fontes.tsx encadeia mergeYouTubeFontes e agrupa os canais respeitando a taxonomia
+  CHECK: rg -n "mergeYouTubeFontes" src/routes/fontes.tsx
+  EXPECT: mergeYouTubeFontes
+  EVIDENCE: 14:import { mergeYouTubeFontes } from "@/lib/news/youtube-catalog.mjs"; | 94:  const withYt = useMemo(() => mergeYouTubeFontes(withRss, secao), [withRss, secao]);
 
-- [x] G4: push-server aceita handles de canais do YouTube na sanitização de subscriptions
-  CHECK: node --experimental-strip-types --test scripts/youtube-push.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 51.675688
-
-- [x] G5: YouTubeEmbed implementa facade player com youtube-nocookie e StoryAssetBlock integra vídeos do YouTube
-  CHECK: node --experimental-strip-types --test scripts/youtube-embed.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 75.878414
-
-- [x] G6: youtube-ingest orquestra canais seed e feeds com cache ETag e integra em runIngestWithRss
-  CHECK: node --experimental-strip-types --test scripts/youtube-ingest.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 58.089101
-
-- [x] G7: suite completa de testes, typecheck e lint passam 100% verdes sem regressões
+- [x] G4: suite completa de testes, typecheck e lint passam 100% verdes sem regressões
   CHECK: npm test && npm run typecheck && npm run lint
   EXPECT: /eslint \. --max-warnings=0/
   EVIDENCE: > lint | > eslint . --max-warnings=0
