@@ -151,15 +151,19 @@ export function ArticleView({
       </h1>
       {replyTo ? <QuoteCard quote={replyTo} /> : null}
       {assets.length ? (
-        <div data-media="">
+        <div>
           {assets.map((asset, index) => (
-            <StoryAssetBlock
-              key={asset.url}
-              asset={asset}
-              alt={title}
-              priority={index === 0}
-              autoPlay={embedded}
-            />
+            <div
+              key={asset.url || index}
+              data-media={asset.type === "photo" ? "" : undefined}
+            >
+              <StoryAssetBlock
+                asset={asset}
+                alt={title}
+                priority={index === 0}
+                autoPlay={embedded}
+              />
+            </div>
           ))}
         </div>
       ) : null}
