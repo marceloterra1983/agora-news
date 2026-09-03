@@ -24,10 +24,12 @@ test("article video is muted looping and does not autoplay when motion is reduce
 });
 
 test("Fontes avatars omit the page referrer", () => {
+  const face = read("src/components/news/source-avatar.tsx");
   const row = read("src/components/news/fontes-profile-row.tsx");
   const page = read("src/routes/fontes.tsx");
-  assert.match(row, /<img[\s\S]*?referrerPolicy=["']no-referrer["']/);
-  assert.match(page, /<img[\s\S]*?referrerPolicy=["']no-referrer["']/);
+  assert.match(face, /referrerPolicy=["']no-referrer["']/);
+  assert.match(row, /SourceAvatar/);
+  assert.match(page, /SourceAvatar/);
 });
 
 test("document referrer is same-origin so Chromium media can fetch X MP4s", () => {

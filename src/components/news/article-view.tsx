@@ -15,6 +15,7 @@ import { displaySourceByline, displaySourceInitial } from "@/lib/news/rss-catalo
 import { safeHttpHref } from "@/lib/news/last-post";
 import { isDistinctTitle } from "@/lib/news/story-pt.mjs";
 import { StoryAssetBlock } from "./story-media";
+import { SourceAvatar } from "./source-avatar";
 import { GroupTag } from "./group-tag";
 import { OriginMark } from "./origin-mark";
 import { QuoteCard, LinkCard, XArticleBlock } from "./quote-card";
@@ -79,13 +80,21 @@ export function ArticleView({
   const whoCatalog = blurbFor(story.source, story.sourceLabel);
   const [who, setWho] = useState(whoCatalog);
   const [face, setFace] = useState(() =>
-    resolveFace(story.avatar, youtubeAvatarFor(story.source) || extraAvatarFor(story.source)),
+    resolveFace(
+      youtubeAvatarFor(story.source) || story.avatar,
+      extraAvatarFor(story.source),
+    ),
   );
   useEffect(() => {
     const key = story.source.replace(/^@+/, "").toLowerCase();
     const extra = loadExtraFontes().find((e) => e.handle.toLowerCase() === key);
     setWho(extra?.summary || whoCatalog);
-    setFace(resolveFace(story.avatar, youtubeAvatarFor(story.source) || extra?.avatar || extraAvatarFor(story.source)));
+    setFace(
+      resolveFace(
+        youtubeAvatarFor(story.source) || story.avatar,
+        extra?.avatar || extraAvatarFor(story.source),
+      ),
+    );
   }, [story.avatar, story.source, whoCatalog]);
   const title = displayTitle(story.title);
   const bodyText = story.body || story.excerpt;
@@ -111,23 +120,14 @@ export function ArticleView({
             : "mt-6 flex items-start gap-2.5 text-[13px] text-mute"
         }
       >
-        {face ? (
-          <img
-            src={face}
-            alt=""
-            width={44}
-            height={44}
-            referrerPolicy="no-referrer"
-            className="size-[44px] shrink-0 rounded-full bg-paper-2 object-cover"
-          />
-        ) : (
-          <span
-            aria-hidden
-            className="grid size-[44px] shrink-0 place-items-center rounded-full bg-paper-2 text-[11px] font-medium text-ink"
-          >
-            {initial}
-          </span>
-        )}
+        <SourceAvatar
+          src={face || null}
+          initial={initial}
+          size={44}
+          className="size-[44px]"
+          imgClassName="bg-paper-2"
+          fallbackClassName="bg-paper-2 text-[11px] font-medium text-ink"
+        />
         <span className="flex min-w-0 flex-wrap items-center gap-1.5 pt-1.5">
           <span className={byline.startsWith("@") ? "break-all lowercase" : "break-all"}>
             {byline}

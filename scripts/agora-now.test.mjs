@@ -109,9 +109,11 @@ test("article skips fxtwitter when the row already packed media", () => {
 test("reader card has avatar, word ellipsis and no-referrer on the header face", () => {
   const card = read("src/components/news/story-card.tsx");
   const article = read("src/components/news/article-view.tsx");
-  assert.match(card, /story\.avatar|rounded-full/);
-  assert.match(card, /referrerPolicy/);
-  assert.match(article, /referrerPolicy=["']no-referrer["']/);
+  const face = read("src/components/news/source-avatar.tsx");
+  assert.match(card, /story\.avatar|SourceAvatar/);
+  assert.match(card, /SourceAvatar/);
+  assert.match(article, /SourceAvatar/);
+  assert.match(face, /referrerPolicy=["']no-referrer["']/);
   assert.match(read("src/lib/news/format.ts"), /clipAtWord/);
 });
 

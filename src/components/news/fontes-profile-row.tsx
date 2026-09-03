@@ -5,12 +5,14 @@ import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { FontePostLink } from "@/components/news/fonte-post-link";
 import { GroupTag } from "@/components/news/group-tag";
 import { OriginMark } from "@/components/news/origin-mark";
+import { SourceAvatar } from "@/components/news/source-avatar";
 import { displayTitle, formatCount, relativeTime } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { safeHttpHref } from "@/lib/news/last-post";
+import { youtubeAvatarFor } from "@/lib/news/youtube-catalog.mjs";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export function ProfileRow({
   row,
@@ -36,7 +38,7 @@ export function ProfileRow({
   const pausedRow = prefs.isDisabled(row.handle);
   const followers = row.followers ? formatCount(row.followers) : "";
   const lastHref = row.lastPost ? safeHttpHref(row.lastPost.href) : "";
-  const [avatarBroken, setAvatarBroken] = useState(false);
+  const face = youtubeAvatarFor(row.handle) || row.avatar || null;
   const actionsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -55,22 +57,14 @@ export function ProfileRow({
           <span className="w-4 shrink-0 text-right font-mono text-[10px] tabular-nums text-mute">
             {index + 1}
           </span>
-          {row.avatar && !avatarBroken ? (
-            <img
-              src={row.avatar}
-              alt=""
-              width={28}
-              height={28}
-              loading={index === 0 ? "eager" : "lazy"}
-              referrerPolicy="no-referrer"
-              onError={() => setAvatarBroken(true)}
-              className="size-7 shrink-0 rounded-full bg-paper-2 object-cover"
-            />
-          ) : (
-            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-mute">
-              {row.name.charAt(0)}
-            </span>
-          )}
+          <SourceAvatar
+            src={face}
+            initial={(row.name || row.handle || "?").charAt(0)}
+            size={28}
+            className="size-7"
+            loading={index === 0 ? "eager" : "lazy"}
+            fallbackClassName="text-[10px] font-medium text-mute"
+          />
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5">
               <span className="truncate text-sm font-medium text-ink">{row.name}</span>

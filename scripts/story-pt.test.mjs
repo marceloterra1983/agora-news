@@ -75,7 +75,7 @@ test("ArticleView shows avatar and hides a duplicated title", () => {
   assert.match(src, /story\.avatar|face/);
   assert.match(src, /isDistinctTitle/);
   assert.match(src, /whitespace-pre-wrap/);
-  assert.match(src, /rounded-full/);
+  assert.match(src, /SourceAvatar/);
   assert.match(src, /size-\[44px\]/);
   assert.match(src, /break-all/);
 });

@@ -3,10 +3,12 @@ import { BadgeCheck, X } from "lucide-react";
 import { FonteProfileCard } from "@/components/news/fonte-profile-card";
 import { GroupTag } from "@/components/news/group-tag";
 import { OriginMark } from "@/components/news/origin-mark";
+import { SourceAvatar } from "@/components/news/source-avatar";
 import { Tip } from "@/components/news/icon-btn";
 import { formatCount } from "@/lib/news/format";
 import type { InfluenceRow } from "@/lib/news/influence";
 import { displaySourceAt, displaySourceInitial } from "@/lib/news/rss-catalog.mjs";
+import { youtubeAvatarFor } from "@/lib/news/youtube-catalog.mjs";
 import { useFontesPrefs } from "@/lib/news/use-fontes-prefs";
 
 function PopupIdentity({
@@ -18,28 +20,20 @@ function PopupIdentity({
 }) {
   const followers = row.followers ? formatCount(row.followers) : "";
   const at = displaySourceAt(row.handle);
+  const face = youtubeAvatarFor(row.handle) || row.avatar || null;
   return (
     <div
       data-testid="feed-profile-identity"
       className="flex items-start gap-3 border-b border-line px-3 pb-2.5 pt-0.5"
     >
-      {row.avatar ? (
-        <img
-          src={row.avatar}
-          alt=""
-          width={56}
-          height={56}
-          referrerPolicy="no-referrer"
-          className="size-14 shrink-0 rounded-full bg-paper object-cover"
-        />
-      ) : (
-        <span
-          aria-hidden
-          className="grid size-14 shrink-0 place-items-center rounded-full bg-paper text-lg font-medium text-mute"
-        >
-          {displaySourceInitial(row.handle, row.name)}
-        </span>
-      )}
+      <SourceAvatar
+        src={face}
+        initial={displaySourceInitial(row.handle, row.name)}
+        size={56}
+        className="size-14"
+        imgClassName="bg-paper"
+        fallbackClassName="bg-paper text-lg font-medium text-mute"
+      />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-1.5">
           <span className="truncate text-base font-medium text-ink">{row.name}</span>
