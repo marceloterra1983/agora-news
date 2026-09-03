@@ -30,7 +30,8 @@ export function ArticleView({
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
-  const packed = Boolean(
+  const isTweet = !story.id.startsWith("yt_") && !story.id.startsWith("rss_") && !story.source.startsWith("r_") && !story.source.startsWith("y_");
+  const packed = !isTweet || Boolean(
     story.quoted ||
       story.replyTo ||
       story.card ||
@@ -62,9 +63,18 @@ export function ArticleView({
     ? embed.assets
     : story.assets?.length
       ? story.assets
-      : story.image
-        ? [{ type: "photo" as const, url: story.image }]
-        : [];
+      : story.id.startsWith("yt_")
+        ? [
+            {
+              type: "youtube" as const,
+              url: story.url,
+              poster: story.image || `https://i.ytimg.com/vi/${story.id.replace(/^yt_/, "")}/hqdefault.jpg`,
+              videoId: story.id.replace(/^yt_/, ""),
+            },
+          ]
+        : story.image
+          ? [{ type: "photo" as const, url: story.image }]
+          : [];
   const whoCatalog = blurbFor(story.source, story.sourceLabel);
   const [who, setWho] = useState(whoCatalog);
   const [face, setFace] = useState(() => resolveFace(story.avatar));

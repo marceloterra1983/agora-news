@@ -1,4 +1,4 @@
-export function ingestSurvives(xFailed: boolean, rssWritten: number): boolean;
+export function ingestSurvives(xFailed: boolean, rssWritten: number, ytWritten?: number): boolean;
 export function skipRssResponse(status: number): boolean;
 export function rssIdsToSkip(
   ids: string[],

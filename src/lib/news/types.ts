@@ -33,11 +33,12 @@ export type StoryXArticle = {
 
 
 export type StoryAsset = {
-  type: "photo" | "video";
+  type: "photo" | "video" | "youtube";
   url: string;
   poster?: string;
   width?: number;
   height?: number;
+  videoId?: string;
 };
 
 export type StoryAlsoFrom = {

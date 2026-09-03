@@ -9,6 +9,7 @@ export type AppSettings = {
   showImages: boolean;
   showX: boolean;
   showRss: boolean;
+  showYouTube: boolean;
   highlightUnread: boolean;
   reduceMotion: boolean;
 };
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showImages: true,
   showX: true,
   showRss: true,
+  showYouTube: true,
   highlightUnread: true,
   reduceMotion: false,
 };
@@ -83,6 +85,7 @@ function parse(raw: unknown): AppSettings {
     showImages: o.showImages !== false,
     showX: o.showX !== false,
     showRss: o.showRss !== false,
+    showYouTube: o.showYouTube !== false,
     highlightUnread: o.highlightUnread !== false,
     reduceMotion: o.reduceMotion === true,
   };

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { StoryAsset } from "@/lib/news/types";
+import { YouTubeEmbed } from "./youtube-embed";
 
 export function StoryMedia({
   src,
@@ -75,6 +76,16 @@ export function StoryAssetBlock({
     const play = node.play();
     if (play) void play.catch(() => {});
   }, [asset.type, asset.url]);
+  if (asset.type === "youtube") {
+    return (
+      <YouTubeEmbed
+        videoId={asset.videoId || asset.url}
+        title={alt}
+        poster={asset.poster}
+        priority={priority}
+      />
+    );
+  }
   if (asset.type === "video") {
     return (
       <video

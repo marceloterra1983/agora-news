@@ -149,22 +149,45 @@ function publishedAt(block) {
   return parseRssDate(stripTags(raw));
 }
 
+function mediaThumbnail(block) {
+  const mediaThumb = String(block).match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
+  if (mediaThumb?.[1]) return mediaThumb[1];
+  const enclosure = String(block).match(/<enclosure[^>]*\burl=["']([^"']+)["'][^>]*\btype=["']image\/[^"']+["']/i);
+  if (enclosure?.[1]) return enclosure[1];
+  return "";
+}
+
+function videoId(block) {
+  const direct = inner(block, "yt:videoId");
+  if (direct) return direct.trim();
+  const fromId = String(inner(block, "id")).match(/yt:video:([a-zA-Z0-9_-]{11})/i);
+  return fromId?.[1] || "";
+}
+
 function toItem(block, kind) {
   const guid = stripTags(inner(block, "guid") || inner(block, "id"));
   const link = kind === "atom" ? atomLink(block) : stripTags(inner(block, "link")) || guid;
-  const title = stripTags(inner(block, "title"));
+  const title = stripTags(inner(block, "title") || inner(block, "media:title"));
   const summary = stripTags(
-    inner(block, "description") || inner(block, "summary") || inner(block, "atom:summary"),
+    inner(block, "description") ||
+      inner(block, "summary") ||
+      inner(block, "atom:summary") ||
+      inner(block, "media:description"),
   ).slice(0, 400);
   if (!link && !guid) return null;
   if (!title && !summary) return null;
-  return {
+  const item = {
     guid: guid || link,
     title: title || summary.slice(0, 180),
     link: link || guid,
     publishedAt: publishedAt(block),
     summary,
   };
+  const imageUrl = mediaThumbnail(block);
+  if (imageUrl) item.imageUrl = imageUrl;
+  const ytId = videoId(block);
+  if (ytId) item.videoId = ytId;
+  return item;
 }
 
 export function parseFeedXml(xml, feedUrl) {

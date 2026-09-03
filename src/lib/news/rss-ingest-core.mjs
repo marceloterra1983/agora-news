@@ -2,8 +2,8 @@ import { rssAccountId, rssPostId } from "./rss-id.mjs";
 import { clipAtWord } from "./summary-core.mjs";
 import { applyStoredTranslation, pickStoredPt } from "./translate-pt.mjs";
 
-export function ingestSurvives(xFailed, rssWritten) {
-  return !xFailed || rssWritten > 0;
+export function ingestSurvives(xFailed, rssWritten, ytWritten = 0) {
+  return !xFailed || rssWritten > 0 || ytWritten > 0;
 }
 
 export function skipRssResponse(status) {

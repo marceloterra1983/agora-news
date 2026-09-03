@@ -1,5 +1,5 @@
-import { Rss } from "lucide-react";
-import { isRssAccount } from "@/lib/news/rss-catalog.mjs";
+import { Rss, Youtube } from "lucide-react";
+import { isRssAccount, isYouTubeAccount } from "@/lib/news/rss-catalog.mjs";
 import { cn } from "@/lib/utils";
 import { XLogo } from "./x-logo";
 
@@ -9,11 +9,25 @@ export function OriginMark({
   className,
 }: {
   handle?: string;
-  origin?: "x" | "rss";
+  origin?: "x" | "rss" | "youtube";
   className?: string;
 }) {
+  const isYt = origin ? origin === "youtube" : isYouTubeAccount(handle || "");
   const rss = origin ? origin === "rss" : isRssAccount(handle || "");
   const label = rss ? "RSS" : "X";
+  if (isYt) {
+    return (
+      <span
+        data-origin-mark="youtube"
+        role="img"
+        aria-label="YouTube"
+        title="YouTube"
+        className={cn("inline-flex shrink-0 text-mute", className)}
+      >
+        <Youtube className="size-3" aria-hidden />
+      </span>
+    );
+  }
   return (
     <span
       data-origin-mark={rss ? "rss" : "x"}

@@ -1,4 +1,5 @@
 import { MAX_RSS_ITEMS, RSS_SEED } from "./rss-catalog-seed.mjs";
+import { youtubeLabelFor } from "./youtube-catalog.mjs";
 
 export { MAX_RSS_ITEMS, RSS_SEED };
 
@@ -109,18 +110,25 @@ export function isRssAccount(handle) {
   return /^r_[a-f0-9]{12}$/i.test(String(handle || "").replace(/^@+/, "").trim());
 }
 
-/** Ordem estável: X, depois RSS. Grupo só-X, só-RSS ou ambos. */
+export function isYouTubeAccount(handle) {
+  return /^y_[a-f0-9]{12}$/i.test(String(handle || "").replace(/^@+/, "").trim());
+}
+
+/** Ordem estável: X, depois RSS, depois YouTube. Grupo só-X, só-RSS, YouTube ou misto. */
 export function originsInHandles(handles) {
   let x = false;
   let rss = false;
+  let youtube = false;
   for (const handle of handles) {
-    if (isRssAccount(handle)) rss = true;
+    if (isYouTubeAccount(handle)) youtube = true;
+    else if (isRssAccount(handle)) rss = true;
     else x = true;
-    if (x && rss) break;
+    if (x && rss && youtube) break;
   }
   const origins = [];
   if (x) origins.push("x");
   if (rss) origins.push("rss");
+  if (youtube) origins.push("youtube");
   return origins;
 }
 
@@ -138,9 +146,14 @@ function hostnameOf(url) {
   }
 }
 
-/** Campos source/sourceLabel da história — RSS nunca vaza o id interno como @handle. */
+/** Campos source/sourceLabel da história — RSS e YouTube nunca vazam o id interno como @handle. */
 export function storySourceFromAccount(account, opts = {}) {
   const source = bareHandle(account) || "fonte";
+  if (isYouTubeAccount(source) || opts.source === "youtube") {
+    const sourceLabel =
+      opts.sourceLabel || opts.title || youtubeLabelFor(source) || (opts.postUrl ? hostnameOf(opts.postUrl) : "") || "YouTube";
+    return { source, sourceLabel };
+  }
   if (isRssAccount(source) || opts.source === "rss") {
     const sourceLabel =
       rssLabelFor(source, opts.owned) || hostnameOf(opts.postUrl) || "Site";
@@ -149,16 +162,19 @@ export function storySourceFromAccount(account, opts = {}) {
   return { source, sourceLabel: `@${source}` };
 }
 
-/** Texto da byline: título do site para RSS, @handle para X. */
+/** Texto da byline: título do canal para YouTube, site para RSS, @handle para X. */
 export function displaySourceByline(source, sourceLabel) {
   const handle = bareHandle(source);
-  const label = bareHandle(sourceLabel);
+  const label = String(sourceLabel || "").trim();
+  if (isYouTubeAccount(handle)) {
+    if (label && !isYouTubeAccount(label)) return label;
+    return youtubeLabelFor(handle) || "YouTube";
+  }
   if (isRssAccount(handle)) {
     if (label && !isRssAccount(label)) return label;
     return rssLabelFor(handle) || "Site";
   }
-  const raw = String(sourceLabel || "").trim();
-  return raw || (handle ? `@${handle}` : "");
+  return label || (handle ? `@${handle}` : "");
 }
 
 export function displaySourceInitial(source, sourceLabel) {
@@ -166,10 +182,10 @@ export function displaySourceInitial(source, sourceLabel) {
   return (text.charAt(0) || "?").toUpperCase();
 }
 
-/** @handle só quando a conta é do X; RSS devolve vazio. */
+/** @handle só quando a conta é do X; RSS e YouTube devolvem vazio. */
 export function displaySourceAt(source) {
   const handle = bareHandle(source);
-  if (!handle || isRssAccount(handle)) return "";
+  if (!handle || isRssAccount(handle) || isYouTubeAccount(handle)) return "";
   return `@${handle}`;
 }
 
@@ -179,21 +195,37 @@ export function storyIsRss(story) {
   return isRssAccount(source) || id.startsWith("rss_");
 }
 
-/** Recorta X e/ou RSS sem reordenar. */
-export function filterStoriesByOrigin(stories, { showX = true, showRss = true } = {}) {
+export function storyIsYouTube(story) {
+  const source = bareHandle(story?.source);
+  const id = String(story?.id || "");
+  return isYouTubeAccount(source) || id.startsWith("yt_");
+}
+
+/** Recorta X, RSS e/ou YouTube sem reordenar. */
+export function filterStoriesByOrigin(stories, { showX = true, showRss = true, showYouTube = true } = {}) {
   if (!Array.isArray(stories)) return [];
-  if (showX && showRss) return stories;
-  return stories.filter((story) => (storyIsRss(story) ? showRss : showX));
+  if (showX && showRss && showYouTube) return stories;
+  return stories.filter((story) => {
+    if (storyIsYouTube(story)) return showYouTube;
+    if (storyIsRss(story)) return showRss;
+    return showX;
+  });
 }
 
-/** Mesmo recorte para a lista de Fontes: r_* é RSS, o resto é X. */
-export function filterFontesByOrigin(rows, { showX = true, showRss = true } = {}) {
+/** Mesmo recorte para a lista de Fontes: y_* é YouTube, r_* é RSS, o resto é X. */
+export function filterFontesByOrigin(rows, { showX = true, showRss = true, showYouTube = true } = {}) {
   if (!Array.isArray(rows)) return [];
-  if (showX && showRss) return rows;
-  return rows.filter((row) => (isRssAccount(row?.handle) ? showRss : showX));
+  if (showX && showRss && showYouTube) return rows;
+  return rows.filter((row) => {
+    const handle = row?.handle;
+    if (isYouTubeAccount(handle)) return showYouTube;
+    if (isRssAccount(handle)) return showRss;
+    return showX;
+  });
 }
 
-export function fontesEmptyHint({ showX = true, showRss = true, sort = "recent" } = {}) {
+export function fontesEmptyHint({ showX = true, showRss = true, showYouTube = true, sort = "recent" } = {}) {
+  if (!showX && !showRss && !showYouTube) return "Ligue o X ou o RSS no topo para ver fontes.";
   if (!showX && !showRss) return "Ligue o X ou o RSS no topo para ver fontes.";
   if (!showX) return "Ligue o X no topo para ver as contas.";
   if (sort === "starred") return "Nenhum favorito ainda. Toque na estrela de um perfil.";

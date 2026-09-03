@@ -1,5 +1,6 @@
 import { acquireIngestLease } from "./ingest-lease";
 import { ingestSurvives, runRssIngest } from "./rss-ingest";
+import { runYouTubeIngest } from "./youtube-ingest";
 import { elapsedMs, logTiming, nowMs } from "./timing";
 
 type OwnedResult = Record<string, unknown> & { ok?: boolean };
@@ -10,7 +11,7 @@ export async function runIngestWithRss<T extends OwnedResult>(
     t0: number,
     assertOwned: () => Promise<void>,
   ) => Promise<T>,
-  opts?: { limitHandles?: number; withProfiles?: boolean; withRss?: boolean },
+  opts?: { limitHandles?: number; withProfiles?: boolean; withRss?: boolean; withYouTube?: boolean },
 ) {
   const t0 = nowMs();
   const lease = await acquireIngestLease();
@@ -23,15 +24,18 @@ export async function runIngestWithRss<T extends OwnedResult>(
     const rss = opts?.withRss
       ? await runRssIngest({ assertOwned: lease.assertOwned })
       : { written: 0, ok: true, feeds: 0 };
+    const youtube = opts?.withYouTube ?? opts?.withRss
+      ? await runYouTubeIngest({ assertOwned: lease.assertOwned })
+      : { written: 0, ok: true, feeds: 0 };
     if ("xFailed" in x) {
-      if (!ingestSurvives(true, rss.written)) {
+      if (!ingestSurvives(true, rss.written, youtube.written)) {
         logTiming("ingest", elapsedMs(t0), { ok: false, error: true });
         throw new Error("ingest_failed");
       }
-      logTiming("ingest", elapsedMs(t0), { ok: true, rss: rss.written });
-      return { ok: true, xFailed: true, rss };
+      logTiming("ingest", elapsedMs(t0), { ok: true, rss: rss.written, youtube: youtube.written });
+      return { ok: true, xFailed: true, rss, youtube };
     }
-    return { ...x, rss };
+    return { ...x, rss, youtube };
   } catch (err) {
     if (err instanceof Error && err.message === "ingest_failed") throw err;
     logTiming("ingest", elapsedMs(t0), { ok: false, error: true });
