@@ -33,4 +33,5 @@ export function youtubePostsFromItems(
   known: Set<string>,
   batch: string,
   translated?: Record<string, { title: string; summary: string }>,
+  now?: number,
 ): UpsertPost[];

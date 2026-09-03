@@ -1,5 +1,18 @@
 export const YOUTUBE_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 export const CHANNEL_ID_RE = /^UC[a-zA-Z0-9_-]{22}$/;
+/** Vídeo mais velho que isto não entra no feed nem na ingestão — evita cursor de +12h em 2012. */
+export const YOUTUBE_MAX_AGE_MS = 30 * 24 * 3_600_000;
+
+/**
+ * @param {unknown} iso
+ * @param {number} [now]
+ */
+export function youtubePostedAtIsFresh(iso, now = Date.now()) {
+  const t = Date.parse(String(iso || ""));
+  if (!Number.isFinite(t)) return false;
+  if (t > now + 3_600_000) return false;
+  return now - t <= YOUTUBE_MAX_AGE_MS;
+}
 
 /**
  * @param {string} urlOrId

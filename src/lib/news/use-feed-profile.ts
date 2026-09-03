@@ -7,6 +7,7 @@ import {
 } from "@/lib/news/feed-profile.mjs";
 import { emptyFonteRow, mergeExtraFontes, seedFontes } from "@/lib/news/fontes-sort";
 import { profileByHandle } from "@/lib/news/profiles";
+import { youtubeGroupOf } from "@/lib/news/youtube-catalog.mjs";
 import { loadFontes } from "@/lib/news/server";
 import type { Category, Story } from "@/lib/news/types";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
@@ -47,7 +48,7 @@ export function useFeedProfile(
           handle: openHandle,
           name: story?.sourceLabel,
           avatar: story?.avatar,
-          group: prefs.groupOf(openHandle) ?? "novos",
+          group: prefs.groupOf(openHandle) ?? (youtubeGroupOf(openHandle) || "novos"),
         });
     return resolveFeedProfileRow({
       handle: openHandle,

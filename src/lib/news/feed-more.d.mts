@@ -3,6 +3,8 @@ export const FEED_MORE_WIDE_HOURS: 24;
 export const FEED_MORE_STEPS: 8;
 export const FEED_MORE_LIMIT: 80;
 export const FEED_MORE_HOUR_STEPS: readonly [12, 24];
+export const YOUTUBE_BACKFILL_HOURS: 168;
+export const YOUTUBE_BACKFILL_LIMIT: 12;
 
 export function windowAfter(beforeIso: string, hours?: number): string;
 export function postedAtQuery(opts?: {
@@ -28,3 +30,13 @@ export function moreStillOpen(state: {
   unboundedTried: boolean;
   unboundedCount: number;
 }): boolean;
+export function moreCursorIso(
+  stories?: Array<{ id?: string; source?: string; publishedAt?: string }> | null,
+): string;
+export const feedMoreCursor: typeof moreCursorIso;
+export function youtubeHandlesIn(handles: unknown): string[];
+export function mergeFeedStories<T>(
+  primary: readonly T[],
+  extra: readonly T[],
+  now?: number,
+): T[];

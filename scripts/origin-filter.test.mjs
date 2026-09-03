@@ -84,7 +84,11 @@ test("filterFontesByOrigin keeps X and RSS rows by flag", () => {
 });
 
 test("fontesEmptyHint names the origin that is off", () => {
-  assert.match(fontesEmptyHint({ showX: false, showRss: false, sort: "recent" }), /X ou o RSS/);
+  assert.match(fontesEmptyHint({ showX: false, showRss: false, sort: "recent" }), /YouTube/);
+  assert.match(
+    fontesEmptyHint({ showX: false, showRss: false, showYouTube: false, sort: "recent" }),
+    /YouTube/,
+  );
   assert.match(fontesEmptyHint({ showX: false, showRss: true, sort: "recent" }), /Ligue o X/);
   assert.match(fontesEmptyHint({ showX: true, showRss: true, sort: "starred" }), /favorito/);
 });

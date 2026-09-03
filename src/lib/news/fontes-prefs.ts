@@ -4,6 +4,7 @@ import { readGroupOverrides, writeGroupOverrides } from "./section-prefs.mjs";
 import { readLastSection } from "./section-pref";
 import { profileByHandle } from "./profiles";
 import { rssGroupOf } from "./rss-catalog.mjs";
+import { youtubeGroupOf } from "./youtube-catalog.mjs";
 import { loadRssFeeds } from "./rss-feeds";
 import type { Category } from "./types";
 
@@ -194,7 +195,7 @@ export function groupOf(handle?: string | null, section?: Category): string {
   return (
     groupOverrideOf(handle, section) ??
     profileByHandle(handle)?.group ??
-    (rssGroupOf(handle, loadRssFeeds()) || "novos")
+    (rssGroupOf(handle, loadRssFeeds()) || youtubeGroupOf(handle) || "novos")
   );
 }
 
