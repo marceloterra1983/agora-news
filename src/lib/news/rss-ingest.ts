@@ -14,6 +14,7 @@ import {
   rssPostsFromItems,
   skipRssResponse,
 } from "./rss-ingest-core.mjs";
+import { assertSafeRssFetchUrl } from "./safe-fetch";
 import { translateToPt } from "./translate-pt.mjs";
 
 export { ingestSurvives };
@@ -84,6 +85,9 @@ export async function runRssIngest(opts?: {
   for (const feed of feeds) {
     try {
       await opts?.assertOwned?.();
+      if (!opts?.fetchImpl) {
+        await assertSafeRssFetchUrl(feed.url);
+      }
       const cacheKey = `${CACHE_KEYS.rssEtag}${feed.account}`;
       const prev = await cacheGetJson<{ etag?: string; lastModified?: string }>(cacheKey);
       const headers: Record<string, string> = { "User-Agent": "AgoraNews/1.0" };

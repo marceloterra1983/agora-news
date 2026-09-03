@@ -1,8 +1,13 @@
-import { spendKeyAllowed, writeAllowed, writeDenialStatus } from "../../../scripts/write-guard.mjs";
+import {
+  safeBearerMatch,
+  spendKeyAllowed,
+  writeAllowed,
+  writeDenialStatus,
+} from "../../../scripts/write-guard.mjs";
 
 type WriteKind = "app" | "ingest" | "ops";
 
-export { spendKeyAllowed, writeAllowed, writeDenialStatus };
+export { safeBearerMatch, spendKeyAllowed, writeAllowed, writeDenialStatus };
 
 function cronSecret(): string {
   if (typeof process === "undefined" || !process.env) return "";

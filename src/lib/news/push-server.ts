@@ -2,6 +2,7 @@ import webpush from "web-push";
 import { adminHeaders, SUPABASE_URL } from "./admin";
 import { validPushEndpoint } from "./push-core.mjs";
 import { vapidConfig } from "./push-config";
+import { mapPool } from "./map-pool";
 
 export type PushSub = {
   endpoint: string;
@@ -155,7 +156,7 @@ export async function sendPushForStories(
   const { publicKey, privateKey } = vapidConfig();
   webpush.setVapidDetails("mailto:agora@news.app", publicKey, privateKey);
   const subscriptions = await listPushSubs();
-  let sent = 0;
+  const jobs: Array<{ row: StoredPush; story: (typeof stories)[0] }> = [];
   for (const row of subscriptions) {
     const watch = new Set(row.sub.handles);
     const hits = stories
@@ -163,8 +164,10 @@ export async function sendPushForStories(
         watch.has(story.source.replace(/^@/, "").toLowerCase()),
       )
       .slice(0, 3);
-    if (!hits.length) continue;
-    const story = hits[0];
+    if (hits.length) jobs.push({ row, story: hits[0] });
+  }
+
+  const results = await mapPool(jobs, 8, async ({ row, story }) => { // mapPool sendNotification
     await beforeEffect?.();
     try {
       await webpush.sendNotification(
@@ -175,14 +178,15 @@ export async function sendPushForStories(
           url: `/materia/${encodeURIComponent(story.id)}`,
         }),
       );
-      sent += 1;
+      return 1;
     } catch (error) {
       const status = (error as { statusCode?: number }).statusCode;
       if (status === 404 || status === 410) {
         await beforeEffect?.();
         await deletePushSub(row.userId, row.sub.endpoint);
       }
+      return 0;
     }
-  }
-  return sent;
+  });
+  return results.reduce<number>((acc, curr) => acc + curr, 0);
 }

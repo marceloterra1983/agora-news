@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
-import { loadNews, newsFromFallback } from "@/lib/news/server";
+import { loadNews } from "@/lib/news/server";
+import { newsFromFallback } from "@/lib/news/news-fallback";
 import { useNewsStore } from "@/lib/news/store";
 import { type Category, type Story } from "@/lib/news/types";
 import { rankStories } from "@/lib/news/feed-rank.mjs";

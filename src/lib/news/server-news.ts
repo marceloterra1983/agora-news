@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { fallbackPayload, filterStories, loadFeed } from "./feed";
+import { newsFromFallback } from "./news-fallback";
 import { serverCatalogFor } from "./server-catalog";
 import { downloadPostById } from "./supabase";
 import { attachStoryAvatars, hydrateStory } from "./story-hydrate";
@@ -12,6 +13,8 @@ import { FEED_MORE_LIMIT, intersectAccounts } from "./feed-more.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 import type { SectionCatalog } from "./section-catalog.mjs";
 import { getSessionUser } from "@/lib/auth/verify.server";
+
+export { newsFromFallback };
 
 type NewsInput = {
   category?: Category;
@@ -41,10 +44,6 @@ function toNews(
       source: payload.source,
     },
   };
-}
-
-export function newsFromFallback(category: Category, q?: string) {
-  return toNews(fallbackPayload(category), category, q);
 }
 
 function asStringList(value: unknown): string[] {

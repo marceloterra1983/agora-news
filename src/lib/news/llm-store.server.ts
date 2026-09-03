@@ -2,21 +2,25 @@
 import {
   applyLlmCommand,
   LLM_PREFS_KEY,
-  parseLlmStore,
   type LlmCommand,
   type LlmStore,
 } from "./llm-accounts.mjs";
+import { openLlmStore, sealLlmStore } from "./llm-crypto.server";
 import { readUserPrefsRaw, writeUserPrefsRaw } from "./prefs-store.server";
 
 export async function readLlmStore(userId: string): Promise<LlmStore> {
-  const raw = await readUserPrefsRaw(userId);
-  return parseLlmStore(raw?.[LLM_PREFS_KEY]);
+  const uid = userId.trim();
+  if (!uid) throw new Error("prefs_owner_required");
+  const raw = await readUserPrefsRaw(uid);
+  return openLlmStore(raw?.[LLM_PREFS_KEY], uid);
 }
 
 export async function writeLlmStore(userId: string, store: LlmStore): Promise<LlmStore> {
-  const raw = (await readUserPrefsRaw(userId)) || {};
-  raw[LLM_PREFS_KEY] = store;
-  await writeUserPrefsRaw(userId, raw);
+  const uid = userId.trim();
+  if (!uid) throw new Error("prefs_owner_required");
+  const raw = (await readUserPrefsRaw(uid)) || {};
+  raw[LLM_PREFS_KEY] = sealLlmStore(store, uid);
+  await writeUserPrefsRaw(uid, raw);
   return store;
 }
 

@@ -11,3 +11,4 @@ export type WriteEnv = { cronSecret?: string; userId?: string };
 export function writeAllowed(kind: WriteKind, headers: WriteHeaders, env?: WriteEnv): boolean;
 export function spendKeyAllowed(headers: WriteHeaders, env?: WriteEnv): boolean;
 export function writeDenialStatus(kind: WriteKind): number;
+export function safeBearerMatch(authorization?: string | null, secret?: string): boolean;
