@@ -42,12 +42,17 @@ export async function runYouTubeIngest(opts?: {
       if (prev?.etag) headers["If-None-Match"] = prev.etag;
       if (prev?.lastModified) headers["If-Modified-Since"] = prev.lastModified;
 
-      const res = await fetchImpl(channel.url, {
-        headers,
-        signal: AbortSignal.timeout(12_000),
-      });
+      let res: Response | null = null;
+      try {
+        res = await fetchImpl(channel.url, {
+          headers,
+          signal: AbortSignal.timeout(8_000),
+        });
+      } catch {
+        /* feed fetch falhou, segue para o fallback */
+      }
 
-      if (res.status === 304) continue;
+      if (res && res.status === 304) continue;
 
       let parsed: Array<{
         videoId?: string;
@@ -59,7 +64,7 @@ export async function runYouTubeIngest(opts?: {
         imageUrl?: string;
       }> = [];
 
-      if (res.status === 200) {
+      if (res && res.status === 200) {
         const xml = decodeRssBody(
           await res.arrayBuffer(),
           res.headers.get("content-type") || "",
@@ -81,20 +86,24 @@ export async function runYouTubeIngest(opts?: {
 
       // Fallback: se o feed Atom der 404/500 ou vier vazio, raspa a página de vídeos do canal
       if (!parsed.length && channel.channelId) {
-        const pageUrl = `https://www.youtube.com/channel/${channel.channelId}/videos`;
-        if (!opts?.fetchImpl) {
-          await assertSafeRssFetchUrl(pageUrl);
-        }
-        const pageRes = await fetchImpl(pageUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
-          },
-          signal: AbortSignal.timeout(12_000),
-        });
-        if (pageRes.ok) {
-          const html = await pageRes.text();
-          parsed = extractChannelVideosFromHtml(html);
+        try {
+          const pageUrl = `https://www.youtube.com/channel/${channel.channelId}/videos`;
+          if (!opts?.fetchImpl) {
+            await assertSafeRssFetchUrl(pageUrl);
+          }
+          const pageRes = await fetchImpl(pageUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+            },
+            signal: AbortSignal.timeout(10_000),
+          });
+          if (pageRes.ok) {
+            const html = await pageRes.text();
+            parsed = extractChannelVideosFromHtml(html);
+          }
+        } catch {
+          /* fallback falhou */
         }
       }
 

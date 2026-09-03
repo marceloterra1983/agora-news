@@ -53,6 +53,7 @@ export async function runIngest(opts?: {
   withProfiles?: boolean;
   withRss?: boolean;
   withYouTube?: boolean;
+  onlyYouTube?: boolean;
 }) {
   return runIngestWithRss(runOwnedIngest, opts);
 }

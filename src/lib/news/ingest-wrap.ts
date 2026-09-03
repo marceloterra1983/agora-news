@@ -11,12 +11,17 @@ export async function runIngestWithRss<T extends OwnedResult>(
     t0: number,
     assertOwned: () => Promise<void>,
   ) => Promise<T>,
-  opts?: { limitHandles?: number; withProfiles?: boolean; withRss?: boolean; withYouTube?: boolean },
+  opts?: { limitHandles?: number; withProfiles?: boolean; withRss?: boolean; withYouTube?: boolean; onlyYouTube?: boolean },
 ) {
   const t0 = nowMs();
   const lease = await acquireIngestLease();
   if (!lease) return { ok: true, skipped: true, reason: "locked" as const };
   try {
+    if (opts?.onlyYouTube) {
+      const youtube = await runYouTubeIngest({ assertOwned: lease.assertOwned });
+      logTiming("ingest", elapsedMs(t0), { ok: true, youtube: youtube.written });
+      return { ok: true, youtube };
+    }
     const x = await runOwned(opts, t0, lease.assertOwned).catch(() => ({
       ok: false as const,
       xFailed: true as const,
