@@ -41,3 +41,70 @@ export function extractChannelIdFromHtml(html) {
 
   return "";
 }
+
+/**
+ * Extrai vídeos recentes a partir da página HTML do canal (fallback para 404/500 do feed Atom)
+ * @param {string} html
+ * @returns {Array<{ videoId: string, guid: string, link: string, title: string, summary: string, publishedAt: string, imageUrl: string }>}
+ */
+export function extractChannelVideosFromHtml(html) {
+  const text = String(html || "");
+  const match = text.match(/ytInitialData\s*=\s*({[\s\S]*?});\s*<\/script>/);
+  if (!match) return [];
+
+  let data;
+  try {
+    data = JSON.parse(match[1]);
+  } catch {
+    return [];
+  }
+
+  const items = [];
+  const seen = new Set();
+
+  function search(obj) {
+    if (!obj || typeof obj !== "object") return;
+    if (obj.lockupViewModel) {
+      const l = obj.lockupViewModel;
+      const videoId = l.contentId || l.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint?.videoId;
+      const title = l.metadata?.lockupMetadataViewModel?.title?.content;
+      if (videoId && title && !seen.has(videoId)) {
+        seen.add(videoId);
+        items.push({
+          videoId,
+          guid: `yt:video:${videoId}`,
+          link: `https://www.youtube.com/watch?v=${videoId}`,
+          title: String(title).trim(),
+          summary: "",
+          publishedAt: new Date().toISOString(),
+          imageUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        });
+        return;
+      }
+    }
+    if (obj.videoRenderer) {
+      const v = obj.videoRenderer;
+      const videoId = v.videoId;
+      const title = v.title?.runs?.[0]?.text || v.title?.simpleText;
+      if (videoId && title && !seen.has(videoId)) {
+        seen.add(videoId);
+        items.push({
+          videoId,
+          guid: `yt:video:${videoId}`,
+          link: `https://www.youtube.com/watch?v=${videoId}`,
+          title: String(title).trim(),
+          summary: v.descriptionSnippet?.runs?.[0]?.text || "",
+          publishedAt: new Date().toISOString(),
+          imageUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        });
+        return;
+      }
+    }
+    for (const k of Object.keys(obj)) {
+      search(obj[k]);
+    }
+  }
+
+  search(data);
+  return items;
+}
