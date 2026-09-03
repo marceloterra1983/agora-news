@@ -9,15 +9,17 @@ export function YouTubeEmbed({
   title,
   poster,
   priority = false,
+  autoPlay = false,
   className,
 }: {
   videoId: string;
   title: string;
   poster?: string | null;
   priority?: boolean;
+  autoPlay?: boolean;
   className?: string;
 }) {
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(autoPlay);
   const cleanId = extractYouTubeId(videoId);
   const thumb = poster || (cleanId ? `https://i.ytimg.com/vi/${cleanId}/hqdefault.jpg` : null);
 

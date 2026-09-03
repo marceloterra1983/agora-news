@@ -5,6 +5,8 @@ import { storySourceFromAccount } from "./rss-catalog.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { isNewsRow } from "./news-row.mjs";
 import { supabaseApiKeyHeaders } from "./supabase-rest";
+import { isYouTubeAccount } from "./rss-id.mjs";
+import { youtubeAvatarFor } from "./youtube-catalog.mjs";
 import { normalizeSection, type Category, type Story } from "./types";
 
 export { isNewsRow };
@@ -128,6 +130,9 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
       : image
         ? [{ type: "photo" as const, url: image }]
         : [];
+  const avatar = isYouTubeAccount(source) || id.startsWith("yt_")
+    ? youtubeAvatarFor(source)
+    : null;
   return {
     id: id || `${source}-${p.posted_at}`,
     title: title.slice(0, 280),
@@ -144,6 +149,7 @@ export function dbPostToStory(p: DbPost, fallbackCategory: Category): Story {
     publishedAt: p.posted_at || new Date().toISOString(),
     source,
     sourceLabel,
+    avatar: avatar || null,
     category: normalizeSection(p.category || fallbackCategory),
     media: packed.label || (id.startsWith("yt_") ? "Vídeo" : image ? "Foto" : "Nenhuma"),
     batch: p.batch_name || "supabase",

@@ -49,10 +49,12 @@ export function StoryAssetBlock({
   asset,
   alt,
   priority = false,
+  autoPlay = false,
 }: {
   asset: StoryAsset;
   alt: string;
   priority?: boolean;
+  autoPlay?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -83,6 +85,7 @@ export function StoryAssetBlock({
         title={alt}
         poster={asset.poster}
         priority={priority}
+        autoPlay={autoPlay}
       />
     );
   }

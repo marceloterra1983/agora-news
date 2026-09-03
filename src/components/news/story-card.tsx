@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck, Play } from "lucide-react";
 import type { Story } from "@/lib/news/types";
 import { extraAvatarFor } from "@/lib/news/extra-fontes";
+import { youtubeAvatarFor } from "@/lib/news/youtube-catalog.mjs";
 import { relativeTime, displayBody, displayTitle } from "@/lib/news/format";
-import { displaySourceByline, displaySourceInitial } from "@/lib/news/rss-catalog.mjs";
+import { displaySourceByline, displaySourceInitial, storyIsYouTube } from "@/lib/news/rss-catalog.mjs";
 import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
@@ -70,14 +71,17 @@ export function StoryCard({
 }) {
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
-  const [face, setFace] = useState(() => resolveFace(story.avatar));
+  const [face, setFace] = useState(() =>
+    resolveFace(story.avatar, youtubeAvatarFor(story.source) || extraAvatarFor(story.source)),
+  );
   useEffect(() => {
-    setFace(resolveFace(story.avatar, extraAvatarFor(story.source)));
+    setFace(resolveFace(story.avatar, youtubeAvatarFor(story.source) || extraAvatarFor(story.source)));
   }, [story.avatar, story.source]);
 
   if (variant === "reader") {
     const byline = displaySourceByline(story.source, story.sourceLabel);
     const initial = displaySourceInitial(story.source, story.sourceLabel);
+    const isYt = storyIsYouTube(story);
     const faceNode = face ? (
       <img
         src={face}
@@ -153,50 +157,128 @@ export function StoryCard({
             </Tip>
           </span>
         </p>
-        <h2 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
-          {onOpenStory ? (
-            <button
-              type="button"
-              data-testid="feed-story-text"
-              aria-haspopup="dialog"
-              aria-expanded={storyOpen || undefined}
-              aria-label={`Abrir mensagem: ${displayTitle(story.title)}`}
-              onClick={() => onOpenStory(story)}
-              className="relative z-10 text-left hover:text-mark"
-            >
-              {displayTitle(story.title)}
-            </button>
-          ) : (
-            <Link
-              to="/materia/$id"
-              params={{ id: story.id }}
-              className="after:absolute after:inset-0 hover:text-mark"
-            >
-              {displayTitle(story.title)}
-            </Link>
-          )}
-        </h2>
-        <WrittenLinks
-          text={`${story.title}\n${story.body}\n${story.excerpt}`}
-          skipHref={story.url}
-        />
-        <ClusterChrome story={story} freshCount={freshCount} />
-        {story.image ? (
-          <Link
-            to="/materia/$id"
-            params={{ id: story.id }}
-            className="mt-4 block overflow-hidden rounded-2xl bg-hero"
-            data-media=""
-            aria-label={`Abrir matéria: ${displayTitle(story.title)}`}
-          >
-            <StoryMedia
-              src={story.image}
-              alt={story.title}
-              priority={priority}
-              className="aspect-[16/11] w-full"
+        {isYt && story.image ? (
+          <div className="mt-2.5 flex items-start gap-3 sm:gap-4">
+            {onOpenStory ? (
+              <button
+                type="button"
+                data-testid="feed-video-thumbnail"
+                aria-label={`Assistir vídeo: ${displayTitle(story.title)}`}
+                onClick={() => onOpenStory(story)}
+                className="group relative shrink-0 w-32 sm:w-44 aspect-video overflow-hidden rounded-lg bg-hero shadow-sm cursor-pointer"
+              >
+                <StoryMedia
+                  src={story.image}
+                  alt={story.title}
+                  priority={priority}
+                  className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+                />
+                <span className="absolute inset-0 grid place-items-center bg-black/25 transition-colors group-hover:bg-black/35">
+                  <span className="grid size-8 sm:size-10 place-items-center rounded-full bg-paper/95 text-ink shadow-md transition-transform group-hover:scale-110">
+                    <Play className="size-4 sm:size-5 fill-current pl-0.5" aria-hidden />
+                  </span>
+                </span>
+              </button>
+            ) : (
+              <Link
+                to="/materia/$id"
+                params={{ id: story.id }}
+                data-testid="feed-video-thumbnail"
+                aria-label={`Assistir vídeo: ${displayTitle(story.title)}`}
+                className="group relative shrink-0 w-32 sm:w-44 aspect-video overflow-hidden rounded-lg bg-hero shadow-sm cursor-pointer"
+              >
+                <StoryMedia
+                  src={story.image}
+                  alt={story.title}
+                  priority={priority}
+                  className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+                />
+                <span className="absolute inset-0 grid place-items-center bg-black/25 transition-colors group-hover:bg-black/35">
+                  <span className="grid size-8 sm:size-10 place-items-center rounded-full bg-paper/95 text-ink shadow-md transition-transform group-hover:scale-110">
+                    <Play className="size-4 sm:size-5 fill-current pl-0.5" aria-hidden />
+                  </span>
+                </span>
+              </Link>
+            )}
+            <div className="min-w-0 flex-1">
+              <h2 className="break-words font-display text-[1.15rem] sm:text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
+                {onOpenStory ? (
+                  <button
+                    type="button"
+                    data-testid="feed-story-text"
+                    aria-haspopup="dialog"
+                    aria-expanded={storyOpen || undefined}
+                    aria-label={`Abrir mensagem: ${displayTitle(story.title)}`}
+                    onClick={() => onOpenStory(story)}
+                    className="relative z-10 text-left hover:text-mark"
+                  >
+                    {displayTitle(story.title)}
+                  </button>
+                ) : (
+                  <Link
+                    to="/materia/$id"
+                    params={{ id: story.id }}
+                    className="after:absolute after:inset-0 hover:text-mark"
+                  >
+                    {displayTitle(story.title)}
+                  </Link>
+                )}
+              </h2>
+              <WrittenLinks
+                text={`${story.title}\n${story.body}\n${story.excerpt}`}
+                skipHref={story.url}
+              />
+              <ClusterChrome story={story} freshCount={freshCount} />
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="break-words font-display text-[1.25rem] font-medium leading-snug tracking-tight text-ink">
+              {onOpenStory ? (
+                <button
+                  type="button"
+                  data-testid="feed-story-text"
+                  aria-haspopup="dialog"
+                  aria-expanded={storyOpen || undefined}
+                  aria-label={`Abrir mensagem: ${displayTitle(story.title)}`}
+                  onClick={() => onOpenStory(story)}
+                  className="relative z-10 text-left hover:text-mark"
+                >
+                  {displayTitle(story.title)}
+                </button>
+              ) : (
+                <Link
+                  to="/materia/$id"
+                  params={{ id: story.id }}
+                  className="after:absolute after:inset-0 hover:text-mark"
+                >
+                  {displayTitle(story.title)}
+                </Link>
+              )}
+            </h2>
+            <WrittenLinks
+              text={`${story.title}\n${story.body}\n${story.excerpt}`}
+              skipHref={story.url}
             />
-          </Link>
-        ) : null}
+            <ClusterChrome story={story} freshCount={freshCount} />
+            {story.image ? (
+              <Link
+                to="/materia/$id"
+                params={{ id: story.id }}
+                className="mt-4 block overflow-hidden rounded-2xl bg-hero"
+                data-media=""
+                aria-label={`Abrir matéria: ${displayTitle(story.title)}`}
+              >
+                <StoryMedia
+                  src={story.image}
+                  alt={story.title}
+                  priority={priority}
+                  className="aspect-[16/11] w-full"
+                />
+              </Link>
+            ) : null}
+          </>
+        )}
       </article>
     );
   }

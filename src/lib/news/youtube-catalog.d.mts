@@ -8,6 +8,7 @@ export type YouTubeSeed = {
   group: string;
   account: string;
   blurb?: string;
+  avatar?: string;
 };
 
 export const MAX_YOUTUBE_ITEMS: number;
@@ -15,6 +16,7 @@ export const YOUTUBE_SEED: YouTubeSeed[];
 export function youtubeGroupFor(section: string): string;
 export function youtubeSeedHit(account: string): YouTubeSeed | undefined;
 export function youtubeLabelFor(account: string): string;
+export function youtubeAvatarFor(account: string): string | null;
 export function youtubeExtrasFor(
   section: string,
 ): Array<{
@@ -25,6 +27,7 @@ export function youtubeExtrasFor(
   url: string;
   channelId: string;
   blurb: string;
+  avatar: string | null;
 }>;
 export function youtubeFonteRow(p: {
   account?: string;
@@ -35,6 +38,7 @@ export function youtubeFonteRow(p: {
   channelId?: string;
   blurb?: string;
   bio?: string;
+  avatar?: string | null;
 }): InfluenceRow;
 export function mergeYouTubeFontes<T extends { handle?: string }>(
   base: T[],
