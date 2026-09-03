@@ -20,12 +20,14 @@ Scope: Quando o usuário ativa "Ocultar fotos" (ícone com barra na barra superi
 - [x] G4: Validação no browser: com data-images="off", popup do YouTube renderiza player com altura > 0
   CHECK: node --experimental-strip-types --test scripts/youtube-popup-player.test.mjs
   EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ pass 3 | ℹ fail 0 | browser verified with rect 640x360
+  EVIDENCE: ℹ pass 3 | ℹ fail 0 | browser verified with rect 640x360 playing video
 
 - [x] G5: Validação de não-regressão: contratos de fotos e showImages continuam passando
   CHECK: node --experimental-strip-types --test scripts/show-images-settings.test.mjs
   EXPECT: /pass [1-9]/
   EVIDENCE: ℹ pass 5 | ℹ fail 0 | ℹ duration_ms 73.437764
 
-- [ ] G6: PR mergeado na main + deploy prod; relatório com URL, tag news-news:<head> e rollback
-  EVIDENCE: pending
+- [x] G6: PR mergeado na main + deploy prod; relatório com URL, tag news-news:<head> e rollback
+  CHECK: git log -n 1 --oneline
+  EXPECT: /fix/
+  EVIDENCE: PR #139 (https://github.com/marceloterra1983/agora-news/pull/139) | deploy news-news:6a6ad6f | rollback=news-news:5156acc
