@@ -1,33 +1,28 @@
-# Gates: Player de Vídeo Visível com data-images="off" no Popup
+# Gates: fix YouTube channel avatar broken images
 
-Scope: Quando o usuário ativa "Ocultar fotos" (ícone com barra na barra superior / data-images="off"), o player de vídeo do YouTube no popup do feed NÃO PODE ser ocultado.
+Scope: Corrigir URLs mortas no YOUTUBE_SEED, fallback onError nos avatares, e garantir que o catálogo prevaleça sobre cache morto — nenhum canal exibe ícone de imagem quebrada.
 
-- [x] G1: Causa raiz comprovada e documentada com reprodução exata
-  CHECK: test -f /tmp/agora-yt-popup-images-off.txt && grep -E 'ROOT_CAUSE|PATH' /tmp/agora-yt-popup-images-off.txt
-  EXPECT: /ROOT_CAUSE/
-  EVIDENCE: PATH: FeedStoryPopup -> ArticleView -> StoryAssetBlock -> YouTubeEmbed | ROOT_CAUSE: In src/styles.css, 'html[data-images="off"] [data-media]' sets 'display: none !important'. In ArticleView all story assets were wrapped in <div data-media="">. When user toggled 'Ocultar fotos', data-images="off" was active, hiding the video player in the popup!
+- [x] G1: Todos os 26 avatares do YOUTUBE_SEED retornam HTTP 200
+  CHECK: node scripts/youtube-avatar-live.mjs
+  EXPECT: OK 26/26
+  EVIDENCE: OK	Canaltech	200	8144 | OK 26/26
 
-- [x] G2: Teste automatizado falha no estado quebrado e passa no fix
-  CHECK: node --experimental-strip-types --test scripts/youtube-popup-images-off.test.mjs
-  EXPECT: /pass 3/
-  EVIDENCE: ℹ pass 3 | ℹ fail 0 | ℹ duration_ms 42.375475
+- [x] G2: Machine Learning Street Talk e Two Minute Papers têm URLs distintas e válidas no seed
+  CHECK: node -e "import{YOUTUBE_SEED}from'./src/lib/news/youtube-catalog.mjs';const a=YOUTUBE_SEED.filter(c=>/Machine Learning Street Talk|Two Minute Papers/.test(c.title));if(a.length!==2)throw0;for(const c of a){if(!c.avatar.includes('yt3.googleusercontent.com'))throw0;console.log(c.title+':'+c.avatar.slice(0,60));}console.log('TARGETS_OK');"
+  EXPECT: TARGETS_OK
+  EVIDENCE: Machine Learning Street Talk:https://yt3.googleusercontent.com/15Akj76BG8IsM5ctgqVwKXArl6 | TARGETS_OK
 
-- [x] G3: Suite de testes completa, typecheck e lint verdes
+- [x] G3: StoryCard, ArticleView e FeedProfilePopup têm onError + referrerPolicy no avatar
+  CHECK: node --test scripts/youtube-avatar.test.mjs
+  EXPECT: pass 6
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 51.72053
+
+- [x] G4: resolveFace / pipeline YouTube preferem avatar do catálogo sobre URL morta
+  CHECK: node --test scripts/youtube-avatar.test.mjs
+  EXPECT: catalog preferred
+  EVIDENCE: catalog preferred | pass 6
+
+- [x] G5: npm test, typecheck e lint passam
   CHECK: npm test && npm run typecheck && npm run lint
-  EXPECT: /eslint \. --max-warnings=0/
-  EVIDENCE: ℹ pass 589 | ℹ fail 0 | ℹ skipped 11 | eslint . --max-warnings=0 clean
-
-- [x] G4: Validação no browser: com data-images="off", popup do YouTube renderiza player com altura > 0
-  CHECK: node --experimental-strip-types --test scripts/youtube-popup-player.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ pass 3 | ℹ fail 0 | browser verified with rect 640x360 playing video
-
-- [x] G5: Validação de não-regressão: contratos de fotos e showImages continuam passando
-  CHECK: node --experimental-strip-types --test scripts/show-images-settings.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ pass 5 | ℹ fail 0 | ℹ duration_ms 73.437764
-
-- [x] G6: PR mergeado na main + deploy prod; relatório com URL, tag news-news:<head> e rollback
-  CHECK: git log -n 1 --oneline
-  EXPECT: /fix/
-  EVIDENCE: PR #139 (https://github.com/marceloterra1983/agora-news/pull/139) | deploy news-news:6a6ad6f | rollback=news-news:5156acc
+  EXPECT: fail 0
+  EVIDENCE: > lint | > eslint . --max-warnings=0

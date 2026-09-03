@@ -50,7 +50,7 @@ async function avatarOf(handle: string): Promise<string | null> {
 export async function attachStoryAvatars(stories: Story[]): Promise<Story[]> {
   if (!stories.length) return stories;
   const withYt = stories.map((s) => {
-    if (!s.avatar && (isYouTubeAccount(s.source) || s.id.startsWith("yt_"))) {
+    if (isYouTubeAccount(s.source) || s.id.startsWith("yt_")) {
       const face = youtubeAvatarFor(s.source);
       if (face) return { ...s, avatar: face };
     }
@@ -72,6 +72,6 @@ export async function hydrateStory(story: Story): Promise<Story> {
     story.original ||
     story.title;
   const ytFace = isYouTubeAccount(story.source) || story.id.startsWith("yt_") ? youtubeAvatarFor(story.source) : null;
-  const avatar = displayAvatarUrl(story.avatar) || ytFace || (await avatarOf(story.source));
+  const avatar = ytFace || displayAvatarUrl(story.avatar) || (await avatarOf(story.source));
   return { ...story, body, avatar };
 }

@@ -46,8 +46,8 @@ test("reader face opens a dialog that reuses the Fontes profile card", () => {
   assert.match(popup, /displaySourceAt/);
   assert.match(popup, /formatCount\(row.followers\)/);
   assert.match(popup, /<GroupTag/);
-  assert.match(popup, /width=\{56\}/);
-  assert.match(popup, /height=\{56\}/);
+  assert.match(popup, /SourceAvatar/);
+  assert.match(popup, /size=\{56\}/);
   assert.match(popup, /hideGroup/);
   assert.match(popup, /hideFollowers/);
 

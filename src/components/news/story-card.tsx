@@ -10,6 +10,7 @@ import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { useNewsStore } from "@/lib/news/store";
 import { cn } from "@/lib/utils";
 import { StoryMedia } from "./story-media";
+import { SourceAvatar } from "./source-avatar";
 import { GroupTag } from "./group-tag";
 import { OriginMark } from "./origin-mark";
 import { tapIcon, Tip } from "./icon-btn";
@@ -72,10 +73,18 @@ export function StoryCard({
   const saved = useNewsStore((s) => s.savedIds.includes(story.id));
   const toggleSave = useNewsStore((s) => s.toggleSave);
   const [face, setFace] = useState(() =>
-    resolveFace(story.avatar, youtubeAvatarFor(story.source) || extraAvatarFor(story.source)),
+    resolveFace(
+      youtubeAvatarFor(story.source) || story.avatar,
+      extraAvatarFor(story.source),
+    ),
   );
   useEffect(() => {
-    setFace(resolveFace(story.avatar, youtubeAvatarFor(story.source) || extraAvatarFor(story.source)));
+    setFace(
+      resolveFace(
+        youtubeAvatarFor(story.source) || story.avatar,
+        extraAvatarFor(story.source),
+      ),
+    );
   }, [story.avatar, story.source]);
 
   if (variant === "reader") {
@@ -84,22 +93,15 @@ export function StoryCard({
     const isYt = storyIsYouTube(story);
     const videoId = isYt ? story.id.replace(/^yt_/, "") : "";
     const ytThumb = story.image || (isYt && videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null);
-    const faceNode = face ? (
-      <img
-        src={face}
-        alt=""
-        width={24}
-        height={24}
-        referrerPolicy="no-referrer"
-        className="size-6 rounded-full bg-paper-2 object-cover"
+    const faceNode = (
+      <SourceAvatar
+        src={face || null}
+        initial={initial}
+        size={24}
+        className="size-6"
+        imgClassName="bg-paper-2"
+        fallbackClassName="bg-paper-2 text-[10px] font-medium text-ink"
       />
-    ) : (
-      <span
-        aria-hidden
-        className="grid size-6 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-ink"
-      >
-        {initial}
-      </span>
     );
     return (
       <article

@@ -4,6 +4,7 @@ import { FontesChip, FontesSortChips } from "@/components/news/fontes-chip";
 import { FontesSites } from "@/components/news/fontes-sites";
 import { OriginMark } from "@/components/news/origin-mark";
 import { ProfileRow } from "@/components/news/fontes-profile-row";
+import { SourceAvatar } from "@/components/news/source-avatar";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
 import { useFontesLeave } from "@/lib/news/use-fontes-leave";
 import {
@@ -11,7 +12,7 @@ import {
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
 import { filterFontesByOrigin, fontesEmptyHint, mergeRssFontes } from "@/lib/news/rss-catalog.mjs";
-import { mergeYouTubeFontes } from "@/lib/news/youtube-catalog.mjs";
+import { mergeYouTubeFontes, youtubeAvatarFor } from "@/lib/news/youtube-catalog.mjs";
 import { loadRssFeeds, onRssFeeds, type RssFeed } from "@/lib/news/rss-feeds";
 import { loadFontes } from "@/lib/news/server";
 import { routeMeta } from "@/lib/news/route-meta";
@@ -188,27 +189,17 @@ function FontesPage() {
                   >
                     <span className="flex shrink-0 -space-x-2">
                       {g.faces.length ? (
-                        g.faces.map((f) =>
-                          f.avatar ? (
-                            <img
-                              key={f.handle}
-                              src={f.avatar}
-                              alt=""
-                              width={28}
-                              height={28}
-                              loading="lazy"
-                              referrerPolicy="no-referrer"
-                              className="size-7 rounded-full border border-paper bg-paper-2 object-cover"
-                            />
-                          ) : (
-                            <span
-                              key={f.handle}
-                              className="grid size-7 place-items-center rounded-full border border-paper bg-paper-2 text-[10px] font-medium text-mute"
-                            >
-                              {(f.handle || "?").charAt(0).toUpperCase()}
-                            </span>
-                          ),
-                        )
+                        g.faces.map((f) => (
+                          <SourceAvatar
+                            key={f.handle}
+                            src={youtubeAvatarFor(f.handle) || f.avatar || null}
+                            initial={(f.handle || "?").charAt(0).toUpperCase()}
+                            size={28}
+                            loading="lazy"
+                            className="size-7 border border-paper"
+                            fallbackClassName="bg-paper-2 text-[10px] font-medium text-mute"
+                          />
+                        ))
                       ) : (
                         <span className="grid size-7 place-items-center rounded-full bg-paper-2 text-[10px] font-medium text-mute">
                           {g.items.length}
