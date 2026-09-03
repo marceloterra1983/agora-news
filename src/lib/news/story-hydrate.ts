@@ -1,6 +1,8 @@
 import { hydrateStoryBody } from "./translate-pt.mjs";
 import { readAvatarsByHandles, readStoredProfile } from "./profile-store";
 import { displayAvatarUrl, withAvatars } from "./profile-store-core.mjs";
+import { isYouTubeAccount } from "./rss-id.mjs";
+import { youtubeAvatarFor } from "./youtube-catalog.mjs";
 import type { Story } from "./types";
 
 const FACE_TTL = 10 * 60_000;
@@ -47,13 +49,20 @@ async function avatarOf(handle: string): Promise<string | null> {
 
 export async function attachStoryAvatars(stories: Story[]): Promise<Story[]> {
   if (!stories.length) return stories;
+  const withYt = stories.map((s) => {
+    if (!s.avatar && (isYouTubeAccount(s.source) || s.id.startsWith("yt_"))) {
+      const face = youtubeAvatarFor(s.source);
+      if (face) return { ...s, avatar: face };
+    }
+    return s;
+  });
   try {
     return withAvatars(
-      stories,
-      await avatarMapFor(stories.map((s) => s.source)),
+      withYt,
+      await avatarMapFor(withYt.map((s) => s.source)),
     );
   } catch {
-    return withAvatars(stories, new Map());
+    return withAvatars(withYt, new Map());
   }
 }
 
@@ -62,6 +71,7 @@ export async function hydrateStory(story: Story): Promise<Story> {
     (await hydrateStoryBody(story.original, story.body || story.excerpt)) ||
     story.original ||
     story.title;
-  const avatar = displayAvatarUrl(story.avatar) || (await avatarOf(story.source));
+  const ytFace = isYouTubeAccount(story.source) || story.id.startsWith("yt_") ? youtubeAvatarFor(story.source) : null;
+  const avatar = displayAvatarUrl(story.avatar) || ytFace || (await avatarOf(story.source));
   return { ...story, body, avatar };
 }

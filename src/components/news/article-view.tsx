@@ -7,6 +7,7 @@ import { labelFor } from "@/lib/news/types";
 import { useNewsStore } from "@/lib/news/store";
 import { blurbFor } from "@/lib/news/profiles";
 import { extraAvatarFor, loadExtraFontes } from "@/lib/news/extra-fontes";
+import { youtubeAvatarFor } from "@/lib/news/youtube-catalog.mjs";
 import { resolveFace } from "@/lib/news/profile-store-core.mjs";
 import { loadTweetEmbed } from "@/lib/news/server";
 import { displayBody, displayTitle, relativeTime } from "@/lib/news/format";
@@ -77,12 +78,14 @@ export function ArticleView({
           : [];
   const whoCatalog = blurbFor(story.source, story.sourceLabel);
   const [who, setWho] = useState(whoCatalog);
-  const [face, setFace] = useState(() => resolveFace(story.avatar));
+  const [face, setFace] = useState(() =>
+    resolveFace(story.avatar, youtubeAvatarFor(story.source) || extraAvatarFor(story.source)),
+  );
   useEffect(() => {
     const key = story.source.replace(/^@+/, "").toLowerCase();
     const extra = loadExtraFontes().find((e) => e.handle.toLowerCase() === key);
     setWho(extra?.summary || whoCatalog);
-    setFace(resolveFace(story.avatar, extra?.avatar || extraAvatarFor(story.source)));
+    setFace(resolveFace(story.avatar, youtubeAvatarFor(story.source) || extra?.avatar || extraAvatarFor(story.source)));
   }, [story.avatar, story.source, whoCatalog]);
   const title = displayTitle(story.title);
   const bodyText = story.body || story.excerpt;
@@ -155,6 +158,7 @@ export function ArticleView({
               asset={asset}
               alt={title}
               priority={index === 0}
+              autoPlay={embedded}
             />
           ))}
         </div>

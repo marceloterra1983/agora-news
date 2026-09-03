@@ -52,7 +52,7 @@ test("mergeYouTubeFontes integrates YouTube channels as InfluenceRows without du
   assert.equal(ytOpenAi.group, "labs");
   assert.match(ytOpenAi.bio, /OpenAI/);
   assert.match(ytOpenAi.siteUrl, /https:\/\/www\.youtube\.com\/channel\/UC/);
-  assert.match(ytOpenAi.avatar, /google\.com\/s2\/favicons/);
+  assert.match(ytOpenAi.avatar, /yt3\.googleusercontent\.com/);
 
   // Sem duplicação
   const twice = mergeYouTubeFontes(mergedAi, "ai");
