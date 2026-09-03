@@ -26,6 +26,15 @@ function norm(h) {
     .toLowerCase();
 }
 
+/** Grupo só vale se existir na taxonomia da seção ou for custom. Senão, Outros. */
+function groupInSection(id, slug, customGroups = []) {
+  const key = String(id || "").trim();
+  if (!key) return "novos";
+  if (groupOrderFor(slug).includes(key)) return key;
+  if ((customGroups || []).some((row) => String(row?.id || "") === key)) return key;
+  return "novos";
+}
+
 /** Catálogo de um tema: fontes, extras e grupos com membro. */
 export function catalogFor(section, input = {}) {
   const slug = normalizeSection(section);
@@ -40,13 +49,19 @@ export function catalogFor(section, input = {}) {
     const handle = norm(p.handle);
     if (!handle || seen.has(handle)) continue;
     seen.add(handle);
-    members.push({ handle, group: overrides[handle] || p.group });
+    members.push({
+      handle,
+      group: groupInSection(overrides[handle] || p.group, slug, customGroups),
+    });
   }
   for (const extra of extras) {
     const handle = norm(extra.handle);
     if (!handle || seen.has(handle)) continue;
     seen.add(handle);
-    members.push({ handle, group: overrides[handle] || extra.group || "novos" });
+    members.push({
+      handle,
+      group: groupInSection(overrides[handle] || extra.group || "novos", slug, customGroups),
+    });
   }
 
   const present = new Set(members.map((m) => m.group));

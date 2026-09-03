@@ -225,8 +225,8 @@ export function filterFontesByOrigin(rows, { showX = true, showRss = true, showY
 }
 
 export function fontesEmptyHint({ showX = true, showRss = true, showYouTube = true, sort = "recent" } = {}) {
-  if (!showX && !showRss && !showYouTube) return "Ligue o X ou o RSS no topo para ver fontes.";
-  if (!showX && !showRss) return "Ligue o X ou o RSS no topo para ver fontes.";
+  if (!showX && !showRss && !showYouTube) return "Ligue o X, o RSS ou o YouTube no topo para ver fontes.";
+  if (!showX && !showRss) return "Nenhum canal YouTube neste recorte. Ligue o X ou o RSS no topo para ver fontes.";
   if (!showX) return "Ligue o X no topo para ver as contas.";
   if (sort === "starred") return "Nenhum favorito ainda. Toque na estrela de um perfil.";
   return "Nenhum perfil.";

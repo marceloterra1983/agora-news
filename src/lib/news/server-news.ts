@@ -9,7 +9,15 @@ import { timed } from "./timing";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { attachClusterChrome } from "./story-cluster.mjs";
 import { accountsForQuery } from "./account-in-filter.mjs";
-import { FEED_MORE_LIMIT, intersectAccounts } from "./feed-more.mjs";
+import {
+  FEED_MORE_LIMIT,
+  YOUTUBE_BACKFILL_HOURS,
+  YOUTUBE_BACKFILL_LIMIT,
+  intersectAccounts,
+  mergeFeedStories,
+  windowAfter,
+  youtubeHandlesIn,
+} from "./feed-more.mjs";
 import { DEFAULT_SECTION, normalizeSection, type Category } from "./types";
 import type { SectionCatalog } from "./section-catalog.mjs";
 import { getSessionUser } from "@/lib/auth/verify.server";
@@ -75,9 +83,24 @@ export const loadNews = createServerFn({ method: "GET" })
             limit: data.before || data.after ? FEED_MORE_LIMIT : PAGE_SIZE,
             accounts: accountsForQuery(catalog, scoped ? accounts : []),
           });
+          const ytWanted = youtubeHandlesIn(scoped ? accounts : catalog.handles);
+          let bundled = older;
+          if (ytWanted.length && (data.before || data.after)) {
+            try {
+              const extra = await downloadSupabase(data.category, {
+                before: data.before,
+                after: data.before ? windowAfter(data.before, YOUTUBE_BACKFILL_HOURS) || undefined : data.after,
+                limit: YOUTUBE_BACKFILL_LIMIT,
+                accounts: accountsForQuery(catalog, ytWanted),
+              });
+              bundled = mergeFeedStories(older, extra);
+            } catch {
+              bundled = older;
+            }
+          }
           const stories = await attachStoryAvatars(
             attachClusterChrome(
-              filterStories(older, data.category, data.q, catalog).map((s) => ({
+              filterStories(bundled, data.category, data.q, catalog).map((s) => ({
                 ...s,
                 body: s.body || s.excerpt || s.title,
                 original: s.original || "",

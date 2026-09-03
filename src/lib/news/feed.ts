@@ -11,7 +11,8 @@ import {
 } from "./section-catalog.mjs";
 import { getSection } from "./sections";
 import { serverCatalogFor } from "./server-catalog";
-import { downloadSupabase } from "./supabase";
+import { downloadLatestYouTube, downloadSupabase } from "./supabase";
+import { mergeFeedStories, YOUTUBE_BACKFILL_LIMIT } from "./feed-more.mjs";
 import { FEED_CLUSTER_FETCH, PAGE_SIZE } from "./page-size.mjs";
 import { attachClusterChrome } from "./story-cluster.mjs";
 import { accountsForQuery } from "./account-in-filter.mjs";
@@ -69,8 +70,20 @@ export async function loadFeed(
     const scoped = filterStories(stories, section.slug, undefined, scopedCatalog);
     const clustered = attachClusterChrome(scoped);
     const heads = clustered.slice(0, PAGE_SIZE);
+    let youtubeLatest: Story[] = [];
+    try {
+      youtubeLatest = filterStories(
+        await downloadLatestYouTube(section.slug, scopedCatalog.handles, YOUTUBE_BACKFILL_LIMIT),
+        section.slug,
+        undefined,
+        scopedCatalog,
+      );
+    } catch {
+      youtubeLatest = [];
+    }
+    const page = mergeFeedStories(heads, youtubeLatest);
     const payload = wrap(
-      heads,
+      page,
       true,
       `NEWS/${section.folderName}`,
       new Date().toISOString(),

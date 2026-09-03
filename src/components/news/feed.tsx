@@ -23,6 +23,7 @@ import { relativeTime } from "@/lib/news/format";
 import { mergeAvatarsIntoStories } from "@/lib/news/profile-store-core.mjs";
 import { handlesForGroup } from "@/lib/news/section-catalog.mjs";
 import { useSectionCatalog } from "@/lib/news/use-section-catalog";
+import { feedMoreCursor, moreCursorIso } from "@/lib/news/feed-more.mjs";
 import { useFeedOlder } from "@/lib/news/use-feed-older";
 import { useFeedProfile } from "@/lib/news/use-feed-profile";
 import { filterStoriesByOrigin } from "@/lib/news/rss-catalog.mjs";
@@ -242,9 +243,11 @@ export function Feed({
         <div className="mx-auto max-w-lg py-16 text-center" role="status">
           <p className="font-display text-2xl">Nada neste recorte</p>
           <p className="mt-2 text-sm text-ink-soft">
-            {!settings.showX && !settings.showRss
-              ? "Ligue o X ou o RSS no topo para ver posts."
-              : !settings.showX
+            {!settings.showX && !settings.showRss && !settings.showYouTube
+              ? "Ligue o X, o RSS ou o YouTube no topo para ver posts."
+              : !settings.showX && !settings.showRss
+                ? "Nenhum vídeo YouTube neste recorte. Ligue o X ou o RSS para ver as outras fontes."
+                : !settings.showX
                 ? "Nenhum post de site neste recorte. Ligue o X para ver as contas."
                 : !settings.showRss
                   ? "Nenhum post RSS neste recorte. Ligue o RSS para ver os sites."
@@ -263,7 +266,11 @@ export function Feed({
             aria-label="Carregar mais"
             disabled={page.loadingMore}
             onClick={() =>
-              void page.loadMore((stories.at(-1) ?? page.raw.at(-1))?.publishedAt)
+              void page.loadMore(
+                moreCursorIso(stories) ||
+                  feedMoreCursor(page.raw) ||
+                  (stories.at(-1) ?? page.raw.at(-1))?.publishedAt,
+              )
             }
             className={cn(tapIcon, "bg-paper-2 text-ink disabled:opacity-40")}
           >

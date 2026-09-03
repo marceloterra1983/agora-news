@@ -13,6 +13,7 @@ import {
   shouldWalkEmptyWindow,
   storyHasText,
   windowAfter,
+  feedMoreCursor,
 } from "../src/lib/news/feed-more.mjs";
 import {
   nextShownByHours,
@@ -119,6 +120,26 @@ test("handlesForGroup lists only members of that group", () => {
   assert.deepEqual(handlesForGroup(ai, "all").sort(), ["openai", "sama"]);
 });
 
+test("feedMoreCursor ignores a stale YouTube pin and still advances", () => {
+  const lastYt = {
+    id: "yt_dQw4w9WgXcQ",
+    source: "y_bdebf4a1823d",
+    publishedAt: "2012-11-29T21:28:45.000Z",
+  };
+  const page = [
+    { id: "x1", source: "openai", publishedAt: "2026-09-03T03:01:55.000Z" },
+    { id: "x2", source: "sama", publishedAt: "2026-09-03T02:25:49.000Z" },
+    lastYt,
+  ];
+  assert.equal(feedMoreCursor(page), "2026-09-03T02:25:49.000Z");
+  assert.equal(windowAfter(feedMoreCursor(page)), "2026-09-02T14:25:49.000Z");
+  assert.equal(
+    feedMoreCursor([lastYt]),
+    "2012-11-29T21:28:45.000Z",
+    "YouTube-only page still uses the video date",
+  );
+});
+
 test("feed and profile wire the 12h more button", () => {
   const feed = read("src/components/news/feed.tsx");
   const chip = read("src/components/news/fontes-last-posts.tsx");
@@ -127,6 +148,7 @@ test("feed and profile wire the 12h more button", () => {
   assert.match(feed, /<ChevronDown/);
   assert.match(feed, /aria-label="Carregar mais"/);
   assert.match(feed, /handlesForGroup|useFeedOlder/);
+  assert.match(feed, /feedMoreCursor/);
   assert.match(read("src/lib/news/use-feed-older.ts"), /FEED_MORE_HOUR_STEPS|windowAfter/);
   assert.match(chip, /mais 12 horas/);
   assert.match(chip, /nextShownByHours/);

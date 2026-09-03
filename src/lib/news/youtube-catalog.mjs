@@ -1,4 +1,5 @@
 /** Catálogo seed de canais do YouTube e integração de fontes. */
+import { youtubePostedAtIsFresh } from "./youtube-core.mjs";
 
 export const MAX_YOUTUBE_ITEMS = 10;
 
@@ -223,7 +224,7 @@ export const YOUTUBE_SEED = [
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCib793mnUOhWymCh2VJKplQ",
     title: "Fábio Akita",
     section: "brasil",
-    group: "tech-devs",
+    group: "br-colunistas",
     account: "y_83cbea10449e",
     blurb: "Akitando. Ensaios aprofundados sobre computação, Unix, carreira técnica e história da tecnologia.",
     avatar: "https://yt3.googleusercontent.com/DnsLS63P8rHr4qdXZ9yuQTV4IkY8YBK1_pE24fG_=s900-c-k-c0x00ffffff-no-rj",
@@ -233,7 +234,7 @@ export const YOUTUBE_SEED = [
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCU5JicSrEM5A63jkJ2QvGYw",
     title: "Filipe Deschamps",
     section: "brasil",
-    group: "tech-devs",
+    group: "br-colunistas",
     account: "y_e6b0ab678ab3",
     blurb: "Notícias para programadores, projetos práticos e discussões de tecnologia.",
     avatar: "https://yt3.googleusercontent.com/ytc/AIdro_l2dYLob_k5biaqXR_dOPX6yOtT3Z=s900-c-k-c0x00ffffff-no-rj",
@@ -243,7 +244,7 @@ export const YOUTUBE_SEED = [
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCFuIUoyHB12qpYa8Jpxoxow",
     title: "Código Fonte TV",
     section: "brasil",
-    group: "tech-devs",
+    group: "br-colunistas",
     account: "y_db0119052ccb",
     blurb: "Gabriel e Vanessa falando sobre mercado de trabalho, programação e tecnologias.",
     avatar: "https://yt3.googleusercontent.com/2CkMHl_lxrIpACXMFUxU6rPiJ85SBGw7kG5S3E_1=s900-c-k-c0x00ffffff-no-rj",
@@ -253,7 +254,7 @@ export const YOUTUBE_SEED = [
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCEf5U1dB5a2e2S-XUlnhxSA",
     title: "Diolinux",
     section: "brasil",
-    group: "tech-devs",
+    group: "br-colunistas",
     account: "y_e83e7e79e62f",
     blurb: "Canal referência em Linux, código aberto, produtividade e hardware.",
     avatar: "https://yt3.googleusercontent.com/SLBk_zBM2dQJIt4YIzK6kMi2I3xyvSpDnxa64E=s900-c-k-c0x00ffffff-no-rj",
@@ -270,10 +271,60 @@ export const YOUTUBE_SEED = [
   },
 ];
 
+function shrinkYtAvatar(url) {
+  const raw = String(url || "").trim();
+  if (!raw) return null;
+  return raw.replace(/([?&=]s)900(-c-k)/i, "$188$2");
+}
+
 export function youtubeGroupFor(section) {
   if (section === "tech") return "tech-devs";
   if (section === "brasil") return "br-ciencia";
   return "labs";
+}
+
+/** Grupo editorial do seed. Vazio se a conta não for YouTube cadastrada. */
+export function youtubeGroupOf(account) {
+  const hit = youtubeSeedHit(account);
+  if (!hit) return "";
+  return String(hit.group || youtubeGroupFor(hit.section) || "");
+}
+
+function isYouTubeStory(story) {
+  const id = String(story?.id || "");
+  const source = String(story?.source || story?.account || "")
+    .replace(/^@+/, "")
+    .trim();
+  return id.startsWith("yt_") || /^y_[a-f0-9]{12}$/i.test(source);
+}
+
+/** Um vídeo por canal — o mais recente. */
+export function latestYouTubeByAccount(stories) {
+  const by = new Map();
+  for (const story of Array.isArray(stories) ? stories : []) {
+    if (!isYouTubeStory(story)) continue;
+    const key = String(story.source || story.account || "")
+      .replace(/^@+/, "")
+      .trim()
+      .toLowerCase();
+    if (!key) continue;
+    const prev = by.get(key);
+    if (!prev || Date.parse(story.publishedAt || "") > Date.parse(prev.publishedAt || "")) {
+      by.set(key, story);
+    }
+  }
+  return [...by.values()];
+}
+
+/** Acrescenta o último vídeo fresco de cada canal que ainda não está na página. */
+export function mergeLatestYouTube(timeline, latest, now = Date.now()) {
+  const page = Array.isArray(timeline) ? timeline : [];
+  const seen = new Set(page.map((story) => String(story?.id || "")).filter(Boolean));
+  const pins = latestYouTubeByAccount(latest).filter(
+    (story) =>
+      story?.id && !seen.has(story.id) && youtubePostedAtIsFresh(story.publishedAt, now),
+  );
+  return pins.length ? [...page, ...pins] : page;
 }
 
 export function youtubeSeedHit(account) {
@@ -299,7 +350,7 @@ export function youtubeExtrasFor(section) {
     url: row.url,
     channelId: row.channelId,
     blurb: row.blurb || "",
-    avatar: row.avatar || null,
+    avatar: shrinkYtAvatar(row.avatar) || null,
   }));
 }
 
@@ -307,7 +358,10 @@ export function youtubeFonteRow(p) {
   const handle = String(p?.account || p?.handle || "").replace(/^@+/, "");
   const channelId = String(p?.channelId || "");
   const siteUrl = channelId ? `https://www.youtube.com/channel/${channelId}` : "https://www.youtube.com";
-  const avatar = p?.avatar || youtubeAvatarFor(handle) || "https://www.google.com/s2/favicons?sz=64&domain=youtube.com";
+  const avatar =
+    shrinkYtAvatar(p?.avatar) ||
+    youtubeAvatarFor(handle) ||
+    "https://www.google.com/s2/favicons?sz=64&domain=youtube.com";
   return {
     handle,
     name: String(p?.title || p?.name || handle),

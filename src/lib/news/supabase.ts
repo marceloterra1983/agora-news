@@ -1,12 +1,12 @@
 import { accountInFilter } from "./account-in-filter.mjs";
-import { postedAtQuery } from "./feed-more.mjs";
+import { postedAtQuery, YOUTUBE_BACKFILL_LIMIT } from "./feed-more.mjs";
 import { PAGE_SIZE } from "./page-size.mjs";
 import { storySourceFromAccount } from "./rss-catalog.mjs";
 import { unpackMediaLabel } from "./story-media-meta.mjs";
 import { isNewsRow } from "./news-row.mjs";
 import { supabaseApiKeyHeaders } from "./supabase-rest";
 import { isYouTubeAccount } from "./rss-id.mjs";
-import { youtubeAvatarFor } from "./youtube-catalog.mjs";
+import { latestYouTubeByAccount, youtubeAvatarFor } from "./youtube-catalog.mjs";
 import { normalizeSection, type Category, type Story } from "./types";
 
 export { isNewsRow };
@@ -308,6 +308,23 @@ export async function downloadSupabase(
 
   listInflight.set(key, job);
   return job;
+}
+
+/** Último vídeo de cada canal YouTube do recorte — fora da janela quente do feed. */
+export async function downloadLatestYouTube(
+  fallbackCategory: Category,
+  accounts: string[] = [],
+  limit = YOUTUBE_BACKFILL_LIMIT,
+): Promise<Story[]> {
+  const yt = [
+    ...new Set(accounts.map(normalizeAccount).filter((handle) => isYouTubeAccount(handle))),
+  ];
+  if (!yt.length) return [];
+  const rows = await fetchList(fallbackCategory, {
+    limit: Math.min(80, Math.max(limit, yt.length)),
+    accounts: yt,
+  });
+  return latestYouTubeByAccount(rows);
 }
 
 export async function downloadPostById(

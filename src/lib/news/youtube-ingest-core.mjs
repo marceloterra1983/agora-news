@@ -3,7 +3,7 @@ import { clipAtWord } from "./summary-core.mjs";
 import { applyStoredTranslation, pickStoredPt } from "./translate-pt.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
 import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
-import { extractChannelVideosFromHtml, fetchVideoPublishedAt } from "./youtube-core.mjs";
+import { extractChannelVideosFromHtml, fetchVideoPublishedAt, youtubePostedAtIsFresh } from "./youtube-core.mjs";
 
 /**
  * Resolve itens de um canal: tenta feed Atom primeiro; se der 404/500/vazio, usa fallback da página do canal.
@@ -69,13 +69,15 @@ export async function resolveYouTubeChannelItems(channel, opts = {}) {
  * @param {Set<string>} known
  * @param {string} batch
  * @param {Record<string, { title: string, summary: string }>} [translated]
+ * @param {number} [now]
  */
-export function youtubePostsFromItems(channel, items, known, batch, translated = {}) {
+export function youtubePostsFromItems(channel, items, known, batch, translated = {}, now = Date.now()) {
   const rows = [];
   const account = channel.account;
   for (const item of items) {
     const postId = youtubePostId(item.videoId || item.guid || item.link);
     if (known.has(postId)) continue;
+    if (!youtubePostedAtIsFresh(item.publishedAt, now)) continue;
     const original = item.summary || item.title || "";
     const title = pickStoredPt(item.title || "", translated[postId]?.title);
     const summary = pickStoredPt(original, translated[postId]?.summary);

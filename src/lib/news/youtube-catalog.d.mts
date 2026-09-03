@@ -14,6 +14,14 @@ export type YouTubeSeed = {
 export const MAX_YOUTUBE_ITEMS: number;
 export const YOUTUBE_SEED: YouTubeSeed[];
 export function youtubeGroupFor(section: string): string;
+export function youtubeGroupOf(account: string): string;
+export function latestYouTubeByAccount<T extends { id?: string; source?: string; account?: string; publishedAt?: string }>(
+  stories: T[],
+): T[];
+export function mergeLatestYouTube<T extends { id?: string; source?: string; account?: string; publishedAt?: string }>(
+  timeline: T[],
+  latest: T[],
+): T[];
 export function youtubeSeedHit(account: string): YouTubeSeed | undefined;
 export function youtubeLabelFor(account: string): string;
 export function youtubeAvatarFor(account: string): string | null;

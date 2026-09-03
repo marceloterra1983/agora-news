@@ -1,5 +1,7 @@
 export const YOUTUBE_ID_RE: RegExp;
 export const CHANNEL_ID_RE: RegExp;
+export const YOUTUBE_MAX_AGE_MS: number;
+export function youtubePostedAtIsFresh(iso: unknown, now?: number): boolean;
 export function extractYouTubeId(urlOrId: string): string;
 export function youtubeFeedUrl(channelId: string): string;
 export function extractChannelIdFromHtml(html: string): string;
