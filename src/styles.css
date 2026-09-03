@@ -177,7 +177,7 @@
   html[data-type="fraunces"] { --font-display: "Fraunces", Georgia, serif; }
   html[data-type="sans"] { --font-display: var(--font-sans); }
 
-  html[data-images="off"] [data-media] {
+  html[data-images="off"] [data-media]:not([data-media="video"]) {
     display: none !important;
   }
 

@@ -19,7 +19,7 @@ export function youtubePostedAtIsFresh(iso, now = Date.now()) {
  * @returns {string}
  */
 export function extractYouTubeId(urlOrId) {
-  const input = String(urlOrId || "").trim();
+  const input = String(urlOrId || "").trim().replace(/^yt_/, "");
   if (YOUTUBE_ID_RE.test(input)) return input;
   const match = input.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|\/shorts\/)([a-zA-Z0-9_-]{11})/i);
   return match?.[1] || "";
