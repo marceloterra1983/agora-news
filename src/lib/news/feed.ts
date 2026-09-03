@@ -1,12 +1,15 @@
-import fallbackCsv from "./agora-feed.csv?raw";
-import { storiesFromCsv } from "./csv";
+import {
+  fallbackPayload,
+  wrap,
+  type FeedPayload,
+} from "./news-fallback";
 import { profilesFor } from "./profiles";
 import {
   catalogFor,
   filterStoriesForCatalog,
   type SectionCatalog,
 } from "./section-catalog.mjs";
-import { getSection, mergeSectionList } from "./sections";
+import { getSection } from "./sections";
 import { serverCatalogFor } from "./server-catalog";
 import { downloadSupabase } from "./supabase";
 import { FEED_CLUSTER_FETCH, PAGE_SIZE } from "./page-size.mjs";
@@ -19,44 +22,9 @@ import {
   type Story,
 } from "./types";
 
-export type FeedPayload = {
-  stories: Story[];
-  syncedAt: string;
-  folder: string;
-  count: number;
-  live: boolean;
-  categories: Category[];
-  source?: string;
-  hasMore?: boolean;
-};
-
-const FIRST_LIMIT = FEED_CLUSTER_FETCH;
-
-const lastGood = new Map<string, FeedPayload>();
-
-function wrap(
-  stories: Story[],
-  live: boolean,
-  folder: string,
-  syncedAt = new Date().toISOString(),
-  source?: string,
-): FeedPayload {
-  const fromStories = stories.map((s) => normalizeSection(s.category));
-  return {
-    stories,
-    syncedAt,
-    folder,
-    count: stories.length,
-    live,
-    categories: mergeSectionList(fromStories),
-    source,
-  };
-}
-
-const fallbackStories = storiesFromCsv(fallbackCsv).map((s) => ({
-  ...s,
-  category: normalizeSection(s.category),
-}));
+export type { FeedPayload };
+export { fallbackPayload };
+export { filterStoriesForCatalog } from "./section-catalog.mjs";
 
 export function filterStories(
   stories: Story[],
@@ -81,19 +49,9 @@ export function filterStories(
   );
 }
 
-export function fallbackPayload(
-  category: Category = DEFAULT_SECTION,
-): FeedPayload {
-  const section = getSection(category);
-  const stories = filterStories(fallbackStories, section.slug);
-  return wrap(
-    stories,
-    false,
-    `NEWS/${section.folderName}`,
-    "2026-08-14T00:06:00.000Z",
-    "copia",
-  );
-}
+const FIRST_LIMIT = FEED_CLUSTER_FETCH;
+
+const lastGood = new Map<string, FeedPayload>();
 
 export async function loadFeed(
   category: Category = DEFAULT_SECTION,

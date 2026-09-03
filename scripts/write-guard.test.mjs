@@ -3,9 +3,20 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { spendKeyAllowed, writeAllowed, writeDenialStatus } from "./write-guard.mjs";
+import { safeBearerMatch, spendKeyAllowed, writeAllowed, writeDenialStatus } from "./write-guard.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+test("safeBearerMatch uses constant-time comparison", () => {
+  assert.equal(safeBearerMatch("Bearer s3cret", "s3cret"), true);
+  assert.equal(safeBearerMatch("Bearer wrong", "s3cret"), false);
+  assert.equal(safeBearerMatch("Bearer s3creX", "s3cret"), false);
+  assert.equal(safeBearerMatch("Bearer short", "s3cret"), false);
+  assert.equal(safeBearerMatch("Bearer muchlongersecretthanexpected", "s3cret"), false);
+  assert.equal(safeBearerMatch("", "s3cret"), false);
+  assert.equal(safeBearerMatch(null, "s3cret"), false);
+  assert.equal(safeBearerMatch("Bearer s3cret", ""), false);
+});
 
 test("app write: same-origin and session userId", () => {
   assert.equal(writeAllowed("app", { site: "same-origin" }), false);

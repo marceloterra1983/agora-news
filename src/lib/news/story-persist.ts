@@ -1,7 +1,6 @@
 import { upsertPosts } from "./admin";
 import { clipAtWord } from "./summary-core.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
-import { invalidateSupabaseList } from "./supabase";
 import { pickStoredPt } from "./translate-pt.mjs";
 import type { Story } from "./types";
 
@@ -34,6 +33,5 @@ export async function persistHydratedBody(story: Story, body: string): Promise<b
       source: "x",
     },
   ]);
-  if (written.ok) invalidateSupabaseList();
   return written.ok;
 }

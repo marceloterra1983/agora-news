@@ -53,12 +53,20 @@ function sslForHost(host) {
  */
 export function postgresPoolConfig(connectionString, extra = {}) {
   const parts = parseDatabaseUrl(connectionString);
+  const max =
+    typeof process !== "undefined" && process.env?.PG_POOL_MAX
+      ? Number(process.env.PG_POOL_MAX)
+      : 4;
   return {
     host: parts.host,
     port: parts.port,
     user: parts.user,
     password: parts.password,
     database: parts.database,
+    max,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 5_000,
+    allowExitOnIdle: true,
     ...extra,
     ssl: sslForHost(parts.host),
   };

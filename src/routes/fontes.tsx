@@ -7,19 +7,11 @@ import { ProfileRow } from "@/components/news/fontes-profile-row";
 import { useExtraFontes } from "@/lib/news/use-extra-fontes";
 import { useFontesLeave } from "@/lib/news/use-fontes-leave";
 import {
-  FONTES_SORT_KEY,
-  FONTES_SORTS,
-  groupFontesRows,
-  filterFontesRows,
-  mergeExtraFontes,
-  readStoredSort,
-  seedFontes,
-  sortFontesRows,
-  type SortKey,
+  FONTES_SORT_KEY, FONTES_SORTS, groupFontesRows, filterFontesRows, mergeExtraFontes, readStoredSort, seedFontes, sortFontesRows, type SortKey,
 } from "@/lib/news/fontes-sort";
 import { allGroupIds, onCustomGroups } from "@/lib/news/groups";
 import { filterFontesByOrigin, fontesEmptyHint, mergeRssFontes } from "@/lib/news/rss-catalog.mjs";
-import { loadRssFeeds, onRssFeeds } from "@/lib/news/rss-feeds";
+import { loadRssFeeds, onRssFeeds, type RssFeed } from "@/lib/news/rss-feeds";
 import { loadFontes } from "@/lib/news/server";
 import { routeMeta } from "@/lib/news/route-meta";
 import { useSettings } from "@/lib/news/use-settings";
@@ -55,7 +47,7 @@ function FontesPage() {
   const [openHandle, setOpenHandle] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const extras = useExtraFontes();
-  const [rssOwned, setRssOwned] = useState(loadRssFeeds);
+  const [rssOwned, setRssOwned] = useState<RssFeed[]>([]);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
   const [groupIds, setGroupIds] = useState<string[]>([]);
@@ -67,7 +59,10 @@ function FontesPage() {
     setPicking(false);
     return onCustomGroups(() => setGroupIds(allGroupIds(secao)));
   }, [secao]);
-  useEffect(() => onRssFeeds(() => setRssOwned(loadRssFeeds())), []);
+  useEffect(() => {
+    setRssOwned(loadRssFeeds());
+    return onRssFeeds(() => setRssOwned(loadRssFeeds()));
+  }, []);
 
   useEffect(() => {
     if (sortParam) return;

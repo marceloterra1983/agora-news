@@ -3,7 +3,7 @@ import { authMiddleware } from "@/lib/auth/middleware";
 import { rssGroupFor } from "./rss-catalog.mjs";
 import type { RssFeed } from "./rss-feeds";
 import { rssAccountId } from "./rss-id.mjs";
-import { assertHttpsRssUrl } from "./rss-owned.mjs";
+import { assertSafeRssFetchUrl, safeRssFetch } from "./safe-fetch";
 import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
 import { normalizeSection } from "./types";
 
@@ -14,8 +14,8 @@ export const resolveRssFeed = createServerFn({ method: "POST" })
     section: normalizeSection(input?.section),
   }))
   .handler(async ({ data }): Promise<RssFeed> => {
-    const url = assertHttpsRssUrl(data.url);
-    const res = await fetch(url, {
+    const url = await assertSafeRssFetchUrl(data.url);
+    const res = await safeRssFetch(url, {
       headers: { "User-Agent": "AgoraNews/1.0" },
       signal: AbortSignal.timeout(10_000),
     });
