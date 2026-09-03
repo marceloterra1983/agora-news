@@ -76,6 +76,9 @@ test("resolveYouTubeChannelItems triggers channel HTML fallback when feed 404s a
       if (url.includes("/videos")) {
         return new Response(CHANNEL_HTML_MOCK, { status: 200, headers: { "content-type": "text/html" } });
       }
+      if (url.includes("watch?v=ROF2Nv_KjOM")) {
+        return new Response('<meta itemprop="datePublished" content="2026-09-01T18:02:31-07:00">', { status: 200 });
+      }
       return new Response("Not Found", { status: 404 });
     },
   });

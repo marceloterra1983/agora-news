@@ -12,3 +12,7 @@ export function extractChannelVideosFromHtml(html: string): Array<{
   publishedAt: string;
   imageUrl: string;
 }>;
+export function fetchVideoPublishedAt(
+  videoId: string,
+  fetchImpl?: typeof fetch,
+): Promise<string>;
