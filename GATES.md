@@ -1,31 +1,27 @@
-# Gates: Revisão YouTube no feed (velocidade, +12h, grupo)
+# Gates: Player YouTube no popup do feed
 
-Scope: Corrigir lentidão/ausência de posts YouTube no feed, o botão «mais 12 horas» quando há vídeos, e o grupo/categoria errado — com revisão ponta a ponta e evidência.
+Scope: Ao abrir um post YouTube no popup/modal do feed, o vídeo precisa aparecer para assistir (iframe ou facade clicável). RSS/X no mesmo popup não regressam.
 
-- [x] G1: Causa raiz da lentidão/ausência de YouTube no feed documentada com evidência (query, filtro, janela temporal ou render)
-  CHECK: node --experimental-strip-types --test scripts/youtube-feed-review.test.mjs
+- [x] G1: Causa raiz confirmada com evidência (código + reprodução), não chute
+  CHECK: test -f /tmp/agora-yt-popup-root-cause.txt && grep -E 'ROOT_CAUSE|PATH' /tmp/agora-yt-popup-root-cause.txt
+  EXPECT: /ROOT_CAUSE/
+  EVIDENCE: PATH: FeedStoryPopup → ArticleView(embedded) → StoryAssetBlock(autoPlay) → YouTubeEmbed iframe youtube-nocookie.com/embed/{id} | ROOT_CAUSE: Document Referrer-Policy is same-origin (header + meta in s
+
+- [x] G2: Teste automatizado falha no estado quebrado e passa no fix — popup/ArticleView hidrata assets YouTube e o player monta
+  CHECK: node --experimental-strip-types --test scripts/youtube-popup-player.test.mjs
   EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 83.405388
+  EVIDENCE: ℹ todo 0 | ℹ duration_ms 53.688631
 
-- [x] G2: «mais 12 horas» avança a janela mesmo quando o último post visível é YouTube (id yt_*, posted_at antigo, media_label JSON)
-  CHECK: node --experimental-strip-types --test scripts/feed-more.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 97.844407
-
-- [x] G3: Grupo do vídeo coincide com o seed (youtubeGroupFor / row.group / seção), não com fallback errado
-  CHECK: node --experimental-strip-types --test scripts/youtube-group.test.mjs
-  EXPECT: /pass [1-9]/
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 93.659037
-
-- [x] G4: Suite, typecheck e lint verdes
+- [x] G3: Suite, typecheck e lint verdes após o fix
   CHECK: npm test && npm run typecheck && npm run lint
   EXPECT: /eslint \. --max-warnings=0/
   EVIDENCE: > lint | > eslint . --max-warnings=0
 
-- [x] G5: Feed/popup/+12h/grupos verificados no browser ou no substituto mais próximo
-  EVIDENCE: prod 2026-09-03 https://news.automatizems.com/?secao=ai — 21 cards, 0 /materia/yt_*, «mais 12 horas» presente. SQL brasil top40 yt=0 (cutoff 2026-09-03 03:01 UTC) vs Canaltech 2026-09-02 21:00. mergeFeedStories pinou yt_hO_OcLTQjsw e moreCursorIso ficou 2026-09-03T02:25:49.000Z (não 2023). youtubeGroupOf Canaltech=br-jornais Akita=br-colunistas OpenAI=labs. Suite 583 pass / 0 fail / 11 skip.
+- [ ] G4: Browser: feed → card YouTube → popup → vídeo assistível (iframe youtube ou facade que vira player)
+  EVIDENCE: pending
 
-Causas raiz (produção 2026-09-03, SQL + HTML :3080):
-- Brasil/tech: 0 `yt_` nos 80 mais novos (Brasil oldest_in_80 = 2026-09-03 02:25 UTC; YT mais novo = 2026-09-02 21:00). Firehose X/RSS afoga o YouTube.
-- `groupOf` só consultava X/RSS → todo `y_*` caía em `novos` (AI prod já tinha `data-group="novos"`).
-- Cursor de +12h usava o último card; um `yt_*` de 2012/2023 zerava a janela.
+- [ ] G5: Browser: RSS e X no mesmo popup continuam com mídia/conteúdo (sem regressão)
+  EVIDENCE: pending
+
+- [ ] G6: PR mergeado na main + deploy prod; relatório com URL, tag news-news:<head> e rollback
+  EVIDENCE: pending
