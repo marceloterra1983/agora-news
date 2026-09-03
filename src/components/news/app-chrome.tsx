@@ -141,9 +141,9 @@ function GrokHeader({
           className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto"
         >
           {toolbar}
+          <OriginSwitch />
         </div>
 
-        <OriginSwitch />
         <AppMenu />
       </div>
     </header>

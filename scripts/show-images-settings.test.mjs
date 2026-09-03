@@ -91,4 +91,7 @@ test("botão de fotos fica ao lado do seletor de temas", () => {
   assert.ok(imagesAt > sectionAt, "ImagesSwitch depois dos temas");
   assert.ok(originAt > imagesAt, "ImagesSwitch antes de OriginSwitch");
   assert.match(chrome.slice(sectionAt, imagesAt), /<\/div>/);
+  const scrollAt = chrome.indexOf("data-h-scroll");
+  const scrollEnd = chrome.indexOf("</div>", originAt);
+  assert.ok(scrollAt > 0 && originAt > scrollAt && scrollEnd > originAt, "OriginSwitch dentro do scroll do header");
 });

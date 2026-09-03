@@ -49,17 +49,17 @@ export function YouTubeEmbed({
           src={thumb}
           alt={title}
           priority={priority}
-          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
         <button
           type="button"
           data-testid="youtube-play-btn"
           onClick={() => setActive(true)}
           aria-label={`Reproduzir vídeo: ${title}`}
-          className="absolute inset-0 grid place-items-center bg-black/25 transition-colors group-hover:bg-black/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mark"
+          className="absolute inset-0 grid place-items-center bg-hero/70 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mark"
         >
-          <span className="grid size-14 place-items-center rounded-full bg-paper/95 text-ink shadow-lg backdrop-blur-sm transition-transform group-hover:scale-110">
-            <Play className="size-6 fill-current pl-0.5" aria-hidden />
+          <span className="grid size-10 place-items-center rounded-full bg-paper text-ink shadow-sm">
+            <Play className="size-4" aria-hidden />
           </span>
         </button>
       </div>
