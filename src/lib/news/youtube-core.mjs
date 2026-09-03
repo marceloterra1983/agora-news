@@ -76,7 +76,7 @@ export function extractChannelVideosFromHtml(html) {
           link: `https://www.youtube.com/watch?v=${videoId}`,
           title: String(title).trim(),
           summary: "",
-          publishedAt: new Date().toISOString(),
+          publishedAt: "",
           imageUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
         });
         return;
@@ -94,7 +94,7 @@ export function extractChannelVideosFromHtml(html) {
           link: `https://www.youtube.com/watch?v=${videoId}`,
           title: String(title).trim(),
           summary: v.descriptionSnippet?.runs?.[0]?.text || "",
-          publishedAt: new Date().toISOString(),
+          publishedAt: "",
           imageUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
         });
         return;
@@ -107,4 +107,36 @@ export function extractChannelVideosFromHtml(html) {
 
   search(data);
   return items;
+}
+
+/**
+ * Busca a data de publicação exata a partir da página do vídeo no YouTube.
+ * @param {string} videoId
+ * @param {typeof fetch} [fetchImpl]
+ * @returns {Promise<string>} Data no formato ISO (ex: "2026-08-28T20:51:46.000Z") ou vazio se não encontrar
+ */
+export async function fetchVideoPublishedAt(videoId, fetchImpl = fetch) {
+  const cleanId = extractYouTubeId(videoId);
+  if (!cleanId) return "";
+  try {
+    const res = await fetchImpl(`https://www.youtube.com/watch?v=${cleanId}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) return "";
+    const html = await res.text();
+    const match =
+      html.match(/<meta\s+itemprop=["']datePublished["']\s+content=["']([^"']+)["']/i)?.[1] ||
+      html.match(/<meta\s+itemprop=["']uploadDate["']\s+content=["']([^"']+)["']/i)?.[1] ||
+      html.match(/"publishDate":\s*"([^"]+)"/)?.[1] ||
+      html.match(/"uploadDate":\s*"([^"]+)"/)?.[1];
+    if (!match) return "";
+    const parsed = Date.parse(match);
+    return Number.isFinite(parsed) ? new Date(parsed).toISOString() : "";
+  } catch {
+    return "";
+  }
 }

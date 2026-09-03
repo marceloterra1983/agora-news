@@ -8,7 +8,7 @@ import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
 import { assertSafeRssFetchUrl } from "./safe-fetch";
 import { translateToPt } from "./translate-pt.mjs";
 import { youtubePostsFromItems } from "./youtube-ingest-core.mjs";
-import { extractChannelVideosFromHtml } from "./youtube-core.mjs";
+import { extractChannelVideosFromHtml, fetchVideoPublishedAt } from "./youtube-core.mjs";
 
 export type YouTubeChannelRow = YouTubeSeed;
 
@@ -108,6 +108,15 @@ export async function runYouTubeIngest(opts?: {
       }
 
       const items = parsed.slice(0, limit);
+      for (const item of items) {
+        if (!item.publishedAt && item.videoId) {
+          try {
+            item.publishedAt = await fetchVideoPublishedAt(item.videoId, fetchImpl);
+          } catch {
+            /* segue com data de fallback */
+          }
+        }
+      }
       const ids = items.map((item) => youtubePostId(item.videoId || item.guid || item.link || ""));
       const known = ids.length ? await knownIds(ids) : new Set<string>();
 

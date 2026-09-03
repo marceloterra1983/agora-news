@@ -3,7 +3,7 @@ import { clipAtWord } from "./summary-core.mjs";
 import { applyStoredTranslation, pickStoredPt } from "./translate-pt.mjs";
 import { packMediaLabel } from "./story-media-meta.mjs";
 import { decodeRssBody, parseFeedXml } from "./rss-parse.mjs";
-import { extractChannelVideosFromHtml } from "./youtube-core.mjs";
+import { extractChannelVideosFromHtml, fetchVideoPublishedAt } from "./youtube-core.mjs";
 
 /**
  * Resolve itens de um canal: tenta feed Atom primeiro; se der 404/500/vazio, usa fallback da página do canal.
@@ -54,7 +54,13 @@ export async function resolveYouTubeChannelItems(channel, opts = {}) {
     }
   }
 
-  return parsed.slice(0, limit);
+  const selected = parsed.slice(0, limit);
+  for (const item of selected) {
+    if (!item.publishedAt && item.videoId) {
+      item.publishedAt = await fetchVideoPublishedAt(item.videoId, fetchImpl);
+    }
+  }
+  return selected;
 }
 
 /**
