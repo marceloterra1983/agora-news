@@ -22,10 +22,10 @@ Scope: Baixar o Takeout compartilhado, selecionar canais relevantes (IA/Tech/Bra
   EXPECT: FEEDS_OK
   EVIDENCE: OK	Asimov Academy	15 | FEEDS_OK 24/24
 
-- [ ] G5: npm test, typecheck e lint passam
+- [x] G5: npm test, typecheck e lint passam
   CHECK: npm test && npm run typecheck && npm run lint
   EXPECT: fail 0
-  EVIDENCE: pending
+  EVIDENCE: pass 592 fail 0 skipped 11; tsc --noEmit ok; eslint --max-warnings=0 ok
 
 - [ ] G6: PR mergeado na main e deploy prod executado
   EVIDENCE: pending
