@@ -75,6 +75,8 @@ export const CATEGORY_LABELS: Record<string, string> = {
   ai: "IA",
   tech: "Tech",
   brasil: "Brasil",
+  podcasts: "Podcasts",
+  mercados: "Mercados",
 };
 
 export function slugifySection(name: string): string {

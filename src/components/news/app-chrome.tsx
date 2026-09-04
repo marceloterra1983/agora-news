@@ -112,7 +112,8 @@ function GrokHeader({
           role="group"
           aria-label="Assunto"
           data-section-switch=""
-          className="flex h-[44px] min-w-[44px] shrink-0 items-center rounded-full bg-paper-2 p-0.5"
+          data-h-scroll
+          className="flex h-[44px] min-w-0 max-w-[min(100%,28rem)] shrink items-center overflow-x-auto rounded-full bg-paper-2 p-0.5"
         >
           {SECTIONS.map((section) => {
             const on = section.slug === current.slug;
