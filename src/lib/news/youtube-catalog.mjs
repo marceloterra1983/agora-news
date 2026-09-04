@@ -1,7 +1,7 @@
 /** Catálogo seed de canais do YouTube e integração de fontes.
  * Recalibrado em 2026-09-03 a partir do Takeout:
  * takeout-20260903T232949Z-1-001.zip → histórico-de-visualização.html
- * (contagem de vídeos assistidos por canal), filtrado para nichos de notícia.
+ * Seção ai: só long-form (sem Shorts/Reels) com tema de IA no histórico.
  */
 import { youtubePostedAtIsFresh } from "./youtube-core.mjs";
 
@@ -9,7 +9,7 @@ export const MAX_YOUTUBE_ITEMS = 10;
 
 export const YOUTUBE_SEED = [
 
-  // IA (watch-history + inscritos oficiais)
+  // IA (long-form watch-history, sem Shorts)
   {
     channelId: "UCEojuEA0eCL267t_G_cc0Fg",
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCEojuEA0eCL267t_G_cc0Fg",
@@ -17,19 +17,109 @@ export const YOUTUBE_SEED = [
     section: "ai",
     group: "builders",
     account: "y_7bf15e60ce27",
-    blurb: "Tutoriais e análises em português sobre modelos, agentes e ferramentas de IA.",
+    blurb: "Tutoriais e análises em português sobre modelos, agentes, Claude Code e skills de IA.",
     avatar: "https://yt3.googleusercontent.com/nwHdTGsASMRYBtrNrpTHRE1GWHzpxOgeFbxafReLT074poXWSFx5FCmoP6vVDWOcJE9IhTr8XQ=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=52
+  }, // longform-ai=40
   {
-    channelId: "UCinWX11DB6RVJTSrI99R58w",
-    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCinWX11DB6RVJTSrI99R58w",
-    title: "Andre Mafra - Coopertech",
+    channelId: "UCc-Nvq1SYmXVTO5_UwQbg6w",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCc-Nvq1SYmXVTO5_UwQbg6w",
+    title: "Rafael Quintanilha – QuantBrasil",
     section: "ai",
     group: "builders",
-    account: "y_fc7c067312e9",
-    blurb: "IA aplicada, automações e engenharia prática no ecossistema brasileiro.",
-    avatar: "https://yt3.googleusercontent.com/eujv9liZwEyTn28LrNXUUSdA7VgirmmBsfn0N1fl3YLQL4UO9ari2pmpJ2X3R0bO2_4IwN1eApw=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=15
+    account: "y_c2559941c3af",
+    blurb: "Reviews práticas de modelos, IA local, agentes e ferramentas de coding com IA.",
+    avatar: "https://yt3.googleusercontent.com/htOX0IaM8pXyiCUuy3jtVfFlXeiT43Jiio8gooNMHRfoe2uhWKTX8zyWsATks3pu8CCe6hiC=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=29
+  {
+    channelId: "UCB0zxJZkEkb7TH6DdS-Fe_A",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCB0zxJZkEkb7TH6DdS-Fe_A",
+    title: "Vini Lana",
+    section: "ai",
+    group: "imprensa",
+    account: "y_63d353c868ba",
+    blurb: "Cobertura rápida de lançamentos de LLMs, Cursor, Claude e a corrida das big techs de IA.",
+    avatar: "https://yt3.googleusercontent.com/Oe_TGJDd-rmwQkmmI0iLzxhKWKQcShd9H3NpO0Q--tfsFFRiA2oOKuqZ_PdnT1nrTcmxnslG=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=22
+  {
+    channelId: "UCQy7CQvtuGSKp-2VGtmTAuQ",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCQy7CQvtuGSKp-2VGtmTAuQ",
+    title: "Inteligência Mil Grau",
+    section: "ai",
+    group: "imprensa",
+    account: "y_a0a4acebc96b",
+    blurb: "Noticiário em português sobre novos modelos GPT, Claude, Gemini, Grok e OpenRouter.",
+    avatar: "https://yt3.googleusercontent.com/ZcbeO9jisFy1wlL-uDoVfV7K7cmxkcHJ8gHyR5314Z4uTHCK9tACzuDaC9qb5E6hgZ1RgcQh=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=10
+  {
+    channelId: "UCIQne9yW4TvCCNYQLszfXCQ",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCIQne9yW4TvCCNYQLszfXCQ",
+    title: "Sandeco",
+    section: "ai",
+    group: "builders",
+    account: "y_abb2b42237f9",
+    blurb: "Claude Code, specs, skills e workflows agentic para quem constrói com IA.",
+    avatar: "https://yt3.googleusercontent.com/aN3a49RMWUMvPORYerEkd6z4kvRtOShXLYH1VBppCUoDb1nSI_WJcaeUXRqDxODBfi4nq7KZKQ=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=10
+  {
+    channelId: "UCFV3j-V6aESI35hwHYrno9Q",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCFV3j-V6aESI35hwHYrno9Q",
+    title: "Macks Wendhell I Inteligência Aplicada",
+    section: "ai",
+    group: "builders",
+    account: "y_6446b7c152aa",
+    blurb: "Conceitos e ajustes práticos de Claude Code, ChatGPT e produtividade com IA.",
+    avatar: "https://yt3.googleusercontent.com/IAFvwAEhi8UmizZFHrJlihbOuWZJ02mRS22SCmzvSEUAfhPfuPCMUCzaTr_hNE3EsZJiDW7XKg=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=8
+  {
+    channelId: "UCTHZK1x5rW-fv_VYieYhYPQ",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCTHZK1x5rW-fv_VYieYhYPQ",
+    title: "ViktorKav",
+    section: "ai",
+    group: "builders",
+    account: "y_42a523df7ca0",
+    blurb: "IA local, Qwen, DeepSeek e modelos que rodam na sua placa.",
+    avatar: "https://yt3.googleusercontent.com/YZblwzQlHsqlpoaOvCEzrM2d_u6T0uXX2oUl9Jj_TYVUypSw85kz5ggeq7510nm0cmHN9fBE=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=7
+  {
+    channelId: "UCgy4t_KFZk87l4B-eVSjqcg",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCgy4t_KFZk87l4B-eVSjqcg",
+    title: "Limite Semanal",
+    section: "ai",
+    group: "imprensa",
+    account: "y_f803b6869f81",
+    blurb: "Resumo semanal da corrida de LLMs: OpenAI, Claude, Qwen, DeepSeek e open source.",
+    avatar: "https://yt3.googleusercontent.com/uaoVhZKYr7DuLY0cIRwdLj3d1CKJUmD004hmoAmqq_QlgRjmSz1ce5xSatO88UHan4G1t5OUig=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=7
+  {
+    channelId: "UCkXwPGVz4FrmXeog4mjbo-w",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCkXwPGVz4FrmXeog4mjbo-w",
+    title: "Breno Vieira LionLab",
+    section: "ai",
+    group: "builders",
+    account: "y_aaa2f1646445",
+    blurb: "Harness de IA, loops agentic e engenharia de processos com Claude e DeepSeek.",
+    avatar: "https://yt3.googleusercontent.com/Cb9TzOtGx43opvzwLuXleJkxOfrI1CV7qE1OKPrRhQs6iUkrTcrTJ_0RkJSEMT1AreRtYoPVO_A=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=6
+  {
+    channelId: "UCdqoyAzMA89TKyGzC_GzAMQ",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCdqoyAzMA89TKyGzC_GzAMQ",
+    title: "Anwar Hermuche | Engenheiro de IA",
+    section: "ai",
+    group: "pesquisa",
+    account: "y_79b2ae3f7881",
+    blurb: "Engenharia de IA do zero: transformers, agentes, graph engineering e skills.",
+    avatar: "https://yt3.googleusercontent.com/sOWyMmGSA2S_kuNTCcZUWKz4FixJIXn4hjj4P9r7i2PTO9G57BCzW1cyBJveOWbawg6fQzh1mg=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=5
+  {
+    channelId: "UCEgYlWh3HH0u7ye8PNlcQgg",
+    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCEgYlWh3HH0u7ye8PNlcQgg",
+    title: "Ratos de IA",
+    section: "ai",
+    group: "builders",
+    account: "y_c293421db987",
+    blurb: "Agentes, Claude Code e operação de time de IAs no dia a dia de produto.",
+    avatar: "https://yt3.googleusercontent.com/csqZhruMj1vB4gsyM_TFDXAmPhZJ0X4ycid-Ejp0tnAPOJ5sn2cP4EktdQZXiHlp9s2rVrXmgUY=s176-c-k-c0x00ffffff-no-rj",
+  }, // longform-ai=5
   {
     channelId: "UC2WmuBuFq6gL08QYG-JjXKw",
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC2WmuBuFq6gL08QYG-JjXKw",
@@ -37,29 +127,9 @@ export const YOUTUBE_SEED = [
     section: "ai",
     group: "imprensa",
     account: "y_c4f2dedde391",
-    blurb: "Noticiário diário de lançamentos, modelos e ferramentas de inteligência artificial.",
+    blurb: "Noticiário diário em inglês de lançamentos, modelos e ferramentas de IA.",
     avatar: "https://yt3.googleusercontent.com/Aee59geVCIWJz9y7AzVdnY3I1jPR1S4VFF4kIkNJ46VD6jrEGhH2VszD-vKly0XhHz_sLBN3u4A=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=4
-  {
-    channelId: "UCXZCJLdBC09xxGZ6gcdrc6A",
-    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCXZCJLdBC09xxGZ6gcdrc6A",
-    title: "OpenAI",
-    section: "ai",
-    group: "labs",
-    account: "y_bdebf4a1823d",
-    blurb: "Conta oficial da OpenAI. Demos, lançamentos de modelos e eventos de desenvolvedores.",
-    avatar: "https://yt3.googleusercontent.com/MopgmVAFV9BqlzOJ-UINtmutvEPcNe5IbKMmP_4vZZo3vnJXcZGtybUBsXaEVxkmxKyGqX9R=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=0
-  {
-    channelId: "UCC-lyoTfSrcJzA1ab3APAgw",
-    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCC-lyoTfSrcJzA1ab3APAgw",
-    title: "LangChain",
-    section: "ai",
-    group: "builders",
-    account: "y_2de5683b3ab5",
-    blurb: "Framework open-source de agentes e orquestração de LLMs. Tutoriais e demos oficiais.",
-    avatar: "https://yt3.googleusercontent.com/a37xtLmxeZMFCB5Zj4isLgU9hKznc5qceLU4DOfdCdgiZJi0pORPqlc145VTJU6Sne1Ti6RJ=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=0
+  }, // longform-ai=4
 
   // Tech / dev (ranqueados pelo histórico)
   {
@@ -284,26 +354,6 @@ export const YOUTUBE_SEED = [
     blurb: "Agronegócio, mercados e o dia a dia do agro brasileiro.",
     avatar: "https://yt3.googleusercontent.com/5CMKS4JvY1lUq7F40W2vfYNLvkEEm77gd1CIC9RllFUyug-G_WJr2bRk2dUPkdyI380T88fKUw=s176-c-k-c0x00ffffff-no-rj",
   }, // watch=127
-  {
-    channelId: "UCc-Nvq1SYmXVTO5_UwQbg6w",
-    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCc-Nvq1SYmXVTO5_UwQbg6w",
-    title: "Rafael Quintanilha – QuantBrasil",
-    section: "brasil",
-    group: "br-economia",
-    account: "y_c2559941c3af",
-    blurb: "Finanças quantitativas, investimentos e análise de mercado.",
-    avatar: "https://yt3.googleusercontent.com/htOX0IaM8pXyiCUuy3jtVfFlXeiT43Jiio8gooNMHRfoe2uhWKTX8zyWsATks3pu8CCe6hiC=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=34
-  {
-    channelId: "UCNMCTCaFi6fMTyURyGvrY0w",
-    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCNMCTCaFi6fMTyURyGvrY0w",
-    title: "Cortes do Rafael Quintanilha",
-    section: "brasil",
-    group: "br-economia",
-    account: "y_d0a3dbe5f216",
-    blurb: "Cortes de entrevistas e análises de finanças e mercados.",
-    avatar: "https://yt3.googleusercontent.com/dI7lr-3wxe0CFmmYZNn8D0rcEXl-iM0Bc-zPgG7JGP_HP11vSi3f1PbZBb3AG-TU4gTgIsrsZw=s176-c-k-c0x00ffffff-no-rj",
-  }, // watch=41
   {
     channelId: "UCUAqQbPNrc2rXx1LRWl5Q2A",
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCUAqQbPNrc2rXx1LRWl5Q2A",

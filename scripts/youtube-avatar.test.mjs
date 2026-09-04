@@ -14,18 +14,22 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
 test("youtubeAvatarFor returns valid avatar URLs for channels", () => {
-  const openAiFace = youtubeAvatarFor("y_bdebf4a1823d");
-  assert.ok(openAiFace);
-  assert.match(openAiFace, /yt3\.googleusercontent\.com/);
-
   const maestrosFace = youtubeAvatarFor("y_7bf15e60ce27");
   assert.ok(maestrosFace);
   assert.match(maestrosFace, /yt3\.googleusercontent\.com/);
+
+  const quantFace = youtubeAvatarFor("y_c2559941c3af");
+  assert.ok(quantFace);
+  assert.match(quantFace, /yt3\.googleusercontent\.com/);
 
   assert.ok(YOUTUBE_SEED.length >= 30, `seed curto: ${YOUTUBE_SEED.length}`);
   assert.ok(
     YOUTUBE_SEED.some((c) => c.title === "Maestros da IA"),
     "seed deve incluir canal top de IA do watch-history",
+  );
+  assert.ok(
+    YOUTUBE_SEED.some((c) => c.title === "Rafael Quintanilha – QuantBrasil"),
+    "seed deve incluir canal long-form de IA do watch-history",
   );
   assert.ok(
     YOUTUBE_SEED.some((c) => c.title === "PrimosAgro"),
@@ -54,7 +58,7 @@ test("watch-ranked channels have distinct live avatar URLs", () => {
 });
 
 test("resolveFace prefers catalog YouTube avatar over dead story URL", () => {
-  const catalog = youtubeAvatarFor("y_bdebf4a1823d");
+  const catalog = youtubeAvatarFor("y_7bf15e60ce27");
   const dead = "https://yt3.googleusercontent.com/15Akj76BG8IsM5ctgqVwKXArl6IfIVFAbuGaUq-I=s900-c-k-c0x00ffffff-no-rj";
   const face = resolveFace(catalog || null, dead);
   assert.equal(face, catalog);
