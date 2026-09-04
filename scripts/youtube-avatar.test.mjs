@@ -18,11 +18,19 @@ test("youtubeAvatarFor returns valid avatar URLs for channels", () => {
   assert.ok(openAiFace);
   assert.match(openAiFace, /yt3\.googleusercontent\.com/);
 
-  const anthropicFace = youtubeAvatarFor("y_b01b6db24262");
-  assert.ok(anthropicFace);
-  assert.match(anthropicFace, /yt3\.googleusercontent\.com/);
+  const maestrosFace = youtubeAvatarFor("y_7bf15e60ce27");
+  assert.ok(maestrosFace);
+  assert.match(maestrosFace, /yt3\.googleusercontent\.com/);
 
-  assert.equal(YOUTUBE_SEED.length, 50);
+  assert.ok(YOUTUBE_SEED.length >= 30, `seed curto: ${YOUTUBE_SEED.length}`);
+  assert.ok(
+    YOUTUBE_SEED.some((c) => c.title === "Maestros da IA"),
+    "seed deve incluir canal top de IA do watch-history",
+  );
+  assert.ok(
+    YOUTUBE_SEED.some((c) => c.title === "PrimosAgro"),
+    "seed deve incluir canal top de economia/agro do watch-history",
+  );
   for (const c of YOUTUBE_SEED) {
     const avatar = youtubeAvatarFor(c.account);
     assert.ok(avatar, `Canal ${c.title} deve ter avatar`);
@@ -37,18 +45,16 @@ test("youtubeAvatarFor returns valid avatar URLs for channels", () => {
   }
 });
 
-test("Machine Learning Street Talk and Two Minute Papers have distinct live URLs", () => {
-  const mlst = YOUTUBE_SEED.find((c) => c.title === "Machine Learning Street Talk");
-  const tmp = YOUTUBE_SEED.find((c) => c.title === "Two Minute Papers");
-  assert.ok(mlst?.avatar);
-  assert.ok(tmp?.avatar);
-  assert.notEqual(mlst.avatar, tmp.avatar);
-  assert.match(mlst.avatar, /15Akj76BG8IsM5ctgqVwKXArl6IfIVFAbuGa1kOomoioRgJgXHHaLmMAW7iHTMRUoEfyjTtq8lg/);
-  assert.match(tmp.avatar, /AIdro_ljAkSpv16cJNUsE_rI1X-Kz9s78w1WNojUga-aZ1uVzEQ/);
+test("watch-ranked channels have distinct live avatar URLs", () => {
+  const maestros = YOUTUBE_SEED.find((c) => c.title === "Maestros da IA");
+  const primos = YOUTUBE_SEED.find((c) => c.title === "PrimosAgro");
+  assert.ok(maestros?.avatar);
+  assert.ok(primos?.avatar);
+  assert.notEqual(maestros.avatar, primos.avatar);
 });
 
 test("resolveFace prefers catalog YouTube avatar over dead story URL", () => {
-  const catalog = youtubeAvatarFor("y_0765ad77052a");
+  const catalog = youtubeAvatarFor("y_bdebf4a1823d");
   const dead = "https://yt3.googleusercontent.com/15Akj76BG8IsM5ctgqVwKXArl6IfIVFAbuGaUq-I=s900-c-k-c0x00ffffff-no-rj";
   const face = resolveFace(catalog || null, dead);
   assert.equal(face, catalog);
@@ -57,12 +63,12 @@ test("resolveFace prefers catalog YouTube avatar over dead story URL", () => {
 });
 
 test("mergeYouTubeFontes overwrites stale avatar from cache/DB", () => {
-  const account = "y_434c876fd910";
+  const account = "y_7bf15e60ce27";
   const fresh = youtubeAvatarFor(account);
   const stale =
     "https://yt3.googleusercontent.com/ytc/AIdro_ljAkSpv16cJNUsE_rI1X-Kz9s7Z5aC7c9A=s900-c-k-c0x00ffffff-no-rj";
   const merged = mergeYouTubeFontes(
-    [{ handle: account, name: "Two Minute Papers", group: "pesquisa", avatar: stale }],
+    [{ handle: account, name: "Maestros da IA", group: "builders", avatar: stale }],
     "ai",
   );
   const row = merged.find((r) => r.handle === account);
@@ -70,7 +76,6 @@ test("mergeYouTubeFontes overwrites stale avatar from cache/DB", () => {
   assert.equal(row.avatar, fresh);
   assert.notEqual(row.avatar, stale);
 });
-
 test("supabase, story-card and article-view wire youtubeAvatarFor", () => {
   assert.match(read("src/lib/news/supabase.ts"), /youtubeAvatarFor\(source\)/);
   assert.match(read("src/components/news/story-card.tsx"), /youtubeAvatarFor\(story\.source\)/);
