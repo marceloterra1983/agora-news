@@ -62,13 +62,13 @@ test("mergeYouTubeFontes integrates YouTube channels as InfluenceRows without du
 test("youtubeExtrasFor returns section-scoped channels", () => {
   const aiExtras = youtubeExtrasFor("ai");
   assert.ok(aiExtras.every((e) => e.section === "ai"));
-  assert.ok(aiExtras.some((e) => e.name === "Google DeepMind"));
+  assert.ok(aiExtras.some((e) => e.name === "Maestros da IA"));
 
   const techExtras = youtubeExtrasFor("tech");
   assert.ok(techExtras.every((e) => e.section === "tech"));
-  assert.ok(techExtras.some((e) => e.name === "Fireship"));
+  assert.ok(techExtras.some((e) => e.name === "Waldemar Neto - Dev Lab"));
 
   const brExtras = youtubeExtrasFor("brasil");
   assert.ok(brExtras.every((e) => e.section === "brasil"));
-  assert.ok(brExtras.some((e) => e.name === "Manual do Mundo"));
+  assert.ok(brExtras.some((e) => e.name === "PrimosAgro"));
 });
