@@ -50,10 +50,13 @@ export async function statusesFor(handle: string): Promise<Status[]> {
   return statuses;
 }
 
+const EXISTING_ID_RE = /^(\d{1,30}|rss_[a-f0-9]{24}|yt_[a-zA-Z0-9_-]{11})$/i;
+
 export async function existingIds(ids: string[]): Promise<Set<string>> {
   const out = new Set<string>();
   const unique = [...new Set(ids.filter(Boolean))];
-  if (unique.some((id) => !/^(\d{1,30}|rss_[a-f0-9]{24})$/i.test(id))) {
+  // X numérico, RSS e YouTube (yt_ + videoId de 11 chars).
+  if (unique.some((id) => !EXISTING_ID_RE.test(id))) {
     throw new Error("existing_ids_invalid_input");
   }
   for (let i = 0; i < unique.length; i += 80) {
