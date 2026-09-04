@@ -1,28 +1,31 @@
-# Gates: fix YouTube channel avatar broken images
+# Gates: integrar inscrições YouTube do Takeout ao YOUTUBE_SEED
 
-Scope: Corrigir URLs mortas no YOUTUBE_SEED, fallback onError nos avatares, e garantir que o catálogo prevaleça sobre cache morto — nenhum canal exibe ícone de imagem quebrada.
+Scope: Baixar o Takeout compartilhado, selecionar canais relevantes (IA/Tech/Brasil), adicionar ao `YOUTUBE_SEED` com avatares válidos, validar ingestão, landar e publicar.
 
-- [x] G1: Todos os 26 avatares do YOUTUBE_SEED retornam HTTP 200
+- [x] G1: CSV de inscrições do Takeout lido e contabilizado
+  CHECK: test -f /tmp/yt-subs/all-channels.json && node -e "const a=require('/tmp/yt-subs/all-channels.json'); console.log('CHANNELS='+a.length)"
+  EXPECT: CHANNELS=856
+  EVIDENCE: CHANNELS=856
+
+- [x] G2: Novos canais no YOUTUBE_SEED com section/group válidos da taxonomia
+  CHECK: node -e "import{YOUTUBE_SEED}from'./src/lib/news/youtube-catalog.mjs';import{groupOrderFor}from'./src/lib/news/catalog-taxonomy.mjs';const n=YOUTUBE_SEED.length;for(const r of YOUTUBE_SEED){const a=groupOrderFor(r.section);if(!a.includes(r.group))throw new Error(r.title+':'+r.group);}console.log('SEED='+n+' TAXONOMY_OK');"
+  EXPECT: TAXONOMY_OK
+  EVIDENCE: SEED=50 TAXONOMY_OK
+
+- [x] G3: Todos os avatares do YOUTUBE_SEED retornam HTTP 200 + image
   CHECK: node scripts/youtube-avatar-live.mjs
-  EXPECT: OK 26/26
-  EVIDENCE: OK	Canaltech	200	8144 | OK 26/26
+  EXPECT: /OK \d+\/\d+/
+  EVIDENCE: OK	Asimov Academy	200	3083 | OK 50/50
 
-- [x] G2: Machine Learning Street Talk e Two Minute Papers têm URLs distintas e válidas no seed
-  CHECK: node -e "import{YOUTUBE_SEED}from'./src/lib/news/youtube-catalog.mjs';const a=YOUTUBE_SEED.filter(c=>/Machine Learning Street Talk|Two Minute Papers/.test(c.title));if(a.length!==2)throw0;for(const c of a){if(!c.avatar.includes('yt3.googleusercontent.com'))throw0;console.log(c.title+':'+c.avatar.slice(0,60));}console.log('TARGETS_OK');"
-  EXPECT: TARGETS_OK
-  EVIDENCE: Machine Learning Street Talk:https://yt3.googleusercontent.com/15Akj76BG8IsM5ctgqVwKXArl6 | TARGETS_OK
+- [x] G4: Feeds Atom dos novos canais respondem e têm entries
+  CHECK: node scripts/youtube-new-channels-ingest-check.mjs
+  EXPECT: FEEDS_OK
+  EVIDENCE: OK	Asimov Academy	15 | FEEDS_OK 24/24
 
-- [x] G3: StoryCard, ArticleView e FeedProfilePopup têm onError + referrerPolicy no avatar
-  CHECK: node --test scripts/youtube-avatar.test.mjs
-  EXPECT: pass 6
-  EVIDENCE: ℹ todo 0 | ℹ duration_ms 51.72053
-
-- [x] G4: resolveFace / pipeline YouTube preferem avatar do catálogo sobre URL morta
-  CHECK: node --test scripts/youtube-avatar.test.mjs
-  EXPECT: catalog preferred
-  EVIDENCE: catalog preferred | pass 6
-
-- [x] G5: npm test, typecheck e lint passam
+- [ ] G5: npm test, typecheck e lint passam
   CHECK: npm test && npm run typecheck && npm run lint
   EXPECT: fail 0
-  EVIDENCE: > lint | > eslint . --max-warnings=0
+  EVIDENCE: pending
+
+- [ ] G6: PR mergeado na main e deploy prod executado
+  EVIDENCE: pending

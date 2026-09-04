@@ -22,7 +22,7 @@ test("youtubeAvatarFor returns valid avatar URLs for channels", () => {
   assert.ok(anthropicFace);
   assert.match(anthropicFace, /yt3\.googleusercontent\.com/);
 
-  assert.equal(YOUTUBE_SEED.length, 26);
+  assert.equal(YOUTUBE_SEED.length, 50);
   for (const c of YOUTUBE_SEED) {
     const avatar = youtubeAvatarFor(c.account);
     assert.ok(avatar, `Canal ${c.title} deve ter avatar`);
