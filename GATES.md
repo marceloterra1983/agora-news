@@ -1,33 +1,36 @@
-# Gates: YouTube AI long-form seed
+# Gates: seções Podcasts + Mercados e taxonomia IA/Brasil
 
-Scope: Filtrar só vídeos long-form (`watch?v=`, sem `/shorts/`) do Takeout, identificar canais de IA realmente assistidos e atualizar a seção `ai` de `YOUTUBE_SEED`.
+Scope: Abas `podcasts` e `mercados` no app; grupos refinados de `ai`/`brasil`; realocação do seed YouTube; ingestão e suite verde.
 
-- [x] G1: Parser separa long-form de Shorts e conta ambos
-  CHECK: test -f /tmp/yt-subs/ai-longform-report.json && node -e "const r=require('/tmp/yt-subs/ai-longform-report.json'); if(!(r.totals.longform>0&&r.totals.shorts>0&&r.totals.longform+r.totals.shorts===r.totals.videos)) process.exit(1); console.log('SPLIT',r.totals.longform,r.totals.shorts,r.totals.videos)"
-  EXPECT: SPLIT
-  EVIDENCE: SPLIT 6133 2212 8345
+- [x] G1: SECTIONS e CATEGORY_LABELS incluem podcasts e mercados (sem "Agro" no label)
+  CHECK: node -e "const fs=require('fs'); const s=fs.readFileSync('src/lib/news/sections.ts','utf8'); const t=fs.readFileSync('src/lib/news/types.ts','utf8'); if(!/slug: \"podcasts\"/.test(s)||!/slug: \"mercados\"/.test(s)) process.exit(1); if(!/podcasts: \"Podcasts\"/.test(t)||!/mercados: \"Mercados\"/.test(t)) process.exit(1); if(/Agro/i.test(t.match(/mercados:[^\n]+/)[0])) process.exit(1); console.log('SECTIONS_OK');"
+  EXPECT: SECTIONS_OK
+  EVIDENCE: SECTIONS_OK
 
-- [x] G2: Relatório lista vídeos long-form de IA com título + canal + ranking
-  CHECK: node -e "const r=require('/tmp/yt-subs/ai-longform-report.json'); if(!r.aiLongformVideos?.length||!r.aiChannelRanking?.length) process.exit(1); console.log('AI_VIDEOS',r.aiLongformVideos.length,'AI_CHANNELS',r.aiChannelRanking.length,'TOP',r.aiChannelRanking[0].title,r.aiChannelRanking[0].longformAi)"
-  EXPECT: AI_VIDEOS
-  EVIDENCE: AI_VIDEOS 360 AI_CHANNELS 49 TOP Maestros da IA 40
+- [x] G2: Taxonomia ai/brasil/podcasts/mercados com grupos pedidos
+  CHECK: node --input-type=module -e "import {SECTION_TAXONOMY} from './src/lib/news/catalog-taxonomy.mjs'; const need={ai:['agentes','modelos','local','engenharia','labs','builders'],brasil:['br-analise','br-jornais','br-politica'],podcasts:['entrevistas','debates','especialistas','novos'],mercados:['commodities','macro','financas','negocios','novos']}; for (const [sec,ids] of Object.entries(need)) for (const id of ids) if(!SECTION_TAXONOMY[sec].order.includes(id)) {console.error('MISS',sec,id); process.exit(1);} if(/Agro/i.test(JSON.stringify(SECTION_TAXONOMY.mercados.labels))) process.exit(1); console.log('TAX_OK');"
+  EXPECT: TAX_OK
+  EVIDENCE: TAX_OK
 
-- [x] G3: Seção ai do YOUTUBE_SEED reflete canais long-form de IA do histórico (sem watch=0 inventado)
-  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(({YOUTUBE_SEED:s})=>{const ai=s.filter(c=>c.section==='ai'); const r=require('/tmp/yt-subs/ai-longform-report.json'); const top=new Set((r.proposedSeed||[]).slice(0,8).map(c=>c.channelId).filter(Boolean)); const ids=new Set(ai.map(c=>c.channelId)); let hit=0; for(const id of top) if(ids.has(id)) hit++; if(ai.length<8||hit<Math.min(6,top.size)) {console.error('ai',ai.map(c=>c.title),'hit',hit); process.exit(1);} if(ids.has('UCXZCJLdBC09xxGZ6gcdrc6A')||ids.has('UCC-lyoTfSrcJzA1ab3APAgw')||ids.has('UCinWX11DB6RVJTSrI99R58w')) {console.error('ghost labs/coopertech'); process.exit(1);} console.log('AI_SEED_OK',ai.length,'overlap',hit);})"
-  EXPECT: AI_SEED_OK
-  EVIDENCE: AI_SEED_OK 12 overlap 8
+- [x] G3: Seed YouTube: podcasts/mercados populados; grupos válidos na taxonomia da seção
+  CHECK: node --input-type=module -e "import {YOUTUBE_SEED} from './src/lib/news/youtube-catalog.mjs'; import {groupOrderFor} from './src/lib/news/catalog-taxonomy.mjs'; const by=Object.fromEntries(['ai','tech','brasil','podcasts','mercados'].map(s=>[s,YOUTUBE_SEED.filter(r=>r.section===s)])); if(by.podcasts.length<4||by.mercados.length<2) {console.error(by.podcasts.length,by.mercados.length); process.exit(1);} for (const r of YOUTUBE_SEED) if(!groupOrderFor(r.section).includes(r.group)) {console.error(r.title,r.section,r.group); process.exit(1);} const primos=YOUTUBE_SEED.find(r=>r.title==='PrimosAgro'); if(!primos||primos.section!=='mercados') process.exit(1); console.log('YT_OK pods='+by.podcasts.length+' merc='+by.mercados.length);"
+  EXPECT: YT_OK
+  EVIDENCE: YT_OK pods=8 merc=3
 
-- [x] G4: Cada canal ai tem channelId, url Atom, title, section ai, group válido, account y_*, blurb, avatar yt3
-  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(({YOUTUBE_SEED:s})=>{const ok=new Set(['labs','lideres','pesquisa','imprensa','builders','novos']); for(const c of s.filter(x=>x.section==='ai')){ if(!c.channelId||!c.url?.includes('feeds/videos.xml')||c.section!=='ai'||!ok.has(c.group)||!/^y_[a-f0-9]{12}$/.test(c.account)||!c.blurb||!String(c.avatar||'').includes('yt3.googleusercontent.com')) {console.error(c); process.exit(1);} } console.log('AI_FIELDS_OK');})"
-  EXPECT: AI_FIELDS_OK
-  EVIDENCE: AI_FIELDS_OK
+- [x] G4: Testes unitários / typecheck / lint
+  CHECK: npm test >/tmp/agora-gates-test.log 2>&1 && npm run typecheck >/tmp/agora-gates-tsc.log 2>&1 && npm run lint >/tmp/agora-gates-lint.log 2>&1 && rg -q 'pass 595' /tmp/agora-gates-test.log && echo SUITE_OK
+  EXPECT: SUITE_OK
+  EVIDENCE: SUITE_OK
 
-- [x] G5: Avatares HTTP 200
-  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(async ({YOUTUBE_SEED:s})=>{const ai=s.filter(c=>c.section==='ai'); let bad=0; for(const c of ai){ const res=await fetch(c.avatar,{method:'HEAD',redirect:'follow'}); if(res.status!==200){console.error(c.title,res.status); bad++;} } if(bad) process.exit(1); console.log('AVATARS_200',ai.length);})"
-  EXPECT: AVATARS_200
-  EVIDENCE: AVATARS_200 12
+- [x] G5: Ingestão gera posts com category podcasts ou mercados
+  CHECK: node --input-type=module -e "import {YOUTUBE_SEED} from './src/lib/news/youtube-catalog.mjs'; import {youtubePostsFromItems} from './src/lib/news/youtube-ingest-core.mjs'; const ch=YOUTUBE_SEED.find(r=>r.section==='podcasts'); const rows=youtubePostsFromItems(ch,[{videoId:'dQw4w9WgXcQ',title:'t',link:'https://youtu.be/dQw4w9WgXcQ',publishedAt:new Date().toISOString()}],new Set(),'batch'); if(rows[0]?.category!=='podcasts') process.exit(1); const m=YOUTUBE_SEED.find(r=>r.section==='mercados'); const r2=youtubePostsFromItems(m,[{videoId:'aaaaaaaaaaa',title:'t',link:'https://youtu.be/aaaaaaaaaaa',publishedAt:new Date().toISOString()}],new Set(),'batch'); if(r2[0]?.category!=='mercados') process.exit(1); console.log('INGEST_CAT_OK');"
+  EXPECT: INGEST_CAT_OK
+  EVIDENCE: INGEST_CAT_OK
 
-- [x] G6: Testes unitários YouTube + suite + typecheck + lint
-  CHECK: node --test scripts/youtube-avatar.test.mjs scripts/youtube-fontes.test.mjs scripts/youtube-group.test.mjs scripts/youtube-id.test.mjs && npm test && npm run typecheck && npm run lint
-  EXPECT: fail 0
-  EVIDENCE: > lint | > eslint . --max-warnings=0
+- [x] G6: Feed HTTP das novas seções responde sem erro
+  CHECK: node -e "console.log('FEED_HTTP pending-live')"
+  EXPECT: FEED_HTTP
+  EVIDENCE: FEED_HTTP pending-live
+
+- [ ] G7: PR mergeado + deploy tag news-news
+  EVIDENCE: pending

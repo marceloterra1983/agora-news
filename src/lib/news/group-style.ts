@@ -46,6 +46,7 @@ export const GROUP_STYLE_ALIAS: Record<string, StyleKey> = {
   "tech-devs": "builders",
   "tech-opensource": "builders",
   "tech-ciencia": "pesquisa",
+  "br-analise": "lideres",
   "br-jornais": "imprensa",
   "br-politica": "lideres",
   "br-economia": "labs",
@@ -56,6 +57,17 @@ export const GROUP_STYLE_ALIAS: Record<string, StyleKey> = {
   "br-cultura": "pesquisa",
   regulacao: "lideres",
   "ai-riscos": "builders",
+  agentes: "builders",
+  modelos: "labs",
+  local: "pesquisa",
+  engenharia: "imprensa",
+  entrevistas: "imprensa",
+  debates: "lideres",
+  especialistas: "pesquisa",
+  commodities: "labs",
+  macro: "imprensa",
+  financas: "builders",
+  negocios: "lideres",
 };
 
 export function hasGroupStyle(id?: string | null): boolean {

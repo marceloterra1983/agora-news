@@ -10,12 +10,14 @@ import {
 import { CHANNEL_ID_RE } from "../src/lib/news/youtube-core.mjs";
 import { isYouTubeAccount } from "../src/lib/news/rss-id.mjs";
 
-test("seed catalog has curated channels for ai, tech and brasil with valid attributes", () => {
+test("seed catalog has curated channels for ai, tech, brasil, podcasts and mercados", () => {
   assert.ok(YOUTUBE_SEED.length >= 20, "Deve ter pelo menos 20 canais curados");
   const sections = new Set(YOUTUBE_SEED.map((c) => c.section));
   assert.ok(sections.has("ai"));
   assert.ok(sections.has("tech"));
   assert.ok(sections.has("brasil"));
+  assert.ok(sections.has("podcasts"));
+  assert.ok(sections.has("mercados"));
 
   for (const c of YOUTUBE_SEED) {
     assert.match(c.channelId, CHANNEL_ID_RE, `Channel ID inválido: ${c.channelId}`);
@@ -34,13 +36,13 @@ test("mergeYouTubeFontes integrates YouTube channels as InfluenceRows without du
   const row = youtubeFonteRow({
     account: "y_7bf15e60ce27",
     title: "Maestros da IA",
-    group: "builders",
+    group: "agentes",
     channelId: "UCEojuEA0eCL267t_G_cc0Fg",
     blurb: "Tutoriais e análises em português sobre modelos, agentes, Claude Code e skills de IA.",
   });
   assert.equal(row.handle, "y_7bf15e60ce27");
   assert.equal(row.name, "Maestros da IA");
-  assert.equal(row.group, "builders");
+  assert.equal(row.group, "agentes");
 
   const baseX = [{ handle: "openai", name: "OpenAI X", group: "labs" }];
   const mergedAi = mergeYouTubeFontes(baseX, "ai");
@@ -49,7 +51,7 @@ test("mergeYouTubeFontes integrates YouTube channels as InfluenceRows without du
   const ytMaestros = mergedAi.find((r) => r.handle === "y_7bf15e60ce27");
   assert.ok(ytMaestros, "Canal Maestros da IA deve estar presente");
   assert.equal(ytMaestros.name, "Maestros da IA");
-  assert.equal(ytMaestros.group, "builders");
+  assert.equal(ytMaestros.group, "agentes");
   assert.match(ytMaestros.bio, /IA/);
   assert.match(ytMaestros.siteUrl, /https:\/\/www\.youtube\.com\/channel\/UC/);
   assert.match(ytMaestros.avatar, /yt3\.googleusercontent\.com/);
@@ -70,5 +72,13 @@ test("youtubeExtrasFor returns section-scoped channels", () => {
 
   const brExtras = youtubeExtrasFor("brasil");
   assert.ok(brExtras.every((e) => e.section === "brasil"));
-  assert.ok(brExtras.some((e) => e.name === "PrimosAgro"));
+  assert.ok(brExtras.some((e) => e.name === "Deltan Dallagnol"));
+
+  const podExtras = youtubeExtrasFor("podcasts");
+  assert.ok(podExtras.every((e) => e.section === "podcasts"));
+  assert.ok(podExtras.some((e) => e.name === "Flow Podcast"));
+
+  const mercExtras = youtubeExtrasFor("mercados");
+  assert.ok(mercExtras.every((e) => e.section === "mercados"));
+  assert.ok(mercExtras.some((e) => e.name === "PrimosAgro"));
 });

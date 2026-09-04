@@ -10,6 +10,8 @@ export const SECTIONS: SectionDef[] = [
   { slug: "ai", label: "IA", folderName: "AI" },
   { slug: "tech", label: "Tech", folderName: "TECH" },
   { slug: "brasil", label: "Brasil", folderName: "BRASIL" },
+  { slug: "podcasts", label: "Podcasts", folderName: "PODCASTS" },
+  { slug: "mercados", label: "Mercados", folderName: "MERCADOS" },
 ];
 
 export function getSection(slug?: string | null): SectionDef {

@@ -1,9 +1,28 @@
-const AI_ORDER = ["labs", "lideres", "pesquisa", "imprensa", "builders", "regulacao", "ai-riscos", "novos"];
+import { EXTRA_SECTION_TAXONOMY } from "./catalog-taxonomy-extra.mjs";
+
+const AI_ORDER = [
+  "agentes",
+  "modelos",
+  "local",
+  "engenharia",
+  "labs",
+  "lideres",
+  "pesquisa",
+  "imprensa",
+  "builders",
+  "regulacao",
+  "ai-riscos",
+  "novos",
+];
 
 export const SECTION_TAXONOMY = {
   ai: {
     order: AI_ORDER,
     labels: {
+      agentes: "Agentes & Código",
+      modelos: "Modelos & Benchmarks",
+      local: "IA Local & Hardware",
+      engenharia: "Engenharia & Papers",
       labs: "Empresas",
       lideres: "CEOs",
       pesquisa: "Cientistas",
@@ -14,6 +33,10 @@ export const SECTION_TAXONOMY = {
       novos: "Outros",
     },
     hints: {
+      agentes: "Cursor, Claude Code, LangGraph, automações e skills",
+      modelos: "Comparações entre LLMs, lançamentos e benchmarks",
+      local: "Ollama, modelos locais, quantização e hardware",
+      engenharia: "Arquitetura, tutoriais de base e papers aplicados",
       labs: "Contas oficiais das empresas e dos produtos",
       lideres: "Quem comanda as empresas de IA",
       pesquisa: "Pesquisadores e autores de papers",
@@ -61,6 +84,7 @@ export const SECTION_TAXONOMY = {
   },
   brasil: {
     order: [
+      "br-analise",
       "br-jornais",
       "br-politica",
       "br-economia",
@@ -72,6 +96,7 @@ export const SECTION_TAXONOMY = {
       "novos",
     ],
     labels: {
+      "br-analise": "Análise & Bastidores",
       "br-jornais": "Jornais",
       "br-politica": "Política",
       "br-economia": "Economia",
@@ -83,6 +108,7 @@ export const SECTION_TAXONOMY = {
       novos: "Outros",
     },
     hints: {
+      "br-analise": "Comentaristas, bastidores e leitura crítica do noticiário",
       "br-jornais": "Redações gerais do noticiário brasileiro",
       "br-politica": "Cobertura de Brasília, Congresso e poder",
       "br-economia": "Mercado, fiscal e negócios no Brasil",
@@ -94,6 +120,7 @@ export const SECTION_TAXONOMY = {
       novos: "Sem grupo definido ou adicionados por você.",
     },
   },
+  ...EXTRA_SECTION_TAXONOMY,
 };
 
 function slugifySection(name) {
