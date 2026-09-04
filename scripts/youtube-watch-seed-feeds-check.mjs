@@ -8,6 +8,9 @@ import { extractChannelVideosFromHtml } from "../src/lib/news/youtube-core.mjs";
 
 const WATCH_TITLES = new Set([
   "Maestros da IA",
+  "Rafael Quintanilha – QuantBrasil",
+  "Vini Lana",
+  "Sandeco",
   "PrimosAgro",
   "Deltan Dallagnol",
   "Flow Podcast",
@@ -17,7 +20,6 @@ const WATCH_TITLES = new Set([
   "André Marsiglia",
   "TV 247",
   "Kim Kataguiri",
-  "Rafael Quintanilha – QuantBrasil",
   "Talk Flow",
 ]);
 

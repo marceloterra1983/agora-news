@@ -1,33 +1,33 @@
-# Gates: YouTube seed from watch history
+# Gates: YouTube AI long-form seed
 
-Scope: Recalibrar `YOUTUBE_SEED` pelos canais mais assistidos no Takeout (`histórico-de-visualização.html`), não só pelas 856 inscrições.
+Scope: Filtrar só vídeos long-form (`watch?v=`, sem `/shorts/`) do Takeout, identificar canais de IA realmente assistidos e atualizar a seção `ai` de `YOUTUBE_SEED`.
 
-- [x] G1: Análise do Takeout documenta zip + watch-history + top canais
-  CHECK: test -f /tmp/yt-subs/watch-top150.json && node -e "const a=require('/tmp/yt-subs/watch-top150.json'); if(a.length<50||!a[0].views) process.exit(1); console.log('TOP1',a[0].title,a[0].views,'N',a.length)"
-  EXPECT: TOP1
-  EVIDENCE: TOP1 WAR GESSO 141 N 150
+- [x] G1: Parser separa long-form de Shorts e conta ambos
+  CHECK: test -f /tmp/yt-subs/ai-longform-report.json && node -e "const r=require('/tmp/yt-subs/ai-longform-report.json'); if(!(r.totals.longform>0&&r.totals.shorts>0&&r.totals.longform+r.totals.shorts===r.totals.videos)) process.exit(1); console.log('SPLIT',r.totals.longform,r.totals.shorts,r.totals.videos)"
+  EXPECT: SPLIT
+  EVIDENCE: SPLIT 6133 2212 8345
 
-- [x] G2: Catálogo inclui canais de alto consumo (Maestros da IA, PrimosAgro, Deltan, Flow)
-  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(({YOUTUBE_SEED:s})=>{const t=new Set(s.map(c=>c.title)); for (const n of ['Maestros da IA','PrimosAgro','Deltan Dallagnol','Flow Podcast','Inteligência Ltda','CazéTV','Waldemar Neto - Dev Lab']) { if(!t.has(n)) { console.error('MISSING',n); process.exit(1);} } console.log('WATCH_SEED_OK',s.length);})"
-  EXPECT: WATCH_SEED_OK
-  EVIDENCE: WATCH_SEED_OK 36
+- [x] G2: Relatório lista vídeos long-form de IA com título + canal + ranking
+  CHECK: node -e "const r=require('/tmp/yt-subs/ai-longform-report.json'); if(!r.aiLongformVideos?.length||!r.aiChannelRanking?.length) process.exit(1); console.log('AI_VIDEOS',r.aiLongformVideos.length,'AI_CHANNELS',r.aiChannelRanking.length,'TOP',r.aiChannelRanking[0].title,r.aiChannelRanking[0].longformAi)"
+  EXPECT: AI_VIDEOS
+  EVIDENCE: AI_VIDEOS 360 AI_CHANNELS 49 TOP Maestros da IA 40
 
-- [x] G3: Canais do seed têm avatar googleusercontent e account y_*
-  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(({YOUTUBE_SEED:s})=>{for(const c of s){if(!/^y_[a-f0-9]{12}$/.test(c.account)) process.exit(1); if(!String(c.avatar||'').includes('yt3.googleusercontent.com')) {console.error(c.title); process.exit(1);} const tok=c.avatar.replace(/^https:\\/\\/yt3\\.googleusercontent\\.com\\//,'').split('=')[0]; if(tok.length<40){console.error('short',c.title); process.exit(1);} } console.log('AVATARS_OK',s.length);})"
-  EXPECT: AVATARS_OK
-  EVIDENCE: AVATARS_OK 36
+- [x] G3: Seção ai do YOUTUBE_SEED reflete canais long-form de IA do histórico (sem watch=0 inventado)
+  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(({YOUTUBE_SEED:s})=>{const ai=s.filter(c=>c.section==='ai'); const r=require('/tmp/yt-subs/ai-longform-report.json'); const top=new Set((r.proposedSeed||[]).slice(0,8).map(c=>c.channelId).filter(Boolean)); const ids=new Set(ai.map(c=>c.channelId)); let hit=0; for(const id of top) if(ids.has(id)) hit++; if(ai.length<8||hit<Math.min(6,top.size)) {console.error('ai',ai.map(c=>c.title),'hit',hit); process.exit(1);} if(ids.has('UCXZCJLdBC09xxGZ6gcdrc6A')||ids.has('UCC-lyoTfSrcJzA1ab3APAgw')||ids.has('UCinWX11DB6RVJTSrI99R58w')) {console.error('ghost labs/coopertech'); process.exit(1);} console.log('AI_SEED_OK',ai.length,'overlap',hit);})"
+  EXPECT: AI_SEED_OK
+  EVIDENCE: AI_SEED_OK 12 overlap 8
 
-- [x] G4: Testes unitários do catálogo YouTube passam
-  CHECK: node --test scripts/youtube-avatar.test.mjs scripts/youtube-fontes.test.mjs scripts/youtube-group.test.mjs scripts/youtube-id.test.mjs
-  EXPECT: fail 0
-  EVIDENCE: pass 19 fail 0
+- [x] G4: Cada canal ai tem channelId, url Atom, title, section ai, group válido, account y_*, blurb, avatar yt3
+  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(({YOUTUBE_SEED:s})=>{const ok=new Set(['labs','lideres','pesquisa','imprensa','builders','novos']); for(const c of s.filter(x=>x.section==='ai')){ if(!c.channelId||!c.url?.includes('feeds/videos.xml')||c.section!=='ai'||!ok.has(c.group)||!/^y_[a-f0-9]{12}$/.test(c.account)||!c.blurb||!String(c.avatar||'').includes('yt3.googleusercontent.com')) {console.error(c); process.exit(1);} } console.log('AI_FIELDS_OK');})"
+  EXPECT: AI_FIELDS_OK
+  EVIDENCE: AI_FIELDS_OK
 
-- [x] G4b: Suite completa, typecheck e lint passam
-  CHECK: npm test && npm run typecheck && npm run lint
+- [x] G5: Avatares HTTP 200
+  CHECK: node -e "import('./src/lib/news/youtube-catalog.mjs').then(async ({YOUTUBE_SEED:s})=>{const ai=s.filter(c=>c.section==='ai'); let bad=0; for(const c of ai){ const res=await fetch(c.avatar,{method:'HEAD',redirect:'follow'}); if(res.status!==200){console.error(c.title,res.status); bad++;} } if(bad) process.exit(1); console.log('AVATARS_200',ai.length);})"
+  EXPECT: AVATARS_200
+  EVIDENCE: AVATARS_200 12
+
+- [x] G6: Testes unitários YouTube + suite + typecheck + lint
+  CHECK: node --test scripts/youtube-avatar.test.mjs scripts/youtube-fontes.test.mjs scripts/youtube-group.test.mjs scripts/youtube-id.test.mjs && npm test && npm run typecheck && npm run lint
   EXPECT: fail 0
   EVIDENCE: > lint | > eslint . --max-warnings=0
-
-- [x] G5: Feeds Atom/HTML dos canais de watch-history respondem
-  CHECK: node scripts/youtube-watch-seed-feeds-check.mjs
-  EXPECT: FEEDS_OK
-  EVIDENCE: OK	CazéTV	atom	15 | FEEDS_OK 12/12

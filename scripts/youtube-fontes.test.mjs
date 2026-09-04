@@ -27,32 +27,32 @@ test("seed catalog has curated channels for ai, tech and brasil with valid attri
     assert.ok(c.blurb.length > 0, "Blurb editorial deve existir");
   }
 
-  assert.equal(youtubeLabelFor("y_bdebf4a1823d"), "OpenAI");
+  assert.equal(youtubeLabelFor("y_7bf15e60ce27"), "Maestros da IA");
 });
 
 test("mergeYouTubeFontes integrates YouTube channels as InfluenceRows without duplicates", () => {
   const row = youtubeFonteRow({
-    account: "y_bdebf4a1823d",
-    title: "OpenAI",
-    group: "labs",
-    channelId: "UCXZCJLdBC09xxGZ6gcdrc6A",
-    blurb: "Conta oficial da OpenAI",
+    account: "y_7bf15e60ce27",
+    title: "Maestros da IA",
+    group: "builders",
+    channelId: "UCEojuEA0eCL267t_G_cc0Fg",
+    blurb: "Tutoriais e análises em português sobre modelos, agentes, Claude Code e skills de IA.",
   });
-  assert.equal(row.handle, "y_bdebf4a1823d");
-  assert.equal(row.name, "OpenAI");
-  assert.equal(row.group, "labs");
+  assert.equal(row.handle, "y_7bf15e60ce27");
+  assert.equal(row.name, "Maestros da IA");
+  assert.equal(row.group, "builders");
 
   const baseX = [{ handle: "openai", name: "OpenAI X", group: "labs" }];
   const mergedAi = mergeYouTubeFontes(baseX, "ai");
   assert.ok(mergedAi.length > baseX.length);
 
-  const ytOpenAi = mergedAi.find((r) => r.handle === "y_bdebf4a1823d");
-  assert.ok(ytOpenAi, "Canal OpenAI deve estar presente");
-  assert.equal(ytOpenAi.name, "OpenAI");
-  assert.equal(ytOpenAi.group, "labs");
-  assert.match(ytOpenAi.bio, /OpenAI/);
-  assert.match(ytOpenAi.siteUrl, /https:\/\/www\.youtube\.com\/channel\/UC/);
-  assert.match(ytOpenAi.avatar, /yt3\.googleusercontent\.com/);
+  const ytMaestros = mergedAi.find((r) => r.handle === "y_7bf15e60ce27");
+  assert.ok(ytMaestros, "Canal Maestros da IA deve estar presente");
+  assert.equal(ytMaestros.name, "Maestros da IA");
+  assert.equal(ytMaestros.group, "builders");
+  assert.match(ytMaestros.bio, /IA/);
+  assert.match(ytMaestros.siteUrl, /https:\/\/www\.youtube\.com\/channel\/UC/);
+  assert.match(ytMaestros.avatar, /yt3\.googleusercontent\.com/);
 
   // Sem duplicação
   const twice = mergeYouTubeFontes(mergedAi, "ai");

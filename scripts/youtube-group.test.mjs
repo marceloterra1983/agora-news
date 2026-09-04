@@ -15,7 +15,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
 test("youtubeGroupOf returns the seed group, not Outros", () => {
-  assert.equal(youtubeGroupOf("y_bdebf4a1823d"), "labs");
+  assert.equal(youtubeGroupOf("y_7bf15e60ce27"), "builders"); // Maestros da IA
+  assert.equal(youtubeGroupOf("y_c2559941c3af"), "builders"); // QuantBrasil
   assert.equal(youtubeGroupOf("y_f01f6dfb789c"), "tech-devs"); // Waldemar Neto
   assert.equal(youtubeGroupOf("y_dea25cfeb371"), "br-economia"); // PrimosAgro
   assert.equal(youtubeGroupOf("y_aa92dc0a0287"), "br-politica"); // Deltan
