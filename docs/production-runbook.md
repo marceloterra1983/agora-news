@@ -79,8 +79,17 @@ O timer de utilizador `agora-news-backup.timer` dispara
 `agora-news-backup.timer.d/offgrid.conf` corre o job às **03:21** (horário
 local), fora da grade do ingest. O serviço tem `Restart=on-failure`
 (`RestartSec=20min`, `StartLimitBurst=3` em 3 h). O dump
-(`scripts/pg-dump-retry.mjs`, #147) faz até 3 tentativas com teto de 5 min
-e ficheiro limpo. O remote privado `gdrive:BACKUP/dev/news/`
+(`scripts/pg-dump-retry.mjs`) faz até 3 tentativas com teto de **15 min**
+(`PG_DUMP_TIMEOUT_MS` por omissão 900000) e ficheiro limpo a cada uma. Lê
+`BACKUP_DATABASE_URL` do `.env` do host quando essa variável existe (via
+directa para `pg_dump`); se estiver ausente ou vazia, cai para `DATABASE_URL`.
+O significado de `DATABASE_URL` não muda: a app continua no session pooler.
+O valor de `BACKUP_DATABASE_URL` não entra no repositório; o coordenador
+preenche-o no `.env` de produção depois do merge. O host directo do plano
+Free resolve só em AAAA; esta máquina tem rota IPv6 e o dump completo pela
+via directa terminou (medido 2026-09-21, ver [backup-strategy.md](backup-strategy.md)
+Passo 1). Se a rota IPv6 cair, omitir `BACKUP_DATABASE_URL` faz o dump voltar
+ao pooler com o mesmo teto de 15 min. O remote privado `gdrive:BACKUP/dev/news/`
 conserva os 30 snapshots remotos mais recentes. Cada snapshot contém o dump
 custom do Postgres, bundle Git, imagem Docker, manifesto, crontab, wrapper de
 alertas e hashes; o `.env` é criptografado com age. Os scripts evitam

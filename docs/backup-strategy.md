@@ -1,11 +1,11 @@
 # Estratégia de backup — Agora News
 
-Medido em 2026-09-21. Só leitura na base (`SELECT`). Este documento não altera
-scripts de backup.
+Medido em 2026-09-21. Só leitura na base (`SELECT`) para o desenho; o Passo 1
+altera `scripts/pg-dump-retry.mjs` (teto 15 min + `BACKUP_DATABASE_URL` opcional).
 
-**Suposição:** o host continua a ter IPv6 até `db.<ref>.supabase.co`, portanto a
-conexão direta (recomendada pela documentação oficial para `pg_dump`) é usável
-sem o add-on IPv4.
+**Suposição:** o coordenador preenche `BACKUP_DATABASE_URL` no `.env` de
+produção depois do merge; até lá o dump usa `DATABASE_URL` (pooler) com o teto
+novo de 15 min.
 
 ## Problema
 
@@ -30,9 +30,10 @@ descartável.
 | Drop-in real | `agora-news-backup.timer.d/offgrid.conf` → **03:21** (fora da grade do ingest `*:00/15`) |
 | Agenda efetiva / runbook | timer systemd `agora-news-backup.timer` às **03:21** |
 | Serviço | `backup-production.sh && backup-to-drive.sh` |
-| Dump | `pg_dump --format=custom --no-owner --no-acl`, gzip (TOC: `Compression: gzip`); até 3 tentativas em `scripts/pg-dump-retry.mjs` (#147), ficheiro limpo a cada uma |
-| Ligação | `DATABASE_URL` = session pooler, porta 5432, `sslmode=require` |
-| Teto | `PG_DUMP_TIMEOUT_MS=300000` (3 tentativas, espera 60 s, ficheiro limpo a cada tentativa) |
+| Dump | `pg_dump --format=custom --no-owner --no-acl`, gzip (TOC: `Compression: gzip`); até 3 tentativas em `scripts/pg-dump-retry.mjs`, ficheiro limpo a cada uma |
+| Ligação da app | `DATABASE_URL` = session pooler, porta 5432, `sslmode=require` (inalterado) |
+| Ligação do dump | `BACKUP_DATABASE_URL` se definida (via directa, IPv6); senão `DATABASE_URL` |
+| Teto | `PG_DUMP_TIMEOUT_MS` por omissão **900000** (15 min; 3 tentativas, espera 60 s, ficheiro limpo a cada tentativa) |
 | systemd extra | `Restart=on-failure` / `RestartSec=20min` / `StartLimitBurst=3` em 3 h |
 | Cliente | `pg_dump` 18.6 contra servidor 17.6.1.155 (aceite pela documentação do `pg_dump`) |
 | Snapshot | dump + bundle git + `docker save news-news:latest` gzip + `.env` age + compose/Dockerfile/runbook/crontab/hashes |
@@ -378,22 +379,40 @@ updates, mas o restore deixaria de ser um comando; o que quebra hoje é o
 
 ## Plano (passos pequenos, critério verificável)
 
-Nenhum destes passos muda scripts neste PR — só o desenho. O Passo 3
-foi executado uma vez contra o dump local (só leitura) para validar o bloco.
+O Passo 1 muda `scripts/pg-dump-retry.mjs` (este PR). Os passos 2–5 ainda
+são desenho. O Passo 3 foi executado uma vez contra o dump local (só leitura)
+para validar o bloco.
 
 ### Passo 1 — `pg_dump` pela conexão direta + teto 15 min
 
-Alterar `pg-dump-retry.mjs` / env do serviço para `PGHOST=db.<ref>.supabase.co`
-(IPv6), manter 3 tentativas e ficheiro limpo, `PG_DUMP_TIMEOUT_MS=900000`.
+**Implementado no código** (`scripts/pg-dump-retry.mjs`):
 
-**Pronto quando:**
+- URL do dump = `BACKUP_DATABASE_URL` (trim; se vazia ou ausente, `DATABASE_URL`).
+- Teto por omissão `PG_DUMP_TIMEOUT_MS=900000` (15 min). 3 tentativas e ficheiro
+  limpo por tentativa mantêm-se.
+- `DATABASE_URL` não muda de significado: a app continua no session pooler.
+- `BACKUP_DATABASE_URL` **não** foi escrita no `.env` de produção (o
+  coordenador decide). `--jobs` / formato directory **não** entrou: a via
+  directa é utilizável neste host e `posts` domina o `COPY`.
 
-- `getent ahosts db.<ref>.supabase.co` devolve AAAA e o dump da madrugada
-  seguinte termina na 1.ª tentativa.
+**Medido neste host, 2026-09-21** (credenciais via `node --env-file`; hosts e
+ref não entram neste documento):
+
+| Prova | Via directa | Session pooler |
+|---|---|---|
+| DNS | `getent ahosts` → só AAAA (`hasA=false`); `ahostsv4` status 15, vazio | A (IPv4); `ahostsv6` só mapped-v4 |
+| `psql -c 'select 1'` | status 0, ~1,8 s | status 0, ~1,8 s |
+| `pg_dump --format=custom --no-owner --no-acl` completo | status 0, **77954 ms**, 25813096 B | status 0, **76396 ms**, 25813096 B |
+
+A máquina tem rota IPv6 default. O host directo do plano Free é só IPv6; se
+essa rota cair, omitir `BACKUP_DATABASE_URL` faz o dump voltar ao pooler.
+
+**Ainda operacional (depois do merge + env no host):**
+
+- O dump da madrugada seguinte termina na 1.ª tentativa.
 - Sete noites seguidas sem `SSL connection has been closed` nem
   `pg_dump_timeout` no journal.
-- `scripts/pg-dump-retry.test.mjs` continua verde (o contrato de retry não
-  muda).
+- `scripts/pg-dump-retry.test.mjs` verde (contrato de retry + URL + teto).
 
 ### Passo 2 — Snapshot diário sem imagem Docker (imagem semanal ou on-digest)
 
@@ -522,13 +541,11 @@ num banco de teste.
    ficou verde”. O script hoje prova que o arquivo abre, não que os dados
    voltam.
 
-## PR Plan (implementação futura)
-
-Este PR (docs) não muda scripts.
+## PR Plan
 
 | PR | Título | Ficheiros | Depende |
 |---|---|---|---|
-| A | `fix(backup): pg_dump via conexão direta e teto 15 min` | `scripts/pg-dump-retry.mjs`, testes, drop-in systemd documentado no runbook | — |
+| A | `fix(backup): pg_dump via conexão direta e teto 15 min` | `scripts/pg-dump-retry.mjs`, testes, runbook, esta página — **este PR** | — |
 | B | `fix(backup): imagem Docker e bundle git só semanal/on-digest` | `scripts/backup-production.sh`, `scripts/backup-contract.test.mjs`, runbook | A recomendado |
 | C | `docs(backup): ensaio de restore local da tabela posts` | runbook + script de ensaio read-only (opcional `scripts/backup-restore-trial.sh`) | A ou dump atual |
 | D | `feat(backup): incremental posts por updated_at` | scripts novos, índice SQL, testes de restore delta | só se o gatilho do passo 5 disparar |

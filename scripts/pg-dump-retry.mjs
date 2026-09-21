@@ -1,11 +1,15 @@
-// pg_dump com nova tentativa. A base é remota (pooler): em 2026-09-21 o backup falhou duas
-// vezes seguidas — ligação cortada a meio do COPY e, na repetição, estouro dos 5 min — e
-// passou sozinho minutos depois. Um teto maior não cura ligação cortada; repetir cura os dois.
+// pg_dump com nova tentativa. BACKUP_DATABASE_URL (via directa) se existir; senão
+// DATABASE_URL (a app continua no pooler). Teto 15 min por omissão: o COPY de posts
+// já chegou a partir a ligação e a estourar 5 min no pooler (2026-09-21).
 // Cada tentativa começa de um ficheiro limpo: um dump parcial nunca é aproveitado.
 import { spawnSync } from "node:child_process";
 import { rmSync } from "node:fs";
 
-const url = new URL(process.env.DATABASE_URL);
+const rawUrl = (process.env.BACKUP_DATABASE_URL || "").trim() || process.env.DATABASE_URL;
+const url = new URL(rawUrl);
+const attempts = Number(process.env.PG_DUMP_ATTEMPTS || 3);
+const timeout = Number(process.env.PG_DUMP_TIMEOUT_MS || 900_000);
+const waitMs = Number(process.env.PG_DUMP_RETRY_WAIT_MS || 60_000);
 const env = {
   ...process.env,
   PGHOST: url.hostname,
@@ -15,13 +19,12 @@ const env = {
   PGDATABASE: decodeURIComponent(url.pathname.replace(/^\/+/, "")) || "postgres",
   PGSSLMODE: url.searchParams.get("sslmode") || "require",
   PGCONNECT_TIMEOUT: "30",
+  PG_DUMP_TIMEOUT_MS: String(timeout),
 };
 delete env.DATABASE_URL;
+delete env.BACKUP_DATABASE_URL;
 
 const bin = process.env.PG_DUMP_BIN || "pg_dump";
-const attempts = Number(process.env.PG_DUMP_ATTEMPTS || 3);
-const timeout = Number(process.env.PG_DUMP_TIMEOUT_MS || 300_000);
-const waitMs = Number(process.env.PG_DUMP_RETRY_WAIT_MS || 60_000);
 const out = process.env.BACKUP_DUMP;
 
 for (let i = 1; i <= attempts; i++) {
