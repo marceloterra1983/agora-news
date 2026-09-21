@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   applyStoredTranslation,
+  chromeSourceIsPt,
   parseChrome,
   pickStoredPt,
   resetTranslateSkip,
@@ -126,4 +127,35 @@ test("Portuguese text is returned without calling the network", async (t) => {
   };
   assert.equal(await translateToPt("uma pesquisa para os dados"), "uma pesquisa para os dados");
   assert.equal(calls, 0);
+});
+
+test("short Portuguese without accents is kept as-is when Google detects pt", async (t) => {
+  resetTranslateSkip();
+  const previousFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+    resetTranslateSkip();
+  });
+  const SHORT_PT = "Charge do Aroeira";
+  const hits = [];
+  let fails = 0;
+  globalThis.fetch = async (input) => {
+    hits.push(String(input));
+    return Response.json([[SHORT_PT, "pt"]]);
+  };
+  assert.equal(pickStoredPt(SHORT_PT, SHORT_PT), "", "heuristic alone still rejects it");
+  assert.equal(await translateToPt(SHORT_PT, { timeout: 200, onFail: () => fails++ }), SHORT_PT);
+  assert.equal(fails, 0);
+  assert.equal(hits.length, 1, "no fallback provider is consulted");
+  assert.equal(applyStoredTranslation(SHORT_PT, SHORT_PT).translation_pt, SHORT_PT);
+  assert.equal(pickStoredPt(EN, EN), "", "English echo is still dropped");
+});
+
+test("chromeSourceIsPt needs every segment detected as pt", () => {
+  assert.equal(chromeSourceIsPt([["Caiu na Rede!", "pt"]]), true);
+  assert.equal(chromeSourceIsPt([["a", "pt-BR"], ["b", "pt"]]), true);
+  assert.equal(chromeSourceIsPt([["As ações caíram.", "en"]]), false);
+  assert.equal(chromeSourceIsPt([["a", "pt"], ["b", "en"]]), false);
+  assert.equal(chromeSourceIsPt(["texto"]), false);
+  assert.equal(chromeSourceIsPt(null), false);
 });

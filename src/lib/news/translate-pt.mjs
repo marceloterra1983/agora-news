@@ -5,6 +5,31 @@ const GTX_URL = "https://translate.googleapis.com/translate_a/single";
 const CHROME_URL = "https://clients5.google.com/translate_a/t";
 const MYMEMORY_URL = "https://api.mymemory.translated.net/get";
 
+/**
+ * Texto curto em português sem acento nem partícula ("Charge do Aroeira") escapa
+ * do looksPortuguese; o app pedia pt→pt, rejeitava o eco e tentava de novo a cada
+ * ingest, até esgotar a cota dos tradutores. O idioma detectado pelo Google é o
+ * sinal confiável: fonte "pt" devolve o original e fica registrada aqui para o
+ * pickStoredPt aceitá-la.
+ * ponytail: registro em memória, só vale dentro do processo que traduziu.
+ */
+const SOURCE_IS_PT = "\u0000source-is-pt";
+const confirmedPt = new Set();
+
+function confirmPt(text) {
+  if (confirmedPt.size > 5_000) confirmedPt.clear();
+  confirmedPt.add(text);
+}
+
+/** @param {unknown} data resposta dict-chrome-ex: [[texto, idioma], ...] */
+export function chromeSourceIsPt(data) {
+  return (
+    Array.isArray(data) &&
+    data.length > 0 &&
+    data.every((part) => Array.isArray(part) && typeof part[1] === "string" && /^pt\b/i.test(part[1]))
+  );
+}
+
 const skipUntil = { gtx: 0, mymemory: 0 };
 
 export function resetTranslateSkip() {
@@ -16,7 +41,7 @@ export function resetTranslateSkip() {
 export function pickStoredPt(original, candidate) {
   const pt = String(candidate || "").trim();
   if (!pt) return "";
-  if (!looksPortuguese(pt)) return "";
+  if (!looksPortuguese(pt) && !confirmedPt.has(pt)) return "";
   return pt;
 }
 
@@ -74,7 +99,9 @@ async function translateChrome(chunk, opts, fetchImpl) {
   })}`;
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(opts.timeout ?? 8_000) });
   if (!res.ok) return "";
-  return parseChrome(await readJson(res));
+  const data = await readJson(res);
+  if (chromeSourceIsPt(data)) return SOURCE_IS_PT;
+  return parseChrome(data);
 }
 
 async function translateGtx(chunk, opts, fetchImpl) {
@@ -130,6 +157,7 @@ async function translateChunk(chunk, opts, fetchImpl) {
   for (const provider of providers) {
     try {
       const out = await provider(chunk, opts, fetchImpl);
+      if (out === SOURCE_IS_PT) return chunk;
       if (pickStoredPt(chunk, out)) return out;
     } catch {
       /* próximo provedor */
@@ -157,5 +185,8 @@ export async function translateToPt(text, opts = {}) {
     }
     out.push(translated);
   }
-  return out.join("").trim();
+  const joined = out.join("").trim();
+  // Todos os pedaços voltaram intactos: a fonte já era português.
+  if (joined === src) confirmPt(src);
+  return joined;
 }
