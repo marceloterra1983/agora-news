@@ -1,6 +1,7 @@
 export function resetTranslateSkip(): void;
 export function parseChrome(data: unknown): string;
 export function chromeSourceIsPt(data: unknown): boolean;
+export function isConfirmedPt(text: string): boolean;
 export function pickStoredPt(original: string, candidate: string): string;
 export function applyStoredTranslation(
   original: string,

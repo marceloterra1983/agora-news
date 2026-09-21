@@ -10,11 +10,19 @@ const MYMEMORY_URL = "https://api.mymemory.translated.net/get";
  * do looksPortuguese; o app pedia pt→pt, rejeitava o eco e tentava de novo a cada
  * ingest, até esgotar a cota dos tradutores. O idioma detectado pelo Google é o
  * sinal confiável: fonte "pt" devolve o original e fica registrada aqui para o
- * pickStoredPt aceitá-la.
- * ponytail: registro em memória, só vale dentro do processo que traduziu.
+ * pickStoredPt aceitá-la e para o postsNeedingPt não a selecionar de novo.
+ * Confia-se na detecção do Google sem segunda checagem: espanhol ou galego curto
+ * detectado como "pt" fica gravado como veio.
+ * ponytail: registro em memória; depois de reiniciar o processo cada linha custa
+ * uma consulta ao Google, uma vez. Coluna no banco se isso pesar.
  */
 const SOURCE_IS_PT = "\u0000source-is-pt";
 const confirmedPt = new Set();
+
+/** @param {string} text */
+export function isConfirmedPt(text) {
+  return confirmedPt.has(String(text || "").trim());
+}
 
 function confirmPt(text) {
   if (confirmedPt.size > 5_000) confirmedPt.clear();
@@ -157,7 +165,7 @@ async function translateChunk(chunk, opts, fetchImpl) {
   for (const provider of providers) {
     try {
       const out = await provider(chunk, opts, fetchImpl);
-      if (out === SOURCE_IS_PT) return chunk;
+      if (out === SOURCE_IS_PT) return SOURCE_IS_PT;
       if (pickStoredPt(chunk, out)) return out;
     } catch {
       /* próximo provedor */
@@ -177,16 +185,22 @@ export async function translateToPt(text, opts = {}) {
   if (looksPortuguese(src)) return src;
   const fetchImpl = opts.fetch ?? fetch;
   const out = [];
+  let allSourcePt = true;
   for (const chunk of chunkText(src, opts.chunk ?? 1500)) {
     const translated = await translateChunk(chunk, opts, fetchImpl);
     if (!translated) {
       opts.onFail?.();
       return "";
     }
-    out.push(translated);
+    if (translated === SOURCE_IS_PT) {
+      out.push(chunk);
+    } else {
+      allSourcePt = false;
+      out.push(translated);
+    }
   }
   const joined = out.join("").trim();
-  // Todos os pedaços voltaram intactos: a fonte já era português.
-  if (joined === src) confirmPt(src);
+  // Só o Google confirma: eco de outro provedor não entra no registro.
+  if (allSourcePt && joined === src) confirmPt(src);
   return joined;
 }

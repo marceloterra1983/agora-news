@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   applyStoredTranslation,
   chromeSourceIsPt,
+  isConfirmedPt,
   parseChrome,
   pickStoredPt,
   resetTranslateSkip,
@@ -158,4 +159,30 @@ test("chromeSourceIsPt needs every segment detected as pt", () => {
   assert.equal(chromeSourceIsPt([["a", "pt"], ["b", "en"]]), false);
   assert.equal(chromeSourceIsPt(["texto"]), false);
   assert.equal(chromeSourceIsPt(null), false);
+});
+
+test("only Google confirms a Portuguese source; another provider's echo does not", async (t) => {
+  resetTranslateSkip();
+  const previousFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+    resetTranslateSkip();
+  });
+  const ECHO = "Voo para Lisboa com escala";
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.includes("clients5.google.com")) return new Response("nope", { status: 500 });
+    if (url.includes("translate.googleapis.com")) return Response.json([[[ECHO + " para voce", ECHO]], null, "en"]);
+    return new Response("nope", { status: 500 });
+  };
+  await translateToPt(ECHO, { timeout: 200 });
+  assert.equal(isConfirmedPt(ECHO), false);
+
+  const MULTI = "Charge do Aroeira. ".repeat(12).trim();
+  globalThis.fetch = async (input) => {
+    const q = new URL(String(input)).searchParams.get("q");
+    return Response.json([[q, "pt"]]);
+  };
+  assert.equal(await translateToPt(MULTI, { timeout: 200, chunk: 60 }), MULTI);
+  assert.equal(isConfirmedPt(MULTI), true);
 });

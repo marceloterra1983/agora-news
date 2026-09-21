@@ -2,10 +2,13 @@
 # acaba (gtxFail=40 em 2026-09-21). translate-pt.mjs já consulta LIBRETRANSLATE_URL.
 services:
   news:
+    # Sem condition: o primeiro arranque baixa modelos e estouraria os 120 s do deploy.
+    depends_on:
+      - libretranslate
     environment:
       LIBRETRANSLATE_URL: http://libretranslate:5000
   libretranslate:
-    image: libretranslate/libretranslate:latest
+    image: libretranslate/libretranslate@sha256:7e7b72b0983c9d5f1e041ddac962ebfc1c20595e04366689cadff72069040027
     restart: unless-stopped
     cpus: 4.0
     mem_limit: 3g
