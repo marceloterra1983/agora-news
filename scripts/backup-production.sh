@@ -60,33 +60,7 @@ recipient="$(age-keygen -y "$AGE_IDENTITY")"
 printf '%s\n' "$recipient" > "$staging/.env.age.recipient"
 age -r "$recipient" -o "$staging/.env.age" "$APP_ROOT/.env"
 
-BACKUP_DUMP="$staging/postgres.dump" node --env-file="$APP_ROOT/.env" --input-type=module <<'NODE'
-import { spawnSync } from "node:child_process";
-
-const url = new URL(process.env.DATABASE_URL);
-const env = {
-  ...process.env,
-  PGHOST: url.hostname,
-  PGPORT: url.port || "5432",
-  PGUSER: decodeURIComponent(url.username),
-  PGPASSWORD: decodeURIComponent(url.password),
-  PGDATABASE: decodeURIComponent(url.pathname.replace(/^\/+/, "")) || "postgres",
-  PGSSLMODE: url.searchParams.get("sslmode") || "require",
-  PGCONNECT_TIMEOUT: "30",
-};
-delete env.DATABASE_URL;
-
-const result = spawnSync(
-  "pg_dump",
-  ["--format=custom", "--no-owner", "--no-acl", "--file", process.env.BACKUP_DUMP],
-  { env, stdio: ["ignore", "inherit", "inherit"], timeout: 300_000, killSignal: "SIGTERM" },
-);
-if (result.error) {
-  console.error(result.error.code === "ETIMEDOUT" ? "pg_dump_timeout" : "pg_dump_failed");
-  process.exit(1);
-}
-process.exit(result.status ?? 1);
-NODE
+BACKUP_DUMP="$staging/postgres.dump" node --env-file="$APP_ROOT/.env" "$APP_ROOT/scripts/pg-dump-retry.mjs"
 
 test -s "$staging/postgres.dump"
 pg_restore --list "$staging/postgres.dump" > "$staging/postgres.manifest.txt"
