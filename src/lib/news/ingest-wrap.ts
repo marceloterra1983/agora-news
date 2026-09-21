@@ -22,10 +22,16 @@ export async function runIngestWithRss<T extends OwnedResult>(
       logTiming("ingest", elapsedMs(t0), { ok: true, youtube: youtube.written });
       return { ok: true, youtube };
     }
-    const x = await runOwned(opts, t0, lease.assertOwned).catch(() => ({
-      ok: false as const,
-      xFailed: true as const,
-    }));
+    const x = await runOwned(opts, t0, lease.assertOwned).catch((err) => {
+      logTiming("ingest-x", elapsedMs(t0), {
+        ok: false,
+        error: err instanceof Error ? err.message : "x_failed",
+      });
+      return {
+        ok: false as const,
+        xFailed: true as const,
+      };
+    });
     const rss = opts?.withRss
       ? await runRssIngest({ assertOwned: lease.assertOwned })
       : { written: 0, ok: true, feeds: 0 };

@@ -590,7 +590,11 @@ test("ingest wires confirmed rows and a renewable owner lease", () => {
   assert.match(source, /confirmed:[\s\S]*failed:/);
   assert.match(source, /confirmedIds:\s*written\.confirmedIds/);
   assert.match(source, /failedIds:\s*written\.failedIds/);
-  assert.doesNotMatch(source, /catch\s*{\s*return \{ handle, list: \[\]/);
+  assert.match(source, /ingest-x-handle/);
+  assert.match(source, /list:\s*\[\]/);
+  const wrap = read("src/lib/news/ingest-wrap.ts");
+  assert.match(wrap, /logTiming\("ingest-x"/);
+  assert.match(wrap, /err instanceof Error \? err\.message/);
   const cacheEffects = source.slice(
     source.indexOf("if (persistedRows.length)"),
     source.indexOf("let pushed"),
@@ -601,6 +605,136 @@ test("ingest wires confirmed rows and a renewable owner lease", () => {
   );
   assert.doesNotMatch(cacheEffects, /try\s*{[\s\S]*await assertOwned/);
   assert.doesNotMatch(pushEffects, /try\s*{[\s\S]*await assertOwned/);
+});
+
+test("X throw without RSS or YouTube writes logs the error and fails ingest", async (t) => {
+  setEnv(t, {
+    SUPABASE_SECRET_KEY: "sb_secret_ingest_x_log",
+    SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ingest_x_log",
+    UPSTASH_REDIS_REST_URL: undefined,
+    UPSTASH_REDIS_REST_TOKEN: undefined,
+    KV_REST_API_URL: undefined,
+    KV_REST_API_TOKEN: undefined,
+    REDIS_REST_URL: undefined,
+    REDIS_REST_TOKEN: undefined,
+  });
+  const cache = await server.ssrLoadModule("/src/lib/news/cache.ts");
+  cache.resetCacheProbe();
+  await cache.cacheDel(cache.CACHE_KEYS.lock);
+  t.after(() => cache.cacheDel(cache.CACHE_KEYS.lock));
+  const lines = [];
+  const previousInfo = console.info;
+  console.info = (...args) => {
+    lines.push(args.map(String).join(" "));
+  };
+  t.after(() => {
+    console.info = previousInfo;
+  });
+  const wrapMod = await server.ssrLoadModule(
+    `/src/lib/news/ingest-wrap.ts?x-log=${Date.now()}`,
+  );
+  await assert.rejects(
+    () =>
+      wrapMod.runIngestWithRss(async () => {
+        throw new Error("fxtwitter_http_404");
+      }),
+    /ingest_failed/,
+  );
+  const logged = lines.join("\n");
+  assert.match(logged, /ingest-x /);
+  assert.match(logged, /fxtwitter_http_404/);
+});
+
+test("one fxtwitter 404 handle does not abort the rest of the X batch", async (t) => {
+  setEnv(t, {
+    SUPABASE_SECRET_KEY: "sb_secret_ingest_x_handle",
+    SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ingest_x_handle",
+    VAPID_PUBLIC_KEY: "public-test",
+    VAPID_PRIVATE_KEY: "private-test",
+    UPSTASH_REDIS_REST_URL: undefined,
+    UPSTASH_REDIS_REST_TOKEN: undefined,
+    KV_REST_API_URL: undefined,
+    KV_REST_API_TOKEN: undefined,
+    REDIS_REST_URL: undefined,
+    REDIS_REST_TOKEN: undefined,
+  });
+  const cache = await server.ssrLoadModule("/src/lib/news/cache.ts");
+  cache.resetCacheProbe();
+  await cache.cacheDel(
+    cache.CACHE_KEYS.lock,
+    cache.CACHE_KEYS.scanCursor,
+    cache.CACHE_KEYS.newest,
+  );
+  t.after(() =>
+    cache.cacheDel(
+      cache.CACHE_KEYS.lock,
+      cache.CACHE_KEYS.scanCursor,
+      cache.CACHE_KEYS.newest,
+    ),
+  );
+  const previousFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+  });
+  const written = [];
+  globalThis.fetch = async (input, init = {}) => {
+    const url = String(input);
+    const method = init.method || "GET";
+    if (url.includes("api.fxtwitter.com/2/profile/grok/")) {
+      return new Response(null, { status: 404 });
+    }
+    if (url.includes("api.fxtwitter.com/2/profile/")) {
+      const handle = decodeURIComponent(url.split("/profile/")[1].split("/")[0]);
+      const id = String(8_100_000_000 + handle.length);
+      return Response.json({
+        results: [
+          {
+            id,
+            text: "O modelo de inteligência artificial melhora a notícia no Brasil.",
+            url: `https://x.com/${handle}/status/${id}`,
+            created_timestamp: Math.floor(Date.now() / 1000) - 30,
+          },
+        ],
+      });
+    }
+    if (url.includes("api.fxtwitter.com/")) return Response.json({ user: {} });
+    if (url.includes("/rest/v1/user_watches")) return Response.json([]);
+    if (url.includes("/rest/v1/x_profiles")) {
+      if (method === "POST") return new Response(null, { status: 201 });
+      return Response.json([]);
+    }
+    if (url.includes("/rest/v1/push_subscriptions")) return Response.json([]);
+    if (url.includes("/rest/v1/posts")) {
+      if (method === "POST") {
+        const rows = JSON.parse(String(init.body || "[]"));
+        written.push(...rows.filter((row) => row.source === "x"));
+        return new Response(null, { status: 201 });
+      }
+      return Response.json([]);
+    }
+    if (
+      url.includes("translate.googleapis.com") ||
+      url.includes("clients5.google.com") ||
+      url.includes("mymemory.translated.net")
+    ) {
+      return Response.json([[["texto PT", "en"]]]);
+    }
+    throw new Error(`unexpected_request:${method}:${url}`);
+  };
+  const ingest = await server.ssrLoadModule(
+    `/src/lib/news/ingest.ts?x-handle=${Date.now()}`,
+  );
+  const result = await ingest.runIngest({
+    limitHandles: 2,
+    withProfiles: false,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.xFailed, undefined);
+  assert.ok(written.some((row) => row.account === "OpenAI"));
+  assert.equal(
+    written.some((row) => String(row.account).toLowerCase() === "grok"),
+    false,
+  );
 });
 
 test("host cron uses bounded transient curl retries", () => {
