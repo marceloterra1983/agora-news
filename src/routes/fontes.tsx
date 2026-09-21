@@ -138,7 +138,9 @@ function FontesPage() {
     <AppChrome
       category={secao}
       toolbar={
-        <div className="flex min-w-0 flex-1 items-center gap-1">
+        // shrink-0: com min-w-0 flex-1 esta faixa encolhia a 0 e o chip de 44 px
+        // transbordava para baixo do OriginSwitch, que roubava o toque.
+        <div className="flex shrink-0 items-center gap-1">
           <FontesChip
             active={picking}
             label="Mover em lote"

@@ -139,7 +139,9 @@ function GrokHeader({
 
         <div
           data-h-scroll
-          className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto"
+          // min-w-11: sem piso, as abas de assunto tomam tudo em 390 px, esta faixa
+          // fica com largura 0 e o primeiro botão cai debaixo do ImagesSwitch.
+          className="flex min-w-11 flex-1 items-center gap-1.5 overflow-x-auto"
         >
           {toolbar}
           <OriginSwitch />
