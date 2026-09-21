@@ -28,9 +28,9 @@ descartável.
 |---|---|
 | Timer versionado | `OnCalendar=*-*-* 03:30:00` |
 | Drop-in real | `agora-news-backup.timer.d/offgrid.conf` → **03:21** (fora da grade do ingest `*:00/15`) |
-| Runbook | ainda diz crontab 03:30 |
+| Agenda efetiva / runbook | timer systemd `agora-news-backup.timer` às **03:21** |
 | Serviço | `backup-production.sh && backup-to-drive.sh` |
-| Dump | `pg_dump --format=custom --no-owner --no-acl`, gzip (TOC: `Compression: gzip`) |
+| Dump | `pg_dump --format=custom --no-owner --no-acl`, gzip (TOC: `Compression: gzip`); até 3 tentativas em `scripts/pg-dump-retry.mjs` (#147), ficheiro limpo a cada uma |
 | Ligação | `DATABASE_URL` = session pooler, porta 5432, `sslmode=require` |
 | Teto | `PG_DUMP_TIMEOUT_MS=300000` (3 tentativas, espera 60 s, ficheiro limpo a cada tentativa) |
 | systemd extra | `Restart=on-failure` / `RestartSec=20min` / `StartLimitBurst=3` em 3 h |
@@ -378,7 +378,8 @@ updates, mas o restore deixaria de ser um comando; o que quebra hoje é o
 
 ## Plano (passos pequenos, critério verificável)
 
-Nenhum destes passos está neste PR — só o desenho.
+Nenhum destes passos muda scripts neste PR — só o desenho. O Passo 3
+foi executado uma vez contra o dump local (só leitura) para validar o bloco.
 
 ### Passo 1 — `pg_dump` pela conexão direta + teto 15 min
 
@@ -410,37 +411,78 @@ snapshot completa diferir, ou no snapshot de domingo. Bundle git: mesma regra
 
 ### Passo 3 — Ensaio de restauração (obrigatório)
 
-Destino **descartável**, nunca `DATABASE_URL` de produção.
+Destino **descartável**, nunca `DATABASE_URL` de produção. Contentor em
+segundo plano (`-d`); porta só em `127.0.0.1`; espera `pg_isready`; limpeza
+`docker rm -f` no `EXIT` do subshell (também em erro).
+
+`--table=posts` no `pg_restore` 18 restaura TABLE + DATA dessa tabela
+(índices e triggers ficam de fora; `pg_trgm` e as funções de trigger não
+entram neste ensaio). `pg_restore` em formato custom exige `--dbname` ou
+`--file`; o comando que passou é o bloco abaixo.
+
+Clientes locais 18.6; dump custom v1.16 de servidor 17.6; imagem
+`postgres:17` (17.11 neste ensaio). O desvio de versão não impediu o
+restore desta tabela.
 
 ```bash
 # Postgres 17 local, base vazia. Não usar a URL de produção.
-docker run --rm --name agora-restore-trial -e POSTGRES_PASSWORD=restore \
-  -p 55432:5432 postgres:17
+# SNAP = pasta do snapshot (dump só leitura).
+SNAP="${SNAP:-$HOME/backups/news/20260921T123428Z}"
+DUMP="$SNAP/postgres.dump"
 
-# Só o que o produto precisa para o feed (public.posts). Confere o arquivo.
-pg_restore --list "$SNAP/postgres.dump" | grep 'TABLE DATA public posts'
-pg_restore --no-owner --no-acl --exit-on-error \
-  --table=posts --schema=public \
-  --dbname="postgresql://postgres:restore@127.0.0.1:55432/postgres" \
-  "$SNAP/postgres.dump"
+(
+  set -eu
+  NAME=agora-restore-trial
+  URI="postgresql://postgres:restore@127.0.0.1:55432/postgres"
+  cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+  trap cleanup EXIT
 
-# Critério numérico
-psql "postgresql://postgres:restore@127.0.0.1:55432/postgres" -c \
-  "select count(*) from public.posts"
-# tem de igualar o count medido no dump (hoje 104295 ± ingest do dia)
+  docker rm -f "$NAME" >/dev/null 2>&1 || true
+  docker run -d --name "$NAME" \
+    -e POSTGRES_PASSWORD=restore \
+    -p 127.0.0.1:55432:5432 \
+    postgres:17
+
+  ok=0
+  for i in $(seq 1 60); do
+    if docker exec "$NAME" pg_isready -U postgres >/dev/null 2>&1; then
+      ok=1
+      break
+    fi
+    sleep 1
+  done
+  if [ "$ok" -ne 1 ]; then
+    echo "pg_isready: teto 60 s" >&2
+    exit 1
+  fi
+
+  pg_restore --list "$DUMP" | grep 'TABLE DATA public posts'
+
+  pg_restore --no-owner --no-acl --exit-on-error \
+    --table=posts --schema=public \
+    --dbname="$URI" \
+    "$DUMP"
+
+  psql "$URI" -c "select count(*) from public.posts"
+)
+
+# tem de ficar vazio depois do EXIT
+docker ps -a --filter name=agora-restore-trial
 ```
 
-Se o restore de `--table=posts` falhar por falta de tipos/extensões, criar a
-tabela a partir de `pg_restore --schema-only --table=posts` e repetir o
-`--data-only`. Documentar o comando que passou no runbook.
+Ensaio 2026-09-21, snapshot `20260921T123428Z`: `count(*)` restaurado =
+**104269**, igual às linhas `COPY` do próprio dump (`pg_restore --data-only
+--table=posts --file=-` + contagem). TOC: `4430; 0 17562 TABLE DATA public
+posts`. O 104 295 da secção Medições é a origem ao vivo (~12:35 UTC), não
+o conteúdo deste ficheiro.
 
 Ensaio extra (opcional no mesmo passo): `pg_restore --schema=public` das
 tabelas `x_profiles`, `user_prefs`, `user_watches`, `push_subscriptions`,
-`user`, `session`, `account`.
+`user`, `session`, `account` — sempre com `--dbname`.
 
 **Pronto quando:**
 
-- `count(*)` restaurado = `count(*)` na origem no instante do dump (± 0).
+- `count(*)` restaurado = número de linhas `COPY` no dump (± 0).
 - Um `post_id` conhecido devolve o mesmo `content` / `posted_at`.
 - O comando ficou no runbook. A identidade age desencripta `.env.age` e o
   SHA256 bate com o `.env` de origem (já existe `env-restore-check.txt`).

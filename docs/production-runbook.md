@@ -77,11 +77,15 @@ O timer de utilizador `agora-news-backup.timer` dispara
 `/home/marce/news/scripts/backup-production.sh` e, em seguida,
 `/home/marce/news/scripts/backup-to-drive.sh`. O drop-in
 `agora-news-backup.timer.d/offgrid.conf` corre o job às **03:21** (horário
-local), fora da grade do ingest. O remote privado `gdrive:BACKUP/dev/news/`
+local), fora da grade do ingest. O serviço tem `Restart=on-failure`
+(`RestartSec=20min`, `StartLimitBurst=3` em 3 h). O dump
+(`scripts/pg-dump-retry.mjs`, #147) faz até 3 tentativas com teto de 5 min
+e ficheiro limpo. O remote privado `gdrive:BACKUP/dev/news/`
 conserva os 30 snapshots remotos mais recentes. Cada snapshot contém o dump
 custom do Postgres, bundle Git, imagem Docker, manifesto, crontab, wrapper de
 alertas e hashes; o `.env` é criptografado com age. Os scripts evitam
-concorrência, validam o dump e verificam os hashes locais e remotos.
+concorrência, validam o dump e verificam os hashes locais e remotos. Ensaio
+de restore de `public.posts` num Postgres 17 descartável: [backup-strategy.md](backup-strategy.md) Passo 3.
 
 Desenho medido (ritmo de `posts`, opções, restore): [backup-strategy.md](backup-strategy.md).
 
