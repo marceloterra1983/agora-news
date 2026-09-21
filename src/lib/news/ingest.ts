@@ -74,10 +74,15 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
   const skippedFresh = catalog.length + extra.length - due.length;
 
   const batch = saoPauloStamp();
-  const collected = await mapPool(due, 10, async (handle) => ({
-    handle,
-    list: await statusesFor(handle),
-  }));
+  const collected = await mapPool(due, 10, async (handle) => {
+    try {
+      return { handle, list: await statusesFor(handle) };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "x_handle_failed";
+      logTiming("ingest-x-handle", 0, { handle, error: message });
+      return { handle, list: [] };
+    }
+  });
 
   const cutoff = now - MAX_AGE_MS;
   const candidates: Array<{ handle: string; status: Status }> = [];
