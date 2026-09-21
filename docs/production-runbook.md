@@ -73,13 +73,17 @@ fica reservada ao operador root quando a política global do host for revisada.
 
 ## Backup periódico
 
-O host executa `/home/marce/news/scripts/backup-production.sh` diariamente às
-03:30 (horário local), pelo crontab do usuário `marce`. Em seguida,
-`/home/marce/news/scripts/backup-to-drive.sh` copia o snapshot para o remote
-privado `gdrive:` e conserva os 30 snapshots remotos mais recentes. Cada
-snapshot contém o dump custom do Postgres, bundle Git, imagem Docker, manifesto,
-crontab, wrapper de alertas e hashes; o `.env` é criptografado com age. Os scripts evitam concorrência,
-validam o dump e verificam os hashes locais e remotos.
+O timer de utilizador `agora-news-backup.timer` dispara
+`/home/marce/news/scripts/backup-production.sh` e, em seguida,
+`/home/marce/news/scripts/backup-to-drive.sh`. O drop-in
+`agora-news-backup.timer.d/offgrid.conf` corre o job às **03:21** (horário
+local), fora da grade do ingest. O remote privado `gdrive:BACKUP/dev/news/`
+conserva os 30 snapshots remotos mais recentes. Cada snapshot contém o dump
+custom do Postgres, bundle Git, imagem Docker, manifesto, crontab, wrapper de
+alertas e hashes; o `.env` é criptografado com age. Os scripts evitam
+concorrência, validam o dump e verificam os hashes locais e remotos.
+
+Desenho medido (ritmo de `posts`, opções, restore): [backup-strategy.md](backup-strategy.md).
 
 A identidade privada age fica fora do repositório em
 `/home/marce/.config/age/news-backup-key.txt`, com modo `600`. O remote do
