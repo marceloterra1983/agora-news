@@ -6,7 +6,8 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 BACKUP_ROOT="/home/marce/backups/news"
 REMOTE_NAME="${BACKUP_DRIVE_REMOTE_NAME:-gdrive}"
-REMOTE="${REMOTE_NAME}:"
+# Offsite canónico: só BACKUP/dev/news (não a raiz do Drive).
+REMOTE="${REMOTE_NAME}:BACKUP/dev/news/"
 RETENTION_COUNT=30
 
 command -v rclone >/dev/null 2>&1 || {
@@ -58,4 +59,4 @@ if ((${#remote_snapshots[@]} > RETENTION_COUNT)); then
   done
 fi
 
-printf 'drive backup complete: %s/%s\n' "$REMOTE_NAME" "$destination"
+printf 'drive backup complete: %s%s\n' "$REMOTE" "$destination"
