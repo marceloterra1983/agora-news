@@ -82,7 +82,7 @@ cp --preserve=mode "$APP_ROOT/docs/production-runbook.md" "$staging/production-r
 CRON_WRAPPER="/home/marce/ops/scripts/cron-alert-wrap.sh"
 test -r "$CRON_WRAPPER"
 cp --preserve=mode "$CRON_WRAPPER" "$staging/cron-alert-wrap.sh"
-crontab -l > "$staging/crontab.txt"
+(crontab -l 2>/dev/null || systemctl --user list-timers --all 2>/dev/null || true) > "$staging/crontab.txt"
 
 original_env_hash="$(sha256sum "$APP_ROOT/.env" | awk '{print $1}')"
 restored_env_hash="$(age -d -i "$AGE_IDENTITY" "$staging/.env.age" | sha256sum | awk '{print $1}')"
@@ -99,10 +99,10 @@ printf 'env_restore_check=ok\n' > "$staging/env-restore-check.txt"
   printf '%s\n' 'cron_alert_wrapper=ok'
 } > "$staging/backup-summary.txt"
 
-find "$staging" -maxdepth 1 -type f ! -name SHA256SUMS -printf '%p\n' | sort | xargs sha256sum > "$staging/SHA256SUMS"
-sha256sum -c "$staging/SHA256SUMS" >/dev/null
 mv -- "$staging" "$final"
 chmod 700 "$final"
+find "$final" -maxdepth 1 -type f ! -name SHA256SUMS -printf '%p\n' | sort | xargs sha256sum > "$final/SHA256SUMS"
+sha256sum -c "$final/SHA256SUMS" >/dev/null
 
 mapfile -t snapshots < <(
   find -P "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name '20??????T??????Z' -printf '%f\n' | sort
