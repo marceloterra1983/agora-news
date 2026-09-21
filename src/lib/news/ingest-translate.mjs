@@ -1,6 +1,6 @@
 import { isNewsRow } from "./news-row.mjs";
 import { needsFullTranslation } from "./story-pt.mjs";
-import { applyStoredTranslation, translateToPt } from "./translate-pt.mjs";
+import { applyStoredTranslation, isConfirmedPt, translateToPt } from "./translate-pt.mjs";
 
 const RETRY_WINDOW_MS = 36 * 60 * 60_000;
 const RETRY_EMPTY = 120;
@@ -11,7 +11,11 @@ const POST_SELECT =
 
 export function postsNeedingPt(rows) {
   return (Array.isArray(rows) ? rows : []).filter(
-    (row) => isNewsRow(row) && needsFullTranslation(row.content, row.translation_pt),
+    (row) =>
+      isNewsRow(row) &&
+      // Fonte que o Google já confirmou como português não volta à fila a cada ciclo.
+      !isConfirmedPt(row.content) &&
+      needsFullTranslation(row.content, row.translation_pt),
   );
 }
 

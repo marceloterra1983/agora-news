@@ -93,3 +93,18 @@ test("retranslateMissingPt skips a row when the translator still fails open", as
   assert.equal(written, 0);
   assert.equal(upserted.length, 0);
 });
+
+test("postsNeedingPt stops reselecting a source Google confirmed as Portuguese", async (t) => {
+  const { translateToPt, resetTranslateSkip } = await import("../src/lib/news/translate-pt.mjs");
+  resetTranslateSkip();
+  const previousFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = previousFetch;
+  });
+  const SHORT_PT = "Caiu na Rede";
+  const row = { post_id: "pt1", content: SHORT_PT, translation_pt: SHORT_PT, category: "ai" };
+  assert.equal(postsNeedingPt([row]).length, 1, "before confirmation the heuristic still selects it");
+  globalThis.fetch = async () => Response.json([[SHORT_PT, "pt"]]);
+  await translateToPt(SHORT_PT, { timeout: 200 });
+  assert.equal(postsNeedingPt([row]).length, 0);
+});

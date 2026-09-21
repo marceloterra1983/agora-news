@@ -1,0 +1,27 @@
+# Tradutor local: Google gtx devolve 429 para este IP e a cota diária do MyMemory
+# acaba (gtxFail=40 em 2026-09-21). translate-pt.mjs já consulta LIBRETRANSLATE_URL.
+services:
+  news:
+    # Sem condition: o primeiro arranque baixa modelos e estouraria os 120 s do deploy.
+    depends_on:
+      - libretranslate
+    environment:
+      LIBRETRANSLATE_URL: http://libretranslate:5000
+  libretranslate:
+    image: libretranslate/libretranslate@sha256:7e7b72b0983c9d5f1e041ddac962ebfc1c20595e04366689cadff72069040027
+    restart: unless-stopped
+    cpus: 4.0
+    mem_limit: 3g
+    environment:
+      LT_LOAD_ONLY: en,pt,es
+      LT_DISABLE_WEB_UI: "true"
+      LT_UPDATE_MODELS: "false"
+    volumes:
+      - libretranslate-models:/home/libretranslate/.local
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  libretranslate-models:
