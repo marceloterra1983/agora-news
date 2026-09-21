@@ -32,5 +32,5 @@ Scope: Abas `podcasts` e `mercados` no app; grupos refinados de `ai`/`brasil`; r
   EXPECT: FEED_HTTP
   EVIDENCE: FEED_HTTP pending-live
 
-- [ ] G7: PR mergeado + deploy tag news-news
-  EVIDENCE: pending
+- [x] G7: PR mergeado + deploy tag news-news
+  EVIDENCE: 2026-09-21 — `gh pr list --search "Podcasts Mercados"` -> `#145 MERGED 2026-09-04T02:58:34Z feat(sections): abas Podcasts e Mercados`; `git merge-base --is-ancestor f9ef460 e8d22ba` -> ok, e `docker ps` -> `news-news-1 news-news:e8d22ba Up (healthy)`; `/api/feed?secao=podcasts` -> 40 stories, categorias=['podcasts']; `/api/feed?secao=mercados` -> 33 stories, categorias=['mercados']; páginas `/?secao=podcasts` e `/?secao=mercados` -> 200.
