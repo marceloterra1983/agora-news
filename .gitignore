@@ -16,3 +16,5 @@ worktrees/
 *.log
 .DS_Store
 .playwright-mcp/
+# Serena MCP cria project.yml e cache na raiz; sujaria o checkout de produção
+.serena/
