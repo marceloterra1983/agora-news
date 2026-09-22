@@ -18,6 +18,8 @@ services:
       LT_UPDATE_MODELS: "false"
     volumes:
       - libretranslate-models:/home/libretranslate/.local
+      # worker_exit com os._exit(0): ctranslate2 segfaulta no teardown (ver ops/libretranslate/).
+      - ./ops/libretranslate/gunicorn_conf.py:/app/scripts/gunicorn_conf.py:ro
     logging:
       driver: json-file
       options:
