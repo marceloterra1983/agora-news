@@ -57,4 +57,12 @@ import os
 
 
 def worker_exit(server, worker):
+    # O gunicorn também chama este hook no processo PRINCIPAL (arbiter.kill_worker,
+    # quando o worker já morreu: ESRCH). Só o próprio worker pode sair aqui, e só
+    # depois de ter arrancado: um worker que falhou no boot tem de devolver
+    # WORKER_BOOT_ERROR para o arbiter parar em vez de o relançar em ciclo.
+    if os.getpid() != worker.pid or not worker.booted:
+        return
+    sys.stdout.flush()
+    sys.stderr.flush()
     os._exit(0)
