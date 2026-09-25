@@ -22,7 +22,11 @@ const anthropicModelCases = [
   { model: "claude-fable-5-1", disable: false, alwaysOn: true, chatMax: 2048, pingMax: 256, fallbacks: true },
   { model: "claude-sonnet-5", disable: true, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
   { model: "claude-sonnet-4-5", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
+  { model: "claude-opus-4-5", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
+  { model: "claude-opus-4-7", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
+  { model: "claude-opus-4-8", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
   { model: "claude-haiku-4-5", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
+  { model: "claude-mythos-5-1", disable: false, alwaysOn: true, chatMax: 2048, pingMax: 256, fallbacks: true },
 ];
 
 function expectedAnthropicBeta(authKind, supportsFallbacks) {
@@ -94,7 +98,9 @@ test("oauth anthropic chat sends Claude Code identity and CLI headers", async ()
   assert.equal(req.init.headers["x-app"], "cli");
   assert.match(String(req.init.headers["user-agent"] || ""), /claude-cli/);
   assert.equal(req.init.headers["anthropic-beta"], "oauth-2025-04-20");
-  assert.equal(body.temperature, 0);
+  assert.equal(body.temperature, undefined);
+  assert.equal(body.top_p, undefined);
+  assert.equal(body.top_k, undefined);
   assert.equal(body.output_config, undefined);
   assert.equal(body.fallbacks, undefined);
 });
@@ -111,7 +117,7 @@ test("Anthropic chat options follow model family for API and OAuth", () => {
           ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
           : alwaysOn
             ? { output_config: { effort: "low" } }
-            : { temperature: 0 }),
+            : {}),
         ...(fallbacks ? { fallbacks: "default" } : {}),
         system:
           authKind === "oauth"
@@ -124,6 +130,9 @@ test("Anthropic chat options follow model family for API and OAuth", () => {
       };
 
       assert.deepEqual(body, expectedBody, `${model} ${authKind} chat body`);
+      assert.equal(body.temperature, undefined, `${model} ${authKind} never sends temperature`);
+      assert.equal(body.top_p, undefined, `${model} ${authKind} never sends top_p`);
+      assert.equal(body.top_k, undefined, `${model} ${authKind} never sends top_k`);
       assert.equal(
         req.init.headers["anthropic-beta"],
         expectedAnthropicBeta(authKind, fallbacks),
@@ -156,6 +165,7 @@ test("Anthropic validation ping options follow model family for API and OAuth", 
       };
 
       assert.deepEqual(body, expectedBody, `${model} ${authKind} ping body`);
+      assert.equal(body.temperature, undefined, `${model} ${authKind} ping never sends temperature`);
       assert.equal(
         req.init.headers["anthropic-beta"],
         expectedAnthropicBeta(authKind, fallbacks),
@@ -186,8 +196,8 @@ test("Anthropic Opus 5 chat disables thinking for the short response budget", ()
   assert.equal(req.init.headers["anthropic-beta"], "server-side-fallback-2026-07-01");
 });
 
-test("Anthropic Opus 5.5 and Fable never send thinking (disabled 400s)", () => {
-  for (const model of ["claude-opus-5-5", "claude-fable-5", "claude-fable-5-1"]) {
+test("Anthropic Opus 5.5, Fable and Mythos never send thinking (disabled 400s)", () => {
+  for (const model of ["claude-opus-5-5", "claude-fable-5", "claude-fable-5-1", "claude-mythos-5", "claude-mythos-5-1"]) {
     const [chat] = chatRequests("anthropic", model, "ant-test", "oi", "resumo");
     const chatBody = JSON.parse(String(chat.init.body));
     assert.equal(chatBody.thinking, undefined, `${model} chat omits thinking`);

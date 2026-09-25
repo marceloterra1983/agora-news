@@ -34,16 +34,19 @@ function opus5MinorVersion(id) {
 
 function anthropicModelCapabilities(model) {
   const id = String(model || "");
-  // ponytail: opus-5-5+, opus-5-N (N>=5) e fable-5* têm pensamento sempre ligado —
+  // ponytail: opus-5-5+, opus-5-N (N>=5), fable-5* e mythos-5* têm pensamento sempre ligado —
   // `thinking:{type:"disabled"}` dá 400 nesses; só opus-5 (+snapshot com data) e sonnet-5 desligam.
-  const alwaysOnThinking = /^claude-fable-5/i.test(id) || (opus5MinorVersion(id) ?? 0) >= 5;
+  const alwaysOnThinking =
+    /^claude-fable-5/i.test(id) ||
+    /^claude-mythos-5/i.test(id) ||
+    (opus5MinorVersion(id) ?? 0) >= 5;
   const canDisableThinking =
     !alwaysOnThinking &&
     (/^claude-opus-5$/i.test(id) ||
       /^claude-opus-5-20\d{6}(?:-|$)/i.test(id) ||
       /^claude-sonnet-5(?:-|$)/i.test(id));
   const supportsEffort = canDisableThinking || alwaysOnThinking;
-  const supportsFallbacks = /^claude-(?:opus-5(?:-|$)|fable-5)/i.test(id);
+  const supportsFallbacks = /^claude-(?:opus-5(?:-|$)|fable-5|mythos-5)/i.test(id);
   return { canDisableThinking, alwaysOnThinking, supportsEffort, supportsFallbacks };
 }
 
@@ -179,11 +182,12 @@ export function chatRequests(provider, model, key, prompt, system = LLM_SYSTEM, 
     // Pensamento sempre ligado: omite `thinking` (disabled dá 400); max_tokens cobre
     // pensamento+frase (a frase continua cortada a 160 chars pelo clipOneLine).
     const maxTokens = capabilities.alwaysOnThinking ? 2048 : 90;
+    // Temperature nunca vai ao Anthropic: opcional em todos, rejeitado desde o Opus 4.7 (400).
     const effortShape = capabilities.canDisableThinking
       ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
       : capabilities.alwaysOnThinking
         ? { output_config: { effort: "low" } }
-        : { temperature: 0 };
+        : {};
     return [
       {
         url: "https://api.anthropic.com/v1/messages",
