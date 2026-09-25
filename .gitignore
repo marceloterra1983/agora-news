@@ -18,3 +18,5 @@ worktrees/
 .playwright-mcp/
 # Serena MCP cria project.yml e cache na raiz; sujaria o checkout de produção
 .serena/
+# A1 sombra: JSONL local de julgamentos (nenhum data/ versionado é afetado)
+data/jev-a1-shadow.jsonl

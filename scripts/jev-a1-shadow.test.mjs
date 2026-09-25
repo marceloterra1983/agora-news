@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createServer } from "node:http";
 import test from "node:test";
 import {
   JEV_A1_CONCURRENCY,
@@ -149,4 +150,27 @@ test("q_kind rejeita opção fora do vocabulário", async () => {
   });
   assert.equal(j.kind, null);
   assert.equal(j.band, "mid");
+});
+
+test("timeout real: servidor que não responde aborta em timeoutMs", async () => {
+  const server = createServer(() => {
+    // Nunca responde: o AbortSignal.timeout precisa abortar sozinho.
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  try {
+    const t0 = Date.now();
+    const [j] = await judgePosts([row()], {
+      apiKey: "k",
+      baseUrl: `http://127.0.0.1:${port}`,
+      timeoutMs: 100,
+      sink: async () => {},
+    });
+    const elapsed = Date.now() - t0;
+    assert.equal(j.error, "jev_timeout");
+    assert.equal(j.p_news, null);
+    assert.ok(elapsed < 2000, `deveria abortar rápido, levou ${elapsed}ms`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });
