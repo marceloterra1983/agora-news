@@ -16,6 +16,7 @@ import {
 } from "./rss-ingest-core.mjs";
 import { assertSafeRssFetchUrl } from "./safe-fetch";
 import { translateToPt } from "./translate-pt.mjs";
+import { judgePosts } from "./ingest-judge";
 
 export { ingestSurvives };
 
@@ -159,5 +160,9 @@ export async function runRssIngest(opts?: {
   if (!rows.length) return { written: 0, ok: true, feeds: feeds.length };
   await opts?.assertOwned?.();
   const written = await upsert(rows, opts?.assertOwned);
+  // A1 em sombra: o Jev julga sem decidir nada; erro nunca quebra o ingest.
+  if (written.count > 0) {
+    void judgePosts(rows.map((row) => ({ ...row, title: row.summary_pt }))).catch(() => {});
+  }
   return { written: written.count, ok: written.ok, feeds: feeds.length };
 }

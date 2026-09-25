@@ -188,7 +188,7 @@ async function runOwnedIngest(opts: { limitHandles?: number; withProfiles?: bool
   const persistedRows = rows.filter((row) => confirmed.has(row.post_id));
   if (persistedRows.length) {
     invalidateSupabaseList();
-    invalidateFontesLastCache();
+    invalidateFontesLastCache(); void import("./ingest-judge").then((m) => m.judgePosts(persistedRows)).catch(() => {}); // A1 sombra: julga sem decidir
   }
 
   let pushed = 0;
