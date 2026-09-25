@@ -48,6 +48,7 @@ test("catalog per provider only returns that provider's production chat IDs", ()
   assert.ok(anthropic.includes("claude-sonnet-4-5"));
   assert.ok(anthropic.includes("claude-opus-4-5"));
   assert.ok(anthropic.includes("claude-haiku-4-5"));
+  assert.ok(anthropic.includes("claude-opus-5"));
   assert.ok(xai.includes("grok-4.5"));
   assert.ok(xai.includes("grok-4.6"));
   assert.ok(xai.includes("grok-4.3"));
@@ -63,7 +64,7 @@ test("catalog per provider only returns that provider's production chat IDs", ()
 
 test("changing provider resets to that provider's default model", () => {
   assert.equal(defaultModelFor("openai"), "gpt-4.1-mini");
-  assert.equal(defaultModelFor("anthropic"), "claude-sonnet-4-5");
+  assert.equal(defaultModelFor("anthropic"), "claude-opus-5");
   assert.equal(defaultModelFor("xai"), "grok-4.5");
   assert.ok(ids("openai").includes(defaultModelFor("openai")));
   assert.ok(ids("anthropic").includes(defaultModelFor("anthropic")));

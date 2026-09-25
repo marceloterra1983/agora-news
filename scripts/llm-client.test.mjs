@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { askProviderLine, validateLlmKey } from "../src/lib/news/llm-client.mjs";
+import {
+  CLAUDE_CODE_IDENTITY,
+  askProviderLine,
+  chatRequests,
+  validationRequest,
+  validateLlmKey,
+} from "../src/lib/news/llm-client.mjs";
 
 function jsonResponse(status, body) {
   return {
@@ -8,6 +14,23 @@ function jsonResponse(status, body) {
     status,
     json: async () => body,
   };
+}
+
+const anthropicModelCases = [
+  { model: "claude-opus-5", effort: true, fallbacks: true },
+  { model: "claude-sonnet-4-5", effort: false, fallbacks: false },
+  { model: "claude-haiku-4-5", effort: false, fallbacks: false },
+  { model: "claude-sonnet-5", effort: true, fallbacks: false },
+];
+
+function expectedAnthropicBeta(authKind, supportsFallbacks) {
+  const beta = [
+    authKind === "oauth" ? "oauth-2025-04-20" : null,
+    supportsFallbacks ? "server-side-fallback-2026-07-01" : null,
+  ]
+    .filter(Boolean)
+    .join(",");
+  return beta || undefined;
 }
 
 test("validateLlmKey maps 401 to auth and 429 to quota without live fetch", async () => {
@@ -68,6 +91,106 @@ test("oauth anthropic chat sends Claude Code identity and CLI headers", async ()
   assert.equal(req.init.headers["x-api-key"], undefined);
   assert.equal(req.init.headers["x-app"], "cli");
   assert.match(String(req.init.headers["user-agent"] || ""), /claude-cli/);
+  assert.equal(req.init.headers["anthropic-beta"], "oauth-2025-04-20");
+  assert.equal(body.temperature, 0);
+  assert.equal(body.output_config, undefined);
+  assert.equal(body.fallbacks, undefined);
+});
+
+test("Anthropic chat options follow model family for API and OAuth", () => {
+  for (const authKind of ["api", "oauth"]) {
+    for (const { model, effort, fallbacks } of anthropicModelCases) {
+      const [req] = chatRequests("anthropic", model, "ant-test", "oi", "resumo", authKind);
+      const body = JSON.parse(String(req.init.body));
+      const expectedBody = {
+        model,
+        max_tokens: 90,
+        ...(effort
+          ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
+          : { temperature: 0 }),
+        ...(fallbacks ? { fallbacks: "default" } : {}),
+        system:
+          authKind === "oauth"
+            ? [
+                { type: "text", text: CLAUDE_CODE_IDENTITY },
+                { type: "text", text: "resumo" },
+              ]
+            : "resumo",
+        messages: [{ role: "user", content: "oi" }],
+      };
+
+      assert.deepEqual(body, expectedBody, `${model} ${authKind} chat body`);
+      assert.equal(
+        req.init.headers["anthropic-beta"],
+        expectedAnthropicBeta(authKind, fallbacks),
+        `${model} ${authKind} beta header`,
+      );
+      assert.equal(req.init.headers["x-api-key"], authKind === "api" ? "ant-test" : undefined);
+      assert.equal(
+        req.init.headers.Authorization,
+        authKind === "oauth" ? "Bearer ant-test" : undefined,
+      );
+    }
+  }
+});
+
+test("Anthropic validation ping options follow model family for API and OAuth", () => {
+  for (const authKind of ["api", "oauth"]) {
+    for (const { model, effort, fallbacks } of anthropicModelCases) {
+      const req = validationRequest("anthropic", "ant-test", model, authKind);
+      const body = JSON.parse(String(req.init.body));
+      const expectedBody = {
+        model,
+        max_tokens: 1,
+        ...(effort ? { thinking: { type: "disabled" }, output_config: { effort: "low" } } : {}),
+        ...(fallbacks ? { fallbacks: "default" } : {}),
+        messages: [{ role: "user", content: "ok" }],
+      };
+
+      assert.deepEqual(body, expectedBody, `${model} ${authKind} ping body`);
+      assert.equal(
+        req.init.headers["anthropic-beta"],
+        expectedAnthropicBeta(authKind, fallbacks),
+        `${model} ${authKind} beta header`,
+      );
+      assert.equal(req.init.headers["x-api-key"], authKind === "api" ? "ant-test" : undefined);
+      assert.equal(
+        req.init.headers.Authorization,
+        authKind === "oauth" ? "Bearer ant-test" : undefined,
+      );
+    }
+  }
+});
+
+test("Anthropic Opus 5 chat disables thinking for the short response budget", () => {
+  const [req] = chatRequests("anthropic", "claude-opus-5", "ant-test", "oi", "resumo");
+  const body = JSON.parse(String(req.init.body));
+
+  assert.deepEqual(body, {
+    model: "claude-opus-5",
+    max_tokens: 90,
+    thinking: { type: "disabled" },
+    output_config: { effort: "low" },
+    fallbacks: "default",
+    system: "resumo",
+    messages: [{ role: "user", content: "oi" }],
+  });
+  assert.equal(req.init.headers["anthropic-beta"], "server-side-fallback-2026-07-01");
+});
+
+test("Anthropic validation ping uses Opus 5 short-output settings and fallback", () => {
+  const req = validationRequest("anthropic", "ant-test");
+  const body = JSON.parse(String(req.init.body));
+
+  assert.deepEqual(body, {
+    model: "claude-opus-5",
+    max_tokens: 1,
+    thinking: { type: "disabled" },
+    output_config: { effort: "low" },
+    fallbacks: "default",
+    messages: [{ role: "user", content: "ok" }],
+  });
+  assert.equal(req.init.headers["anthropic-beta"], "server-side-fallback-2026-07-01");
 });
 
 test("validateLlmKey checks the key via models list, not a chat ping", async () => {
@@ -94,7 +217,11 @@ test("validateLlmKey checks the key via models list, not a chat ping", async () 
 test("askProviderLine hits the three provider endpoints with mock fetch", async () => {
   const calls = [];
   const fetchImpl = async (url, init) => {
-    calls.push({ url: String(url), headers: init?.headers || {} });
+    calls.push({
+      url: String(url),
+      headers: init?.headers || {},
+      body: JSON.parse(String(init?.body)),
+    });
     return jsonResponse(200, {
       choices: [{ message: { content: "Uma frase curta." } }],
       content: [{ type: "text", text: "Uma frase curta." }],
@@ -110,7 +237,7 @@ test("askProviderLine hits the three provider endpoints with mock fetch", async 
   });
   const claude = await askProviderLine({
     provider: "anthropic",
-    model: "claude-sonnet-4-5",
+    model: "claude-opus-5",
     key: "ant-test",
     prompt: "quem é",
     fetchImpl,
@@ -132,6 +259,38 @@ test("askProviderLine hits the three provider endpoints with mock fetch", async 
   const anthropic = calls.find((c) => c.url.includes("anthropic"));
   assert.equal(anthropic.headers["x-api-key"], "ant-test");
   assert.ok(anthropic.headers["anthropic-version"]);
+  assert.equal(anthropic.body.model, "claude-opus-5");
+  assert.equal(anthropic.body.max_tokens, 90);
+  assert.deepEqual(anthropic.body.thinking, { type: "disabled" });
+  assert.deepEqual(anthropic.body.output_config, { effort: "low" });
+  assert.equal(anthropic.body.fallbacks, "default");
+  assert.equal(anthropic.body.temperature, undefined);
   const open = calls.find((c) => c.url.includes("openai"));
   assert.match(String(open.headers.Authorization || open.headers.authorization), /Bearer sk-test/);
+  assert.equal(open.body.max_tokens, 90);
+  assert.equal(open.body.temperature, 0);
+  assert.equal(open.body.thinking, undefined);
+  const grokRequest = calls.find((c) => c.url.includes("api.x.ai/v1/chat/completions"));
+  assert.equal(grokRequest.body.max_tokens, 90);
+  assert.equal(grokRequest.body.temperature, 0);
+  assert.equal(grokRequest.body.thinking, undefined);
+});
+
+test("askProviderLine handles Anthropic refusal before reading response content", async () => {
+  const refusal = { stop_reason: "refusal" };
+  Object.defineProperty(refusal, "content", {
+    get() {
+      throw new Error("refusal content must not be read");
+    },
+  });
+
+  const result = await askProviderLine({
+    provider: "anthropic",
+    model: "claude-opus-5",
+    key: "ant-test",
+    prompt: "conteúdo de segurança",
+    fetchImpl: async () => jsonResponse(200, refusal),
+  });
+
+  assert.deepEqual(result, { line: "", status: "error", httpStatus: 200 });
 });

@@ -86,7 +86,7 @@ test("resolveLlmRuntime returns provider, model and key of the active account", 
     userId: "owner-1",
   });
   assert.equal(fromClaude.provider, "anthropic");
-  assert.equal(fromClaude.model, "claude-sonnet-4-5");
+  assert.equal(fromClaude.model, "claude-opus-5");
   assert.equal(fromClaude.key, "ant-key-yyyy");
 
   const cronEnv = resolveLlmRuntime({
@@ -197,7 +197,7 @@ test("prefs merge keeps _llm secrets and strip removes them from the client blob
 test("allowed providers are only OpenAI, Claude and Grok with defaults", () => {
   assert.deepEqual(LLM_PROVIDERS, ["openai", "anthropic", "xai"]);
   assert.equal(defaultModelFor("openai"), "gpt-4.1-mini");
-  assert.equal(defaultModelFor("anthropic"), "claude-sonnet-4-5");
+  assert.equal(defaultModelFor("anthropic"), "claude-opus-5");
   assert.equal(defaultModelFor("xai"), "grok-4.5");
   assert.throws(
     () =>

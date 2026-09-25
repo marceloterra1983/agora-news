@@ -1,7 +1,7 @@
 export const LLM_PREFS_KEY: "_llm";
 export const LLM_PROVIDERS: readonly ["openai", "anthropic", "xai"];
 export const LLM_PROVIDER_LABELS: { openai: "OpenAI"; anthropic: "Claude"; xai: "Grok" };
-export const DEFAULT_MODELS: { openai: "gpt-4.1-mini"; anthropic: "claude-sonnet-4-5"; xai: "grok-4.5" };
+export const DEFAULT_MODELS: { openai: "gpt-4.1-mini"; anthropic: "claude-opus-5"; xai: "grok-4.5" };
 export const DEFAULT_XAI_MODEL: "grok-4.5";
 
 export type LlmProvider = "openai" | "anthropic" | "xai";

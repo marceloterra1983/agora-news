@@ -25,12 +25,45 @@ export function validateWarningFor(status) {
   return "Não deu para validar a chave agora (rede ou o provedor falhou). Nada foi cadastrado.";
 }
 
+function anthropicModelCapabilities(model) {
+  const id = String(model || "");
+  // ponytail: family prefixes let future suffixed IDs inherit capabilities without a version list.
+  const supportsEffort = /^claude-(?:opus-5(?:-|$)|fable-5|sonnet-5(?:-|$))/i.test(id);
+  const supportsFallbacks = /^claude-(?:opus-5(?:-|$)|fable-5)/i.test(id);
+  return { supportsEffort, supportsFallbacks };
+}
+
 function pingBody(provider, model) {
-  return JSON.stringify({
-    model: model || defaultModelFor(provider),
+  const modelId = model || defaultModelFor(provider);
+  const body = {
+    model: modelId,
     max_tokens: 1,
     messages: [{ role: "user", content: "ok" }],
-  });
+  };
+  if (provider === "anthropic") {
+    const capabilities = anthropicModelCapabilities(modelId);
+    if (capabilities.supportsEffort) {
+      Object.assign(body, {
+        thinking: { type: "disabled" },
+        output_config: { effort: "low" },
+      });
+    }
+    if (capabilities.supportsFallbacks) body.fallbacks = "default";
+  }
+  return JSON.stringify(body);
+}
+
+function anthropicMessageHeaders(headers, model) {
+  if (!anthropicModelCapabilities(model).supportsFallbacks) return headers;
+  return {
+    ...headers,
+    "anthropic-beta": [
+      headers["anthropic-beta"],
+      "server-side-fallback-2026-07-01",
+    ]
+      .filter(Boolean)
+      .join(","),
+  };
 }
 
 export function providerAuthHeaders(provider, key, authKind = "api") {
@@ -65,7 +98,11 @@ export function validationRequest(provider, key, model, authKind = "api") {
   if (provider === "anthropic") {
     return {
       url: "https://api.anthropic.com/v1/messages",
-      init: { method: "POST", headers, body: pingBody(provider, model) },
+      init: {
+        method: "POST",
+        headers: anthropicMessageHeaders(headers, model || defaultModelFor(provider)),
+        body: pingBody(provider, model),
+      },
     };
   }
   if (provider === "openai") {
@@ -121,16 +158,20 @@ export function chatRequests(provider, model, key, prompt, system = LLM_SYSTEM, 
     ];
   }
   if (provider === "anthropic") {
+    const capabilities = anthropicModelCapabilities(model);
     return [
       {
         url: "https://api.anthropic.com/v1/messages",
         init: {
           method: "POST",
-          headers,
+          headers: anthropicMessageHeaders(headers, model),
           body: JSON.stringify({
             model,
             max_tokens: 90,
-            temperature: 0,
+            ...(capabilities.supportsEffort
+              ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
+              : { temperature: 0 }),
+            ...(capabilities.supportsFallbacks ? { fallbacks: "default" } : {}),
             system:
               authKind === "oauth"
                 ? [
@@ -216,7 +257,11 @@ export async function askProviderLine({
         }
         continue;
       }
-      const line = clipOneLine(extractLlmText(await res.json()));
+      const response = await res.json();
+      if (provider === "anthropic" && response?.stop_reason === "refusal") {
+        return { line: "", status: "error", httpStatus: res.status };
+      }
+      const line = clipOneLine(extractLlmText(response));
       if (line) return { line, status: "ok", httpStatus: res.status };
     } catch {
       /* tenta o próximo endpoint (xAI /responses) */
