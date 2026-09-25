@@ -1,6 +1,6 @@
 ---
 description: Depois do auto-land na main, publicar Docker sem perguntar
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Auto-deploy agora-news
