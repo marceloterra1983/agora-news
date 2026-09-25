@@ -17,10 +17,12 @@ function jsonResponse(status, body) {
 }
 
 const anthropicModelCases = [
-  { model: "claude-opus-5", effort: true, fallbacks: true },
-  { model: "claude-sonnet-4-5", effort: false, fallbacks: false },
-  { model: "claude-haiku-4-5", effort: false, fallbacks: false },
-  { model: "claude-sonnet-5", effort: true, fallbacks: false },
+  { model: "claude-opus-5", disable: true, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: true },
+  { model: "claude-opus-5-5", disable: false, alwaysOn: true, chatMax: 2048, pingMax: 256, fallbacks: true },
+  { model: "claude-fable-5-1", disable: false, alwaysOn: true, chatMax: 2048, pingMax: 256, fallbacks: true },
+  { model: "claude-sonnet-5", disable: true, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
+  { model: "claude-sonnet-4-5", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
+  { model: "claude-haiku-4-5", disable: false, alwaysOn: false, chatMax: 90, pingMax: 1, fallbacks: false },
 ];
 
 function expectedAnthropicBeta(authKind, supportsFallbacks) {
@@ -99,15 +101,17 @@ test("oauth anthropic chat sends Claude Code identity and CLI headers", async ()
 
 test("Anthropic chat options follow model family for API and OAuth", () => {
   for (const authKind of ["api", "oauth"]) {
-    for (const { model, effort, fallbacks } of anthropicModelCases) {
+    for (const { model, disable, alwaysOn, chatMax, fallbacks } of anthropicModelCases) {
       const [req] = chatRequests("anthropic", model, "ant-test", "oi", "resumo", authKind);
       const body = JSON.parse(String(req.init.body));
       const expectedBody = {
         model,
-        max_tokens: 90,
-        ...(effort
+        max_tokens: chatMax,
+        ...(disable
           ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
-          : { temperature: 0 }),
+          : alwaysOn
+            ? { output_config: { effort: "low" } }
+            : { temperature: 0 }),
         ...(fallbacks ? { fallbacks: "default" } : {}),
         system:
           authKind === "oauth"
@@ -136,13 +140,17 @@ test("Anthropic chat options follow model family for API and OAuth", () => {
 
 test("Anthropic validation ping options follow model family for API and OAuth", () => {
   for (const authKind of ["api", "oauth"]) {
-    for (const { model, effort, fallbacks } of anthropicModelCases) {
+    for (const { model, disable, alwaysOn, pingMax, fallbacks } of anthropicModelCases) {
       const req = validationRequest("anthropic", "ant-test", model, authKind);
       const body = JSON.parse(String(req.init.body));
       const expectedBody = {
         model,
-        max_tokens: 1,
-        ...(effort ? { thinking: { type: "disabled" }, output_config: { effort: "low" } } : {}),
+        max_tokens: pingMax,
+        ...(disable
+          ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
+          : alwaysOn
+            ? { output_config: { effort: "low" } }
+            : {}),
         ...(fallbacks ? { fallbacks: "default" } : {}),
         messages: [{ role: "user", content: "ok" }],
       };
@@ -176,6 +184,32 @@ test("Anthropic Opus 5 chat disables thinking for the short response budget", ()
     messages: [{ role: "user", content: "oi" }],
   });
   assert.equal(req.init.headers["anthropic-beta"], "server-side-fallback-2026-07-01");
+});
+
+test("Anthropic Opus 5.5 and Fable never send thinking (disabled 400s)", () => {
+  for (const model of ["claude-opus-5-5", "claude-fable-5", "claude-fable-5-1"]) {
+    const [chat] = chatRequests("anthropic", model, "ant-test", "oi", "resumo");
+    const chatBody = JSON.parse(String(chat.init.body));
+    assert.equal(chatBody.thinking, undefined, `${model} chat omits thinking`);
+    assert.deepEqual(chatBody.output_config, { effort: "low" });
+    assert.equal(chatBody.max_tokens, 2048);
+    assert.equal(chatBody.fallbacks, "default");
+
+    const ping = validationRequest("anthropic", "ant-test", model);
+    const pingBody = JSON.parse(String(ping.init.body));
+    assert.equal(pingBody.thinking, undefined, `${model} ping omits thinking`);
+    assert.deepEqual(pingBody.output_config, { effort: "low" });
+    assert.equal(pingBody.max_tokens, 256);
+    assert.equal(pingBody.fallbacks, "default");
+  }
+});
+
+test("Anthropic future opus-5-N (N>=5) stays always-on; dated snapshot keeps opus-5", () => {
+  const [future] = chatRequests("anthropic", "claude-opus-5-6", "ant-test", "oi", "resumo");
+  assert.equal(JSON.parse(String(future.init.body)).thinking, undefined);
+
+  const [dated] = chatRequests("anthropic", "claude-opus-5-20260101", "ant-test", "oi", "resumo");
+  assert.deepEqual(JSON.parse(String(dated.init.body)).thinking, { type: "disabled" });
 });
 
 test("Anthropic validation ping uses Opus 5 short-output settings and fallback", () => {

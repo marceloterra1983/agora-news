@@ -25,12 +25,26 @@ export function validateWarningFor(status) {
   return "Não deu para validar a chave agora (rede ou o provedor falhou). Nada foi cadastrado.";
 }
 
+function opus5MinorVersion(id) {
+  const match = /^claude-opus-5-(\d+)/i.exec(String(id || ""));
+  if (!match) return null;
+  if (/^20\d{6}$/.test(match[1])) return null; // snapshot com data herda claude-opus-5
+  return Number.parseInt(match[1], 10);
+}
+
 function anthropicModelCapabilities(model) {
   const id = String(model || "");
-  // ponytail: family prefixes let future suffixed IDs inherit capabilities without a version list.
-  const supportsEffort = /^claude-(?:opus-5(?:-|$)|fable-5|sonnet-5(?:-|$))/i.test(id);
+  // ponytail: opus-5-5+, opus-5-N (N>=5) e fable-5* têm pensamento sempre ligado —
+  // `thinking:{type:"disabled"}` dá 400 nesses; só opus-5 (+snapshot com data) e sonnet-5 desligam.
+  const alwaysOnThinking = /^claude-fable-5/i.test(id) || (opus5MinorVersion(id) ?? 0) >= 5;
+  const canDisableThinking =
+    !alwaysOnThinking &&
+    (/^claude-opus-5$/i.test(id) ||
+      /^claude-opus-5-20\d{6}(?:-|$)/i.test(id) ||
+      /^claude-sonnet-5(?:-|$)/i.test(id));
+  const supportsEffort = canDisableThinking || alwaysOnThinking;
   const supportsFallbacks = /^claude-(?:opus-5(?:-|$)|fable-5)/i.test(id);
-  return { supportsEffort, supportsFallbacks };
+  return { canDisableThinking, alwaysOnThinking, supportsEffort, supportsFallbacks };
 }
 
 function pingBody(provider, model) {
@@ -42,11 +56,14 @@ function pingBody(provider, model) {
   };
   if (provider === "anthropic") {
     const capabilities = anthropicModelCapabilities(modelId);
-    if (capabilities.supportsEffort) {
+    if (capabilities.canDisableThinking) {
       Object.assign(body, {
         thinking: { type: "disabled" },
         output_config: { effort: "low" },
       });
+    } else if (capabilities.alwaysOnThinking) {
+      // Pensamento conta no max_tokens; sem mínimo garantido no guia, 256 evita o 400.
+      Object.assign(body, { max_tokens: 256, output_config: { effort: "low" } });
     }
     if (capabilities.supportsFallbacks) body.fallbacks = "default";
   }
@@ -159,6 +176,14 @@ export function chatRequests(provider, model, key, prompt, system = LLM_SYSTEM, 
   }
   if (provider === "anthropic") {
     const capabilities = anthropicModelCapabilities(model);
+    // Pensamento sempre ligado: omite `thinking` (disabled dá 400); max_tokens cobre
+    // pensamento+frase (a frase continua cortada a 160 chars pelo clipOneLine).
+    const maxTokens = capabilities.alwaysOnThinking ? 2048 : 90;
+    const effortShape = capabilities.canDisableThinking
+      ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
+      : capabilities.alwaysOnThinking
+        ? { output_config: { effort: "low" } }
+        : { temperature: 0 };
     return [
       {
         url: "https://api.anthropic.com/v1/messages",
@@ -167,10 +192,8 @@ export function chatRequests(provider, model, key, prompt, system = LLM_SYSTEM, 
           headers: anthropicMessageHeaders(headers, model),
           body: JSON.stringify({
             model,
-            max_tokens: 90,
-            ...(capabilities.supportsEffort
-              ? { thinking: { type: "disabled" }, output_config: { effort: "low" } }
-              : { temperature: 0 }),
+            max_tokens: maxTokens,
+            ...effortShape,
             ...(capabilities.supportsFallbacks ? { fallbacks: "default" } : {}),
             system:
               authKind === "oauth"
