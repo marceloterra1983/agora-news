@@ -195,6 +195,9 @@ export const completeLlmOauth = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<LlmUpsertResult> => {
     await assertSpendAllowed(context.userId);
     const { applyOwnerLlmCommand, readLlmStore } = await import("./llm-store.server");
+    const storeForPolicy = await readLlmStore(context.userId);
+    const policy = subscriptionAuthFor(storeForPolicy.pendingOauth?.provider || "anthropic");
+    if (!policy.available) throw new Error("llm_oauth_unavailable");
     const {
       claudeOauthClientId,
       parseOauthCallbackInput,

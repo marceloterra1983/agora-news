@@ -2,10 +2,12 @@
 
 export function subscriptionAuthFor(provider) {
   if (provider === "anthropic") {
+    // O login por assinatura só funcionava fingindo ser o Claude Code (client id, user-agent e
+    // identidade dele). A assinatura Claude não cobre apps de terceiros: só chave de API.
     return {
-      available: true,
-      reason: null,
-      hint: "Abre o login oficial da Anthropic (Claude Pro/Max). Cole só o código — vale por poucos minutos.",
+      available: false,
+      reason:
+        "A assinatura Claude (Pro/Max) não autoriza apps de terceiros. Use uma chave de console.anthropic.com.",
     };
   }
   if (provider === "openai") {

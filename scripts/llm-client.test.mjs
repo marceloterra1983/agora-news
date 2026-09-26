@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  CLAUDE_CODE_IDENTITY,
   askProviderLine,
+  askProviderLineWithRefresh,
   chatRequests,
   validationRequest,
   validateLlmKey,
@@ -88,15 +88,15 @@ test("oauth validate persists without probing GET /models", async () => {
   assert.equal(called, 0);
 });
 
-test("oauth anthropic chat sends Claude Code identity and CLI headers", async () => {
-  const { CLAUDE_CODE_IDENTITY, chatRequests } = await import("../src/lib/news/llm-client.mjs");
+test("oauth anthropic chat never impersonates Claude Code", async () => {
   const [req] = chatRequests("anthropic", "claude-sonnet-4-5", "oat-token", "hi", "resumo", "oauth");
   const body = JSON.parse(String(req.init.body));
-  assert.equal(body.system[0].text, CLAUDE_CODE_IDENTITY);
+  assert.equal(body.system, "resumo");
+  assert.doesNotMatch(String(req.init.body), /Claude Code/);
   assert.equal(req.init.headers.Authorization, "Bearer oat-token");
   assert.equal(req.init.headers["x-api-key"], undefined);
-  assert.equal(req.init.headers["x-app"], "cli");
-  assert.match(String(req.init.headers["user-agent"] || ""), /claude-cli/);
+  assert.equal(req.init.headers["x-app"], undefined);
+  assert.equal(req.init.headers["user-agent"], undefined);
   assert.equal(req.init.headers["anthropic-beta"], "oauth-2025-04-20");
   assert.equal(body.temperature, undefined);
   assert.equal(body.top_p, undefined);
@@ -119,13 +119,7 @@ test("Anthropic chat options follow model family for API and OAuth", () => {
             ? { output_config: { effort: "low" } }
             : {}),
         ...(fallbacks ? { fallbacks: "default" } : {}),
-        system:
-          authKind === "oauth"
-            ? [
-                { type: "text", text: CLAUDE_CODE_IDENTITY },
-                { type: "text", text: "resumo" },
-              ]
-            : "resumo",
+        system: "resumo",
         messages: [{ role: "user", content: "oi" }],
       };
 
@@ -337,4 +331,22 @@ test("askProviderLine handles Anthropic refusal before reading response content"
   });
 
   assert.deepEqual(result, { line: "", status: "error", httpStatus: 200 });
+});
+
+test("anthropic subscription accounts stop before any network call or token refresh", async () => {
+  let called = 0;
+  let persisted = 0;
+  const out = await askProviderLineWithRefresh({
+    provider: "anthropic",
+    model: "claude-opus-5",
+    key: "oat-token",
+    prompt: "oi",
+    authKind: "oauth",
+    refreshToken: "rt",
+    persistTokens: async () => { persisted += 1; },
+    fetchImpl: async () => { called += 1; throw new Error("no network"); },
+  });
+  assert.equal(out.status, "auth");
+  assert.equal(called, 0);
+  assert.equal(persisted, 0);
 });

@@ -147,7 +147,8 @@ test("subscription auth is official OAuth for Claude and API-only for OpenAI/Gro
   const claude = subscriptionAuthFor("anthropic");
   const openai = subscriptionAuthFor("openai");
   const grok = subscriptionAuthFor("xai");
-  assert.equal(claude.available, true);
+  assert.equal(claude.available, false);
+  assert.match(claude.reason, /console\.anthropic\.com/);
   assert.equal(openai.available, false);
   assert.match(openai.reason, /Plus|API|chave|platform\.openai/i);
   assert.equal(grok.available, false);
@@ -182,52 +183,6 @@ test("Claude authorize URL is official OAuth with PKCE", async () => {
   assert.doesNotMatch(read("src/lib/news/llm-oauth.mjs"), /console\.(log|info|debug)/);
 });
 
-test("oauth 401 refreshes once then succeeds; failed refresh stays auth", async () => {
-  const { askProviderLineWithRefresh } = await import("../src/lib/news/llm-client.mjs");
-  let chatCalls = 0;
-  const persisted = [];
-  const ok = await askProviderLineWithRefresh({
-    provider: "anthropic",
-    model: "claude-sonnet-4-5",
-    key: "old-access",
-    refreshToken: "old-rt",
-    authKind: "oauth",
-    prompt: "quem",
-    persistTokens: async (tokens) => {
-      persisted.push(tokens);
-    },
-    fetchImpl: async (url) => {
-      if (String(url).includes("/oauth/token")) {
-        return jsonResponse(200, {
-          access_token: "new-access-wwww",
-          refresh_token: "new-rt",
-          expires_in: 3600,
-        });
-      }
-      chatCalls += 1;
-      if (chatCalls === 1) return jsonResponse(401, { error: { type: "authentication_error" } });
-      return jsonResponse(200, { content: [{ type: "text", text: "Ok renovado." }] });
-    },
-  });
-  assert.equal(ok.line, "Ok renovado.");
-  assert.equal(ok.status, "ok");
-  assert.equal(persisted[0].accessToken, "new-access-wwww");
-
-  const failed = await askProviderLineWithRefresh({
-    provider: "anthropic",
-    model: "claude-sonnet-4-5",
-    key: "old-access",
-    refreshToken: "old-rt",
-    authKind: "oauth",
-    prompt: "quem",
-    fetchImpl: async (url) => {
-      if (String(url).includes("/oauth/token")) return jsonResponse(400, { error: "invalid_grant" });
-      return jsonResponse(401, {});
-    },
-  });
-  assert.equal(failed.status, "auth");
-  assert.equal(failed.line, "");
-});
 
 test("anthropic oauth chat uses Bearer, not x-api-key", async () => {
   const { chatRequests } = await import("../src/lib/news/llm-client.mjs");
