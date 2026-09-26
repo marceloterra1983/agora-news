@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { createServer } from "node:http";
+import { connect } from "node:net";
 import test from "node:test";
 import {
   JEV_A1_CONCURRENCY,
@@ -25,6 +27,104 @@ const okFetch = (answers) => async () => ({
   status: 200,
   text: async () => JSON.stringify({ answers, model: JEV_A1_MODEL }),
 });
+
+/**
+ * Garante que o tráfego aos servidores fake locais (127.0.0.1) não passe por
+ * proxy de ambiente (NODE_USE_ENV_PROXY=1/HTTP_PROXY): sem isso o proxy
+ * devolve 502 e o teste exercita o proxy, não o timeout/retry.
+ */
+async function withLocalNoProxy(fn) {
+  const prevUpper = process.env.NO_PROXY;
+  const prevLower = process.env.no_proxy;
+  const add = "127.0.0.1,localhost";
+  process.env.NO_PROXY = prevUpper ? `${prevUpper},${add}` : add;
+  process.env.no_proxy = prevLower ? `${prevLower},${add}` : add;
+  try {
+    return await fn();
+  } finally {
+    if (prevUpper === undefined) delete process.env.NO_PROXY;
+    else process.env.NO_PROXY = prevUpper;
+    if (prevLower === undefined) delete process.env.no_proxy;
+    else process.env.no_proxy = prevLower;
+  }
+}
+const directFetch = (url, opts = {}) =>
+  new Promise((resolve, reject) => {
+    // TCP cru via node:net — nenhum proxy de ambiente (NODE_USE_ENV_PROXY=1 /
+    // HTTP_PROXY) é consultado: o socket conecta direto no 127.0.0.1. Nem
+    // node:http nem o fetch global servem aqui (ambos honram o proxy do env;
+    // e NO_PROXY mutado em runtime não tem efeito, o Node o lê no startup).
+    const target = new URL(String(url));
+    const body = opts.body ? String(opts.body) : "";
+    const headers = {
+      Host: target.host,
+      Connection: "close",
+      ...(opts.headers ?? {}),
+    };
+    if (body) headers["Content-Length"] = Buffer.byteLength(body);
+    const head =
+      `${opts.method ?? "GET"} ${target.pathname}${target.search} HTTP/1.1\r\n` +
+      Object.entries(headers)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\r\n") +
+      "\r\n\r\n";
+    let settled = false;
+    const done = (fn, v) => {
+      if (!settled) {
+        settled = true;
+        fn(v);
+      }
+    };
+    let buf = "";
+    const socket = connect(
+      { host: target.hostname, port: Number(target.port) || 80 },
+      () => socket.write(head + body),
+    );
+    socket.setEncoding("utf8");
+    socket.on("data", (c) => {
+      buf += c;
+    });
+    socket.on("close", () => {
+      const idx = buf.indexOf("\r\n\r\n");
+      const headText = idx >= 0 ? buf.slice(0, idx) : buf;
+      let text = idx >= 0 ? buf.slice(idx + 4) : "";
+      const status = Number.parseInt(headText.split(" ", 3)[1], 10);
+      const headers = Object.fromEntries(
+        headText
+          .split("\r\n")
+          .slice(1)
+          .map((line) => {
+            const colon = line.indexOf(":");
+            return colon < 0
+              ? [line.toLowerCase(), ""]
+              : [line.slice(0, colon).trim().toLowerCase(), line.slice(colon + 1).trim()];
+          }),
+      );
+      if (/chunked/i.test(headers["transfer-encoding"] ?? "")) {
+        let out = "";
+        let rest = text;
+        for (;;) {
+          const eol = rest.indexOf("\r\n");
+          if (eol < 0) break;
+          const size = Number.parseInt(rest.slice(0, eol).split(";")[0].trim(), 16);
+          if (!Number.isFinite(size) || size === 0) break;
+          out += rest.slice(eol + 2, eol + 2 + size);
+          rest = rest.slice(eol + 2 + size + 2);
+        }
+        text = out;
+      }
+      done(resolve, { status, text: async () => text });
+    });
+    socket.on("error", (err) => done(reject, err));
+    const signal = opts.signal;
+    if (signal) {
+      if (signal.aborted) {
+        socket.destroy(signal.reason);
+        return;
+      }
+      signal.addEventListener("abort", () => socket.destroy(signal.reason), { once: true });
+    }
+  });
 
 test("state tem source/account/section/post e corta em 1500 chars", () => {
   const state = buildJudgeState(row({ translation_pt: "x".repeat(2000) }));
@@ -149,4 +249,70 @@ test("q_kind rejeita opção fora do vocabulário", async () => {
   });
   assert.equal(j.kind, null);
   assert.equal(j.band, "mid");
+});
+
+test("timeout real: servidor que não responde aborta em timeoutMs", async () => {
+  await withLocalNoProxy(async () => {
+    const server = createServer(() => {
+      // Nunca responde: o AbortSignal.timeout precisa abortar sozinho.
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address();
+    try {
+      const t0 = Date.now();
+      const [j] = await judgePosts([row()], {
+        apiKey: "k",
+        baseUrl: `http://127.0.0.1:${port}`,
+        timeoutMs: 100,
+        fetchImpl: directFetch,
+        sink: async () => {},
+      });
+      const elapsed = Date.now() - t0;
+      assert.equal(j.error, "jev_timeout");
+      assert.equal(j.p_news, null);
+      assert.ok(elapsed < 1000, `deveria abortar rápido, levou ${elapsed}ms`);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+});
+
+test("retry 429: segunda tentativa 200 vira julgamento ok", async () => {
+  await withLocalNoProxy(async () => {
+    let calls = 0;
+    const server = createServer((req, res) => {
+      calls += 1;
+      if (calls === 1) {
+        res.writeHead(429, { "Content-Type": "text/plain" });
+        res.end("rate limited");
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          answers: {
+            q_news: { noul: 0.9, confidence: 0.8 },
+            q_kind: { choice: "k1", probabilities: { k1: 0.7 }, confidence: 0.7 },
+          },
+          model: JEV_A1_MODEL,
+        }),
+      );
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address();
+    try {
+      const [j] = await judgePosts([row()], {
+        apiKey: "k",
+        baseUrl: `http://127.0.0.1:${port}`,
+        fetchImpl: directFetch,
+        sink: async () => {},
+      });
+      assert.equal(calls, 2);
+      assert.equal(j.error, undefined);
+      assert.equal(j.p_news, 0.9);
+      assert.equal(j.band, "high");
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
 });

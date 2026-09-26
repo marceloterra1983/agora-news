@@ -74,6 +74,24 @@ function env(name: string): string {
   return process.env[name] ?? "";
 }
 
+/** Aviso de sombra desligada: uma vez por processo. */
+let warnedMissingKey = false;
+
+function warnMissingKeyOnce(): void {
+  if (warnedMissingKey) return;
+  warnedMissingKey = true;
+  console.warn("[jev-a1] sombra A1 desligada: sem TYPESAFE_API_KEY");
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Backoff curto com jitter antes da 2ª tentativa (429/529): 300–800 ms. */
+export function jevA1RetryDelayMs(): number {
+  return 300 + Math.random() * 500;
+}
+
 function oneLine(s: string): string {
   return String(s ?? "").replace(/\s+/g, " ").trim();
 }
@@ -263,6 +281,7 @@ async function judgeOne(input: JudgeInput, resolved: Required<Pick<JudgeOptions,
   try {
     let attempt = await postOnce(resolved.baseUrl, resolved.apiKey, body, resolved.timeoutMs, resolved.fetchImpl);
     if ((attempt.status === 429 || attempt.status === 529) && Number.isFinite(resolved.timeoutMs)) {
+      await sleep(jevA1RetryDelayMs());
       attempt = await postOnce(resolved.baseUrl, resolved.apiKey, body, resolved.timeoutMs, resolved.fetchImpl);
     }
     if (attempt.status < 200 || attempt.status >= 300) return fail(`jev_http_${attempt.status}`);
@@ -295,6 +314,7 @@ export async function judgePosts(rows: JudgeInput[], opts?: JudgeOptions): Promi
   const fetchImpl = opts?.fetchImpl ?? fetch;
   const sink = opts?.sink ?? defaultSink;
   if (!apiKey) {
+    warnMissingKeyOnce();
     return rows.map((row) => ({
       post_id: row.post_id,
       engine: "jev",
