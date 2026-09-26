@@ -182,6 +182,14 @@ test("select and status stay on the store without exposing keys in warnings", ()
   assert.equal(warning.includes(secret), false);
 });
 
+test("oauth auth warning states the policy reason, never reconnect", () => {
+  const warning = llmWarningFor("auth", { hasAccount: true, hasEnv: false, authKind: "oauth" });
+  assert.match(warning, /console\.anthropic\.com/);
+  assert.match(warning, /chave/i);
+  assert.match(warning, /Desconecte/i);
+  assert.doesNotMatch(warning, /Reconecte/);
+});
+
 test("prefs merge keeps _llm secrets and strip removes them from the client blob", () => {
   const existing = { theme: "dark", _llm: store };
   const incoming = { theme: "light", starred: ["a"] };

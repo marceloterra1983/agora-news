@@ -126,21 +126,9 @@ export const deleteLlmAccount = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: { id: string }) => ({ id: String(input.id || "").trim() }))
   .handler(async ({ data, context }): Promise<LlmPrefsPublic> => {
-    const { applyOwnerLlmCommand, readLlmStore } = await import("./llm-store.server");
-    const current = await readLlmStore(context.userId);
-    const account = current.accounts.find((row) => row.id === data.id);
-    if (account?.authKind === "oauth") {
-      try {
-        const { tokenRevokeRequest } = await import("./llm-oauth.mjs");
-        const token = account.refreshToken || account.key;
-        if (token) {
-          const req = tokenRevokeRequest({ token });
-          await fetch(req.url, req.init).catch(() => undefined);
-        }
-      } catch {
-        /* revoke é melhor-esforço; a conta some do store mesmo assim */
-      }
-    }
+    const { applyOwnerLlmCommand } = await import("./llm-store.server");
+    // Desconectar apaga só o registo local, sem chamar a Anthropic: o token
+    // deixa de ser usado e nunca nos apresentamos com o client id do Claude Code.
     const store = await applyOwnerLlmCommand(context.userId, { type: "delete", id: data.id });
     return publicLlmPrefs(store, envSnapshot());
   });

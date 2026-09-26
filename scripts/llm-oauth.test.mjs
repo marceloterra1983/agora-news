@@ -16,14 +16,6 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => readFileSync(join(root, rel), "utf8");
 
-function jsonResponse(status, body) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-  };
-}
-
 function llmUiSource() {
   const dir = join(root, "src/components/news");
   return readdirSync(dir)
@@ -190,6 +182,22 @@ test("anthropic oauth chat uses Bearer, not x-api-key", async () => {
   assert.equal(req.init.headers.Authorization, "Bearer oat-token");
   assert.equal(req.init.headers["x-api-key"], undefined);
   assert.ok(req.init.headers["anthropic-version"]);
+});
+
+test("disconnect deletes locally without calling Anthropic revoke", () => {
+  const server = read("src/lib/news/llm-server.ts");
+  assert.match(server, /deleteLlmAccount/);
+  assert.doesNotMatch(server, /tokenRevokeRequest/);
+  assert.doesNotMatch(server, /oauth\/revoke/);
+});
+
+test("legacy anthropic oauth slot never shows ok and surfaces the policy reason", () => {
+  const slot = read("src/components/news/llm-provider-slot.tsx");
+  assert.match(slot, /provider === "anthropic" && account\?\.authKind === "oauth"/);
+  assert.match(slot, /statusLabel\("auth", "oauth"\)/);
+  assert.equal((slot.match(/cap\.reason/g) || []).length >= 2, true);
+  assert.match(slot, /Desconecte esta conta/);
+  assert.match(slot, /Conectar com API/);
 });
 
 test("settings UI offers API and Assinatura without web password or chatgpt login fetch", () => {

@@ -46,6 +46,9 @@ export function LlmProviderSlot({
   const [model, setModel] = useState(account?.model || defaultModelFor(provider));
   const cap = subscriptionAuthFor(provider);
   const models = modelOptionsFor(provider, account?.model || model);
+  // Conta de assinatura antiga: a política já não autoriza apps de terceiros,
+  // por isso nunca aparece como "ok" — mostra o motivo e o caminho da chave.
+  const legacyOauth = provider === "anthropic" && account?.authKind === "oauth";
 
   function reset() {
     setMode("idle");
@@ -62,10 +65,16 @@ export function LlmProviderSlot({
         {account ? (
           <p className="text-xs text-mute">
             {account.keyHint} · {account.authKind === "oauth" ? "Assinatura" : "API"} ·{" "}
-            {statusLabel(account.status, account.authKind)}
+            {legacyOauth ? statusLabel("auth", "oauth") : statusLabel(account.status, account.authKind)}
           </p>
         ) : null}
       </div>
+
+      {legacyOauth && mode === "idle" ? (
+        <p className="mt-2 text-[11px] text-mute">
+          {cap.reason} Desconecte esta conta e use “Conectar com API”.
+        </p>
+      ) : null}
 
       {account && mode === "idle" ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">

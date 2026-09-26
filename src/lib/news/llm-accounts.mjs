@@ -115,7 +115,7 @@ export function classifyLlmHttpStatus(status) {
 export function llmWarningFor(status, { hasAccount = false, hasEnv = false, authKind = "api" } = {}) {
   if (status === "auth") {
     if (authKind === "oauth") {
-      return "A assinatura de IA foi recusada ou expirou. Reconecte em Configurações.";
+      return "A assinatura Claude (Pro/Max) não autoriza apps de terceiros. Desconecte essa conta e use uma chave de console.anthropic.com em Configurações.";
     }
     return "A conta de IA foi recusada (chave inválida ou sem permissão). Troque a chave em Configurações.";
   }
