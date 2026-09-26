@@ -27,6 +27,8 @@ export const JEV_A1_CONCURRENCY = 8;
 export const JEV_A1_STATE_CHARS = 1500;
 /** Abaixo disso o resumo RSS não acrescenta nada: usa o título como síntese. */
 export const JEV_A1_SUMMARY_ADDS_FLOOR = 0.3;
+/** Texto de q_news, q_kind e q_summary_adds. Sobe quando instructions ou criteria mudam. */
+export const JEV_A1_QUESTION_VERSION = "1";
 
 export type JudgeInput = {
   post_id: string;
@@ -47,14 +49,18 @@ export type PostJudgment = {
   post_id: string;
   engine: "jev";
   model: string;
+  pergunta: string;
   p_news: number | null;
-  p_news_conf: number | null;
   band: NewsBand | null;
   kind: NewsKind | null;
   kind_probs: Record<string, number> | null;
   kind_conf: number | null;
   p_summary_adds: number | null;
   use_title_as_summary: boolean | null;
+  /** Feed sem filtro de qualidade: o post fica visível. A sombra não muda isso. */
+  decisão_atual: "visivel";
+  /** true se a faixa também o manteria visível; null quando não há faixa. */
+  concordou: boolean | null;
   ms: number;
   judged_at: string;
   error?: string;
@@ -74,14 +80,8 @@ function env(name: string): string {
   return process.env[name] ?? "";
 }
 
-/** Aviso de sombra desligada: uma vez por processo. */
+/** Aviso e linha `sem_chave`: uma vez por processo, sem uma linha por post. */
 let warnedMissingKey = false;
-
-function warnMissingKeyOnce(): void {
-  if (warnedMissingKey) return;
-  warnedMissingKey = true;
-  console.warn("[jev-a1] sombra A1 desligada: sem TYPESAFE_API_KEY");
-}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -199,34 +199,42 @@ function asProbs(value: unknown): Record<string, number> | null {
   return Object.keys(out).length ? out : null;
 }
 
-function judgmentFromAnswers(
-  input: JudgeInput,
-  answers: Record<string, any> | null | undefined,
-  model: string,
-  ms: number,
-): PostJudgment {
-  const base: PostJudgment = {
-    post_id: input.post_id,
+function blankJudgment(postId: string, model: string, ms: number, error?: string): PostJudgment {
+  const row: PostJudgment = {
+    post_id: postId,
     engine: "jev",
     model,
+    pergunta: JEV_A1_QUESTION_VERSION,
     p_news: null,
-    p_news_conf: null,
     band: null,
     kind: null,
     kind_probs: null,
     kind_conf: null,
     p_summary_adds: null,
     use_title_as_summary: null,
+    decisão_atual: "visivel",
+    concordou: null,
     ms,
     judged_at: new Date().toISOString(),
   };
+  if (error) row.error = error;
+  return row;
+}
+
+function judgmentFromAnswers(
+  input: JudgeInput,
+  answers: Record<string, any> | null | undefined,
+  model: string,
+  ms: number,
+): PostJudgment {
+  const base = blankJudgment(input.post_id, model, ms);
   if (!answers || typeof answers !== "object") {
     base.error = "bad_answer_shape";
     return base;
   }
   const news = answers.q_news ?? null;
+  // Noul devolve só `noul`. Não há confidence separado; a probabilidade fica em p_news.
   base.p_news = asFiniteNumber(news?.noul);
-  base.p_news_conf = asFiniteNumber(news?.confidence);
   base.band = newsBand(base.p_news);
   const kind = answers.q_kind ?? null;
   base.kind = asKind(kind?.choice);
@@ -238,6 +246,8 @@ function judgmentFromAnswers(
     base.use_title_as_summary =
       base.p_summary_adds === null ? null : base.p_summary_adds < JEV_A1_SUMMARY_ADDS_FLOOR;
   }
+  // Decisão atual: o feed mostra tudo. Concorda quando a faixa não é baixa.
+  base.concordou = base.band === null ? null : base.band !== "low";
   if (base.p_news === null && base.kind === null) base.error = "empty_answers";
   return base;
 }
@@ -270,22 +280,8 @@ async function postOnce(
 
 async function judgeOne(input: JudgeInput, resolved: Required<Pick<JudgeOptions, "apiKey" | "baseUrl" | "timeoutMs" | "fetchImpl">> & { model: string }): Promise<PostJudgment> {
   const t0 = Date.now();
-  const fail = (error: string): PostJudgment => ({
-    post_id: input.post_id,
-    engine: "jev",
-    model: resolved.model,
-    p_news: null,
-    p_news_conf: null,
-    band: null,
-    kind: null,
-    kind_probs: null,
-    kind_conf: null,
-    p_summary_adds: null,
-    use_title_as_summary: null,
-    ms: Date.now() - t0,
-    judged_at: new Date().toISOString(),
-    error,
-  });
+  const fail = (error: string): PostJudgment =>
+    blankJudgment(input.post_id, resolved.model, Date.now() - t0, error);
   const body = {
     model: resolved.model,
     state: buildJudgeState(input),
@@ -318,6 +314,7 @@ async function defaultSink(lines: string[]): Promise<void> {
 /**
  * Julga posts em sombra. Nunca rejeita: erro vira julgamento com `error`
  * preenchido e o fluxo do ingest continua igual (fail-open).
+ * Sem chave, grava uma linha `motivo: sem_chave` uma vez por processo.
  */
 export async function judgePosts(rows: JudgeInput[], opts?: JudgeOptions): Promise<PostJudgment[]> {
   if (!rows.length) return [];
@@ -327,23 +324,24 @@ export async function judgePosts(rows: JudgeInput[], opts?: JudgeOptions): Promi
   const fetchImpl = opts?.fetchImpl ?? fetch;
   const sink = opts?.sink ?? defaultSink;
   if (!apiKey) {
-    warnMissingKeyOnce();
-    return rows.map((row) => ({
-      post_id: row.post_id,
-      engine: "jev",
-      model: JEV_A1_MODEL,
-      p_news: null,
-      p_news_conf: null,
-      band: null,
-      kind: null,
-      kind_probs: null,
-      kind_conf: null,
-      p_summary_adds: null,
-      use_title_as_summary: null,
-      ms: 0,
-      judged_at: new Date().toISOString(),
-      error: "missing_key",
-    }));
+    if (!warnedMissingKey) {
+      warnedMissingKey = true;
+      console.warn("[jev-a1] sombra A1 desligada: sem TYPESAFE_API_KEY");
+      try {
+        await sink([
+          JSON.stringify({
+            motivo: "sem_chave",
+            engine: "jev",
+            model: JEV_A1_MODEL,
+            pergunta: JEV_A1_QUESTION_VERSION,
+            judged_at: new Date().toISOString(),
+          }),
+        ]);
+      } catch {
+        /* sombra nunca quebra o ingest */
+      }
+    }
+    return rows.map((row) => blankJudgment(row.post_id, JEV_A1_MODEL, 0, "missing_key"));
   }
   const resolved = { apiKey, baseUrl, timeoutMs, fetchImpl, model: JEV_A1_MODEL };
   const judgments = await mapPool(rows, JEV_A1_CONCURRENCY, (row) => judgeOne(row, resolved));

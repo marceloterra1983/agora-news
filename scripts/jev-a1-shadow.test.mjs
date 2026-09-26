@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   JEV_A1_CONCURRENCY,
   JEV_A1_MODEL,
+  JEV_A1_QUESTION_VERSION,
   JEV_A1_STATE_CHARS,
   JEV_A1_TIMEOUT_MS,
   buildJudgeState,
@@ -227,13 +228,23 @@ test("judgePosts grava sombra com banda/kind e não decide nada", async () => {
   assert.equal(j.p_news, 0.9);
   assert.equal(j.band, "high");
   assert.equal(j.kind, "k1");
+  assert.equal(j.kind_conf, 0.7);
   assert.equal(j.engine, "jev");
   assert.equal(j.model, JEV_A1_MODEL);
+  assert.equal(j.pergunta, JEV_A1_QUESTION_VERSION);
+  assert.equal(j.decisão_atual, "visivel");
+  assert.equal(j.concordou, true);
+  assert.equal("p_news_conf" in j, false);
   assert.equal(j.error, undefined);
   assert.equal(lines.length, 1);
   const logged = JSON.parse(lines[0]);
   assert.equal(logged.post_id, "123");
   assert.equal(logged.band, "high");
+  assert.equal(logged.pergunta, JEV_A1_QUESTION_VERSION);
+  assert.equal(logged.decisão_atual, "visivel");
+  assert.equal(logged.concordou, true);
+  assert.equal(logged.kind_conf, 0.7);
+  assert.equal("p_news_conf" in logged, false);
 });
 
 test("RSS com p_summary_adds baixo marca use_title_as_summary", async () => {
@@ -251,6 +262,8 @@ test("RSS com p_summary_adds baixo marca use_title_as_summary", async () => {
   );
   assert.equal(j.p_summary_adds, 0.1);
   assert.equal(j.use_title_as_summary, true);
+  assert.equal(j.concordou, true);
+  assert.equal("p_news_conf" in j, false);
 });
 
 test("X não tem q_summary_adds", async () => {
@@ -265,6 +278,8 @@ test("X não tem q_summary_adds", async () => {
   });
   assert.ok(!("q_summary_adds" in sentBody.questions));
   assert.equal(j.band, "low");
+  assert.equal(j.concordou, false);
+  assert.equal(j.decisão_atual, "visivel");
   assert.equal(j.use_title_as_summary, null);
 });
 
@@ -275,6 +290,10 @@ test("fail-open: HTTP 500, timeout e sem chave viram error, nunca throw", async 
     sink: async () => { throw new Error("sink quebrou"); },
   });
   assert.match(http500[0].error, /jev_http_500/);
+  assert.equal(http500[0].decisão_atual, "visivel");
+  assert.equal(http500[0].concordou, null);
+  assert.equal(http500[0].pergunta, JEV_A1_QUESTION_VERSION);
+  assert.equal("p_news_conf" in http500[0], false);
 
   const hanging = () =>
     new Promise((_res, rej) => {
@@ -289,9 +308,31 @@ test("fail-open: HTTP 500, timeout e sem chave viram error, nunca throw", async 
   });
   assert.equal(timed[0].error, "jev_timeout");
 
-  const noKey = await judgePosts([row()], { apiKey: "", sink: async () => {} });
+  const shadow = [];
+  const noKey = await judgePosts([row(), row({ post_id: "456" })], {
+    apiKey: "",
+    sink: async (ls) => shadow.push(...ls),
+  });
+  assert.equal(noKey.length, 2);
   assert.equal(noKey[0].error, "missing_key");
+  assert.equal(noKey[1].error, "missing_key");
   assert.equal(noKey[0].p_news, null);
+  assert.equal(noKey[0].concordou, null);
+  assert.equal(noKey[0].decisão_atual, "visivel");
+  assert.equal(shadow.length, 1);
+  const line = JSON.parse(shadow[0]);
+  assert.equal(line.motivo, "sem_chave");
+  assert.equal(line.pergunta, JEV_A1_QUESTION_VERSION);
+  assert.equal(line.model, JEV_A1_MODEL);
+  assert.equal(line.post_id, undefined);
+
+  const again = [];
+  const second = await judgePosts([row({ post_id: "789" })], {
+    apiKey: "   ",
+    sink: async (ls) => again.push(...ls),
+  });
+  assert.equal(second[0].error, "missing_key");
+  assert.equal(again.length, 0);
 });
 
 test("modelo fixo, timeout ≤2s e concorrência 8", () => {
